@@ -26,6 +26,7 @@ import {
 import {
   explainUndergroundOutPairingFailure,
   findUnpairedUndergroundEntranceId,
+  hasUndergroundOutSpanWindowInBounds,
   isUndergroundOutPlacementGeometricallyValid,
 } from "./underground-out-pairing-hint";
 import type { BuildingType, Direction, GameState, Inventory } from "./types";
@@ -197,6 +198,14 @@ export function previewBuildingPlacementAtCell(
   // if it already fails, surface that specific reason instead of letting an
   // unrelated cell occupancy hide the actual blocker.
   if (bType === "conveyor_underground_out") {
+    if (!hasUndergroundOutSpanWindowInBounds(x, y, direction)) {
+      return {
+        ok: false,
+        reason: "ug_tunnel_span",
+        message:
+          "Untergrund-Tunnel: Strecke zwischen Eingang und Ausgang liegt außerhalb der Karte.",
+      };
+    }
     if (!isUndergroundOutPlacementGeometricallyValid(state, x, y, direction)) {
       const entranceId = findUnpairedUndergroundEntranceId(
         state,

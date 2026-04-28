@@ -44,6 +44,21 @@ export function findUnpairedUndergroundEntranceId(
   return null;
 }
 
+/** True iff at least one valid entrance candidate cell (2..5 tiles backward) is inside the map bounds. */
+export function hasUndergroundOutSpanWindowInBounds(
+  outX: number,
+  outY: number,
+  direction: Direction,
+): boolean {
+  const [ox, oy] = directionOffset(direction);
+  for (let k = MIN_UNDERGROUND_SPAN; k <= MAX_UNDERGROUND_SPAN; k++) {
+    const ix = outX - ox * k;
+    const iy = outY - oy * k;
+    if (ix >= 0 && ix < GRID_W && iy >= 0 && iy < GRID_H) return true;
+  }
+  return false;
+}
+
 /** True iff an out at (outX,outY) with direction would pass entrance + span checks (cell occupancy is not checked here). */
 export function isUndergroundOutPlacementGeometricallyValid(
   deps: UndergroundOutPairScanDeps,
