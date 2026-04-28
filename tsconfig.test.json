@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.factory.json",
+  "compilerOptions": {
+    "moduleResolution": "Node"
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,24 @@
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install modules
+        run: yarn --frozen-lockfile
+      - name: Typescript check
+        run: yarn tsc -p tsconfig.factory.json --noEmit
+      - name: Run tests
+        run: yarn test
+      - name: Run lint
+        run: yarn lint
