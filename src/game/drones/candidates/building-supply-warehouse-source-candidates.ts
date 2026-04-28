@@ -5,6 +5,7 @@ import type {
   StarterDroneState,
 } from "../../store/types";
 import type { DroneSelectionCandidate } from "./types";
+import { buildScoredCandidate } from "./candidate-builder";
 
 interface NearbyWarehouseDispatchCandidate {
   readonly warehouseId: string;
@@ -81,22 +82,10 @@ export function gatherWarehouseBuildingSupplyCandidates(
     for (const warehouse of nearby) {
       const syntheticNodeId = `wh:${warehouse.warehouseId}:${target.resource}`;
       const stickyBonus = drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
-      const score = deps.scoreDroneTask("building_supply", drone.tileX, drone.tileY, warehouse.x, warehouse.y, {
-        sticky: stickyBonus,
-        demand: demandBonus,
-        spread: spreadPenalty,
-      }) + constants.warehousePriorityBonus;
-      candidates.push({
-        taskType: "building_supply",
-        nodeId: syntheticNodeId,
-        deliveryTargetId: target.assetId,
-        score,
-        _roleBonus: 0,
-        _stickyBonus: stickyBonus,
-        _urgencyBonus: 0,
-        _demandBonus: demandBonus,
-        _spreadPenalty: spreadPenalty,
-      });
+      const bonuses = { sticky: stickyBonus, demand: demandBonus, spread: spreadPenalty };
+      const score = deps.scoreDroneTask("building_supply", drone.tileX, drone.tileY, warehouse.x, warehouse.y, bonuses)
+        + constants.warehousePriorityBonus;
+      candidates.push(buildScoredCandidate("building_supply", syntheticNodeId, target.assetId, score, bonuses));
     }
   }
 

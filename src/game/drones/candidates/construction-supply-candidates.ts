@@ -6,6 +6,7 @@ import type {
   StarterDroneState,
 } from "../../store/types";
 import type { DroneSelectionCandidate } from "./types";
+import { buildScoredCandidate } from "./candidate-builder";
 
 export type { DroneSelectionCandidate };
 
@@ -69,22 +70,12 @@ export function gatherConstructionSupplyCandidates(
       for (const node of availableNodes) {
         if (node.itemType !== itemType) continue;
         const stickyBonus = node.reservedByDroneId === drone.droneId ? constants.stickyBonus : 0;
-        candidates.push({
-          taskType: "construction_supply",
-          nodeId: node.id,
-          deliveryTargetId: siteId,
-          score: deps.scoreDroneTask("construction_supply", drone.tileX, drone.tileY, node.tileX, node.tileY, {
-            role: constructionRoleBonus,
-            sticky: stickyBonus,
-            demand: demandBonus,
-            spread: spreadPenalty,
-          }),
-          _roleBonus: constructionRoleBonus,
-          _stickyBonus: stickyBonus,
-          _urgencyBonus: 0,
-          _demandBonus: demandBonus,
-          _spreadPenalty: spreadPenalty,
-        });
+        const bonuses = { role: constructionRoleBonus, sticky: stickyBonus, demand: demandBonus, spread: spreadPenalty };
+        candidates.push(buildScoredCandidate(
+          "construction_supply", node.id, siteId,
+          deps.scoreDroneTask("construction_supply", drone.tileX, drone.tileY, node.tileX, node.tileY, bonuses),
+          bonuses,
+        ));
       }
     }
   }

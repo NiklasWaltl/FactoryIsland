@@ -5,6 +5,7 @@ import type {
   StarterDroneState,
 } from "../../store/types";
 import type { DroneSelectionCandidate } from "./types";
+import { buildScoredCandidate } from "./candidate-builder";
 
 export interface HubDispatchCandidateConstants {
   demandBonusMax: number;
@@ -79,22 +80,14 @@ export function gatherHubDispatchCandidates(
       const demandBonus = Math.min(constants.demandBonusMax, remainingNeed);
       const syntheticNodeId = `hub:${drone.hubId}:${itemType}`;
       const stickyBonus = drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
-      candidates.push({
-        taskType: "hub_dispatch",
-        nodeId: syntheticNodeId,
-        deliveryTargetId: siteId,
-        score: deps.scoreDroneTask("hub_dispatch", drone.tileX, drone.tileY, hubAsset.x, hubAsset.y, {
-          role: constructionRoleBonus,
-          sticky: stickyBonus,
-          demand: demandBonus,
-          spread: spreadPenalty,
-        }),
-        _roleBonus: constructionRoleBonus,
-        _stickyBonus: stickyBonus,
-        _urgencyBonus: 0,
-        _demandBonus: demandBonus,
-        _spreadPenalty: spreadPenalty,
-      });
+      const bonuses = { role: constructionRoleBonus, sticky: stickyBonus, demand: demandBonus, spread: spreadPenalty };
+      candidates.push(buildScoredCandidate(
+        "hub_dispatch",
+        syntheticNodeId,
+        siteId,
+        deps.scoreDroneTask("hub_dispatch", drone.tileX, drone.tileY, hubAsset.x, hubAsset.y, bonuses),
+        bonuses,
+      ));
     }
   }
 

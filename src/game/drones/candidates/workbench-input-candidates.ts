@@ -6,6 +6,7 @@ import type {
   StarterDroneState,
 } from "../../store/types";
 import type { DroneSelectionCandidate } from "./types";
+import { buildScoredCandidate } from "./candidate-builder";
 
 export interface WorkbenchInputCandidateConstants {
   stickyBonus: number;
@@ -67,19 +68,12 @@ export function gatherWorkbenchInputCandidates(
       if (!pickup) continue;
       const syntheticNodeId = `workbench_input:${job.workbenchId}:${job.id}:${reservation.id}`;
       const stickyBonus = drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
-      candidates.push({
-        taskType: "workbench_delivery",
-        nodeId: syntheticNodeId,
-        deliveryTargetId: job.workbenchId,
-        score: deps.scoreDroneTask("workbench_delivery", drone.tileX, drone.tileY, pickup.x, pickup.y, {
-          sticky: stickyBonus,
-        }),
-        _roleBonus: 0,
-        _stickyBonus: stickyBonus,
-        _urgencyBonus: 0,
-        _demandBonus: 0,
-        _spreadPenalty: 0,
-      });
+      const bonuses = { sticky: stickyBonus };
+      candidates.push(buildScoredCandidate(
+        "workbench_delivery", syntheticNodeId, job.workbenchId,
+        deps.scoreDroneTask("workbench_delivery", drone.tileX, drone.tileY, pickup.x, pickup.y, bonuses),
+        bonuses,
+      ));
     }
   }
 
