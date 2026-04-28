@@ -16,14 +16,18 @@ import { getNetworkAmount, type NetworkStateSlice } from "./network";
 import type {
   MissingItem,
   NetworkAction,
-  NetworkError,
   NetworkSlice,
   Reservation,
-  ReservationId,
   ReservationOwnerKind,
   ReserveBatchResult,
 } from "./reservationTypes";
 import { createEmptyNetworkSlice } from "./reservationTypes";
+import {
+  removeReservationByIndex,
+  removeReservationsByIds,
+  reservationsByOwner,
+  unknownReservationErrorNetwork,
+} from "./reservations.helpers";
 
 // ---------------------------------------------------------------------------
 // Combined slice used by every helper
@@ -320,14 +324,9 @@ export function applyNetworkAction(
       if (idx < 0) {
         return {
           warehouseInventories,
-          network: {
-            ...network,
-            lastError: {
-              kind: "UNKNOWN_RESERVATION",
-              message: `Reservation "${action.reservationId}" does not exist.`,
-              reservationId: action.reservationId,
-            },
-          },
+          network: unknownReservationErrorNetwork(network, {
+            reservationId: action.reservationId,
+          }),
         };
       }
       const r = network.reservations[idx];
@@ -336,10 +335,7 @@ export function applyNetworkAction(
         r.itemId,
         r.amount,
       );
-      const nextReservations = [
-        ...network.reservations.slice(0, idx),
-        ...network.reservations.slice(idx + 1),
-      ];
+      const nextReservations = removeReservationByIndex(network.reservations, idx);
       return {
         warehouseInventories: nextWarehouses,
         network: {
@@ -351,20 +347,18 @@ export function applyNetworkAction(
     }
 
     case "NETWORK_COMMIT_BY_OWNER": {
-      const matching = network.reservations.filter(
-        (r) =>
-          r.ownerKind === action.ownerKind && r.ownerId === action.ownerId,
+      const matching = reservationsByOwner(
+        network.reservations,
+        action.ownerKind,
+        action.ownerId,
       );
       if (matching.length === 0) {
         return {
           warehouseInventories,
-          network: {
-            ...network,
-            lastError: {
-              kind: "UNKNOWN_RESERVATION",
-              message: `No reservations for owner "${action.ownerKind}:${action.ownerId}".`,
-            },
-          },
+          network: unknownReservationErrorNetwork(network, {
+            ownerKind: action.ownerKind,
+            ownerId: action.ownerId,
+          }),
         };
       }
       let nextWarehouses: Readonly<Record<WarehouseId, Inventory>> =
@@ -381,9 +375,7 @@ export function applyNetworkAction(
         warehouseInventories: nextWarehouses,
         network: {
           ...network,
-          reservations: network.reservations.filter(
-            (r) => !matchingIds.has(r.id),
-          ),
+          reservations: removeReservationsByIds(network.reservations, matchingIds),
           lastError: null,
         },
       };
@@ -396,44 +388,34 @@ export function applyNetworkAction(
       if (idx < 0) {
         return {
           warehouseInventories,
-          network: {
-            ...network,
-            lastError: {
-              kind: "UNKNOWN_RESERVATION",
-              message: `Reservation "${action.reservationId}" does not exist.`,
-              reservationId: action.reservationId,
-            },
-          },
+          network: unknownReservationErrorNetwork(network, {
+            reservationId: action.reservationId,
+          }),
         };
       }
       return {
         warehouseInventories,
         network: {
           ...network,
-          reservations: [
-            ...network.reservations.slice(0, idx),
-            ...network.reservations.slice(idx + 1),
-          ],
+          reservations: removeReservationByIndex(network.reservations, idx),
           lastError: null,
         },
       };
     }
 
     case "NETWORK_CANCEL_BY_OWNER": {
-      const matching = network.reservations.filter(
-        (r) =>
-          r.ownerKind === action.ownerKind && r.ownerId === action.ownerId,
+      const matching = reservationsByOwner(
+        network.reservations,
+        action.ownerKind,
+        action.ownerId,
       );
       if (matching.length === 0) {
         return {
           warehouseInventories,
-          network: {
-            ...network,
-            lastError: {
-              kind: "UNKNOWN_RESERVATION",
-              message: `No reservations for owner "${action.ownerKind}:${action.ownerId}".`,
-            },
-          },
+          network: unknownReservationErrorNetwork(network, {
+            ownerKind: action.ownerKind,
+            ownerId: action.ownerId,
+          }),
         };
       }
       const matchingIds = new Set(matching.map((r) => r.id));
@@ -441,9 +423,7 @@ export function applyNetworkAction(
         warehouseInventories,
         network: {
           ...network,
-          reservations: network.reservations.filter(
-            (r) => !matchingIds.has(r.id),
-          ),
+          reservations: removeReservationsByIds(network.reservations, matchingIds),
           lastError: null,
         },
       };
