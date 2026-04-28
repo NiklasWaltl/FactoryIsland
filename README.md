@@ -83,3 +83,9 @@ See [AGENTS.md](AGENTS.md) for AI coding agent guidelines.
 | `yarn preview` | Preview production build | `vite.factory.config.ts` |
 | `yarn test` | Run tests | `jest.config.js` |
 | `yarn lint` | Lint source files | ESLint |
+
+---
+
+# License
+
+Licensed under the MIT License.
