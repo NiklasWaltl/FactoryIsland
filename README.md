@@ -66,7 +66,7 @@ src/game/          ← All game code (standalone, zero external dependencies)
   types/           Type re-exports
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for full technical documentation.
+See [ARCHITECTURE.md](src/game/ARCHITECTURE.md) for full technical documentation.
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues and fixes.
 

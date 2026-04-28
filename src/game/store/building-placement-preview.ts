@@ -193,18 +193,9 @@ export function previewBuildingPlacementAtCell(
     };
   }
 
-  for (let dy = 0; dy < bSize; dy++) {
-    for (let dx = 0; dx < bSize; dx++) {
-      if (state.cellMap[cellKey(x + dx, y + dy)]) {
-        return {
-          ok: false,
-          reason: "cell_occupied",
-          message: "Das Feld ist belegt.",
-        };
-      }
-    }
-  }
-
+  // For conveyor_underground_out, run the pairing/geometric authority first:
+  // if it already fails, surface that specific reason instead of letting an
+  // unrelated cell occupancy hide the actual blocker.
   if (bType === "conveyor_underground_out") {
     if (!isUndergroundOutPlacementGeometricallyValid(state, x, y, direction)) {
       const entranceId = findUnpairedUndergroundEntranceId(
@@ -225,6 +216,20 @@ export function previewBuildingPlacementAtCell(
         ok: false,
         reason: "ug_pairing",
         message: explainUndergroundOutPairingFailure(state, x, y, direction),
+      };
+    }
+  }
+
+  for (let dy = 0; dy < bSize; dy++) {
+    for (let dx = 0; dx < bSize; dx++) {
+      const occupantId = state.cellMap[cellKey(x + dx, y + dy)];
+      // Treat stale cellMap entries (id without a corresponding asset) as
+      // empty so a real collision is required to block placement.
+      if (!occupantId || !state.assets[occupantId]) continue;
+      return {
+        ok: false,
+        reason: "cell_occupied",
+        message: "Das Feld ist belegt.",
       };
     }
   }
