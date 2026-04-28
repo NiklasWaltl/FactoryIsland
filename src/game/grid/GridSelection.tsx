@@ -18,6 +18,10 @@ import {
   previewBuildingPlacementAtCell,
 } from "../store/building-placement-preview";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
+import {
+  collectPowerPoleRangeHighlightElements as collectPowerPoleRangeHighlightElementsHelper,
+  renderPowerPoleRangeArea as renderPowerPoleRangeAreaHelper,
+} from "./helpers/power-pole-range-helper";
 
 interface BuildSelectionOverlaysParams {
   state: GameState;
@@ -93,71 +97,22 @@ export function buildSelectionOverlays({
       getBorderColor?: (assetId: string) => string;
       keyPrefix?: string;
     },
-  ): React.ReactNode[] => {
-    const highlightElements: React.ReactNode[] = [];
-    for (const asset of Object.values(state.assets)) {
-      if (options?.excludeAssetId && asset.id === options.excludeAssetId)
-        continue;
-      let inRange = false;
-      for (let cy = 0; cy < assetH(asset) && !inRange; cy++) {
-        for (let cx = 0; cx < assetW(asset) && !inRange; cx++) {
-          const dx = Math.abs(asset.x + cx - poleX);
-          const dy = Math.abs(asset.y + cy - poleY);
-          if (Math.max(dx, dy) <= POWER_POLE_RANGE) inRange = true;
-        }
-      }
-      if (!inRange) continue;
-      highlightElements.push(
-        <div
-          key={`${options?.keyPrefix ?? "range"}-${asset.id}`}
-          style={{
-            position: "absolute",
-            left: asset.x * CELL_PX + 2,
-            top: asset.y * CELL_PX + 2,
-            width: assetW(asset) * CELL_PX - 4,
-            height: assetH(asset) * CELL_PX - 4,
-            border: `2px dashed ${options?.getBorderColor?.(asset.id) ?? "rgba(255, 200, 0, 0.8)"}`,
-            borderRadius: 6,
-            zIndex: 9,
-            pointerEvents: "none",
-          }}
-        />,
-      );
-    }
-    return highlightElements;
-  };
+  ): React.ReactNode[] =>
+    collectPowerPoleRangeHighlightElementsHelper(
+      state.assets,
+      assetW,
+      assetH,
+      poleX,
+      poleY,
+      options,
+    );
 
   const renderPowerPoleRangeArea = (
     poleX: number,
     poleY: number,
     colors: { background: string; border: string },
     key?: string,
-  ): React.ReactNode => {
-    const rx1 = Math.max(0, poleX - POWER_POLE_RANGE);
-    const ry1 = Math.max(0, poleY - POWER_POLE_RANGE);
-    const rx2 = Math.min(GRID_W - 1, poleX + POWER_POLE_RANGE);
-    const ry2 = Math.min(GRID_H - 1, poleY + POWER_POLE_RANGE);
-    const rangeW = rx2 - rx1 + 1;
-    const rangeH = ry2 - ry1 + 1;
-
-    return (
-      <div
-        key={key}
-        style={{
-          position: "absolute",
-          left: rx1 * CELL_PX,
-          top: ry1 * CELL_PX,
-          width: rangeW * CELL_PX,
-          height: rangeH * CELL_PX,
-          background: colors.background,
-          border: `2px dashed ${colors.border}`,
-          borderRadius: 8,
-          zIndex: 8,
-          pointerEvents: "none",
-        }}
-      />
-    );
-  };
+  ): React.ReactNode => renderPowerPoleRangeAreaHelper(poleX, poleY, colors, key);
 
   let placementOverlayElement: React.ReactNode = null;
   let inspectionOverlayElement: React.ReactNode = null;
