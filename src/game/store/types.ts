@@ -15,11 +15,41 @@ import type {
   RecipeAutomationPolicyMap,
 } from "../crafting/policies";
 import type { ItemId } from "../items/types";
+import type { StarterDroneState } from "./types/drone-types";
+import type { KeepStockByWorkbench } from "./types/crafting-types";
+import type {
+  ConveyorState,
+  AutoSmelterEntry,
+  AutoAssemblerEntry,
+} from "./types/conveyor-types";
 
 export type {
   RecipeAutomationPolicyEntry,
   RecipeAutomationPolicyMap,
 };
+export type {
+  DroneRole,
+  DroneStatus,
+  DroneCargoItem,
+  StarterDroneState,
+  DroneTaskType,
+} from "./types/drone-types";
+export type {
+  KeepStockTargetEntry,
+  KeepStockByWorkbench,
+  CraftingSource,
+  WorkbenchSource,
+} from "./types/crafting-types";
+export type {
+  ConveyorItem,
+  ConveyorState,
+  AutoSmelterStatus,
+  AutoSmelterProcessing,
+  AutoSmelterEntry,
+  AutoAssemblerRecipeId,
+  AutoAssemblerStatus,
+  AutoAssemblerEntry,
+} from "./types/conveyor-types";
 
 export type GameMode = "release" | "debug";
 
@@ -141,69 +171,6 @@ export interface AutoMinerEntry {
   progress: number;
 }
 
-export type ConveyorItem =
-  | "stone"
-  | "iron"
-  | "copper"
-  | "ironIngot"
-  | "copperIngot"
-  | "metalPlate"
-  | "gear";
-
-export interface ConveyorState {
-  queue: ConveyorItem[];
-}
-
-export type AutoSmelterStatus =
-  | "IDLE"
-  | "PROCESSING"
-  | "OUTPUT_BLOCKED"
-  | "NO_POWER"
-  | "MISCONFIGURED";
-
-export interface AutoSmelterProcessing {
-  inputItem: ConveyorItem;
-  outputItem: ConveyorItem;
-  progressMs: number;
-  durationMs: number;
-}
-
-export interface AutoSmelterEntry {
-  inputBuffer: ConveyorItem[];
-  processing: AutoSmelterProcessing | null;
-  pendingOutput: ConveyorItem[];
-  status: AutoSmelterStatus;
-  lastRecipeInput: string | null;
-  lastRecipeOutput: string | null;
-  throughputEvents: number[];
-  selectedRecipe: "iron" | "copper";
-}
-
-/** Two fixed V1 recipes for the auto-assembler (not a generic recipe id). */
-export type AutoAssemblerRecipeId = "metal_plate" | "gear";
-
-export type AutoAssemblerStatus =
-  | "IDLE"
-  | "PROCESSING"
-  | "OUTPUT_BLOCKED"
-  | "NO_POWER"
-  | "MISCONFIGURED";
-
-/** Belt-fed assembler V1: iron ingots in, metal plate or gear out (no warehouse output fallback). */
-export interface AutoAssemblerEntry {
-  /** Count of iron ingots held for processing (same logical buffer for both recipes). */
-  ironIngotBuffer: number;
-  processing: {
-    outputItem: Extract<ConveyorItem, "metalPlate" | "gear">;
-    progressMs: number;
-    durationMs: number;
-  } | null;
-  /** At most one finished item waiting for the output belt. */
-  pendingOutput: ConveyorItem[];
-  status: AutoAssemblerStatus;
-  selectedRecipe: AutoAssemblerRecipeId;
-}
-
 export type UIPanel =
   | "map_shop"
   | "warehouse"
@@ -302,84 +269,6 @@ export interface CollectionNode {
   reservedByDroneId: string | null;
 }
 
-// ---- Drone Roles ----
-/**
- * Optional role that biases a drone's task selection toward a specific work type.
- * "auto" = no preference — drone picks any best-scoring task (default).
- * "construction" = prefers construction_supply tasks (score bonus applied).
- * "supply" = prefers hub_restock tasks (score bonus applied).
- * Roles never block fallback: if the preferred task type has no candidates the
- * drone still picks the highest-scoring task of any type.
- */
-export type DroneRole = "auto" | "construction" | "supply";
-
-// ---- Starter Drone ----
-export type DroneStatus =
-  | "idle"
-  | "moving_to_collect"
-  | "collecting"
-  | "moving_to_dropoff"
-  | "depositing"
-  /** Drone is flying back to its homeHub dock after finishing a task or on game start. */
-  | "returning_to_dock";
-
-export interface DroneCargoItem {
-  itemType: CollectableItemType;
-  amount: number;
-}
-
-/**
- * Singleton starter drone. Becomes the "hub drone" once a service hub is
- * introduced — no separate drone system needed.
- *
- * Hub-integration path: set `hubId` to a service-hub asset ID.
- * The drone then delivers to that hub's tile position instead of MAP_SHOP_POS.
- * All other state-machine logic stays identical.
- */
-export interface StarterDroneState {
-  status: DroneStatus;
-  /** Conceptual tile position (for distance calc; no visual yet). */
-  tileX: number;
-  tileY: number;
-  /** ID of the CollectionNode currently targeted (null when idle). */
-  targetNodeId: string | null;
-  /** Items being carried this trip. */
-  cargo: DroneCargoItem | null;
-  /** Ticks remaining for the current movement / action phase. */
-  ticksRemaining: number;
-  /**
-   * When null: drone delivers to the start module (MAP_SHOP_POS).
-   * When set to an asset ID: drone delivers to that hub asset's tile.
-   * This is the only change required for hub integration.
-   */
-  hubId: string | null;
-  /** Type of the active drone task. null when idle / no task. */
-  currentTaskType: DroneTaskType | null;
-  /** Asset ID of the delivery target (construction site or hub). null when idle or delivering to start module. */
-  deliveryTargetId: string | null;
-  /** Crafting job currently being delivered from a workbench. */
-  craftingJobId: string | null;
-  /**
-   * Stable identifier for this drone instance.
-   * Used as the claim/reservation token on collection nodes.
-   * Remains constant for the lifetime of the drone object.
-   */
-  droneId: string;
-  /**
-   * Optional role preference — influences task scoring.
-   * Defaults to "auto" when absent (backward compatible with older saves).
-   */
-  role?: DroneRole;
-}
-
-// ---- Drone Tasks ----
-/**
- * hub_dispatch: drone flies to its hub, withdraws resources from hub.inventory,
- * then delivers them directly to a construction site.
- * nodeId format: "hub:{hubId}:{resourceType}"
- */
-export type DroneTaskType = "construction_supply" | "hub_restock" | "hub_dispatch" | "workbench_delivery" | "building_supply";
-
 // ---- Construction Sites ----
 
 /** Tracks the outstanding resource debt for a building placed as a construction site. */
@@ -418,38 +307,11 @@ export interface ServiceHubEntry {
   pendingUpgrade?: Partial<Record<CollectableItemType, number>>;
 }
 
-/** Keep-in-stock target for one workbench recipe. */
-export interface KeepStockTargetEntry {
-  /** Whether automatic refill is active for this recipe. */
-  enabled: boolean;
-  /** Desired minimum stock for the recipe output item. */
-  amount: number;
-}
-
-/** Keep-in-stock config map: workbenchId -> recipeId -> target entry. */
-export type KeepStockByWorkbench = Record<string, Record<string, KeepStockTargetEntry>>;
-
 /** A production zone groups warehouses and crafting buildings into a shared local resource pool. */
 export interface ProductionZone {
   id: string;
   name: string;
 }
-
-// ---- Crafting source (read/write resource scope) ----
-//
-// Where a crafting device reads/writes resources:
-// - "global": state.inventory
-// - "warehouse": a specific warehouseInventories[id]
-// - "zone": aggregate of zone member warehouses
-//
-// Resolvers may fall back to global when a warehouse/zone is invalid.
-export type CraftingSource =
-  | { kind: "global" }
-  | { kind: "warehouse"; warehouseId: string }
-  | { kind: "zone"; zoneId: string };
-
-/** @deprecated Use CraftingSource */
-export type WorkbenchSource = CraftingSource;
 
 export interface GameState {
   mode: GameMode;

@@ -1329,8 +1329,7 @@ const LOGISTICS_TICK_IO_DEPS: LogisticsTickIoDeps = {
 // state (action belonged to its cluster) or `null` (fall through).
 //
 // The remaining inline `switch` only covers cases that have not
-// been extracted (e.g. ENERGY_NET_TICK, LOGISTICS_TICK,
-// AUTO_SMELTER_SET_RECIPE). All extracted cases are documented
+// been extracted (e.g. ENERGY_NET_TICK). All extracted cases are documented
 // inline below via `// <ACTION> is handled above by handle<Cluster>Action`
 // markers so the action surface remains greppable from this file.
 //
@@ -1423,6 +1422,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     CLICK_CELL_ACTION_DEPS,
   );
   if (clickCellResult !== null) return clickCellResult;
+  const logisticsTickResult =
+    action.type === "LOGISTICS_TICK"
+      ? handleLogisticsTickAction(state, LOGISTICS_TICK_IO_DEPS)
+      : null;
+  if (logisticsTickResult !== null) return logisticsTickResult;
   switch (action.type) {
     // NETWORK_*, CRAFT_REQUEST_WITH_PREREQUISITES, JOB_*,
     // SET_KEEP_STOCK_TARGET and SET_RECIPE_AUTOMATION_POLICY are handled
@@ -1466,9 +1470,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     // BUILD_PLACE_FLOOR_TILE is handled above by
     // handleFloorPlacementAction (see action-handlers/floor-placement.ts).
 
-    case "LOGISTICS_TICK": {
-      return handleLogisticsTickAction(state, LOGISTICS_TICK_IO_DEPS);
-    }
+    // LOGISTICS_TICK is handled above by
+    // handleLogisticsTickAction (see action-handlers/logistics-tick.ts).
 
     // TOGGLE_ENERGY_DEBUG is handled above by
     // handleUiAction (see action-handlers/ui-actions.ts).

@@ -32,6 +32,11 @@ function logZoneInvariantIfInvalid(state: GameState, actionType: string): void {
   console.warn(`[ZoneAction:${actionType}] buildingZoneIds inkonsistent`);
 }
 
+function finalizeZoneAction(nextState: GameState, actionType: string): GameState {
+  logZoneInvariantIfInvalid(nextState, actionType);
+  return nextState;
+}
+
 /**
  * Handles all production-zone mutation actions. Returns the next
  * state if the action belongs to this cluster, or `null` so the
@@ -51,8 +56,7 @@ export function handleZoneAction(
         ...state,
         productionZones: { ...state.productionZones, [zoneId]: { id: zoneId, name } },
       };
-      logZoneInvariantIfInvalid(nextState, action.type);
-      return nextState;
+      return finalizeZoneAction(nextState, action.type);
     }
 
     case "DELETE_ZONE": {
@@ -69,8 +73,7 @@ export function handleZoneAction(
         productionZones: remainingZones,
         buildingZoneIds: newBuildingZoneIds,
       };
-      logZoneInvariantIfInvalid(nextState, action.type);
-      return nextState;
+      return finalizeZoneAction(nextState, action.type);
     }
 
     case "SET_BUILDING_ZONE": {
@@ -80,16 +83,14 @@ export function handleZoneAction(
         // Remove from zone
         const { [buildingId]: _removed, ...rest } = state.buildingZoneIds;
         const nextState = { ...state, buildingZoneIds: rest };
-        logZoneInvariantIfInvalid(nextState, action.type);
-        return nextState;
+        return finalizeZoneAction(nextState, action.type);
       }
       if (!state.productionZones[zoneId]) return state;
       const nextState = {
         ...state,
         buildingZoneIds: { ...state.buildingZoneIds, [buildingId]: zoneId },
       };
-      logZoneInvariantIfInvalid(nextState, action.type);
-      return nextState;
+      return finalizeZoneAction(nextState, action.type);
     }
 
     default:

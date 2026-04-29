@@ -20,6 +20,15 @@ function decideMachineConfigTargetAsset(
   return { kind: "eligible", asset };
 }
 
+function resolveMachineConfigTargetAsset(
+  state: Pick<GameState, "assets">,
+  assetId: string,
+): PlacedAsset | null {
+  const targetDecision = decideMachineConfigTargetAsset(state, assetId);
+  if (targetDecision.kind === "blocked") return null;
+  return targetDecision.asset;
+}
+
 function patchMachineAsset(
   state: GameState,
   assetId: string,
@@ -43,10 +52,8 @@ export function handleMachineConfigAction(
 ): GameState | null {
   switch (action.type) {
     case "SET_MACHINE_PRIORITY": {
-      const targetDecision = decideMachineConfigTargetAsset(state, action.assetId);
-      if (targetDecision.kind === "blocked") return state;
-
-      const { asset } = targetDecision;
+      const asset = resolveMachineConfigTargetAsset(state, action.assetId);
+      if (!asset) return state;
       if (!isEnergyConsumerType(asset.type)) return state;
 
       const nextPriority = clampMachinePriority(action.priority);
@@ -58,10 +65,8 @@ export function handleMachineConfigAction(
     }
 
     case "SET_MACHINE_BOOST": {
-      const targetDecision = decideMachineConfigTargetAsset(state, action.assetId);
-      if (targetDecision.kind === "blocked") return state;
-
-      const { asset } = targetDecision;
+      const asset = resolveMachineConfigTargetAsset(state, action.assetId);
+      if (!asset) return state;
       // Harte Einschraenkung: Overclocking-Stufe 1 ist nur fuer auto_miner und auto_smelter.
       if (!isBoostSupportedType(asset.type)) return state;
 

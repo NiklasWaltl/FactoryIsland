@@ -1,11 +1,10 @@
 import React from "react";
-import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
-import { cellKey } from "../store/cell-key";
+import { CELL_PX } from "../constants/grid";
 import { isUnderConstruction } from "../store/asset-status";
-import { getWarehouseInputCell, isValidWarehouseInput } from "../store/warehouse-input";
 import type { Direction, GameState } from "../store/types";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import type { StaticAssetSnapshot } from "../world/PhaserGame";
+import { collectWarehouseMarkers } from "./grid-overlay-helpers";
 
 interface BuildWorldOverlayDataParams {
   state: GameState;
@@ -54,7 +53,6 @@ export function buildWorldOverlayData({
   const machineOverlayElements: React.ReactNode[] = [];
   const debugWorldOverlayElements: React.ReactNode[] = [];
   const phaserStaticAssets: StaticAssetSnapshot[] = [];
-  const warehouseMarkers: Array<{ id: string; x: number; y: number; hasFeedingBelt: boolean }> = [];
 
   for (const asset of Object.values(state.assets)) {
     if (renderedAssets.has(asset.id)) continue;
@@ -424,25 +422,13 @@ export function buildWorldOverlayData({
     ...debugWorldOverlayElements,
   ];
 
-  for (const asset of Object.values(state.assets)) {
-    if (asset.type !== "warehouse") continue;
-    const { x: inputX, y: inputY } = getWarehouseInputCell(asset);
-    if (inputX >= GRID_W || inputY >= GRID_H) continue;
-    if (inputX < minCellX || inputX > maxCellX || inputY < minCellY || inputY > maxCellY) continue;
-
-    const tileAssetId = state.cellMap[cellKey(inputX, inputY)];
-    const tileAsset = tileAssetId ? state.assets[tileAssetId] : null;
-    const hasFeedingBelt =
-      tileAsset?.type === "conveyor" &&
-      isValidWarehouseInput(tileAsset.x, tileAsset.y, tileAsset.direction ?? "east", asset);
-
-    warehouseMarkers.push({
-      id: asset.id,
-      x: inputX,
-      y: inputY,
-      hasFeedingBelt,
-    });
-  }
+  const warehouseMarkers = collectWarehouseMarkers({
+    state,
+    minCellX,
+    minCellY,
+    maxCellX,
+    maxCellY,
+  });
 
   const warehouseMarkerElements = warehouseMarkers.map((marker) => (
     <div

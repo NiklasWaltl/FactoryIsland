@@ -1,11 +1,8 @@
 import React from "react";
-import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
+import { CELL_PX } from "../constants/grid";
 import {
   BUILDING_LABELS,
-  BUILDING_SIZES,
   FLOOR_TILE_EMOJIS,
-  REQUIRES_STONE_FLOOR,
-  DEPOSIT_TYPES,
   RESOURCE_EMOJIS,
   directionOffset,
   cellKey,
@@ -15,13 +12,17 @@ import type { Direction, GameState, PlacedAsset } from "../store/types";
 import { POWER_POLE_RANGE } from "../store/constants/energy/power-pole";
 import {
   isConveyorPreviewBuildingType,
-  previewBuildingPlacementAtCell,
 } from "../store/building-placement-preview";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import {
   collectPowerPoleRangeHighlightElements as collectPowerPoleRangeHighlightElementsHelper,
   renderPowerPoleRangeArea as renderPowerPoleRangeAreaHelper,
 } from "./helpers/power-pole-range-helper";
+import {
+  getBuildingPreviewDimensions,
+  validateBuildingPlacementPreview,
+  isFloorTilePlacementValid,
+} from "./placement-validation";
 
 interface BuildSelectionOverlaysParams {
   state: GameState;
@@ -119,82 +120,22 @@ export function buildSelectionOverlays({
 
   if (isPlacingBuilding && hover && !dragging) {
     const { x, y } = hover;
-    const isDirectedTwoByOneMachine =
-      activeBuildingType === "auto_smelter" || activeBuildingType === "auto_assembler";
-    const bWidth: 1 | 2 = isDirectedTwoByOneMachine
-      ? buildDirection === "east" || buildDirection === "west"
-        ? 2
-        : 1
-      : ((activeBuildingType && BUILDING_SIZES[activeBuildingType]) ?? 2);
-    const bHeight: 1 | 2 = isDirectedTwoByOneMachine
-      ? buildDirection === "east" || buildDirection === "west"
-        ? 1
-        : 2
-      : ((activeBuildingType && BUILDING_SIZES[activeBuildingType]) ?? 2);
-    let valid =
-      x >= 0 && y >= 0 && x + bWidth <= GRID_W && y + bHeight <= GRID_H;
-
-    const conveyorPreview =
-      activeBuildingType && isConveyorPreviewBuildingType(activeBuildingType)
-        ? previewBuildingPlacementAtCell(
-            state,
-            activeBuildingType,
-            x,
-            y,
-            buildDirection,
-          )
-        : null;
-
-    if (conveyorPreview) {
-      valid = conveyorPreview.ok;
-    } else if (valid && activeBuildingType === "auto_miner") {
-      const depId = state.cellMap[cellKey(x, y)];
-      const depAsset = depId ? state.assets[depId] : null;
-      valid = !!depAsset && DEPOSIT_TYPES.has(depAsset.type);
-      if (valid && depId) {
-        const existingMiner = Object.values(state.autoMiners).find(
-          (miner) => miner.depositId === depId,
-        );
-        if (existingMiner) valid = false;
-      }
-    } else if (valid) {
-      for (let dy = 0; dy < bHeight && valid; dy++) {
-        for (let dx = 0; dx < bWidth && valid; dx++) {
-          if (state.cellMap[cellKey(x + dx, y + dy)]) valid = false;
-        }
-      }
-    }
-    if (
-      valid &&
-      activeBuildingType &&
-      REQUIRES_STONE_FLOOR.has(activeBuildingType)
-    ) {
-      for (let dy = 0; dy < bHeight && valid; dy++) {
-        for (let dx = 0; dx < bWidth && valid; dx++) {
-          if (!state.floorMap[cellKey(x + dx, y + dy)]) valid = false;
-        }
-      }
-    }
-
-    const isUgOutBuild = activeBuildingType === "conveyor_underground_out";
-    const ugOutPreviewOk = isUgOutBuild && conveyorPreview?.ok === true;
-
-    const undergroundOutPlacementHint: string | null = !isUgOutBuild
-      ? null
-      : conveyorPreview
-        ? conveyorPreview.ok
-          ? "Untergrund: Eingang in Reichweite (2–5 Felder)."
-          : conveyorPreview.message
-        : null;
-
-    const conveyorNonUgHint: string | null =
-      activeBuildingType &&
-      isConveyorPreviewBuildingType(activeBuildingType) &&
-      activeBuildingType !== "conveyor_underground_out" &&
-      conveyorPreview &&
-      !conveyorPreview.ok
-        ? conveyorPreview.message
-        : null;
+    const { bWidth, bHeight, isDirectedTwoByOneMachine } =
+      getBuildingPreviewDimensions(activeBuildingType, buildDirection);
+    const {
+      valid,
+      ugOutPreviewOk,
+      undergroundOutPlacementHint,
+      conveyorNonUgHint,
+    } = validateBuildingPlacementPreview({
+      state,
+      x,
+      y,
+      activeBuildingType,
+      buildDirection,
+      bWidth,
+      bHeight,
+    });
 
     const isDirectional =
       activeBuildingType === "auto_miner" ||
@@ -573,11 +514,7 @@ export function buildSelectionOverlays({
   } else if (state.buildMode && state.selectedFloorTile && hover && !dragging) {
     const { x, y } = hover;
     const tileType = state.selectedFloorTile;
-    const key = cellKey(x, y);
-    const valid =
-      tileType === "stone_floor"
-        ? !state.floorMap[key] && !state.cellMap[key]
-        : !!state.floorMap[key] && !state.cellMap[key];
+    const valid = isFloorTilePlacementValid(state, x, y, tileType);
     placementOverlayElement = renderFloorPlacementOverlay(
       x,
       y,
