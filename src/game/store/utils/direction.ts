@@ -1,4 +1,4 @@
-import type { Direction } from "./types";
+import type { Direction } from "../types";
 
 export function directionOffset(dir: Direction): [number, number] {
   switch (dir) {

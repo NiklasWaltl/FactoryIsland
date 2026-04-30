@@ -11,10 +11,10 @@ import {
 } from "../store/constants/resources";
 import {
   directionOffset,
-} from "../store/direction";
+} from "../store/utils/direction";
 import {
   cellKey,
-} from "../store/cell-key";
+} from "../store/utils/cell-key";
 import {
   getWarehouseInputCell,
 } from "../store/warehouse-input";

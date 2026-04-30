@@ -1,7 +1,7 @@
 import { debugLog } from "../../debug/debugLogger";
 import { routeOutput } from "../../crafting/output";
 import { addWorkbenchInputToJob } from "../../crafting/workbench-input-buffer";
-import { addNotification } from "../../store/notifications";
+import { addNotification } from "../../store/utils/notifications";
 import { addResources } from "../../store/inventory-ops";
 import { getCraftingJobById } from "../../store/workbench-task-utils";
 import { applyDroneUpdate } from "../drone-state-helpers";

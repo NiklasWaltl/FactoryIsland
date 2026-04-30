@@ -4,13 +4,13 @@
  */
 
 import { GRID_H, GRID_W } from "../constants/grid";
-import { cellKey } from "./cell-key";
+import { cellKey } from "./utils/cell-key";
 import {
   MAX_UNDERGROUND_SPAN,
   MIN_UNDERGROUND_SPAN,
   undergroundSpanCellsInBounds,
 } from "./constants/conveyor";
-import { directionOffset } from "./direction";
+import { directionOffset } from "./utils/direction";
 import type { Direction, GameState, PlacedAsset } from "./types";
 
 export type UndergroundOutPairScanDeps = Pick<

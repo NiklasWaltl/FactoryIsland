@@ -8,7 +8,7 @@ import {
 } from "../store/constants/deposit-positions";
 import {
   cellKey,
-} from "../store/cell-key";
+} from "../store/utils/cell-key";
 import {
   isConveyorPreviewBuildingType,
   previewBuildingPlacementAtCell,

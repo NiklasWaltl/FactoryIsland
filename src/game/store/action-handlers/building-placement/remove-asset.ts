@@ -11,7 +11,7 @@ import type {
 } from "../../types";
 import { BUILDING_COSTS } from "../../constants/buildings";
 import { ASSET_LABELS } from "../../constants/assets";
-import { cellKey } from "../../cell-key";
+import { cellKey } from "../../utils/cell-key";
 import { addResources } from "../../inventory-ops";
 import { removeAsset } from "../../asset-mutation";
 import { reassignBuildingSourceIds } from "../../../buildings/warehouse/warehouse-assignment";

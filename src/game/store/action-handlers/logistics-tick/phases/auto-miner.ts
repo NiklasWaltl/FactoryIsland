@@ -8,7 +8,7 @@ import {
   decideAutoMinerTickEligibility,
 } from "../../../decisions/auto-miner-decisions";
 import { resolveBuildingSource } from "../../../building-source";
-import { directionOffset } from "../../../direction";
+import { directionOffset } from "../../../utils/direction";
 import { addResources } from "../../../inventory-ops";
 import { getBoostMultiplier } from "../../../machine-priority";
 import {

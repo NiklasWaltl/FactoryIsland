@@ -1,5 +1,5 @@
 import { GRID_H, GRID_W } from "../constants/grid";
-import { cellKey } from "../store/cell-key";
+import { cellKey } from "../store/utils/cell-key";
 import { getWarehouseInputCell, isValidWarehouseInput } from "../store/warehouse-input";
 import type { GameState } from "../store/types";
 

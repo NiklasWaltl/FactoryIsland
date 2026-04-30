@@ -6,7 +6,7 @@
  */
 
 import { GRID_H, GRID_W } from "../constants/grid";
-import { cellKey } from "./cell-key";
+import { cellKey } from "./utils/cell-key";
 import { decideBuildingPlacementEligibility } from "./build-placement-eligibility";
 import type { BuildPlacementEligibilityBlockReason } from "./build-placement-eligibility";
 import {

@@ -22,7 +22,7 @@ import { areAutoAssemblerEntriesEqual } from "../../../assembler-equality";
 import type { AutoAssemblerEntry, ConveyorItem, PlacedAsset } from "../../../types";
 import { getAutoSmelterIoCells } from "../../../asset-geometry";
 import { GRID_H, GRID_W } from "../../../../constants/grid";
-import { cellKey } from "../../../cell-key";
+import { cellKey } from "../../../utils/cell-key";
 import { getMachinePowerRatio, type LogisticsTickContext } from "../context";
 import type { ConveyorState, GameState } from "../../../types";
 

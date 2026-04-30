@@ -1,5 +1,5 @@
 import { GRID_H, GRID_W } from "../../constants/grid";
-import { cellKey } from "../cell-key";
+import { cellKey } from "../utils/cell-key";
 import { createInitialState } from "../initial-state";
 import {
   isConveyorPreviewBuildingType,

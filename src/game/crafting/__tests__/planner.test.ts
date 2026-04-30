@@ -1,4 +1,4 @@
-import { cellKey } from "../../store/cell-key";
+import { cellKey } from "../../store/utils/cell-key";
 import { createInitialState } from "../../store/initial-state";
 import type { GameState, Inventory, PlacedAsset } from "../../store/types";
 import { WORKBENCH_RECIPES, type WorkbenchRecipe } from "../../simulation/recipes";

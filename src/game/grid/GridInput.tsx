@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
 import {
   cellKey,
-} from "../store/cell-key";
+} from "../store/utils/cell-key";
 import type { Direction, GameState } from "../store/types";
 import type { GameAction } from "../store/game-actions";
 

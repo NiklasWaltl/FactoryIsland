@@ -102,8 +102,8 @@ import {
 import { droneTravelTicks } from "../drones/drone-movement";
 import { getDroneDockOffset } from "../drones/drone-dock-geometry";
 import { syncDrones } from "../drones/drone-state-helpers";
-import { addErrorNotification, addNotification } from "./notifications";
-import { directionOffset } from "./direction";
+import { addErrorNotification, addNotification } from "./utils/notifications";
+import { directionOffset } from "./utils/direction";
 import { getWarehouseInputCell, isValidWarehouseInput } from "./warehouse-input";
 import { isUnderConstruction } from "./asset-status";
 import {
@@ -511,7 +511,7 @@ export function isPowerPoleRangeType(type: AssetType): boolean {
 }
 
 import { clampMachinePriority, isEnergyConsumerType, withDefaultMachinePriority } from "./machine-priority";
-import { cellKey } from "./cell-key";
+import { cellKey } from "./utils/cell-key";
 import { assetWidth, assetHeight, getAutoSmelterIoCells } from "./asset-geometry";
 import { removeAsset, placeAsset } from "./asset-mutation";
 import {
@@ -1019,8 +1019,8 @@ export function manhattanDist(x1: number, y1: number, x2: number, y2: number): n
 // makeId lives in ./make-id (extracted so handler modules can value-import it
 // directly without an ESM cycle through this file). Re-exported for backward
 // compatibility with `from "../store/reducer"` consumers.
-export { makeId } from "./make-id";
-import { makeId } from "./make-id";
+export { makeId } from "./utils/make-id";
+import { makeId } from "./utils/make-id";
 
 /**
  * Add `amount` of `itemType` to a collection node at (tileX, tileY). If a

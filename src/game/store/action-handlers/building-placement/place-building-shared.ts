@@ -1,6 +1,6 @@
 import type { AssetType, Direction, GameState, PlacedAsset } from "../../types";
 import { GRID_W, GRID_H } from "../../../constants/grid";
-import { cellKey } from "../../cell-key";
+import { cellKey } from "../../utils/cell-key";
 import { getAutoSmelterIoCells } from "../../asset-geometry";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import type { BuildPlacementEligibilityDecision } from "../../build-placement-eligibility";

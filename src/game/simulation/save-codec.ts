@@ -18,7 +18,7 @@ import {
   createDefaultHubTargetStock,
   createDefaultProtoHubTargetStock,
 } from "../store/constants/hub/hub-target-stock";
-import { cellKey } from "../store/cell-key";
+import { cellKey } from "../store/utils/cell-key";
 import { createInitialState } from "../store/initial-state";
 import type { HubTier } from "../store/types";
 import { debugLog } from "../debug/debugLogger";

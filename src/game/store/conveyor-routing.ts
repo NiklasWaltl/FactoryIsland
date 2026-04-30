@@ -2,7 +2,7 @@ import { GRID_H, GRID_W } from "../constants/grid";
 import { areZonesTransportCompatible } from "../logistics/conveyor-zone";
 import type { CraftingJob } from "../crafting/types";
 import { CONVEYOR_TILE_CAPACITY } from "./constants/conveyor";
-import { directionOffset } from "./direction";
+import { directionOffset } from "./utils/direction";
 import type {
   ConveyorItem,
   ConveyorState,

@@ -2,7 +2,7 @@ import type { AssetType, AutoSmelterStatus, Direction, GameState } from "../../t
 import { BUILDING_LABELS } from "../../constants/buildings";
 import { DEPOSIT_RESOURCE, DEPOSIT_TYPES } from "../../constants/deposit-positions";
 import { DEFAULT_MACHINE_PRIORITY } from "../../constants/energy/energy-balance";
-import { cellKey } from "../../cell-key";
+import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";
 import { decideAutoMinerPlacementEligibility } from "../../build-auto-miner-placement-eligibility";
 import { getNearestWarehouseId } from "../../../buildings/warehouse/warehouse-assignment";

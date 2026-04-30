@@ -1,6 +1,6 @@
 import { GRID_H, GRID_W } from "../../../../constants/grid";
 import { placeAsset } from "../../../asset-mutation";
-import { cellKey } from "../../../cell-key";
+import { cellKey } from "../../../utils/cell-key";
 import {
   NATURAL_SPAWN_CAP,
   NATURAL_SPAWN_CHANCE,

@@ -10,7 +10,7 @@
 
 import type { GameAction } from "../game-actions";
 import { GRID_W, GRID_H } from "../../constants/grid";
-import { cellKey } from "../cell-key";
+import { cellKey } from "../utils/cell-key";
 import type { GameState, PlacedAsset } from "../types";
 import {
   handleClickCellToolAction,

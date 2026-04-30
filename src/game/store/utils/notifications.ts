@@ -1,6 +1,6 @@
 import { makeId } from "./make-id";
-import { RESOURCE_LABELS } from "./constants/resources";
-import type { GameNotification } from "./types";
+import { RESOURCE_LABELS } from "../constants/resources";
+import type { GameNotification } from "../types";
 
 export function addNotification(
   notifications: GameNotification[],
