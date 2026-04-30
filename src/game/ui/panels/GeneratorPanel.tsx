@@ -1,6 +1,6 @@
 import React from "react";
 import type { GameState } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import {
   GENERATOR_TICKS_PER_WOOD,
   ENERGY_NET_TICK_MS,

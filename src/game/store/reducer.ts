@@ -212,16 +212,16 @@ import {
   decideAutoSmelterOutputTarget,
   decideAutoSmelterPendingOutputStatus,
   decideAutoSmelterStartProcessingEligibility,
-} from "./smelter-decisions";
+} from "./decisions/smelter-decisions";
 import { consumeAutoSmelterPendingOutput } from "./smelter-mutations";
 import {
   decideConveyorTickEligibility,
   decideConveyorTargetSelection,
-} from "./conveyor-decisions";
+} from "./decisions/conveyor-decisions";
 import {
   decideAutoMinerOutputTarget,
   decideAutoMinerTickEligibility,
-} from "./auto-miner-decisions";
+} from "./decisions/auto-miner-decisions";
 import { getDroneStatusDetail as getDroneStatusDetailClassifier } from "./drone-status-detail";
 import type { CraftingInventorySource } from "../crafting/types";
 

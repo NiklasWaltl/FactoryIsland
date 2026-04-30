@@ -1,12 +1,12 @@
-import { resolveOutputDestination } from "../crafting/output";
-import type { CraftingJob } from "../crafting/types";
+import { resolveOutputDestination } from "../../crafting/output";
+import type { CraftingJob } from "../../crafting/types";
 import type {
   GameState,
   Inventory,
   PlacedAsset,
   ServiceHubEntry,
   StarterDroneState,
-} from "./types";
+} from "../types";
 
 type WorkbenchTaskNodeId =
   | { kind: "input"; workbenchId: string; jobId: string; reservationId: string }

@@ -10,7 +10,7 @@
 // CLICK_CELL is handled by handleClickCellAction (see action-handlers/click-cell.ts).
 // ============================================================
 
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 
 type HandledActionType =

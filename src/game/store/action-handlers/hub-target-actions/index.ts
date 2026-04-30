@@ -11,7 +11,7 @@
 //              ../../hub-tier-selectors.ts (getMaxTargetStockForTier).
 // ============================================================
 
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import { HANDLED_ACTION_TYPES, type HubTargetAction } from "./types";
 import { runSetHubTargetStockPhase } from "./phases/set-hub-target-stock-phase";

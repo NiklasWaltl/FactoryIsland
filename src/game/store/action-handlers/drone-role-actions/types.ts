@@ -1,4 +1,4 @@
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 
 export type DroneRoleHandledActionType = "DRONE_SET_ROLE";
 

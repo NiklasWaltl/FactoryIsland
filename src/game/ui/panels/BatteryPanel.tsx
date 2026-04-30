@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import type { GameState } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import { getConnectedConsumerDrainEntries } from "../../power/energy-consumers";
 import { getEnergyProductionPerPeriod } from "../../power/energy-production";
 import { BATTERY_CAPACITY } from "../../store/constants/energy/battery";

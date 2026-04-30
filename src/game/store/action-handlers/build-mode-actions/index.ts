@@ -13,7 +13,7 @@
 //              building-placement.ts).
 // ============================================================
 
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import { HANDLED_ACTION_TYPES, type BuildModeHandledAction } from "./types";
 import {

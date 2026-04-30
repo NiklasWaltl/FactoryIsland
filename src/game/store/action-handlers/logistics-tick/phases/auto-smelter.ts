@@ -11,7 +11,7 @@ import {
   decideAutoSmelterOutputTarget,
   decideAutoSmelterPendingOutputStatus,
   decideAutoSmelterStartProcessingEligibility,
-} from "../../../smelter-decisions";
+} from "../../../decisions/smelter-decisions";
 import { consumeAutoSmelterPendingOutput } from "../../../smelter-mutations";
 import type { ConveyorItem } from "../../../types";
 import { getAutoSmelterIoCells } from "../../../asset-geometry";

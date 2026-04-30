@@ -8,7 +8,7 @@
 // - TRANSFER_FROM_WAREHOUSE
 // ============================================================
 
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 import type { WarehouseHotbarActionDeps } from "./warehouse-hotbar-actions/deps";
 import {

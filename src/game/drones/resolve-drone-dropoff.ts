@@ -4,7 +4,7 @@ import { MAP_SHOP_POS } from "../store/constants/map-layout";
 import {
   resolveDroneDropoffDecision,
   type DroneDropoffFallbackEvent,
-} from "../store/drone-dropoff-decision";
+} from "../store/decisions/drone-dropoff-decision";
 import type {
   GameState,
   Inventory,

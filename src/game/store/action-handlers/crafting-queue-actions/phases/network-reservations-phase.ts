@@ -1,5 +1,5 @@
 import { applyNetworkAction } from "../../../../inventory/reservations";
-import type { GameAction } from "../../../actions";
+import type { GameAction } from "../../../game-actions";
 import type { GameState, Inventory } from "../../../types";
 
 type NetworkReservationAction = Extract<

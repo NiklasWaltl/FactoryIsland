@@ -1,4 +1,4 @@
-import type { FloorTileType } from "./types";
+import type { FloorTileType } from "../types";
 
 export type BuildFloorTileEligibilityBlockReason =
   | "stone_floor_already_present"

@@ -3,7 +3,7 @@ import {
   applyCraftingSourceInventory,
   getCraftingSourceInventory,
 } from "../../../../crafting/crafting-sources";
-import type { GameAction } from "../../../actions";
+import type { GameAction } from "../../../game-actions";
 import type { GameState } from "../../../types";
 import type { MachineActionDeps } from "../deps";
 

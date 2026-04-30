@@ -8,7 +8,7 @@ import {
   applyExecutionTick,
 } from "../../../../crafting/tickPhases";
 import { releaseJobReservations } from "../../../../crafting/tick";
-import type { GameAction } from "../../../actions";
+import type { GameAction } from "../../../game-actions";
 import type { GameState } from "../../../types";
 import type { CraftingQueueActionDeps } from "../deps";
 

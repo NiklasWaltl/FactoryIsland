@@ -23,7 +23,7 @@
 // ============================================================
 
 import type { GameState } from "../../types";
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 import type { CraftingQueueActionDeps } from "./deps";
 import { HANDLED_ACTION_TYPES, type CraftingQueueHandledAction } from "./types";
 import {

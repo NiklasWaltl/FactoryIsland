@@ -1,4 +1,4 @@
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 
 /** Action types handled by this module. */
 export type HandledActionType =

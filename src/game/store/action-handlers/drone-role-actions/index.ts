@@ -19,7 +19,7 @@
 //              tasks via select-drone-task.ts.
 // ============================================================
 
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import type { DroneRoleActionDeps } from "./deps";
 import {

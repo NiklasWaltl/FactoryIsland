@@ -17,7 +17,7 @@ import {
   decideAutoSmelterInputBeltEligibility,
   decideAutoSmelterNonPendingStatus,
   decideAutoSmelterStartProcessingEligibility,
-} from "../../../smelter-decisions";
+} from "../../../decisions/smelter-decisions";
 import { areAutoAssemblerEntriesEqual } from "../../../assembler-equality";
 import type { AutoAssemblerEntry, ConveyorItem, PlacedAsset } from "../../../types";
 import { getAutoSmelterIoCells } from "../../../asset-geometry";

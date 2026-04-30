@@ -1,6 +1,6 @@
-import { GRID_H, GRID_W } from "../constants/grid";
-import { getSmeltingRecipe } from "../simulation/recipes";
-import { CONVEYOR_TILE_CAPACITY } from "./constants/conveyor";
+import { GRID_H, GRID_W } from "../../constants/grid";
+import { getSmeltingRecipe } from "../../simulation/recipes";
+import { CONVEYOR_TILE_CAPACITY } from "../constants/conveyor";
 import type {
   AutoSmelterEntry,
   ConveyorItem,
@@ -8,7 +8,7 @@ import type {
   GameState,
   Inventory,
   PlacedAsset,
-} from "./types";
+} from "../types";
 
 export type AutoSmelterTickEntryEligibilityDecision =
   | {

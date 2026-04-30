@@ -1,4 +1,4 @@
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import type { DroneHubAssignmentPreflightResult } from "../helpers/droneAssignment";
 import type {
   DroneStatus,

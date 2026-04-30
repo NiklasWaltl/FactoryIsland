@@ -13,7 +13,7 @@
 //              saplingGrowAt has matured are passed in.
 // ============================================================
 
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import { HANDLED_ACTION_TYPES, type GrowthHandledAction } from "./types";
 import {

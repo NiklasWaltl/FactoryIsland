@@ -16,7 +16,7 @@
 //              Task selection deps live in ../../../drones/selection/.
 // ============================================================
 
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import type { DroneTickActionDeps } from "./deps";
 import {

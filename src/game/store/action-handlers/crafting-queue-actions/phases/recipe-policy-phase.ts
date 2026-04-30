@@ -3,7 +3,7 @@ import {
   areRecipeAutomationPolicyEntriesEqual,
   isRecipeAutomationPolicyEntryDefault,
 } from "../../../../crafting/policies";
-import type { GameAction } from "../../../actions";
+import type { GameAction } from "../../../game-actions";
 import type { GameState } from "../../../types";
 import type { CraftingQueueActionDeps } from "../deps";
 

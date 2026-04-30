@@ -1,7 +1,7 @@
 import {
   decideBuildFloorTileEligibility,
   type BuildFloorTileEligibilityBlockReason,
-} from "../floor-tile-decisions";
+} from "../decisions/floor-tile-decisions";
 import type { GameState } from "../types";
 
 export type FloorPlacementEligibilityResult =

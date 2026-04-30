@@ -9,7 +9,7 @@ import {
   type GameState,
   type PlacedAsset,
 } from "../reducer";
-import { SPLITTER_OUTPUT_SIDE_PRIORITY } from "../conveyor-decisions";
+import { SPLITTER_OUTPUT_SIDE_PRIORITY } from "../decisions/conveyor-decisions";
 
 function makeConveyorAsset(
   id: string,

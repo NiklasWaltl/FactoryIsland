@@ -20,7 +20,7 @@ import {
   isConstructionSiteStateConsistent,
 } from "../utils/asset-guards";
 import { withErrorNotification } from "../utils/notification-utils";
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import type {
   CollectableItemType,
   GameNotification,

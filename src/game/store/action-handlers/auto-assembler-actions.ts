@@ -1,5 +1,5 @@
 import { isUnderConstruction } from "../asset-status";
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 
 export function isAutoAssemblerAction(action: GameAction): boolean {

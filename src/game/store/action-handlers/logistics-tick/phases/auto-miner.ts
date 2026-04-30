@@ -6,7 +6,7 @@ import { getZoneWarehouseIds } from "../../../../zones/production-zone-aggregati
 import {
   decideAutoMinerOutputTarget,
   decideAutoMinerTickEligibility,
-} from "../../../auto-miner-decisions";
+} from "../../../decisions/auto-miner-decisions";
 import { resolveBuildingSource } from "../../../building-source";
 import { directionOffset } from "../../../direction";
 import { addResources } from "../../../inventory-ops";

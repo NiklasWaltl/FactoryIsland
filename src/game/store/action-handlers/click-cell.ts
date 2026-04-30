@@ -8,7 +8,7 @@
 // - hotbar tool delegation
 // ============================================================
 
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import { GRID_W, GRID_H } from "../../constants/grid";
 import { cellKey } from "../cell-key";
 import type { GameState, PlacedAsset } from "../types";

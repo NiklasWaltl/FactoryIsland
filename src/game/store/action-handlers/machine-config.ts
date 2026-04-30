@@ -1,4 +1,4 @@
-import type { GameAction } from "../actions";
+import type { GameAction } from "../game-actions";
 import type { GameState, PlacedAsset } from "../types";
 import { DEFAULT_MACHINE_PRIORITY } from "../constants/energy/energy-balance";
 import {

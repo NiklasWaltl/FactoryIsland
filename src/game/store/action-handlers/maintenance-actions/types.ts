@@ -1,6 +1,6 @@
 // Action types handled by the maintenance/no-op action cluster.
 
-import type { GameAction } from "../../actions";
+import type { GameAction } from "../../game-actions";
 
 export type MaintenanceHandledActionType =
   | "CRAFT_WORKBENCH"

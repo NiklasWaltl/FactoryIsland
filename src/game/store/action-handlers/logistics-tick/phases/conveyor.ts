@@ -4,7 +4,7 @@ import {
   decideConveyorTickEligibility,
   decideConveyorTargetSelection,
   shouldDeferRightMergerInputToLeft,
-} from "../../../conveyor-decisions";
+} from "../../../decisions/conveyor-decisions";
 import type { CraftingSource } from "../../../types";
 import type { ConveyorItem, Inventory, PlacedAsset } from "../../../types";
 import { resolveBuildingSource } from "../../../building-source";
