@@ -58,6 +58,11 @@ export {
   selectGlobalInventoryView,
 } from "./helpers/inventory-queries";
 export {
+  isPowerCableConductorType,
+  isPowerPoleRangeType,
+  getConnectedDemandPerPeriod,
+} from "./helpers/energy-helpers";
+export {
   getHubDrones,
   getDroneDockSlotIndex,
   getDroneStatusDetail,

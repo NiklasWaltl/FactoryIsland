@@ -319,12 +319,6 @@ import {
   ENERGY_NET_TICK_MS,
 } from "./constants/energy/energy-smelter";
 
-// Energy balance constants live in ./constants/energy-balance.
-import {
-  POWER_CABLE_CONDUCTOR_TYPES,
-  POWER_POLE_RANGE_TYPES,
-} from "./constants/energy/energy-balance";
-
 // Generator constants live in ./constants/generator.
 import {
   GENERATOR_ENERGY_PER_TICK,
@@ -393,16 +387,18 @@ import {
   DRONE_TICK_ACTION_DEPS,
   LOGISTICS_TICK_IO_DEPS,
 } from "./action-handler-deps";
+import {
+  isPowerCableConductorType,
+  isPowerPoleRangeType,
+  getConnectedDemandPerPeriod,
+} from "./helpers/energy-helpers";
 
 // ---- Energy / Generator ----
-
-export function isPowerCableConductorType(type: AssetType): boolean {
-  return POWER_CABLE_CONDUCTOR_TYPES.has(type);
-}
-
-export function isPowerPoleRangeType(type: AssetType): boolean {
-  return POWER_POLE_RANGE_TYPES.has(type);
-}
+export {
+  isPowerCableConductorType,
+  isPowerPoleRangeType,
+  getConnectedDemandPerPeriod,
+};
 
 import { clampMachinePriority, isEnergyConsumerType, withDefaultMachinePriority } from "./helpers/machine-priority";
 import { cellKey } from "./utils/cell-key";
@@ -451,12 +447,6 @@ export {
 export {
   getDroneDockOffset,
 };
-
-export function getConnectedDemandPerPeriod(
-  state: Pick<GameState, "assets" | "connectedAssetIds" | "autoSmelters" | "autoAssemblers">,
-): number {
-  return getConnectedConsumerDrainEntries(state).reduce((sum, entry) => sum + entry.drain, 0);
-}
 
 export { withDefaultMachinePriority };
 
