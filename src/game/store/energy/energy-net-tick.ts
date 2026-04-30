@@ -10,7 +10,7 @@ import {
   buildEnergyTickPhase1Snapshot,
   hasEnergyTickChanges,
 } from "./energy-tick-phases";
-import type { GameState } from "./types";
+import type { GameState } from "../types";
 
 export function runEnergyNetTick(state: GameState): GameState {
   const {

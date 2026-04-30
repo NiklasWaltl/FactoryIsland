@@ -5,30 +5,30 @@
 // outside reducer.ts while preserving behavior.
 // ============================================================
 
-import { getEnergyProductionPerPeriod } from "../power/energy-production";
+import { getEnergyProductionPerPeriod } from "../../power/energy-production";
 import {
   AUTO_ASSEMBLER_IDLE_DRAIN_PER_PERIOD,
   AUTO_ASSEMBLER_PROCESSING_DRAIN_PER_PERIOD,
-} from "./constants/energy/energy-assembler";
+} from "../constants/energy/energy-assembler";
 import {
   AUTO_SMELTER_IDLE_DRAIN_PER_PERIOD,
   AUTO_SMELTER_PROCESSING_DRAIN_PER_PERIOD,
-} from "./constants/energy/energy-smelter";
+} from "../constants/energy/energy-smelter";
 import {
   DEFAULT_MACHINE_PRIORITY,
   ENERGY_ALLOCATION_RANK,
   ENERGY_DRAIN,
-} from "./constants/energy/energy-balance";
+} from "../constants/energy/energy-balance";
 import {
   AUTO_MINER_BOOST_MULTIPLIER,
   AUTO_SMELTER_BOOST_MULTIPLIER,
-} from "./constants/boost-multipliers";
+} from "../constants/boost-multipliers";
 import type {
   AssetType,
   GameState,
   MachinePriority,
   PlacedAsset,
-} from "./types";
+} from "../types";
 
 export interface EnergyTickPrioritizedConsumer {
   asset: PlacedAsset;

@@ -202,7 +202,7 @@ import {
   getSelectedCraftingAsset,
 } from "./helpers/crafting-asset-lookup";
 import { resolveShopItemTarget } from "./helpers/shop";
-import { runEnergyNetTick } from "./energy-net-tick";
+import { runEnergyNetTick } from "./energy/energy-net-tick";
 import { resolveBuildingSource } from "./building-source";
 import { toCraftingJobInventorySource } from "./crafting/crafting-source-adapters";
 import {
