@@ -73,20 +73,6 @@ export {
   scoreDroneTask,
   DRONE_WAREHOUSE_PRIORITY_BONUS,
 };
-import {
-  getAssignedBuildingSupplyDroneCount as getAssignedBuildingSupplyDroneCountResolver,
-  getAssignedConstructionDroneCount as getAssignedConstructionDroneCountResolver,
-  getAssignedWorkbenchDeliveryDroneCount as getAssignedWorkbenchDeliveryDroneCountResolver,
-  getAssignedWorkbenchInputDroneCount as getAssignedWorkbenchInputDroneCountResolver,
-  getInboundConstructionAmount as getInboundConstructionAmountResolver,
-  getInboundHubRestockAmount as getInboundHubRestockAmountResolver,
-  getInboundHubRestockDroneCount as getInboundHubRestockDroneCountResolver,
-  getOpenBuildingSupplyDroneSlots as getOpenBuildingSupplyDroneSlotsResolver,
-  getOpenConstructionDroneSlots as getOpenConstructionDroneSlotsResolver,
-  getOpenHubRestockDroneSlots as getOpenHubRestockDroneSlotsResolver,
-  getRemainingConstructionNeed as getRemainingConstructionNeedResolver,
-  getRemainingHubRestockNeed as getRemainingHubRestockNeedResolver,
-} from "../drones/selection/helpers/need-slot-resolvers";
 import { droneTravelTicks } from "../drones/movement/drone-movement";
 import { getDroneDockOffset } from "../drones/dock/drone-dock-geometry";
 import { syncDrones } from "../drones/utils/drone-state-helpers";
@@ -472,141 +458,12 @@ export { createDefaultHubTargetStock, createDefaultProtoHubTargetStock };
 
 // costIsFullyCollectable, fullCostAsRemaining, COLLECTABLE_KEYS extracted to ./inventory-ops
 
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getInboundHubRestockAmount(
-  state: Pick<GameState, "drones" | "collectionNodes">,
-  hubId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getInboundHubRestockAmountResolver(state, hubId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getInboundHubRestockDroneCount(
-  state: Pick<GameState, "drones" | "collectionNodes">,
-  hubId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getInboundHubRestockDroneCountResolver(state, hubId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getRemainingHubRestockNeed(
-  state: Pick<GameState, "drones" | "collectionNodes" | "serviceHubs" | "constructionSites">,
-  hubId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getRemainingHubRestockNeedResolver(state, hubId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getOpenHubRestockDroneSlots(
-  state: Pick<GameState, "drones" | "collectionNodes" | "serviceHubs" | "constructionSites">,
-  hubId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getOpenHubRestockDroneSlotsResolver(state, hubId, itemType, excludeDroneId);
-}
-
-
-// ---------------------------------------------------------------------------
-// Warehouse-as-pickup-source helpers (warehouse > hub priority).
-// Mirror the hub-dispatch model: synthetic targetNodeId "wh:{whId}:{item}",
-// inbound counting throttles per-warehouse availability. We deliberately do
-// NOT subtract crafting reservations here — symmetric to the existing hub
-// path, which also ignores them. If a craft commit later races and finds
-// short stock, the existing reservation system handles it.
-// ---------------------------------------------------------------------------
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-/** Counts in-flight drone trips heading to a specific warehouse for `itemType`,
- *  across both hub_dispatch and building_supply task types. */
-function getInboundConstructionAmount(
-  state: Pick<GameState, "drones" | "collectionNodes">,
-  siteId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getInboundConstructionAmountResolver(state, siteId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getAssignedConstructionDroneCount(
-  state: Pick<GameState, "drones">,
-  siteId: string,
-  excludeDroneId?: string,
-): number {
-  return getAssignedConstructionDroneCountResolver(state, siteId, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getRemainingConstructionNeed(
-  state: Pick<GameState, "drones" | "collectionNodes" | "constructionSites">,
-  siteId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getRemainingConstructionNeedResolver(state, siteId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getOpenConstructionDroneSlots(
-  state: Pick<GameState, "drones" | "constructionSites">,
-  siteId: string,
-  excludeDroneId?: string,
-): number {
-  return getOpenConstructionDroneSlotsResolver(state, siteId, excludeDroneId);
-}
-
-// ---- Building Input Buffer helpers (drone supply targets) ------------------
-//
-// Mirrors the construction_supply helpers above, but targets a building's
-// local input buffer (see BUILDING_INPUT_BUFFERS) instead of a construction
-// site. Currently used by the wood generator.
+// Need-slot resolvers live in drones/selection/helpers/need-slot-resolvers.ts
+// and are imported directly by their consumers (drones/selection/*,
+// drones/candidates/*, drones/execution/*).
 
 /** Lists every placed asset that owns an input buffer, paired with its accepted resource. */
 export { getBuildingInputTargets };
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getAssignedBuildingSupplyDroneCount(
-  state: Pick<GameState, "drones">,
-  assetId: string,
-  excludeDroneId?: string,
-): number {
-  return getAssignedBuildingSupplyDroneCountResolver(state, assetId, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getOpenBuildingSupplyDroneSlots(
-  state: Pick<GameState, "assets" | "generators" | "drones">,
-  assetId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getOpenBuildingSupplyDroneSlotsResolver(state, assetId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getAssignedWorkbenchDeliveryDroneCount(
-  state: Pick<GameState, "drones">,
-  jobId: string,
-  excludeDroneId?: string,
-): number {
-  return getAssignedWorkbenchDeliveryDroneCountResolver(state, jobId, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-function getAssignedWorkbenchInputDroneCount(
-  state: Pick<GameState, "drones">,
-  reservationId: string,
-  excludeDroneId?: string,
-): number {
-  return getAssignedWorkbenchInputDroneCountResolver(state, reservationId, excludeDroneId);
-}
 
 /**
  * Overclocking-Stufe 1: Zwei feste Modi (normal / boosted), nur für auto_miner
