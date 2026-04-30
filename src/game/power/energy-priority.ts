@@ -12,7 +12,7 @@ import type {
   AssetType,
   MachinePriority,
   PlacedAsset,
-} from "../store/state";
+} from "../store/types";
 
 type EnergyConsumerWithDrain = {
   asset: PlacedAsset;

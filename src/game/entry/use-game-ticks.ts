@@ -3,14 +3,16 @@ import type { Dispatch } from "react";
 import type { GameAction } from "../store/game-actions";
 import {
   NATURAL_SPAWN_MS,
-  SMITHY_TICK_MS,
-  MANUAL_ASSEMBLER_TICK_MS,
-  GENERATOR_TICK_MS,
-  ENERGY_NET_TICK_MS,
   LOGISTICS_TICK_MS,
   CRAFTING_TICK_MS,
   DRONE_TICK_MS,
-} from "../store/tick-constants";
+} from "../store/constants/timing";
+import {
+  SMITHY_TICK_MS,
+  MANUAL_ASSEMBLER_TICK_MS,
+} from "../store/constants/workbench-timing";
+import { GENERATOR_TICK_MS } from "../store/constants/energy/generator";
+import { ENERGY_NET_TICK_MS } from "../store/constants/energy/energy-smelter";
 import type { GameState } from "../store/types";
 
 export function useGameTicks(
