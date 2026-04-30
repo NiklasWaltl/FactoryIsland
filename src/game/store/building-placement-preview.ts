@@ -17,7 +17,7 @@ import {
   MAX_WAREHOUSES,
   REQUIRES_STONE_FLOOR,
   STACKABLE_BUILDINGS,
-} from "./constants/buildings";
+} from "./constants/buildings/index";
 import {
   costIsFullyCollectable,
   getEffectiveBuildInventory,

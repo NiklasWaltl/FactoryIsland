@@ -1,4 +1,4 @@
-import { WAREHOUSE_CAPACITY } from "./constants/buildings";
+import { WAREHOUSE_CAPACITY } from "./constants/buildings/index";
 import type { GameMode, GameState } from "./types";
 import { getZoneWarehouseIds } from "../zones/production-zone-aggregation";
 

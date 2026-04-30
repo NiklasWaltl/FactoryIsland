@@ -16,7 +16,7 @@ import {
   type Inventory,
   type PlacedAsset,
 } from "../reducer";
-import { WAREHOUSE_CAPACITY } from "../constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 
 function emptyInv(): Inventory {
   return createInitialState("release").inventory;

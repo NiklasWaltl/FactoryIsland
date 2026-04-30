@@ -1,4 +1,4 @@
-import { getBuildingInputConfig } from "../store/constants/buildings";
+import { getBuildingInputConfig } from "../store/constants/buildings/index";
 import type { CollectableItemType, GameState } from "../store/types";
 
 /** Reads the current amount in a building's input buffer. */

@@ -1,5 +1,5 @@
 import type { AssetType, BuildingType, ConveyorItem, Direction, GameState, PlacedAsset } from "../../types";
-import { BUILDING_LABELS } from "../../constants/buildings";
+import { BUILDING_LABELS } from "../../constants/buildings/index";
 import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";
 import { undergroundSpanCellsInBounds } from "../../conveyor/constants";

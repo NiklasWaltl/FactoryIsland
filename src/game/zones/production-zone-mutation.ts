@@ -1,4 +1,4 @@
-import { WAREHOUSE_CAPACITY } from "../store/constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../store/constants/buildings/index";
 import type {
   GameState,
   Inventory,

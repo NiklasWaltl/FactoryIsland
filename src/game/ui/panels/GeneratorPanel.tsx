@@ -9,7 +9,7 @@ import {
   GENERATOR_ENERGY_PER_TICK,
   GENERATOR_TICK_MS,
 } from "../../store/constants/energy/generator";
-import { GENERATOR_MAX_FUEL } from "../../store/constants/buildings";
+import { GENERATOR_MAX_FUEL } from "../../store/constants/buildings/index";
 import {
   getInboundBuildingSupplyAmount,
 } from "../../drones/selection/helpers/need-slot-resolvers";

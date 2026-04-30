@@ -16,7 +16,7 @@ import {
   hasStaleWarehouseAssignment,
   MAX_ZONES,
 } from "../reducer";
-import { WAREHOUSE_CAPACITY } from "../constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 
 // ---------------------------------------------------------------------------
 // Helpers: build a minimal clean state for zone testing

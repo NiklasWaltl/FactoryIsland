@@ -2,7 +2,7 @@ import React from "react";
 import { CELL_PX } from "../constants/grid";
 import {
   BUILDING_LABELS,
-} from "../store/constants/buildings";
+} from "../store/constants/buildings/index";
 import {
   FLOOR_TILE_EMOJIS,
 } from "../store/constants/map/floor";

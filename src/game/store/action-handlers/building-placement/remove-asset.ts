@@ -9,7 +9,7 @@ import type {
   PlacedAsset,
   UIPanel,
 } from "../../types";
-import { BUILDING_COSTS } from "../../constants/buildings";
+import { BUILDING_COSTS } from "../../constants/buildings/index";
 import { ASSET_LABELS } from "../../constants/ui/assets";
 import { cellKey } from "../../utils/cell-key";
 import { addResources } from "../../inventory-ops";

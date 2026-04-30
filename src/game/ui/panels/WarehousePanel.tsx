@@ -8,7 +8,7 @@ import {
 import {
   MAX_ZONES,
   BUILDING_LABELS,
-} from "../../store/constants/buildings";
+} from "../../store/constants/buildings/index";
 import {
   getZoneWarehouseIds,
   getZoneAggregateInventory,
@@ -19,7 +19,7 @@ import {
 import {
   getZoneItemCapacity,
 } from "../../store/reducer";
-import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings/index";
 
 interface WarehousePanelProps {
   state: GameState;

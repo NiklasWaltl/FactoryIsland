@@ -2,7 +2,7 @@ import { finalizeHubTier2Upgrade, createEmptyHubInventory } from "../../../build
 import { createDefaultProtoHubTargetStock } from "../../../store/constants/hub/hub-target-stock";
 import { isHubUpgradeDeliverySatisfied } from "../../../buildings/service-hub/hub-upgrade-status";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
-import { getBuildingInputConfig } from "../../../store/constants/buildings";
+import { getBuildingInputConfig } from "../../../store/constants/buildings/index";
 import { getMaxDrones } from "../../../store/selectors/hub-tier-selectors";
 import { addResources } from "../../../store/inventory-ops";
 import { syncDrones, applyDroneUpdate } from "../../utils/drone-state-helpers";

@@ -1,4 +1,4 @@
-import { getBuildingInputConfig } from "../../../store/constants/buildings";
+import { getBuildingInputConfig } from "../../../store/constants/buildings/index";
 import { MAX_DRONES_PER_BUILDING_SUPPLY } from "../../../store/constants/drone/drone-assignment-caps";
 import { DRONE_CAPACITY } from "../../../store/constants/drone/drone-config";
 import type {

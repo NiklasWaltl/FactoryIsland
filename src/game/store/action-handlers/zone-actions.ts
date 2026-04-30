@@ -7,7 +7,7 @@
 // ============================================================
 
 import type { GameAction } from "../game-actions";
-import { MAX_ZONES } from "../constants/buildings";
+import { MAX_ZONES } from "../constants/buildings/index";
 import { makeId } from "../utils/make-id";
 import type { GameState } from "../types";
 import { hasAsset, isBuildingZoneStateConsistent } from "../utils/asset-guards";

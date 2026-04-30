@@ -1,5 +1,5 @@
 import type { AssetType, AutoSmelterStatus, Direction, GameState } from "../../types";
-import { BUILDING_LABELS } from "../../constants/buildings";
+import { BUILDING_LABELS } from "../../constants/buildings/index";
 import { DEPOSIT_RESOURCE, DEPOSIT_TYPES } from "../../constants/map/deposit-positions";
 import { DEFAULT_MACHINE_PRIORITY } from "../../constants/energy/energy-balance";
 import { cellKey } from "../../utils/cell-key";

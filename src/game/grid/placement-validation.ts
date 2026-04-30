@@ -2,7 +2,7 @@ import { GRID_H, GRID_W } from "../constants/grid";
 import {
   BUILDING_SIZES,
   REQUIRES_STONE_FLOOR,
-} from "../store/constants/buildings";
+} from "../store/constants/buildings/index";
 import {
   DEPOSIT_TYPES,
 } from "../store/constants/map/deposit-positions";

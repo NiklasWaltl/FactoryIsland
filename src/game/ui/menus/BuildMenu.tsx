@@ -7,7 +7,7 @@ import {
   BUILDING_SIZES,
   MAX_WAREHOUSES,
   STACKABLE_BUILDINGS,
-} from "../../store/constants/buildings";
+} from "../../store/constants/buildings/index";
 import {
   BUILD_CATEGORIES,
   getBuildingDef,

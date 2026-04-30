@@ -1,7 +1,7 @@
-﻿import React from "react";
+import React from "react";
 import type { BuildingType, GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
-import { BUILDING_LABELS } from "../../store/constants/buildings";
+import { BUILDING_LABELS } from "../../store/constants/buildings/index";
 import { getSourceStatusInfo } from "../../store/selectors/source-status";
 import { getZoneItemCapacity } from "../../store/warehouse-capacity";
 import {

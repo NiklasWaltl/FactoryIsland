@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import type { GameState, Inventory, MachinePriority } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
@@ -16,7 +16,7 @@ import {
   getZoneItemCapacity,
 } from "../../store/warehouse-capacity";
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
-import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings/index";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";
 
 interface AutoMinerPanelProps {

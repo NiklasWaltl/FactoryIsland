@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import type { GameState, Inventory } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import {
@@ -14,7 +14,7 @@ import {
   getZoneItemCapacity,
 } from "../../store/warehouse-capacity";
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
-import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings/index";
 import { getSmeltingRecipe } from "../../simulation/recipes";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";
 

@@ -21,7 +21,7 @@ import type {
   HubTier,
 } from "../store/types";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
-import { GENERATOR_MAX_FUEL } from "../store/constants/buildings";
+import { GENERATOR_MAX_FUEL } from "../store/constants/buildings/index";
 import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
 import { createDefaultHubTargetStock } from "../store/constants/hub/hub-target-stock";
 import type { NetworkSlice } from "../inventory/reservationTypes";

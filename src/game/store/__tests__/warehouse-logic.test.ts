@@ -12,7 +12,7 @@ import {
   type Inventory,
   type ConveyorState,
 } from "../reducer";
-import { WAREHOUSE_CAPACITY } from "../constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,6 +1,6 @@
 import type { GameState } from "../types";
 import { getZoneWarehouseIds } from "../../zones/production-zone-aggregation";
-import { WAREHOUSE_CAPACITY } from "../constants/buildings";
+import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 
 /**
  * Returns IDs of non-warehouse buildings (crafting devices) assigned to a zone.

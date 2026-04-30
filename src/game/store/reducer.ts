@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // Factory Island - Game State & Logic
 // ============================================================
 
@@ -8,7 +8,7 @@ import {
   GENERATOR_MAX_FUEL,
   getBuildingInputConfig,
   WAREHOUSE_CAPACITY,
-} from "./constants/buildings";
+} from "./constants/buildings/index";
 import { CONVEYOR_TILE_CAPACITY } from "./conveyor/constants";
 import {
   getManualAssemblerRecipe,
@@ -337,9 +337,9 @@ export {
 } from "./conveyor/constants";
 export { GRID_W, GRID_H, CELL_PX };
 
-// Building constants & input-buffer configuration live in ./constants/buildings.
+// Building constants & input-buffer configuration live in ./constants/buildings/index.
 // Re-exported here so existing `from "../store/reducer"` imports keep working.
-export * from "./constants/buildings";
+export * from "./constants/buildings/index";
 
 // Asset display tables (labels/colors/emojis) live in ./constants/ui/assets.
 // Re-exported for backward compatibility.

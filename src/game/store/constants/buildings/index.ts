@@ -18,7 +18,7 @@ import type {
   AssetType,
   BuildingType,
   Inventory,
-} from "../types";
+} from "../../types";
 
 import {
   BUILDING_REGISTRY,
@@ -26,13 +26,13 @@ import {
   lookupBuildingInputConfig,
   type BuildingDef,
   type BuildingInputBufferConfig,
-} from "./buildings/registry";
+} from "./registry";
 
 export type { BuildingInputBufferConfig };
 
 // Re-export the registry helpers so legacy `from "./buildings"`
 // import paths reach them too.
-export { BUILDING_REGISTRY, getBuildingDef } from "./buildings/registry";
+export { BUILDING_REGISTRY, getBuildingDef } from "./registry";
 
 // ---- Generator fuel buffer capacity (single source: registry) ----
 export const GENERATOR_MAX_FUEL = REGISTRY_GENERATOR_MAX_FUEL;
