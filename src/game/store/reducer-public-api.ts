@@ -52,7 +52,8 @@ export type { FallbackReason, SourceStatusInfo } from "./selectors/source-status
 export { hasStaleWarehouseAssignment, getSourceStatusInfo } from "./selectors/source-status";
 
 // ---- Helpers ----
-export { isBoostSupportedType } from "./helpers/machine-priority";
+export { isBoostSupportedType, getBoostMultiplier } from "./helpers/machine-priority";
+export { RESOURCE_1x1_DROP_AMOUNT } from "./constants/resources";
 export {
   selectBuildMenuInventoryView,
   selectGlobalInventoryView,
@@ -63,8 +64,6 @@ export {
   getConnectedDemandPerPeriod,
 } from "./helpers/energy-helpers";
 export {
-  RESOURCE_1x1_DROP_AMOUNT,
-  getBoostMultiplier,
   devAssertInventoryNonNegative,
   resolveWorkbenchSource,
   manhattanDist,

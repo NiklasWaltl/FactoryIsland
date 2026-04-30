@@ -383,9 +383,9 @@ import {
   DRONE_TICK_ACTION_DEPS,
   LOGISTICS_TICK_IO_DEPS,
 } from "./action-handler-deps";
+import { RESOURCE_1x1_DROP_AMOUNT } from "./constants/resources";
+import { getBoostMultiplier } from "./helpers/machine-priority";
 import {
-  RESOURCE_1x1_DROP_AMOUNT,
-  getBoostMultiplier,
   devAssertInventoryNonNegative,
   resolveWorkbenchSource,
   manhattanDist,
@@ -490,22 +490,6 @@ function getInboundHubRestockDroneCount(
   excludeDroneId?: string,
 ): number {
   return getInboundHubRestockDroneCountResolver(state, hubId, itemType, excludeDroneId);
-}
-
-/**
- * True when the hub's own inventory already covers every resource still
- * outstanding in `pendingUpgrade`. Used to finalize a pending tier-2 upgrade
- * once drones have delivered the last of the required materials.
- */
-function isHubUpgradeDeliverySatisfied(hub: ServiceHubEntry | undefined | null): boolean {
-  if (!hub || !hub.pendingUpgrade) return false;
-  for (const [k, v] of Object.entries(hub.pendingUpgrade)) {
-    const needed = v ?? 0;
-    if (needed <= 0) continue;
-    const have = hub.inventory[k as CollectableItemType] ?? 0;
-    if (have < needed) return false;
-  }
-  return true;
 }
 
 // Implementation: drones/selection/helpers/need-slot-resolvers.ts
