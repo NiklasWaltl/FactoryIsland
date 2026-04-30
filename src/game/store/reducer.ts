@@ -909,7 +909,8 @@ export { toCraftingJobInventorySource };
 // PRODUCTION ZONE HELPERS
 // ============================================================
 
-import { getZoneBuildingIds, getZoneItemCapacity } from "./selectors/zone-selectors";
+import { getZoneBuildingIds } from "./selectors/zone-selectors";
+import { getZoneItemCapacity } from "./warehouse-capacity";
 export { getZoneBuildingIds, getZoneItemCapacity };
 
 /**

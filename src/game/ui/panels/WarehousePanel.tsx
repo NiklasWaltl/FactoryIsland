@@ -18,7 +18,7 @@ import {
 } from "../../store/selectors/zone-selectors";
 import {
   getZoneItemCapacity,
-} from "../../store/reducer";
+} from "../../store/warehouse-capacity";
 import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings/index";
 
 interface WarehousePanelProps {
