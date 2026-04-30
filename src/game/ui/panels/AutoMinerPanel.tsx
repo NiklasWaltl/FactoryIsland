@@ -9,7 +9,7 @@ import {
 } from "../../store/constants/energy/energy-balance";
 import {
   AUTO_MINER_BOOST_MULTIPLIER,
-} from "../../store/reducer";
+} from "../../store/constants/energy/boost-multipliers";
 import { getSourceStatusInfo } from "../../store/selectors/source-status";
 import {
   getCapacityPerResource,

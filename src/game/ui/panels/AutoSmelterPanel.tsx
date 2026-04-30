@@ -7,7 +7,7 @@ import {
 } from "../../store/constants/energy/energy-smelter";
 import {
   AUTO_SMELTER_BOOST_MULTIPLIER,
-} from "../../store/reducer";
+} from "../../store/constants/energy/boost-multipliers";
 import { getSourceStatusInfo } from "../../store/selectors/source-status";
 import {
   getCapacityPerResource,

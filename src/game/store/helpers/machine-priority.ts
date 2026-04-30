@@ -5,6 +5,10 @@
 
 import type { AssetType, MachinePriority, PlacedAsset } from "../types";
 import { DEFAULT_MACHINE_PRIORITY, ENERGY_DRAIN } from "../constants/energy/energy-balance";
+import {
+  AUTO_MINER_BOOST_MULTIPLIER,
+  AUTO_SMELTER_BOOST_MULTIPLIER,
+} from "../constants/energy/boost-multipliers";
 
 export function clampMachinePriority(priority: number | undefined): MachinePriority {
   const raw = Number.isFinite(priority) ? Math.round(priority as number) : DEFAULT_MACHINE_PRIORITY;
@@ -24,9 +28,6 @@ export function withDefaultMachinePriority(type: AssetType): Pick<PlacedAsset, "
   if (!isEnergyConsumerType(type)) return {};
   return { priority: DEFAULT_MACHINE_PRIORITY };
 }
-
-export const AUTO_MINER_BOOST_MULTIPLIER = 2;
-export const AUTO_SMELTER_BOOST_MULTIPLIER = 2;
 
 export function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">): number {
   if (!asset.boosted) return 1;

@@ -819,9 +819,13 @@ export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto/auto-smelter";
 /**
  * Overclocking-Stufe 1: Zwei feste Modi (normal / boosted), nur für auto_miner
  * und auto_smelter. Multiplikator wirkt konsistent auf Strom UND Produktion.
+ * Re-exported from the canonical source for backward compatibility.
  */
-export const AUTO_MINER_BOOST_MULTIPLIER = 2;
-export const AUTO_SMELTER_BOOST_MULTIPLIER = 2;
+import {
+  AUTO_MINER_BOOST_MULTIPLIER,
+  AUTO_SMELTER_BOOST_MULTIPLIER,
+} from "./constants/energy/boost-multipliers";
+export { AUTO_MINER_BOOST_MULTIPLIER, AUTO_SMELTER_BOOST_MULTIPLIER };
 
 export { isBoostSupportedType } from "./helpers/machine-priority";
 
