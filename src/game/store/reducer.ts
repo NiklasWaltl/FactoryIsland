@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Factory Island - Game State & Logic
 // ============================================================
 
@@ -9,7 +9,7 @@ import {
   getBuildingInputConfig,
   WAREHOUSE_CAPACITY,
 } from "./constants/buildings";
-import { CONVEYOR_TILE_CAPACITY } from "./constants/conveyor";
+import { CONVEYOR_TILE_CAPACITY } from "./conveyor/constants";
 import {
   getManualAssemblerRecipe,
   getWorkbenchRecipe,
@@ -326,7 +326,7 @@ export { isUnderConstruction };
 // CONSTANTS
 // ============================================================
 
-// Conveyor constants live in ./constants/conveyor.
+// Conveyor constants live in ./conveyor/constants.
 // Imported for internal use and re-exported for backward compatibility.
 export {
   CONVEYOR_TILE_CAPACITY,
@@ -334,7 +334,7 @@ export {
   MIN_UNDERGROUND_SPAN,
   undergroundSpanCellsInBounds,
   undergroundSpanSteps,
-} from "./constants/conveyor";
+} from "./conveyor/constants";
 export { GRID_W, GRID_H, CELL_PX };
 
 // Building constants & input-buffer configuration live in ./constants/buildings.

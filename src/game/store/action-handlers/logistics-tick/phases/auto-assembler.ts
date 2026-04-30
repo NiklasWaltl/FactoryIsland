@@ -11,7 +11,7 @@
 
 import { LOGISTICS_TICK_MS } from "../../../constants/timing/timing";
 import { AUTO_ASSEMBLER_BUFFER_CAPACITY } from "../../../constants/auto/auto-assembler";
-import { CONVEYOR_TILE_CAPACITY } from "../../../constants/conveyor";
+import { CONVEYOR_TILE_CAPACITY } from "../../../conveyor/constants";
 import { getAutoAssemblerV1Recipe } from "../../../../simulation/recipes/AutoAssemblerV1Recipes";
 import {
   decideAutoSmelterInputBeltEligibility,

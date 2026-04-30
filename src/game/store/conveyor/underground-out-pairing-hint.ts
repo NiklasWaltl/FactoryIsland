@@ -9,7 +9,7 @@ import {
   MAX_UNDERGROUND_SPAN,
   MIN_UNDERGROUND_SPAN,
   undergroundSpanCellsInBounds,
-} from "../constants/conveyor";
+} from "../conveyor/constants";
 import { directionOffset } from "../utils/direction";
 import type { Direction, GameState, PlacedAsset } from "../types";
 

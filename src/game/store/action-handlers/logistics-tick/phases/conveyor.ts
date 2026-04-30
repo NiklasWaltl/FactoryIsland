@@ -9,7 +9,7 @@ import type { CraftingSource } from "../../../types";
 import type { ConveyorItem, Inventory, PlacedAsset } from "../../../types";
 import { resolveBuildingSource } from "../../../building-source";
 import { addResources } from "../../../inventory-ops";
-import { CONVEYOR_TILE_CAPACITY } from "../../../constants/conveyor";
+import { CONVEYOR_TILE_CAPACITY } from "../../../conveyor/constants";
 import { getWarehouseCapacity } from "../../../warehouse-capacity";
 import { isValidWarehouseInput } from "../../../warehouse-input";
 import {

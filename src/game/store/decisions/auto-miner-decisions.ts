@@ -1,5 +1,5 @@
 import { GRID_H, GRID_W } from "../../constants/grid";
-import { CONVEYOR_TILE_CAPACITY } from "../constants/conveyor";
+import { CONVEYOR_TILE_CAPACITY } from "../conveyor/constants";
 import type { AutoMinerEntry, ConveyorState, GameState, Inventory, PlacedAsset } from "../types";
 
 export type AutoMinerTickEligibilityDecision =

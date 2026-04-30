@@ -1,6 +1,6 @@
 import { GRID_H, GRID_W } from "../../constants/grid";
 import { getSmeltingRecipe } from "../../simulation/recipes";
-import { CONVEYOR_TILE_CAPACITY } from "../constants/conveyor";
+import { CONVEYOR_TILE_CAPACITY } from "../conveyor/constants";
 import type {
   AutoSmelterEntry,
   ConveyorItem,

@@ -2,7 +2,7 @@ import type { AssetType, BuildingType, ConveyorItem, Direction, GameState, Place
 import { BUILDING_LABELS } from "../../constants/buildings";
 import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";
-import { undergroundSpanCellsInBounds } from "../../constants/conveyor";
+import { undergroundSpanCellsInBounds } from "../../conveyor/constants";
 import {
   explainUndergroundOutPairingFailure,
   findUnpairedUndergroundEntranceId,

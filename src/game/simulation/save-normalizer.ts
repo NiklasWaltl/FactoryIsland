@@ -28,7 +28,7 @@ import {
   type RecipeAutomationPolicyMap,
 } from "../crafting/policies";
 import { debugLog } from "../debug/debugLogger";
-import { undergroundSpanSteps } from "../store/constants/conveyor";
+import { undergroundSpanSteps } from "../store/conveyor/constants";
 
 const PHYSICAL_WAREHOUSE_KEYS: ReadonlyArray<keyof Inventory> = [
   "wood",
