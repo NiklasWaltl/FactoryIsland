@@ -16,7 +16,7 @@ import { ENERGY_DRAIN } from "../store/constants/energy/energy-balance";
 import {
   AUTO_MINER_BOOST_MULTIPLIER,
   AUTO_SMELTER_BOOST_MULTIPLIER,
-} from "../store/constants/boost-multipliers";
+} from "../store/constants/energy/boost-multipliers";
 import type {
   GameState,
   PlacedAsset,

@@ -22,7 +22,7 @@ import {
 import {
   AUTO_MINER_BOOST_MULTIPLIER,
   AUTO_SMELTER_BOOST_MULTIPLIER,
-} from "../constants/boost-multipliers";
+} from "../constants/energy/boost-multipliers";
 import type {
   AssetType,
   GameState,
