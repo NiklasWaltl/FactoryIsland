@@ -2,7 +2,6 @@
 // Factory Island - Game State & Logic
 // ============================================================
 
-import { debugLog } from "../debug/debugLogger";
 import { CELL_PX, GRID_H, GRID_W } from "../constants/grid";
 import {
   GENERATOR_MAX_FUEL,
@@ -28,8 +27,6 @@ import { applyKeepStockRefills } from "../crafting/workflows/keepStockWorkflow";
 import {
   applyPlanningTriggers,
   applyExecutionTick,
-  type ExecutionTickDeps,
-  type PlanningTriggerDeps,
 } from "../crafting/tickPhases";
 import {
   applyRecipeAutomationPolicyPatch,
@@ -95,10 +92,6 @@ import {
   getRemainingConstructionNeed as getRemainingConstructionNeedResolver,
   getRemainingHubRestockNeed as getRemainingHubRestockNeedResolver,
 } from "../drones/selection/helpers/need-slot-resolvers";
-import {
-  tickOneDrone as tickOneDroneExecution,
-  type TickOneDroneIoDeps,
-} from "../drones/execution/tick-one-drone";
 import { droneTravelTicks } from "../drones/movement/drone-movement";
 import { getDroneDockOffset } from "../drones/dock/drone-dock-geometry";
 import { syncDrones } from "../drones/utils/drone-state-helpers";
@@ -122,47 +115,32 @@ import { getConveyorZoneStatus } from "./selectors/conveyor-zone-status";
 import { decideHubDispatchExecutionAction } from "./workflows/hub-dispatch-execution";
 import {
   handleCraftingQueueAction,
-  type CraftingQueueActionDeps,
 } from "./action-handlers/crafting-queue-actions";
 import { handleZoneAction } from "./action-handlers/zone-actions";
 import { handleUiAction } from "./action-handlers/ui-actions";
 import {
   handleBuildingPlacementAction,
-  type BuildingPlacementIoDeps,
 } from "./action-handlers/building-placement";
 import {
   handleBuildingSiteAction,
-  type BuildingSiteActionDeps,
 } from "./action-handlers/building-site";
 import {
-  type UiCellPreludeDeps,
-} from "./action-handlers/ui-cell-prelude";
-import {
   handleMachineAction,
-  type MachineActionDeps,
 } from "./action-handlers/machine-actions";
 import {
-  type ClickCellToolActionDeps,
-} from "./action-handlers/click-cell-tools";
-import {
   handleClickCellAction,
-  type ClickCellActionDeps,
 } from "./action-handlers/click-cell";
 import {
   handleWarehouseHotbarAction,
-  type WarehouseHotbarActionDeps,
 } from "./action-handlers/warehouse-hotbar-actions";
 import {
   handleManualAssemblerAction,
-  type ManualAssemblerActionDeps,
 } from "./action-handlers/manual-assembler-actions";
 import {
   handleFloorPlacementAction,
-  type FloorPlacementActionDeps,
 } from "./action-handlers/floor-placement";
 import {
   handleShopAction,
-  type ShopActionDeps,
 } from "./action-handlers/shop";
 import { handleMachineConfigAction } from "./action-handlers/machine-config";
 import { handleBuildModeAction } from "./action-handlers/build-mode-actions";
@@ -173,35 +151,20 @@ import { handleAutoSmelterAction } from "./action-handlers/auto-smelter-actions"
 import { handleAutoAssemblerAction } from "./action-handlers/auto-assembler-actions";
 import {
   handleDroneRoleAction,
-  type DroneRoleActionDeps,
 } from "./action-handlers/drone-role-actions";
 import {
   handleDroneTickAction,
-  type DroneTickActionDeps,
 } from "./action-handlers/drone-tick-actions";
 import {
   handleDroneAssignmentAction,
-  type DroneAssignmentActionDeps,
 } from "./action-handlers/drone-assignment";
 import {
   handleLogisticsTickAction,
-  type LogisticsTickIoDeps,
 } from "./action-handlers/logistics-tick";
 import {
   decideInitialWarehousePlacement,
   deriveDebugBootstrapLayout,
 } from "./helpers/initialState";
-import {
-  checkFloorPlacementEligibility,
-  mapFloorPlacementError,
-} from "./helpers/floorPlacement";
-import { validateDroneHubAssignment } from "./helpers/droneAssignment";
-import { tryTogglePanelFromAsset } from "./helpers/ui-panel-toggle";
-import {
-  getActiveSmithyAsset,
-  getSelectedCraftingAsset,
-} from "./helpers/crafting-asset-lookup";
-import { resolveShopItemTarget } from "./helpers/shop";
 import { runEnergyNetTick } from "./energy/energy-net-tick";
 import { resolveBuildingSource } from "./building-source";
 import { toCraftingJobInventorySource } from "./crafting/crafting-source-adapters";
@@ -338,7 +301,6 @@ export {
 export { GRID_W, GRID_H, CELL_PX };
 
 // Floor tile constants live in ./constants/map/floor.
-import { FLOOR_TILE_COSTS } from "./constants/map/floor";
 
 // Timing constants live in ./constants/timing/timing.
 import {
@@ -420,32 +382,38 @@ export {
 import { HUB_UPGRADE_COST } from "./constants/hub/hub-upgrade-cost";
 
 // Map shop offer constants live in ./constants/ui/shop.
-import { MAP_SHOP_ITEMS } from "./constants/ui/shop";
 
 /** Drop amount for all 1×1 harvestable resources (tree, stone, iron, copper). */
 export const RESOURCE_1x1_DROP_AMOUNT = 10;
 if (import.meta.env.DEV) console.log(`[FactoryIsland] Drop-Multiplikator auf ${RESOURCE_1x1_DROP_AMOUNT}x für 1x1-Ressourcen gesetzt.`);
 export { HOTBAR_SIZE, HOTBAR_STACK_MAX } from "./constants/ui/hotbar";
-export const KEEP_STOCK_MAX_TARGET = 999;
-export const KEEP_STOCK_OPEN_JOB_CAP = 2;
-
-// Must stay in reducer.ts — crafting/tickPhases.ts imports GameState from
-// store/types (transitively via reducer.ts), so moving these deps into
-// crafting/ would create a circular module dependency:
-//   crafting/tickPhases → store/reducer → crafting/tickPhases
-// resolveBuildingSource and toCraftingJobInventorySource are store-layer
-// helpers that depend on GameState; they cannot be declared in ../crafting.
-const PLANNING_TRIGGER_DEPS: PlanningTriggerDeps = {
-  KEEP_STOCK_OPEN_JOB_CAP,
+export {
   KEEP_STOCK_MAX_TARGET,
-  resolveBuildingSource,
-  toCraftingJobInventorySource,
-  getCraftingSourceInventory,
-  isUnderConstruction,
-};
-const EXECUTION_TICK_DEPS: ExecutionTickDeps = {
-  isUnderConstruction,
-};
+  KEEP_STOCK_OPEN_JOB_CAP,
+} from "./constants/keep-stock";
+
+// Action-handler dependency-injection containers live in ./action-handler-deps.
+// Imported here so the dispatch chain wiring (handle...Action(state, action, deps))
+// remains greppable from this file.
+import {
+  PLANNING_TRIGGER_DEPS,
+  EXECUTION_TICK_DEPS,
+  CRAFTING_QUEUE_ACTION_DEPS,
+  UI_CELL_PRELUDE_DEPS,
+  CLICK_CELL_TOOL_ACTION_DEPS,
+  CLICK_CELL_ACTION_DEPS,
+  MACHINE_ACTION_DEPS,
+  WAREHOUSE_HOTBAR_ACTION_DEPS,
+  MANUAL_ASSEMBLER_ACTION_DEPS,
+  BUILDING_PLACEMENT_IO_DEPS,
+  BUILDING_SITE_ACTION_DEPS,
+  FLOOR_PLACEMENT_ACTION_DEPS,
+  SHOP_ACTION_DEPS,
+  DRONE_ASSIGNMENT_ACTION_DEPS,
+  DRONE_ROLE_ACTION_DEPS,
+  DRONE_TICK_ACTION_DEPS,
+  LOGISTICS_TICK_IO_DEPS,
+} from "./action-handler-deps";
 
 // ---- Energy / Generator ----
 
@@ -989,136 +957,9 @@ export type { GameAction };
 // ../crafting/jobStatus und werden oben importiert.
 // Die Keep-in-stock-Refill-Orchestrierung liegt in
 // ../crafting/workflows/keepStockWorkflow (applyKeepStockRefills).
-
-const CRAFTING_QUEUE_ACTION_DEPS: CraftingQueueActionDeps = {
-  KEEP_STOCK_MAX_TARGET,
-  planningTriggerDeps: PLANNING_TRIGGER_DEPS,
-  executionTickDeps: EXECUTION_TICK_DEPS,
-  isUnderConstruction,
-  resolveBuildingSource,
-  toCraftingJobInventorySource,
-  logCraftingSelectionComparison,
-  addErrorNotification,
-  getKeepStockByWorkbench,
-  getRecipeAutomationPolicies,
-};
-
-const UI_CELL_PRELUDE_DEPS: UiCellPreludeDeps = {
-  tryTogglePanelFromAsset,
-};
-
-const CLICK_CELL_TOOL_ACTION_DEPS: ClickCellToolActionDeps = {
-  RESOURCE_1x1_DROP_AMOUNT,
-  removeAsset,
-  addToCollectionNodeAt,
-  hotbarDecrement,
-  getCapacityPerResource,
-  hotbarAdd,
-  addResources,
-  addNotification,
-  placeAsset,
-  addErrorNotification,
-  debugLog,
-};
-
-const CLICK_CELL_ACTION_DEPS: ClickCellActionDeps = {
-  uiCellPreludeDeps: UI_CELL_PRELUDE_DEPS,
-  clickCellToolActionDeps: CLICK_CELL_TOOL_ACTION_DEPS,
-};
-
-const MACHINE_ACTION_DEPS: MachineActionDeps = {
-  getSelectedCraftingAsset,
-  getActiveSmithyAsset,
-  logCraftingSelectionComparison,
-  isUnderConstruction,
-  resolveBuildingSource,
-  addErrorNotification,
-  addNotification,
-  consumeResources,
-  addResources,
-};
-
-const WAREHOUSE_HOTBAR_ACTION_DEPS: WarehouseHotbarActionDeps = {
-  EMPTY_HOTBAR_SLOT,
-  hotbarAdd,
-  addErrorNotification,
-  isUnderConstruction,
-  getAvailableResource,
-  getWarehouseCapacity,
-  consumeResources,
-  addResources,
-};
-
-const MANUAL_ASSEMBLER_ACTION_DEPS: ManualAssemblerActionDeps = {
-  getSelectedCraftingAsset,
-  logCraftingSelectionComparison,
-  isUnderConstruction,
-  resolveBuildingSource,
-  getCapacityPerResource,
-  getZoneItemCapacity,
-  addErrorNotification,
-  addNotification,
-  consumeResources,
-  addResources,
-  WAREHOUSE_CAPACITY,
-};
-
-const BUILDING_PLACEMENT_IO_DEPS: BuildingPlacementIoDeps = {
-  makeId,
-  addErrorNotification,
-  debugLog,
-};
-
-const BUILDING_SITE_ACTION_DEPS: BuildingSiteActionDeps = {
-  isUnderConstruction,
-  addErrorNotification,
-  fullCostAsRemaining,
-  debugLog,
-};
-
-const FLOOR_PLACEMENT_ACTION_DEPS: FloorPlacementActionDeps = {
-  GRID_W,
-  GRID_H,
-  FLOOR_TILE_COSTS,
-  cellKey,
-  hasResources,
-  getEffectiveBuildInventory,
-  addErrorNotification,
-  checkFloorPlacementEligibility,
-  mapFloorPlacementError,
-  consumeBuildResources,
-  debugLog,
-};
-
-const SHOP_ACTION_DEPS: ShopActionDeps = {
-  MAP_SHOP_ITEMS,
-  hasResources,
-  consumeResources,
-  addNotification,
-  resolveShopItemTarget,
-  hotbarAdd,
-  addResources,
-};
-
-const DRONE_ASSIGNMENT_ACTION_DEPS: DroneAssignmentActionDeps = {
-  validateDroneHubAssignment,
-  addErrorNotification,
-  syncDrones,
-  debugLog,
-};
-
-const DRONE_ROLE_ACTION_DEPS: DroneRoleActionDeps = {
-  syncDrones,
-};
-
-const DRONE_TICK_ACTION_DEPS: DroneTickActionDeps = {
-  tickOneDrone,
-};
-
-const LOGISTICS_TICK_IO_DEPS: LogisticsTickIoDeps = {
-  addNotification,
-  addAutoDelivery,
-};
+//
+// Die Action-Handler-Deps-Container leben in ./action-handler-deps und
+// werden oben importiert.
 
 // ============================================================
 // DISPATCHER
