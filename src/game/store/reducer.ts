@@ -839,14 +839,20 @@ export function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">)
 
 export { createEmptyInventory };
 
-function getWarehouseCapacity(mode: GameMode): number {
-  return mode === "debug" ? Infinity : WAREHOUSE_CAPACITY;
-}
-
-export function getCapacityPerResource(state: { mode: string; warehousesPlaced: number }): number {
-  if (state.mode === "debug") return Infinity;
-  return (state.warehousesPlaced + 1) * WAREHOUSE_CAPACITY;
-}
+// Helpers extracted to ./helpers/reducer-helpers.
+// Re-exports for backward-compat (`getCapacityPerResource` was originally exported here).
+import {
+  getWarehouseCapacity,
+  getCapacityPerResource,
+  consumeResources,
+  logCraftingSelectionComparison,
+  addToCollectionNodeAt,
+  addAutoDelivery,
+  tickOneDrone,
+  getKeepStockByWorkbench,
+  getRecipeAutomationPolicies,
+} from "./helpers/reducer-helpers";
+export { getCapacityPerResource, consumeResources, addToCollectionNodeAt };
 
 // ============================================================
 // INVENTORY WRAPPERS
@@ -857,21 +863,6 @@ export function getCapacityPerResource(state: { mode: string; warehousesPlaced: 
 export { getAvailableResource };
 
 export { hasResources };
-
-/**
- * Return a new Inventory with `costs` deducted.
- * DEV: warns if any resulting value becomes negative (indicates a missing hasResources check).
- */
-export function consumeResources(inv: Inventory, costs: Partial<Record<keyof Inventory, number>>): Inventory {
-  const result = { ...inv } as Record<string, number>;
-  for (const [key, amt] of Object.entries(costs)) {
-    result[key] = (result[key] ?? 0) - (amt ?? 0);
-    if (import.meta.env.DEV && result[key] < 0) {
-      console.warn(`[consumeResources] Negative value for "${key}": ${result[key]}. Missing hasResources() guard?`);
-    }
-  }
-  return result as unknown as Inventory;
-}
 
 export { addResources };
 
@@ -924,28 +915,6 @@ export function resolveWorkbenchSource(state: GameState): CraftingSource {
   return resolveBuildingSource(state, state.selectedCraftingBuildingId);
 }
 
-type CraftingBuildingAssetType = "workbench" | "smithy" | "manual_assembler";
-
-function getFirstCraftingAssetOfType(
-  state: Pick<GameState, "assets">,
-  assetType: CraftingBuildingAssetType,
-): PlacedAsset | null {
-  return Object.values(state.assets).find((asset) => asset.type === assetType) ?? null;
-}
-
-function logCraftingSelectionComparison(
-  state: Pick<GameState, "assets" | "selectedCraftingBuildingId">,
-  assetType: CraftingBuildingAssetType,
-  selectedId: string | null | undefined = state.selectedCraftingBuildingId,
-): void {
-  if (!import.meta.env.DEV) return;
-  const firstId = getFirstCraftingAssetOfType(state, assetType)?.id ?? "none";
-  const resolvedSelectedId = selectedId ?? "none";
-  if (resolvedSelectedId === firstId) return;
-  const logger = assetType === "smithy" ? debugLog.smithy : debugLog.general;
-  logger(`Selected: ${assetType}[${resolvedSelectedId}], first would have been [${firstId}]`);
-}
-
 // ============================================================
 // SOURCE STATUS VIEW-MODEL
 // Pure derivation for UI transparency — no side effects.
@@ -974,31 +943,6 @@ export function manhattanDist(x1: number, y1: number, x2: number, y2: number): n
 export { makeId } from "./utils/make-id";
 import { makeId } from "./utils/make-id";
 
-/**
- * Add `amount` of `itemType` to a collection node at (tileX, tileY). If a
- * matching node (same tile + same itemType) already exists, merge into it;
- * otherwise spawn a new one. Returns a fresh record — never mutates.
- */
-export function addToCollectionNodeAt(
-  nodes: Record<string, CollectionNode>,
-  itemType: CollectableItemType,
-  tileX: number,
-  tileY: number,
-  amount: number,
-): Record<string, CollectionNode> {
-  if (amount <= 0) return nodes;
-  for (const node of Object.values(nodes)) {
-    if (node.tileX === tileX && node.tileY === tileY && node.itemType === itemType) {
-      return { ...nodes, [node.id]: { ...node, amount: node.amount + amount } };
-    }
-  }
-  const id = makeId("cn");
-  return {
-    ...nodes,
-    [id]: { id, itemType, amount, tileX, tileY, collectable: true, createdAt: Date.now(), reservedByDroneId: null },
-  };
-}
-
 export { cellKey };
 
 /** Returns [dx, dy] offset for a direction. */
@@ -1012,46 +956,6 @@ export { getWarehouseInputCell, isValidWarehouseInput };
 // removeAsset extracted to ./asset-mutation
 
 export { placeAsset };
-
-/**
- * Appends (or batches into the latest matching entry) one unit delivered to a warehouse.
- * Same sourceId + resource within the batch window → increments amount.
- * Older entries are evicted when the log exceeds AUTO_DELIVERY_LOG_MAX.
- */
-function addAutoDelivery(
-  log: AutoDeliveryEntry[],
-  sourceType: AutoDeliveryEntry["sourceType"],
-  sourceId: string,
-  resource: string,
-  warehouseId: string,
-): AutoDeliveryEntry[] {
-  const now = Date.now();
-  const lastIdx = log.length - 1;
-  const last = lastIdx >= 0 ? log[lastIdx] : null;
-  if (
-    last &&
-    last.sourceId === sourceId &&
-    last.resource === resource &&
-    now - last.timestamp <= AUTO_DELIVERY_BATCH_WINDOW_MS
-  ) {
-    return [
-      ...log.slice(0, lastIdx),
-      { ...last, amount: last.amount + 1, timestamp: now },
-    ];
-  }
-  const entry: AutoDeliveryEntry = {
-    id: makeId(),
-    sourceType,
-    sourceId,
-    resource,
-    amount: 1,
-    warehouseId,
-    timestamp: now,
-  };
-  return log.length >= AUTO_DELIVERY_LOG_MAX
-    ? [...log.slice(1), entry]
-    : [...log, entry];
-}
 
 export {
   EMPTY_HOTBAR_SLOT,
@@ -1080,32 +984,6 @@ export type { GameAction };
 // ============================================================
 // REDUCER
 // ============================================================
-
-/**
- * Tick one drone (identified by droneId) through its state machine for one step.
- * Reads from state.drones[droneId]; writes back via applyDroneUpdate so that
- * state.starterDrone stays in sync for the "starter" drone.
- * All other game-state fields (collectionNodes, serviceHubs, …) are updated in place.
- */
-const TICK_ONE_DRONE_IO_DEPS: TickOneDroneIoDeps = {
-  makeId,
-  addNotification,
-  debugLog,
-};
-
-function tickOneDrone(state: GameState, droneId: string): GameState {
-  return tickOneDroneExecution(state, droneId, TICK_ONE_DRONE_IO_DEPS);
-}
-
-function getKeepStockByWorkbench(state: Pick<GameState, "keepStockByWorkbench">): KeepStockByWorkbench {
-  return state.keepStockByWorkbench ?? {};
-}
-
-function getRecipeAutomationPolicies(
-  state: Pick<GameState, "recipeAutomationPolicies">,
-): RecipeAutomationPolicyMap {
-  return state.recipeAutomationPolicies ?? {};
-}
 
 // Crafting-Job-Status-, Source-Vergleichs- und Cap-Helfer leben in
 // ../crafting/jobStatus und werden oben importiert.
