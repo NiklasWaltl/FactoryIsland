@@ -74,21 +74,16 @@ export {
   DRONE_WAREHOUSE_PRIORITY_BONUS,
 };
 import {
-  selectDroneTask as selectDroneTaskBinding,
-} from "../drones/selection/select-drone-task-bindings";
-import {
   getAssignedBuildingSupplyDroneCount as getAssignedBuildingSupplyDroneCountResolver,
   getAssignedConstructionDroneCount as getAssignedConstructionDroneCountResolver,
   getAssignedWorkbenchDeliveryDroneCount as getAssignedWorkbenchDeliveryDroneCountResolver,
   getAssignedWorkbenchInputDroneCount as getAssignedWorkbenchInputDroneCountResolver,
-  getInboundBuildingSupplyAmount as getInboundBuildingSupplyAmountResolver,
   getInboundConstructionAmount as getInboundConstructionAmountResolver,
   getInboundHubRestockAmount as getInboundHubRestockAmountResolver,
   getInboundHubRestockDroneCount as getInboundHubRestockDroneCountResolver,
   getOpenBuildingSupplyDroneSlots as getOpenBuildingSupplyDroneSlotsResolver,
   getOpenConstructionDroneSlots as getOpenConstructionDroneSlotsResolver,
   getOpenHubRestockDroneSlots as getOpenHubRestockDroneSlotsResolver,
-  getRemainingBuildingInputDemand as getRemainingBuildingInputDemandResolver,
   getRemainingConstructionNeed as getRemainingConstructionNeedResolver,
   getRemainingHubRestockNeed as getRemainingHubRestockNeedResolver,
 } from "../drones/selection/helpers/need-slot-resolvers";
@@ -185,7 +180,6 @@ import {
   decideAutoMinerOutputTarget,
   decideAutoMinerTickEligibility,
 } from "./decisions/auto-miner-decisions";
-import { getDroneStatusDetail as getDroneStatusDetailClassifier } from "./selectors/drone-status-detail";
 import type { CraftingInventorySource } from "../crafting/types";
 
 // ---- Core types ----------------------------------------------------------
@@ -469,82 +463,12 @@ export { withDefaultMachinePriority };
 // ---- Auto-Miner / Conveyor ----
 // ---- Crafting job queue ----
 // ---- Starter Drone ----
-/** Max items carried per trip. */
-export const DRONE_CAPACITY = 5;
-/**
- * Chebyshev radius (tiles) within which drones repel each other.
- * Matches DRONE_SPEED_TILES_PER_TICK so a fast drone always sees its
- * nearest neighbour before crossing.
- */
-export const DRONE_SEPARATION_RADIUS = 2;
-
-// ---- Service Hub ----
-/** Hard cap to prevent a single construction target from mobilizing the entire drone fleet. */
-export const MAX_DRONES_PER_CONSTRUCTION_TARGET = 4;
-/** Hard cap for concurrent restock trips of the same resource into one hub. */
-export const MAX_DRONES_PER_HUB_RESTOCK_RESOURCE = 4;
-/** Hard cap for concurrent supply trips into the same building input buffer. */
-export const MAX_DRONES_PER_BUILDING_SUPPLY = 4;
+// Drone constants and helper functions were extracted to:
+// - ./constants/drone/drone-config
+// - ./constants/drone/drone-assignment-caps
+// - ./helpers/drone-helpers
 
 export { createDefaultHubTargetStock, createDefaultProtoHubTargetStock };
-
-/** Get all drones assigned to a specific hub. */
-export function getHubDrones(state: GameState, hubId: string): StarterDroneState[] {
-  const hub = state.serviceHubs[hubId];
-  if (!hub) return [];
-  return hub.droneIds.map((id) => state.drones[id]).filter(Boolean);
-}
-
-export function getDroneDockSlotIndex(
-  state: Pick<GameState, "serviceHubs">,
-  hubId: string,
-  droneId: string,
-): number {
-  const dockSlot = state.serviceHubs[hubId]?.droneIds.indexOf(droneId) ?? -1;
-  return dockSlot >= 0 ? dockSlot : 0;
-}
-
-/** Produce a human-readable status detail for a drone (for UI display). */
-export function getDroneStatusDetail(state: GameState, drone: StarterDroneState): { label: string; taskGoal?: string } {
-  return getDroneStatusDetailClassifier(state, drone);
-}
-
-
-/**
- * Returns the tile position of the homeHub dock slot for a drone.
- * Returns null when the drone has no hub or the hub asset is gone.
- */
-export function getDroneHomeDock(
-  drone: StarterDroneState,
-  state: Pick<GameState, "assets" | "serviceHubs">,
-): { x: number; y: number } | null {
-  if (!drone.hubId) return null;
-  const hubAsset = state.assets[drone.hubId];
-  if (!hubAsset) return null;
-  const dockSlot = getDroneDockSlotIndex(state, drone.hubId, drone.droneId);
-  const offset = getDroneDockOffset(dockSlot);
-  return { x: hubAsset.x + offset.dx, y: hubAsset.y + offset.dy };
-}
-
-export function isDroneParkedAtHub(
-  state: Pick<GameState, "assets" | "serviceHubs">,
-  drone: StarterDroneState,
-): boolean {
-  const dock = getDroneHomeDock(drone, state);
-  return !!dock && drone.status === "idle" && drone.tileX === dock.x && drone.tileY === dock.y;
-}
-
-export function getParkedDrones(
-  state: Pick<GameState, "assets" | "serviceHubs" | "drones">,
-  hubId: string,
-): StarterDroneState[] {
-  const hub = state.serviceHubs[hubId];
-  if (!hub) return [];
-  return hub.droneIds
-    .map((droneId) => state.drones[droneId])
-    .filter((drone): drone is StarterDroneState => !!drone)
-    .filter((drone) => isDroneParkedAtHub(state, drone));
-}
 
 // costIsFullyCollectable, fullCostAsRemaining, COLLECTABLE_KEYS extracted to ./inventory-ops
 
@@ -660,43 +584,8 @@ function getOpenConstructionDroneSlots(
 // local input buffer (see BUILDING_INPUT_BUFFERS) instead of a construction
 // site. Currently used by the wood generator.
 
-/** Reads the current amount in a building's input buffer. */
-export function getBuildingInputCurrent(
-  state: Pick<GameState, "assets" | "generators">,
-  assetId: string,
-): number {
-  const asset = state.assets[assetId];
-  if (!asset) return 0;
-  if (asset.type === "generator") return state.generators[assetId]?.fuel ?? 0;
-  return 0;
-}
-
 /** Lists every placed asset that owns an input buffer, paired with its accepted resource. */
 export { getBuildingInputTargets };
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-/** Counts in-flight building_supply cargo + reservations + hub-bound trips heading into `assetId`. */
-export function getInboundBuildingSupplyAmount(
-  state: Pick<GameState, "drones" | "collectionNodes">,
-  assetId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getInboundBuildingSupplyAmountResolver(state, assetId, itemType, excludeDroneId);
-}
-
-// Implementation: drones/selection/helpers/need-slot-resolvers.ts
-/** Open delivery demand for a building's input buffer (capacity − current − inbound).
- *  Generators are special: they only accept drone deliveries up to the player-issued
- *  `requestedRefill`. With no outstanding request, demand is 0 and no auto-refill happens. */
-export function getRemainingBuildingInputDemand(
-  state: Pick<GameState, "assets" | "generators" | "drones" | "collectionNodes">,
-  assetId: string,
-  itemType: CollectableItemType,
-  excludeDroneId?: string,
-): number {
-  return getRemainingBuildingInputDemandResolver(state, assetId, itemType, excludeDroneId);
-}
 
 // Implementation: drones/selection/helpers/need-slot-resolvers.ts
 function getAssignedBuildingSupplyDroneCount(
@@ -733,37 +622,6 @@ function getAssignedWorkbenchInputDroneCount(
   excludeDroneId?: string,
 ): number {
   return getAssignedWorkbenchInputDroneCountResolver(state, reservationId, excludeDroneId);
-}
-
-/**
- * Selects the highest-scoring drone task from all valid candidates.
- *
- * Scoring: score = BASE_PRIORITY[taskType] − chebyshevDistanceDroneToNode + bonuses
- *
- * Bonuses applied per candidate:
- *   · Role bonus (DRONE_ROLE_BONUS = 30): added when the task type matches the drone's
- *     preferred role ("construction" → construction_supply; "supply" → hub_restock).
- *     "auto" role → no bonus. Roles never block fallback to other task types.
- *   · Sticky bonus (DRONE_STICKY_BONUS = 15): added when the node is already reserved
- *     by this drone. Prevents pointless task-hopping between nearby equal-score nodes.
- *   · Urgency bonus (0..DRONE_URGENCY_BONUS_MAX = 20): for hub_restock only, proportional
- *     to resource deficit (target − current). Favours the most-needed resource.
- *
- * Priority invariant (always holds):
- *   worst construction_supply score: 1000 - 79 + 0 = 921
- *   best workbench_delivery score:   300  -  0 + 15 = 315
- *   best hub_restock score:          100  -  0 + 30 + 15 + 20 = 165
- *   921 > 315 > 165 ✓ — construction wins; crafted tool pickup beats passive restock.
- *
- * Tie-break: ascending nodeId string — deterministic, stable across ticks.
- * Returns null if no valid task exists.
- */
-export function selectDroneTask(state: GameState, droneOverride?: StarterDroneState): {
-  taskType: DroneTaskType;
-  nodeId: string;
-  deliveryTargetId: string;
-} | null {
-  return selectDroneTaskBinding(state, droneOverride);
 }
 
 /**

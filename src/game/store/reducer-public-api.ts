@@ -29,6 +29,17 @@ export {
   KEEP_STOCK_OPEN_JOB_CAP,
 } from "./constants/keep-stock";
 
+// ---- Constants (drone) ----
+export {
+  DRONE_CAPACITY,
+  DRONE_SEPARATION_RADIUS,
+} from "./constants/drone/drone-config";
+export {
+  MAX_DRONES_PER_CONSTRUCTION_TARGET,
+  MAX_DRONES_PER_HUB_RESTOCK_RESOURCE,
+  MAX_DRONES_PER_BUILDING_SUPPLY,
+} from "./constants/drone/drone-assignment-caps";
+
 // ---- Constants (auto-smelter) ----
 export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto/auto-smelter";
 
@@ -46,6 +57,18 @@ export {
   selectBuildMenuInventoryView,
   selectGlobalInventoryView,
 } from "./helpers/inventory-queries";
+export {
+  getHubDrones,
+  getDroneDockSlotIndex,
+  getDroneStatusDetail,
+  getDroneHomeDock,
+  isDroneParkedAtHub,
+  getParkedDrones,
+  selectDroneTask,
+  getBuildingInputCurrent,
+  getInboundBuildingSupplyAmount,
+  getRemainingBuildingInputDemand,
+} from "./helpers/drone-helpers";
 
 // ---- Utilities ----
 export { makeId } from "./utils/make-id";
