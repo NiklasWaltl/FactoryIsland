@@ -1,4 +1,4 @@
-import type { AutoSmelterEntry, ConveyorItem } from "./types";
+import type { AutoSmelterEntry, ConveyorItem } from "../types";
 
 function areConveyorItemsEqual(a: ConveyorItem[], b: ConveyorItem[]): boolean {
   if (a.length !== b.length) return false;

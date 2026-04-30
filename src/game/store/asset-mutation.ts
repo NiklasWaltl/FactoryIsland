@@ -1,6 +1,6 @@
 import { GRID_W, GRID_H } from "../constants/grid";
 import { makeId } from "./utils/make-id";
-import { withDefaultMachinePriority } from "./machine-priority";
+import { withDefaultMachinePriority } from "./helpers/machine-priority";
 import { cellKey } from "./utils/cell-key";
 import { assetWidth, assetHeight } from "./asset-geometry";
 import type { AssetType, GameState, PlacedAsset } from "./types";

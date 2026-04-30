@@ -1,6 +1,6 @@
 import { hasCompleteWorkbenchInput } from "../../crafting/workbench-input-complete";
 import { isCollectableCraftingItem } from "../../crafting/workbench-input-buffer";
-import { isUnderConstruction } from "../../store/asset-status";
+import { isUnderConstruction } from "../../store/helpers/asset-status";
 import { resolveWorkbenchInputPickup } from "../../store/workbench-input-pickup";
 import { getBuildingInputTargets } from "../../buildings/building-input-targets";
 import {

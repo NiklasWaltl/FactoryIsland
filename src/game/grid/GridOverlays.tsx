@@ -1,6 +1,6 @@
 import React from "react";
 import { CELL_PX } from "../constants/grid";
-import { isUnderConstruction } from "../store/asset-status";
+import { isUnderConstruction } from "../store/helpers/asset-status";
 import type { Direction, GameState } from "../store/types";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import type { StaticAssetSnapshot } from "../world/PhaserGame";

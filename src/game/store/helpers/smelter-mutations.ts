@@ -1,4 +1,4 @@
-import type { AutoSmelterEntry } from "./types";
+import type { AutoSmelterEntry } from "../types";
 
 export interface ConsumeAutoSmelterPendingOutputInput {
   smelter: Pick<AutoSmelterEntry, "pendingOutput" | "throughputEvents">;

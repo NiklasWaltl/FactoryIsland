@@ -3,8 +3,8 @@
 // can value-import them directly without creating an ESM cycle through
 // `../reducer`.
 
-import type { AssetType, MachinePriority, PlacedAsset } from "./types";
-import { DEFAULT_MACHINE_PRIORITY, ENERGY_DRAIN } from "./constants/energy/energy-balance";
+import type { AssetType, MachinePriority, PlacedAsset } from "../types";
+import { DEFAULT_MACHINE_PRIORITY, ENERGY_DRAIN } from "../constants/energy/energy-balance";
 
 export function clampMachinePriority(priority: number | undefined): MachinePriority {
   const raw = Number.isFinite(priority) ? Math.round(priority as number) : DEFAULT_MACHINE_PRIORITY;

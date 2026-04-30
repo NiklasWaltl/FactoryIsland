@@ -5,7 +5,7 @@ import {
   clampMachinePriority,
   isBoostSupportedType,
   isEnergyConsumerType,
-} from "../machine-priority";
+} from "../helpers/machine-priority";
 
 type MachineConfigTargetDecision =
   | { kind: "blocked" }

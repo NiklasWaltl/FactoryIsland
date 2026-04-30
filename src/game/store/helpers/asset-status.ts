@@ -1,4 +1,4 @@
-import type { GameState } from "./types";
+import type { GameState } from "../types";
 
 export function isUnderConstruction(
   state: Pick<GameState, "constructionSites">,

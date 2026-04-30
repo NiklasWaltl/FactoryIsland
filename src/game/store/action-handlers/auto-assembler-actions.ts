@@ -1,4 +1,4 @@
-import { isUnderConstruction } from "../asset-status";
+import { isUnderConstruction } from "../helpers/asset-status";
 import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 

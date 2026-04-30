@@ -12,13 +12,13 @@ import {
   decideAutoSmelterPendingOutputStatus,
   decideAutoSmelterStartProcessingEligibility,
 } from "../../../decisions/smelter-decisions";
-import { consumeAutoSmelterPendingOutput } from "../../../smelter-mutations";
+import { consumeAutoSmelterPendingOutput } from "../../../helpers/smelter-mutations";
 import type { ConveyorItem } from "../../../types";
 import { getAutoSmelterIoCells } from "../../../asset-geometry";
 import { resolveBuildingSource } from "../../../building-source";
 import { addResources } from "../../../inventory-ops";
-import { getBoostMultiplier } from "../../../machine-priority";
-import { areAutoSmelterEntriesEqual } from "../../../smelter-equality";
+import { getBoostMultiplier } from "../../../helpers/machine-priority";
+import { areAutoSmelterEntriesEqual } from "../../../helpers/smelter-equality";
 import {
   applySourceInventory,
   getLiveLogisticsState,

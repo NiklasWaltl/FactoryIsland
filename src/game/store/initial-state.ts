@@ -35,7 +35,7 @@ import { assetHeight, assetWidth, getAutoSmelterIoCells } from "./asset-geometry
 import { cellKey } from "./utils/cell-key";
 import { createDefaultProtoHubTargetStock } from "./constants/hub/hub-target-stock";
 import { createEmptyInventory } from "./inventory-ops";
-import { isEnergyConsumerType, withDefaultMachinePriority } from "./machine-priority";
+import { isEnergyConsumerType, withDefaultMachinePriority } from "./helpers/machine-priority";
 import { makeId } from "./utils/make-id";
 import { placeAsset } from "./asset-mutation";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";

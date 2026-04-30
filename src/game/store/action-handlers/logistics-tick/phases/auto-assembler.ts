@@ -18,7 +18,7 @@ import {
   decideAutoSmelterNonPendingStatus,
   decideAutoSmelterStartProcessingEligibility,
 } from "../../../decisions/smelter-decisions";
-import { areAutoAssemblerEntriesEqual } from "../../../assembler-equality";
+import { areAutoAssemblerEntriesEqual } from "../../../helpers/assembler-equality";
 import type { AutoAssemblerEntry, ConveyorItem, PlacedAsset } from "../../../types";
 import { getAutoSmelterIoCells } from "../../../asset-geometry";
 import { GRID_H, GRID_W } from "../../../../constants/grid";

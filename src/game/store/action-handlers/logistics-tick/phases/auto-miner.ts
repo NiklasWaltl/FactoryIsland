@@ -10,7 +10,7 @@ import {
 import { resolveBuildingSource } from "../../../building-source";
 import { directionOffset } from "../../../utils/direction";
 import { addResources } from "../../../inventory-ops";
-import { getBoostMultiplier } from "../../../machine-priority";
+import { getBoostMultiplier } from "../../../helpers/machine-priority";
 import {
   applySourceInventory,
   getLiveLogisticsState,

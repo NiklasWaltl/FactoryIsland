@@ -105,7 +105,7 @@ import { syncDrones } from "../drones/drone-state-helpers";
 import { addErrorNotification, addNotification } from "./utils/notifications";
 import { directionOffset } from "./utils/direction";
 import { getWarehouseInputCell, isValidWarehouseInput } from "./warehouse-input";
-import { isUnderConstruction } from "./asset-status";
+import { isUnderConstruction } from "./helpers/asset-status";
 import {
   EMPTY_HOTBAR_SLOT,
   createInitialHotbar,
@@ -213,7 +213,7 @@ import {
   decideAutoSmelterPendingOutputStatus,
   decideAutoSmelterStartProcessingEligibility,
 } from "./decisions/smelter-decisions";
-import { consumeAutoSmelterPendingOutput } from "./smelter-mutations";
+import { consumeAutoSmelterPendingOutput } from "./helpers/smelter-mutations";
 import {
   decideConveyorTickEligibility,
   decideConveyorTargetSelection,
@@ -510,7 +510,7 @@ export function isPowerPoleRangeType(type: AssetType): boolean {
   return POWER_POLE_RANGE_TYPES.has(type);
 }
 
-import { clampMachinePriority, isEnergyConsumerType, withDefaultMachinePriority } from "./machine-priority";
+import { clampMachinePriority, isEnergyConsumerType, withDefaultMachinePriority } from "./helpers/machine-priority";
 import { cellKey } from "./utils/cell-key";
 import { assetWidth, assetHeight, getAutoSmelterIoCells } from "./asset-geometry";
 import { removeAsset, placeAsset } from "./asset-mutation";
@@ -876,7 +876,7 @@ export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto-smelter";
 export const AUTO_MINER_BOOST_MULTIPLIER = 2;
 export const AUTO_SMELTER_BOOST_MULTIPLIER = 2;
 
-export { isBoostSupportedType } from "./machine-priority";
+export { isBoostSupportedType } from "./helpers/machine-priority";
 
 /** Effektiver Boost-Multiplikator für ein Asset. 1 wenn nicht boosted oder nicht unterstützt. */
 export function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">): number {

@@ -33,7 +33,7 @@ import {
   KEEP_STOCK_MAX_TARGET,
   KEEP_STOCK_OPEN_JOB_CAP,
 } from "../../store/reducer";
-import { isUnderConstruction } from "../../store/asset-status";
+import { isUnderConstruction } from "../../store/helpers/asset-status";
 import { resolveBuildingSource } from "../../store/building-source";
 import { toCraftingJobInventorySource } from "../../store/crafting/crafting-source-adapters";
 import { getWorkbenchRecipe } from "../../simulation/recipes";

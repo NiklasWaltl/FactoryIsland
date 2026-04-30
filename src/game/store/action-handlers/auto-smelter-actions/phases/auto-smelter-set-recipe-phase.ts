@@ -1,4 +1,4 @@
-import { isUnderConstruction } from "../../../asset-status";
+import { isUnderConstruction } from "../../../helpers/asset-status";
 import type { GameState } from "../../../types";
 import type { AutoSmelterAction } from "../types";
 

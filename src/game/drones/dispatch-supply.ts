@@ -4,7 +4,7 @@ import {
   getInboundHubDispatchAmount,
   getInboundWarehouseDispatchAmount,
 } from "./selection/helpers/need-slot-resolvers";
-import { isUnderConstruction } from "../store/asset-status";
+import { isUnderConstruction } from "../store/helpers/asset-status";
 import type { CollectableItemType, GameState } from "../store/types";
 
 export function getAvailableHubDispatchSupply(
