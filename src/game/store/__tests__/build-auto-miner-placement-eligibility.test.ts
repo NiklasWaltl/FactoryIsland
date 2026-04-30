@@ -1,4 +1,4 @@
-import { decideAutoMinerPlacementEligibility } from "../build-auto-miner-placement-eligibility";
+import { decideAutoMinerPlacementEligibility } from "../decisions/build-auto-miner-placement-eligibility";
 
 describe("decideAutoMinerPlacementEligibility", () => {
   test("returns eligible for a valid unclaimed deposit", () => {

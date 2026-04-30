@@ -1,4 +1,4 @@
-import type { BuildingType } from "./types";
+import type { BuildingType } from "../types";
 
 export type BuildPlacementEligibilityBlockReason =
   | "not_enough_resources"

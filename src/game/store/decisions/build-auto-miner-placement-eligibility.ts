@@ -1,4 +1,4 @@
-import type { AutoMinerEntry, PlacedAsset } from "./types";
+import type { AutoMinerEntry, PlacedAsset } from "../types";
 
 export type AutoMinerPlacementEligibilityBlockReason =
   | "target_cell_has_no_deposit"

@@ -4,7 +4,7 @@ import { DEPOSIT_RESOURCE, DEPOSIT_TYPES } from "../../constants/deposit-positio
 import { DEFAULT_MACHINE_PRIORITY } from "../../constants/energy/energy-balance";
 import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";
-import { decideAutoMinerPlacementEligibility } from "../../build-auto-miner-placement-eligibility";
+import { decideAutoMinerPlacementEligibility } from "../../decisions/build-auto-miner-placement-eligibility";
 import { getNearestWarehouseId } from "../../../buildings/warehouse/warehouse-assignment";
 import { type BuildingPlacementIoDeps } from "./shared";
 import {

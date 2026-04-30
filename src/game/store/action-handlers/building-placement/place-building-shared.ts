@@ -3,7 +3,7 @@ import { GRID_W, GRID_H } from "../../../constants/grid";
 import { cellKey } from "../../utils/cell-key";
 import { getAutoSmelterIoCells } from "../../asset-geometry";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
-import type { BuildPlacementEligibilityDecision } from "../../build-placement-eligibility";
+import type { BuildPlacementEligibilityDecision } from "../../decisions/build-placement-eligibility";
 import { type BuildingPlacementIoDeps, logPlacementInvariantWarnings } from "./shared";
 
 // ---- Notification mapping ----

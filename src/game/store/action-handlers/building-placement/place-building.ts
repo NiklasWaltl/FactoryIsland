@@ -25,7 +25,7 @@ import {
   getEffectiveBuildInventory,
   hasResources,
 } from "../../inventory-ops";
-import { decideBuildingPlacementEligibility } from "../../build-placement-eligibility";
+import { decideBuildingPlacementEligibility } from "../../decisions/build-placement-eligibility";
 import { getNearestWarehouseId } from "../../../buildings/warehouse/warehouse-assignment";
 import { createEmptyHubInventory } from "../../../buildings/service-hub/hub-upgrade-workflow";
 import { getDroneDockOffset } from "../../../drones/drone-dock-geometry";
