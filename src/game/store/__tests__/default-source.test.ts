@@ -9,10 +9,12 @@ import {
   addResources,
   getNearestWarehouseId,
   manhattanDist,
-  BUILDINGS_WITH_DEFAULT_SOURCE,
-  BUILDING_COSTS,
   cellKey,
 } from "../reducer";
+import {
+  BUILDINGS_WITH_DEFAULT_SOURCE,
+  BUILDING_COSTS,
+} from "../constants/buildings/index";
 
 // ---------------------------------------------------------------------------
 // Helpers

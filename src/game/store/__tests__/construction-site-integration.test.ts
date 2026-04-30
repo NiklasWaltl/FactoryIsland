@@ -8,11 +8,13 @@
 import {
   gameReducer,
   createInitialState,
-  BUILDING_COSTS,
-  CONSTRUCTION_SITE_BUILDINGS,
   isUnderConstruction,
   computeConnectedAssetIds,
 } from "../reducer";
+import {
+  BUILDING_COSTS,
+  CONSTRUCTION_SITE_BUILDINGS,
+} from "../constants/buildings/index";
 import type { GameState, BuildingType, PlacedAsset } from "../types";
 
 // ---- helpers ---------------------------------------------------------------

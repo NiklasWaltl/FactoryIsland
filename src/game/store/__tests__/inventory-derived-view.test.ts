@@ -17,8 +17,8 @@ import {
   selectGlobalInventoryView,
   gameReducer,
   addResources,
-  HUB_UPGRADE_COST,
 } from "../reducer";
+import { HUB_UPGRADE_COST } from "../constants/hub/hub-upgrade-cost";
 import { serializeState, deserializeState } from "../../simulation/save";
 import { applyMockToState } from "../../debug/mockData";
 

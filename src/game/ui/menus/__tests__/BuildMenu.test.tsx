@@ -1,13 +1,13 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
-  BUILDING_COSTS,
   createInitialState,
   type GameAction,
   type GameState,
   type Inventory,
   type ServiceHubEntry,
 } from "../../../store/reducer";
+import { BUILDING_COSTS } from "../../../store/constants/buildings/index";
 import {
   addResources,
   hasResources,

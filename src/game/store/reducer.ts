@@ -337,25 +337,10 @@ export {
 } from "./conveyor/constants";
 export { GRID_W, GRID_H, CELL_PX };
 
-// Building constants & input-buffer configuration live in ./constants/buildings/index.
-// Re-exported here so existing `from "../store/reducer"` imports keep working.
-export * from "./constants/buildings/index";
-
-// Asset display tables (labels/colors/emojis) live in ./constants/ui/assets.
-// Re-exported for backward compatibility.
-export * from "./constants/ui/assets";
-
-// Resource display tables (labels/emojis) live in ./constants/resources.
-// Re-exported for backward compatibility.
-export * from "./constants/resources";
-
 // Floor tile constants live in ./constants/map/floor.
-// Imported for internal use and re-exported for backward compatibility.
 import { FLOOR_TILE_COSTS } from "./constants/map/floor";
-export * from "./constants/map/floor";
 
 // Timing constants live in ./constants/timing/timing.
-// Imported for internal use and re-exported for backward compatibility.
 import {
   DRONE_TICK_MS,
   LOGISTICS_TICK_MS,
@@ -363,7 +348,6 @@ import {
   NATURAL_SPAWN_CHANCE,
   SAPLING_GROW_MS,
 } from "./constants/timing/timing";
-export * from "./constants/timing/timing";
 
 // Auto-delivery log limits live in ./constants/auto/auto-delivery.
 import {
@@ -372,80 +356,51 @@ import {
 } from "./constants/auto/auto-delivery";
 
 // Drone/logistics constants live in ./constants/drone/drone-config.
-// Imported for internal use and re-exported for backward compatibility.
 import {
   AUTO_MINER_PRODUCE_TICKS,
   DRONE_COLLECT_TICKS,
   DRONE_DEPOSIT_TICKS,
   DRONE_SPEED_TILES_PER_TICK,
 } from "./constants/drone/drone-config";
-export * from "./constants/drone/drone-config";
 
 // Energy/auto-smelter coupled constants live in ./constants/energy-smelter.
-// Imported for internal use and re-exported for backward compatibility.
 import {
   AUTO_SMELTER_IDLE_DRAIN_PER_PERIOD,
   AUTO_SMELTER_PROCESSING_DRAIN_PER_PERIOD,
   ENERGY_NET_TICK_MS,
 } from "./constants/energy/energy-smelter";
-export * from "./constants/energy/energy-smelter";
 
 // Energy balance constants live in ./constants/energy-balance.
-// Named import for reducer-internal helpers; full module re-exported below.
 import {
   POWER_CABLE_CONDUCTOR_TYPES,
   POWER_POLE_RANGE_TYPES,
 } from "./constants/energy/energy-balance";
-export * from "./constants/energy/energy-balance";
 
 export { BATTERY_CAPACITY } from "./constants/energy/battery";
 export { POWER_POLE_RANGE } from "./constants/energy/power-pole";
 
 // Generator constants live in ./constants/generator.
-// Imported for internal use and re-exported for backward compatibility.
 import {
   GENERATOR_ENERGY_PER_TICK,
   GENERATOR_TICK_MS,
   GENERATOR_TICKS_PER_WOOD,
 } from "./constants/energy/generator";
-export * from "./constants/energy/generator";
 
 // Workbench/Smithy timing constants live in ./constants/timing/workbench-timing.
-// Imported for internal use and re-exported for backward compatibility.
 import {
   MANUAL_ASSEMBLER_PROCESS_MS,
   MANUAL_ASSEMBLER_TICK_MS,
   SMITHY_PROCESS_MS,
   SMITHY_TICK_MS,
 } from "./constants/timing/workbench-timing";
-export * from "./constants/timing/workbench-timing";
 
 // Service hub target-stock defaults live in ./constants/hub-target-stock.
-// Imported for internal use and re-exported for backward compatibility.
 import {
   createDefaultHubTargetStock,
   createDefaultProtoHubTargetStock,
 } from "./constants/hub/hub-target-stock";
-export * from "./constants/hub/hub-target-stock";
-
-// Service hub target-stock clamp constants live in ./constants/hub-target-stock-max.
-// Imported for internal use and re-exported for backward compatibility.
-export * from "./constants/hub/hub-target-stock-max";
-
-// Service hub range constants live in ./constants/hub-range.
-// Imported for internal use and re-exported for backward compatibility.
-export * from "./constants/hub/hub-range";
-
-// Service hub active-resource constants live in ./constants/hub-active-resources.
-// Imported for internal use and re-exported for backward compatibility.
-export * from "./constants/hub/hub-active-resources";
-
-// Service hub max-drone constants live in ./constants/hub-max-drones.
-// Imported for internal use and re-exported for backward compatibility.
-export * from "./constants/hub/hub-max-drones";
 
 // Hub tier selector helpers live in ./selectors/hub-tier-selectors.
-// Imported for reducer-internal use and re-exported for backward compatibility.
 import {
   getHubRange,
   getActiveResources,
@@ -462,18 +417,10 @@ export {
 };
 
 // Service hub upgrade cost lives in ./constants/hub-upgrade-cost.
-// Imported for internal use and re-exported for backward compatibility.
 import { HUB_UPGRADE_COST } from "./constants/hub/hub-upgrade-cost";
-export * from "./constants/hub/hub-upgrade-cost";
-
-// Deposit constants live in ./constants/map/deposit-positions.
-// Re-exported for backward compatibility.
-export * from "./constants/map/deposit-positions";
 
 // Map shop offer constants live in ./constants/ui/shop.
-// Imported for internal use and re-exported for backward compatibility.
 import { MAP_SHOP_ITEMS } from "./constants/ui/shop";
-export * from "./constants/ui/shop";
 
 /** Drop amount for all 1×1 harvestable resources (tree, stone, iron, copper). */
 export const RESOURCE_1x1_DROP_AMOUNT = 10;

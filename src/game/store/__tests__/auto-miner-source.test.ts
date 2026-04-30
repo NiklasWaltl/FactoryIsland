@@ -7,7 +7,6 @@ import {
   createInitialState,
   addResources,
   cellKey,
-  AUTO_MINER_PRODUCE_TICKS,
   getSourceStatusInfo,
   type AutoMinerEntry,
   type GameAction,
@@ -16,6 +15,7 @@ import {
   type PlacedAsset,
 } from "../reducer";
 import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
+import { AUTO_MINER_PRODUCE_TICKS } from "../constants/drone/drone-config";
 
 function emptyInv(): Inventory {
   return createInitialState("release").inventory;

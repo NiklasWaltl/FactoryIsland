@@ -2,13 +2,11 @@ import React from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import {
-  GENERATOR_TICKS_PER_WOOD,
-  ENERGY_NET_TICK_MS,
-} from "../../store/reducer";
-import {
   GENERATOR_ENERGY_PER_TICK,
   GENERATOR_TICK_MS,
+  GENERATOR_TICKS_PER_WOOD,
 } from "../../store/constants/energy/generator";
+import { ENERGY_NET_TICK_MS } from "../../store/constants/energy/energy-smelter";
 import { GENERATOR_MAX_FUEL } from "../../store/constants/buildings/index";
 import {
   getInboundBuildingSupplyAmount,

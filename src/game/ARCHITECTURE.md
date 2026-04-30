@@ -18,7 +18,7 @@ Für Onboarding genau in dieser Reihenfolge:
 1. [`src/game/ARCHITECTURE.md`](./ARCHITECTURE.md) ← du bist hier
 2. [`entry/FactoryApp.tsx`](./entry/FactoryApp.tsx) — alle `setInterval`-Tick-Dispatches sichtbar
 3. [`store/types.ts`](./store/types.ts) — `GameState`-Shape (Zeile 316+) + alle Sub-Typen
-4. [`store/reducer.ts`](./store/reducer.ts) ab Zeile 1308 — `gameReducer`-Dispatcher
+4. [`store/reducer.ts`](./store/reducer.ts) ab Zeile 1255 — `gameReducer`-Dispatcher
 5. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union (kanonische Quelle; alle Handler importieren direkt von hier)
 6. [`crafting/README.md`](./crafting/README.md) — Job-Lifecycle (komplexestes Subsystem)
 7. Cluster-Header in [`store/action-handlers/*/index.ts`](./store/action-handlers/) je nach Aufgabe
@@ -133,7 +133,7 @@ Der Store enthält ausschließlich folgende Dateien auf Root-Ebene:
 
 `GameAction` ist eine diskriminierte Union, kanonisch definiert in [`store/game-actions.ts:20`](./store/game-actions.ts#L20). Alle Handler importieren direkt von dort: `import type { GameAction } from "../game-actions"` (bzw. `../../` oder `../../../` je nach Tiefe). `grep "type GameAction ="` trifft genau einen Treffer.
 
-`gameReducer` ist eine Dispatch-Kette aus `handleXAction(state, action, deps?) → GameState | null`. Jeder Handler entscheidet per `HANDLED_ACTION_TYPES`-Set, ob er zuständig ist; `null` = Fallthrough. Verbleibende Actions landen im inline `switch` ([`reducer.ts:1417`](./store/reducer.ts#L1417)).
+`gameReducer` ist eine Dispatch-Kette aus `handleXAction(state, action, deps?) → GameState | null`. Jeder Handler entscheidet per `HANDLED_ACTION_TYPES`-Set, ob er zuständig ist; `null` = Fallthrough. Verbleibende Actions landen im inline `switch` ([`reducer.ts:1347`](./store/reducer.ts#L1347)).
 
 ### Action-Cluster-Map
 
@@ -199,7 +199,7 @@ Kurz: Jobs durchlaufen `queued → reserved → crafting → delivering → done
 Stolperfallen, die häufiger Tool-Calls kosten als nötig:
 
 1. **Ein Weg zu `GameAction`** — kanonisch [`game-actions.ts:20`](./store/game-actions.ts#L20). `actions.ts` wurde entfernt (Wave 4); alle 45 Handler importieren direkt. `grep "type GameAction ="` trifft genau einen Treffer.
-2. **`reducer.ts` ist 1508 Zeilen** — überwiegend Imports + Re-Export-Hub. Echte Reducer-Logik: Zeile 1308–1506 (`gameReducer`-Dispatcher + `gameReducerWithInvariants`-Wrapper).
+2. **`reducer.ts` ist 1287 Zeilen** — überwiegend Imports + Re-Export-Hub. Echte Reducer-Logik: Zeile 1255–1287 (`gameReducer`-Dispatcher + `gameReducerWithInvariants`-Wrapper).
 3. **Resolver-Aliasings** in [`reducer.ts:82-97`](./store/reducer.ts#L82-L97) — Funktionen werden mit `as XResolver` umbenannt; Grep nach Originalnamen findet die Verwendung in `reducer.ts` nicht direkt.
 4. **Drei Inventarsysteme koexistieren** — `inventory` (global) / `warehouseInventories` (physisch) / `network` (logisch reserviert). Wer ist kanonisch? Antwort: physisch ist Source-of-Truth, `network` ist abgeleitete Holds.
 5. **`starterDrone` ↔ `drones[id]`** — duplizierter State, "kept in sync" via [`syncDrones`](./drones/drone-state-helpers.ts). Nicht beide editieren.

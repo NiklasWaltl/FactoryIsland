@@ -17,13 +17,15 @@ import {
   addToCollectionNodeAt,
   selectDroneTask,
   getRemainingBuildingInputDemand,
-  getBuildingInputConfig,
   getBuildingInputCurrent,
-  GENERATOR_MAX_FUEL,
   MAP_SHOP_POS,
   DRONE_CAPACITY,
-  GENERATOR_TICKS_PER_WOOD,
 } from "../reducer";
+import {
+  GENERATOR_MAX_FUEL,
+  getBuildingInputConfig,
+} from "../constants/buildings/index";
+import { GENERATOR_TICKS_PER_WOOD } from "../constants/energy/generator";
 import type {
   GameState,
   PlacedAsset,

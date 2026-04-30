@@ -18,10 +18,17 @@ import type {
 import type { GameAction } from "../../store/game-actions";
 
 export {
-  BUILDING_COSTS,
   createDefaultHubTargetStock,
   createEmptyHubInventory,
   DRONE_CAPACITY,
+  getDroneHomeDock,
+  getParkedDrones,
+  MAX_DRONES_PER_CONSTRUCTION_TARGET,
+  scoreDroneTask,
+  selectDroneTask,
+} from "../../store/reducer";
+export { BUILDING_COSTS } from "../../store/constants/buildings/index";
+export {
   DRONE_COLLECT_TICKS,
   DRONE_DEMAND_BONUS_MAX,
   DRONE_DEPOSIT_TICKS,
@@ -30,15 +37,12 @@ export {
   DRONE_STICKY_BONUS,
   DRONE_TASK_BASE_SCORE,
   DRONE_URGENCY_BONUS_MAX,
-  getDroneHomeDock,
-  getParkedDrones,
-  MAX_DRONES_PER_CONSTRUCTION_TARGET,
-  MAX_HUB_TARGET_STOCK,
+} from "../../store/constants/drone/drone-config";
+export { MAX_HUB_TARGET_STOCK } from "../../store/constants/hub/hub-target-stock-max";
+export {
   PROTO_HUB_TARGET_STOCK,
-  scoreDroneTask,
-  selectDroneTask,
   SERVICE_HUB_TARGET_STOCK,
-} from "../../store/reducer";
+} from "../../store/constants/hub/hub-target-stock";
 
 export { addToCollectionNodeAt, createInitialState, gameReducer, MAP_SHOP_POS };
 
