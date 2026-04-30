@@ -290,14 +290,7 @@ export { isUnderConstruction };
 // ============================================================
 
 // Conveyor constants live in ./conveyor/constants.
-// Imported for internal use and re-exported for backward compatibility.
-export {
-  CONVEYOR_TILE_CAPACITY,
-  MAX_UNDERGROUND_SPAN,
-  MIN_UNDERGROUND_SPAN,
-  undergroundSpanCellsInBounds,
-  undergroundSpanSteps,
-} from "./conveyor/constants";
+// Re-exported via ./reducer-public-api (see end of file).
 export { GRID_W, GRID_H, CELL_PX };
 
 // Floor tile constants live in ./constants/map/floor.
@@ -337,9 +330,6 @@ import {
   POWER_CABLE_CONDUCTOR_TYPES,
   POWER_POLE_RANGE_TYPES,
 } from "./constants/energy/energy-balance";
-
-export { BATTERY_CAPACITY } from "./constants/energy/battery";
-export { POWER_POLE_RANGE } from "./constants/energy/power-pole";
 
 // Generator constants live in ./constants/generator.
 import {
@@ -386,11 +376,6 @@ import { HUB_UPGRADE_COST } from "./constants/hub/hub-upgrade-cost";
 /** Drop amount for all 1×1 harvestable resources (tree, stone, iron, copper). */
 export const RESOURCE_1x1_DROP_AMOUNT = 10;
 if (import.meta.env.DEV) console.log(`[FactoryIsland] Drop-Multiplikator auf ${RESOURCE_1x1_DROP_AMOUNT}x für 1x1-Ressourcen gesetzt.`);
-export { HOTBAR_SIZE, HOTBAR_STACK_MAX } from "./constants/ui/hotbar";
-export {
-  KEEP_STOCK_MAX_TARGET,
-  KEEP_STOCK_OPEN_JOB_CAP,
-} from "./constants/keep-stock";
 
 // Action-handler dependency-injection containers live in ./action-handler-deps.
 // Imported here so the dispatch chain wiring (handle...Action(state, action, deps))
@@ -461,7 +446,6 @@ export {
   getConveyorZoneStatus,
   areZonesTransportCompatible,
 };
-export type { ConveyorZoneStatus } from "./selectors/conveyor-zone-status";
 export {
   resolveCraftingSource,
   getCraftingSourceInventory,
@@ -782,8 +766,6 @@ export function selectDroneTask(state: GameState, droneOverride?: StarterDroneSt
   return selectDroneTaskBinding(state, droneOverride);
 }
 
-export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto/auto-smelter";
-
 /**
  * Overclocking-Stufe 1: Zwei feste Modi (normal / boosted), nur für auto_miner
  * und auto_smelter. Multiplikator wirkt konsistent auf Strom UND Produktion.
@@ -794,8 +776,6 @@ import {
   AUTO_SMELTER_BOOST_MULTIPLIER,
 } from "./constants/energy/boost-multipliers";
 export { AUTO_MINER_BOOST_MULTIPLIER, AUTO_SMELTER_BOOST_MULTIPLIER };
-
-export { isBoostSupportedType } from "./helpers/machine-priority";
 
 /** Effektiver Boost-Multiplikator für ein Asset. 1 wenn nicht boosted oder nicht unterstützt. */
 export function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">): number {
@@ -833,11 +813,6 @@ export { getAvailableResource };
 export { hasResources };
 
 export { addResources };
-
-export {
-  selectBuildMenuInventoryView,
-  selectGlobalInventoryView,
-} from "./helpers/inventory-queries";
 
 export { getEffectiveBuildInventory };
 // consumeBuildResources extracted to ./inventory-ops
@@ -886,12 +861,8 @@ export function resolveWorkbenchSource(state: GameState): CraftingSource {
 // ============================================================
 // SOURCE STATUS VIEW-MODEL
 // Pure derivation for UI transparency — no side effects.
+// Re-exported via ./reducer-public-api (see end of file).
 // ============================================================
-
-export type { FallbackReason, SourceStatusInfo } from "./selectors/source-status";
-export { hasStaleWarehouseAssignment, getSourceStatusInfo } from "./selectors/source-status";
-
-export { MAP_SHOP_POS } from "./constants/map/map-layout";
 
 /**
  * Manhattan distance between two grid positions.
@@ -906,9 +877,8 @@ export function manhattanDist(x1: number, y1: number, x2: number, y2: number): n
 
 // _smelterRecipesLogged moved into action-handlers/logistics-tick.ts together with the smelter phase.
 // makeId lives in ./make-id (extracted so handler modules can value-import it
-// directly without an ESM cycle through this file). Re-exported for backward
-// compatibility with `from "../store/reducer"` consumers.
-export { makeId } from "./utils/make-id";
+// directly without an ESM cycle through this file). Re-exported via
+// ./reducer-public-api for backward compatibility with `from "../store/reducer"`.
 import { makeId } from "./utils/make-id";
 
 export { cellKey };
@@ -1159,4 +1129,9 @@ export function gameReducerWithInvariants(state: GameState, action: GameAction):
   return next;
 }
 
+
+
+// Public API barrel: pure `export ... from` lines extracted to ./reducer-public-api.
+// Placed at end-of-file so explicit local exports above take precedence in CJS init order.
+export * from "./reducer-public-api";
 
