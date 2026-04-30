@@ -1,4 +1,4 @@
-import type { GameState, StarterDroneState } from "./types";
+import type { GameState, StarterDroneState } from "../types";
 
 type WorkbenchTaskNodeId =
   | { kind: "input"; workbenchId: string; jobId: string; reservationId: string }

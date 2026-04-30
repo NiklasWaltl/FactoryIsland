@@ -1,5 +1,5 @@
 import { createInitialState } from "../initial-state";
-import { getDroneStatusDetail } from "../drone-status-detail";
+import { getDroneStatusDetail } from "../selectors/drone-status-detail";
 
 describe("drone status detail classifier", () => {
   test("returns ready label for idle drones", () => {

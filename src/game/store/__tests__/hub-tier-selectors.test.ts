@@ -4,7 +4,7 @@ import {
   getHubTierLabel,
   getMaxDrones,
   getMaxTargetStockForTier,
-} from "../hub-tier-selectors";
+} from "../selectors/hub-tier-selectors";
 
 describe("hub tier selector helpers", () => {
   it("returns expected values for tier 1", () => {

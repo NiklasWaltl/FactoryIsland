@@ -2,14 +2,14 @@ import React from "react";
 import type { GameState, CollectableItemType, DroneRole, Inventory } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_LABELS as GLOBAL_RESOURCE_LABELS } from "../../store/constants/resources";
-import { getDroneStatusDetail } from "../../store/drone-status-detail";
+import { getDroneStatusDetail } from "../../store/selectors/drone-status-detail";
 import {
   getHubTierLabel,
   getMaxTargetStockForTier,
   getHubRange,
   getActiveResources,
   getMaxDrones,
-} from "../../store/hub-tier-selectors";
+} from "../../store/selectors/hub-tier-selectors";
 import { getHubDrones } from "../../store/reducer";
 import { HUB_UPGRADE_COST } from "../../store/constants/hub/hub-upgrade-cost";
 import { hasResourcesInPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";

@@ -3,7 +3,7 @@ import { createDefaultProtoHubTargetStock } from "../../../store/constants/hub/h
 import { isHubUpgradeDeliverySatisfied } from "../../../buildings/service-hub/hub-upgrade-status";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import { getBuildingInputConfig } from "../../../store/constants/buildings";
-import { getMaxDrones } from "../../../store/hub-tier-selectors";
+import { getMaxDrones } from "../../../store/selectors/hub-tier-selectors";
 import { addResources } from "../../../store/inventory-ops";
 import { syncDrones, applyDroneUpdate } from "../../drone-state-helpers";
 import { parseWorkbenchTaskNodeId } from "../../../store/workbench-task-utils";

@@ -222,7 +222,7 @@ import {
   decideAutoMinerOutputTarget,
   decideAutoMinerTickEligibility,
 } from "./decisions/auto-miner-decisions";
-import { getDroneStatusDetail as getDroneStatusDetailClassifier } from "./drone-status-detail";
+import { getDroneStatusDetail as getDroneStatusDetailClassifier } from "./selectors/drone-status-detail";
 import type { CraftingInventorySource } from "../crafting/types";
 
 // ---- Core types ----------------------------------------------------------
@@ -444,7 +444,7 @@ export * from "./constants/hub/hub-active-resources";
 // Imported for internal use and re-exported for backward compatibility.
 export * from "./constants/hub/hub-max-drones";
 
-// Hub tier selector helpers live in ./hub-tier-selectors.
+// Hub tier selector helpers live in ./selectors/hub-tier-selectors.
 // Imported for reducer-internal use and re-exported for backward compatibility.
 import {
   getHubRange,
@@ -452,7 +452,7 @@ import {
   getMaxDrones,
   getMaxTargetStockForTier,
   getHubTierLabel,
-} from "./hub-tier-selectors";
+} from "./selectors/hub-tier-selectors";
 export {
   getHubRange,
   getActiveResources,

@@ -1,5 +1,5 @@
 import { isUnderConstruction } from "../../../helpers/asset-status";
-import { getMaxTargetStockForTier } from "../../../hub-tier-selectors";
+import { getMaxTargetStockForTier } from "../../../selectors/hub-tier-selectors";
 import type { GameState } from "../../../types";
 import type { HubTargetAction } from "../types";
 

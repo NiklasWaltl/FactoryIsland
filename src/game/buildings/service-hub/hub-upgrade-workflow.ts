@@ -1,6 +1,6 @@
 import { debugLog } from "../../debug/debugLogger";
 import { SERVICE_HUB_TARGET_STOCK } from "../../store/constants/hub/hub-target-stock";
-import { getMaxDrones } from "../../store/hub-tier-selectors";
+import { getMaxDrones } from "../../store/selectors/hub-tier-selectors";
 import type {
   CollectableItemType,
   GameNotification,
