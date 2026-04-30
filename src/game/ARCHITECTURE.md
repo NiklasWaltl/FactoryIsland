@@ -1,7 +1,7 @@
 # `src/game` — Architektur-Karte
 
 > AI-orientierte Übersicht. Ziel: in <10 Min ein tragfähiges Mentalmodell aufbauen.
-> **Stand:** generiert; bei Konflikten gilt der Code.
+> **Stand:** verifiziert 2026-04-30; bei Konflikten gilt der Code.
 
 ---
 
@@ -17,8 +17,8 @@ Für Onboarding genau in dieser Reihenfolge:
 
 1. [`src/game/ARCHITECTURE.md`](./ARCHITECTURE.md) ← du bist hier
 2. [`entry/FactoryApp.tsx`](./entry/FactoryApp.tsx) — alle `setInterval`-Tick-Dispatches sichtbar
-3. [`store/types.ts`](./store/types.ts) — `GameState`-Shape (Zeile 432+) + alle Sub-Typen
-4. [`store/reducer.ts`](./store/reducer.ts) ab Zeile 1332 — `gameReducer`-Dispatcher
+3. [`store/types.ts`](./store/types.ts) — `GameState`-Shape (Zeile 316+) + alle Sub-Typen
+4. [`store/reducer.ts`](./store/reducer.ts) ab Zeile 1308 — `gameReducer`-Dispatcher
 5. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union (kanonische Quelle; alle Handler importieren direkt von hier)
 6. [`crafting/README.md`](./crafting/README.md) — Job-Lifecycle (komplexestes Subsystem)
 7. Cluster-Header in [`store/action-handlers/*/index.ts`](./store/action-handlers/) je nach Aufgabe
@@ -68,7 +68,7 @@ Konstanten in [`store/constants/timing/timing.ts`](./store/constants/timing/timi
 
 ## State Map
 
-`GameState` (definiert in [`store/types.ts:432`](./store/types.ts#L432)) zerfällt logisch in folgende Slices. **Hinweis:** Die Aufteilung ist konzeptuell — im Code ist `GameState` ein einziges Flat-Interface mit ~62 Feldern.
+`GameState` (definiert in [`store/types.ts:316`](./store/types.ts#L316)) zerfällt logisch in folgende Slices. **Hinweis:** Die Aufteilung ist konzeptuell — im Code ist `GameState` ein einziges Flat-Interface mit ~62 Feldern.
 
 | Slice (logisch) | Felder | Persistiert |
 |---|---|---|
@@ -199,7 +199,7 @@ Kurz: Jobs durchlaufen `queued → reserved → crafting → delivering → done
 Stolperfallen, die häufiger Tool-Calls kosten als nötig:
 
 1. **Ein Weg zu `GameAction`** — kanonisch [`game-actions.ts:20`](./store/game-actions.ts#L20). `actions.ts` wurde entfernt (Wave 4); alle 45 Handler importieren direkt. `grep "type GameAction ="` trifft genau einen Treffer.
-2. **`reducer.ts` ist 1508 Zeilen** — überwiegend Imports + Re-Export-Hub. Echte Reducer-Logik: Zeile 1332–1506 (`gameReducer`-Dispatcher + `gameReducerWithInvariants`-Wrapper).
+2. **`reducer.ts` ist 1508 Zeilen** — überwiegend Imports + Re-Export-Hub. Echte Reducer-Logik: Zeile 1308–1506 (`gameReducer`-Dispatcher + `gameReducerWithInvariants`-Wrapper).
 3. **Resolver-Aliasings** in [`reducer.ts:82-97`](./store/reducer.ts#L82-L97) — Funktionen werden mit `as XResolver` umbenannt; Grep nach Originalnamen findet die Verwendung in `reducer.ts` nicht direkt.
 4. **Drei Inventarsysteme koexistieren** — `inventory` (global) / `warehouseInventories` (physisch) / `network` (logisch reserviert). Wer ist kanonisch? Antwort: physisch ist Source-of-Truth, `network` ist abgeleitete Holds.
 5. **`starterDrone` ↔ `drones[id]`** — duplizierter State, "kept in sync" via [`syncDrones`](./drones/drone-state-helpers.ts). Nicht beide editieren.
