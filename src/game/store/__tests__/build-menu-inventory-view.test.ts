@@ -1,10 +1,12 @@
 import type { GameState, Inventory, ServiceHubEntry } from "../types";
 import {
-  addResources,
   createInitialState,
-  hasResources,
-  selectBuildMenuInventoryView,
 } from "../reducer";
+import {
+  addResources,
+  hasResources,
+} from "../inventory-ops";
+import { selectBuildMenuInventoryView } from "../helpers/inventory-queries";
 
 function emptyInv(): Inventory {
   const inv = createInitialState("release").inventory;

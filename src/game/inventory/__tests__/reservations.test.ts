@@ -2,7 +2,7 @@
 // Reservations — pure helper tests (Step 2)
 // ============================================================
 
-import { createInitialState } from "../../store/reducer";
+import { createInitialState } from "../../store/initial-state";
 import type { Inventory } from "../../store/types";
 import {
   applyNetworkAction,

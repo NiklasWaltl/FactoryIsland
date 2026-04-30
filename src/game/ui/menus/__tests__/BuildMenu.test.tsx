@@ -1,16 +1,18 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
-  addResources,
   BUILDING_COSTS,
   createInitialState,
-  hasResources,
-  selectBuildMenuInventoryView,
   type GameAction,
   type GameState,
   type Inventory,
   type ServiceHubEntry,
 } from "../../../store/reducer";
+import {
+  addResources,
+  hasResources,
+} from "../../../store/inventory-ops";
+import { selectBuildMenuInventoryView } from "../../../store/helpers/inventory-queries";
 import { BuildMenu } from "../BuildMenu";
 
 jest.mock("../../../assets/sprites/sprites", () => {

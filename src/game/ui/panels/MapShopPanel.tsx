@@ -1,6 +1,6 @@
 ﻿import React from "react";
 import type { GameState } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import { MAP_SHOP_ITEMS } from "../../store/constants/shop";
 import { RESOURCE_EMOJIS, RESOURCE_LABELS } from "../../store/constants/resources";
 

@@ -12,6 +12,11 @@ import type { Inventory, PlacedAsset, ServiceHubEntry } from "../../store/types"
 import { pickCraftingPhysicalSourceForIngredient } from "../tick";
 import { pickOutputWarehouseId } from "../output";
 import type { CraftingInventorySource, CraftingJob, RecipeId } from "../types";
+import {
+  getLegacyScopeKeyForSource,
+  getReservedInScope,
+  getWarehouseLaneScopeKey,
+} from "../scope-keys";
 import type { RecipePolicyDecision } from "../policies/policies";
 import type {
   AutoCraftPlanError,
@@ -82,25 +87,6 @@ export function getOutputWarehouseId(
     assets,
     preferredFromAssetId: producerAssetId,
   });
-}
-
-function getLegacyScopeKeyForSource(source: NonGlobalSource): string {
-  if (source.kind === "warehouse") return `crafting:warehouse:${source.warehouseId}`;
-  return `crafting:zone:${source.zoneId}`;
-}
-
-function getWarehouseLaneScopeKey(source: NonGlobalSource, warehouseId: WarehouseId): string {
-  return `${getLegacyScopeKeyForSource(source)}:warehouse:${warehouseId}`;
-}
-
-function getReservedInScope(network: NetworkSlice, itemId: ItemId, scopeKey: string): number {
-  let total = 0;
-  for (const reservation of network.reservations) {
-    if (reservation.itemId !== itemId) continue;
-    if (reservation.scopeKey !== scopeKey) continue;
-    total += reservation.amount;
-  }
-  return total;
 }
 
 function getWarehouseLaneAvailability(

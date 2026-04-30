@@ -2,7 +2,7 @@
 // InventoryNetwork Read-View — Tests (Step 1)
 // ============================================================
 
-import { createInitialState } from "../../store/reducer";
+import { createInitialState } from "../../store/initial-state";
 import type { Inventory } from "../../store/types";
 import {
   getNetworkAmount,

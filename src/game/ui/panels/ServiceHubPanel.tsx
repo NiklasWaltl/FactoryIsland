@@ -1,18 +1,18 @@
 import React from "react";
 import type { GameState, CollectableItemType, DroneRole, Inventory } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_LABELS as GLOBAL_RESOURCE_LABELS } from "../../store/constants/resources";
+import { getDroneStatusDetail } from "../../store/drone-status-detail";
 import {
-  getDroneStatusDetail,
   getHubTierLabel,
   getMaxTargetStockForTier,
   getHubRange,
   getActiveResources,
   getMaxDrones,
-  getHubDrones,
-  HUB_UPGRADE_COST,
-  hasResourcesInPhysicalStorage,
-} from "../../store/reducer";
+} from "../../store/hub-tier-selectors";
+import { getHubDrones } from "../../store/reducer";
+import { HUB_UPGRADE_COST } from "../../store/constants/hub/hub-upgrade-cost";
+import { hasResourcesInPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 
 interface ServiceHubPanelProps {
   state: GameState;

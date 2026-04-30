@@ -1,12 +1,19 @@
 import React from "react";
 import type { BuildingType, FloorTileType, GameState, Inventory } from "../../store/types";
-import type { GameAction } from "../../store/actions";
-import { BUILDING_LABELS } from "../../store/constants/buildings";
+import type { GameAction } from "../../store/game-actions";
+import {
+  BUILDING_COSTS,
+  BUILDING_LABELS,
+  BUILDING_SIZES,
+  MAX_WAREHOUSES,
+  STACKABLE_BUILDINGS,
+} from "../../store/constants/buildings";
 import {
   BUILD_CATEGORIES,
   getBuildingDef,
 } from "../../store/constants/buildings/registry";
 import {
+  FLOOR_TILE_COSTS,
   FLOOR_TILE_DESCRIPTIONS,
   FLOOR_TILE_LABELS,
 } from "../../store/constants/floor";
@@ -15,16 +22,13 @@ import {
   RESOURCE_LABELS,
 } from "../../store/constants/resources";
 import {
-  BUILDING_COSTS,
-  BUILDING_SIZES,
-  STACKABLE_BUILDINGS,
-  FLOOR_TILE_COSTS,
   hasResources,
+} from "../../store/inventory-ops";
+import {
   selectBuildMenuInventoryView,
   selectGlobalInventoryView,
-  hasResourcesInPhysicalStorage,
-} from "../../store/reducer";
-import { MAX_WAREHOUSES } from "../../store/constants/buildings";
+} from "../../store/helpers/inventory-queries";
+import { hasResourcesInPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 import { ASSET_SPRITES, FLOOR_SPRITES, GRASS_TILE_SPRITES } from "../../assets/sprites/sprites";
 
 interface BuildMenuProps {

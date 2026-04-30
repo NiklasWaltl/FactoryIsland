@@ -2,12 +2,22 @@ import React from "react";
 import { CELL_PX } from "../constants/grid";
 import {
   BUILDING_LABELS,
+} from "../store/constants/buildings";
+import {
   FLOOR_TILE_EMOJIS,
+} from "../store/constants/floor";
+import {
   RESOURCE_EMOJIS,
+} from "../store/constants/resources";
+import {
   directionOffset,
+} from "../store/direction";
+import {
   cellKey,
+} from "../store/cell-key";
+import {
   getWarehouseInputCell,
-} from "../store/reducer";
+} from "../store/warehouse-input";
 import type { Direction, GameState, PlacedAsset } from "../store/types";
 import { POWER_POLE_RANGE } from "../store/constants/energy/power-pole";
 import {

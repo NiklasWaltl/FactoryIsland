@@ -1,4 +1,4 @@
-import { createInitialState } from "../reducer";
+import { createInitialState } from "../initial-state";
 import { getDroneStatusDetail } from "../drone-status-detail";
 
 describe("drone status detail classifier", () => {

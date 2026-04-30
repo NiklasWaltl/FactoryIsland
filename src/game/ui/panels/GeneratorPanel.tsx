@@ -3,16 +3,20 @@ import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/actions";
 import {
   GENERATOR_TICKS_PER_WOOD,
+  ENERGY_NET_TICK_MS,
+} from "../../store/reducer";
+import {
   GENERATOR_ENERGY_PER_TICK,
   GENERATOR_TICK_MS,
-  GENERATOR_MAX_FUEL,
-  ENERGY_NET_TICK_MS,
-  getConnectedDemandPerPeriod,
-  getEnergyProductionPerPeriod,
-  getCraftingSourceInventory,
-  getSourceStatusInfo,
+} from "../../store/constants/energy/generator";
+import { GENERATOR_MAX_FUEL } from "../../store/constants/buildings";
+import {
   getInboundBuildingSupplyAmount,
-} from "../../store/reducer";
+} from "../../drones/selection/helpers/need-slot-resolvers";
+import { getConnectedConsumerDrainEntries } from "../../power/energy-consumers";
+import { getEnergyProductionPerPeriod } from "../../power/energy-production";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
+import { getSourceStatusInfo } from "../../store/selectors/source-status";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";
 
 interface GeneratorPanelProps {
@@ -58,7 +62,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(({ state
 
   // Energy balance as used by the scheduler: connected consumer drains per net period.
   const production = getEnergyProductionPerPeriod(state);
-  const consumption = getConnectedDemandPerPeriod(state);
+  const consumption = getConnectedConsumerDrainEntries(state).reduce((sum, entry) => sum + entry.drain, 0);
   const netEnergy = production - consumption;
 
   return (

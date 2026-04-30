@@ -10,13 +10,13 @@ import { serializeState, deserializeState } from "../save";
 import { rebuildGlobalInventoryFromStorage } from "../save";
 import {
   createInitialState,
-  addResources,
-  selectGlobalInventoryView,
-  hasResourcesInPhysicalStorage,
   type GameState,
   type Inventory,
   type ServiceHubEntry,
 } from "../../store/reducer";
+import { addResources } from "../../store/inventory-ops";
+import { selectGlobalInventoryView } from "../../store/helpers/inventory-queries";
+import { hasResourcesInPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 
 function emptyInv(): Inventory {
   const inv = createInitialState("release").inventory;

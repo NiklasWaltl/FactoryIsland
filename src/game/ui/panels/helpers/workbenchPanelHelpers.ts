@@ -14,7 +14,7 @@ import type {
   GameState,
   Inventory,
 } from "../../../store/types";
-import { getZoneWarehouseIds } from "../../../store/reducer";
+import { getZoneWarehouseIds } from "../../../zones/production-zone-aggregation";
 import {
   MANUAL_ASSEMBLER_RECIPES,
   SMELTING_RECIPES,

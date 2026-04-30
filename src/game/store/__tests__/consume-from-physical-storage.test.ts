@@ -13,9 +13,9 @@
 
 import {
   createInitialState,
-  consumeFromPhysicalStorage,
-  addResources,
 } from "../reducer";
+import { addResources } from "../inventory-ops";
+import { consumeFromPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 import type { GameState, Inventory, ServiceHubEntry } from "../types";
 
 function emptyInv(): Inventory {

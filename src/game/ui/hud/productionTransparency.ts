@@ -25,17 +25,17 @@ import {
   type KeepStockDecisionResult,
   type KeepStockEvaluationDeps,
 } from "../../crafting/policies";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { isKnownItemId, getItemDef } from "../../items/registry";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
 import type { CollectableItemType, CraftingSource, GameState } from "../../store/types";
 import {
   KEEP_STOCK_MAX_TARGET,
   KEEP_STOCK_OPEN_JOB_CAP,
-  getCraftingSourceInventory,
-  getZoneWarehouseIds,
-  isUnderConstruction,
-  resolveBuildingSource,
 } from "../../store/reducer";
+import { isUnderConstruction } from "../../store/asset-status";
+import { resolveBuildingSource } from "../../store/building-source";
+import { toCraftingJobInventorySource } from "../../store/crafting/crafting-source-adapters";
 import { getWorkbenchRecipe } from "../../simulation/recipes";
 import { computeIngredientLines } from "../panels/helpers";
 
@@ -94,23 +94,6 @@ const KEEP_STOCK_EVALUATION_DEPS: KeepStockEvaluationDeps = {
   getCraftingSourceInventory,
   isUnderConstruction,
 };
-
-function toCraftingJobInventorySource(
-  state: GameState,
-  source: CraftingSource,
-): CraftingInventorySource {
-  if (source.kind === "global") {
-    return { kind: "global" };
-  }
-  if (source.kind === "zone") {
-    return {
-      kind: "zone",
-      zoneId: source.zoneId,
-      warehouseIds: getZoneWarehouseIds(state, source.zoneId),
-    };
-  }
-  return { kind: "warehouse", warehouseId: source.warehouseId };
-}
 
 function toCraftingSource(source: CraftingInventorySource): CraftingSource {
   if (source.kind === "global") return { kind: "global" };

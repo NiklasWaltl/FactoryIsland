@@ -1,6 +1,6 @@
 import React from "react";
 import type { BuildingType, GameState, Inventory } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import {
   RESOURCE_LABELS,
   RESOURCE_EMOJIS,
@@ -8,9 +8,15 @@ import {
 import {
   MAX_ZONES,
   BUILDING_LABELS,
+} from "../../store/constants/buildings";
+import {
   getZoneWarehouseIds,
-  getZoneBuildingIds,
   getZoneAggregateInventory,
+} from "../../zones/production-zone-aggregation";
+import {
+  getZoneBuildingIds,
+} from "../../store/selectors/zone-selectors";
+import {
   getZoneItemCapacity,
 } from "../../store/reducer";
 import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings";

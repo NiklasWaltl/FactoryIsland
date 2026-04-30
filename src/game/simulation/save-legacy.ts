@@ -14,7 +14,7 @@ import type {
   AutoSmelterEntry,
   ManualAssemblerState,
 } from "../store/types";
-import { createInitialState } from "../store/reducer";
+import { createInitialState } from "../store/initial-state";
 
 /** Represents a pre-version save payload. */
 export type SaveGameV0 = Record<string, unknown>;

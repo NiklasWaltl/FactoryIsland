@@ -1,13 +1,15 @@
 ﻿import React from "react";
 import type { GameState, PlacedAsset } from "../../store/types";
 import { CELL_PX, GRID_W, GRID_H } from "../../constants/grid";
+import { ENERGY_DRAIN } from "../../store/constants/energy/energy-balance";
 import {
-  ENERGY_DRAIN,
   GENERATOR_ENERGY_PER_TICK,
   GENERATOR_TICK_MS,
-  ENERGY_NET_TICK_MS,
+} from "../../store/constants/energy/generator";
+import { ENERGY_NET_TICK_MS } from "../../store/constants/energy/energy-smelter";
+import {
   getConnectedConsumerDrainEntries,
-} from "../../store/reducer";
+} from "../../power/energy-consumers";
 import { POWER_POLE_RANGE } from "../../store/constants/energy/power-pole";
 
 const WORLD_W = GRID_W * CELL_PX;

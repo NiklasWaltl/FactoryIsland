@@ -1,10 +1,14 @@
 import { GRID_H, GRID_W } from "../constants/grid";
 import {
   BUILDING_SIZES,
-  DEPOSIT_TYPES,
   REQUIRES_STONE_FLOOR,
+} from "../store/constants/buildings";
+import {
+  DEPOSIT_TYPES,
+} from "../store/constants/deposit-positions";
+import {
   cellKey,
-} from "../store/reducer";
+} from "../store/cell-key";
 import {
   isConveyorPreviewBuildingType,
   previewBuildingPlacementAtCell,

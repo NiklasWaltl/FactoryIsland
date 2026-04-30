@@ -1,17 +1,21 @@
 ﻿import React, { useEffect, useRef } from "react";
 import type { GameState, Inventory, MachinePriority } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
+import { AUTO_MINER_PRODUCE_TICKS } from "../../store/constants/drone-config";
 import {
-  AUTO_MINER_BOOST_MULTIPLIER,
-  AUTO_MINER_PRODUCE_TICKS,
   DEFAULT_MACHINE_PRIORITY,
   ENERGY_DRAIN,
-  getCapacityPerResource,
-  getCraftingSourceInventory,
-  getSourceStatusInfo,
-  getZoneItemCapacity,
+} from "../../store/constants/energy/energy-balance";
+import {
+  AUTO_MINER_BOOST_MULTIPLIER,
 } from "../../store/reducer";
+import { getSourceStatusInfo } from "../../store/selectors/source-status";
+import {
+  getCapacityPerResource,
+  getZoneItemCapacity,
+} from "../../store/warehouse-capacity";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";
 

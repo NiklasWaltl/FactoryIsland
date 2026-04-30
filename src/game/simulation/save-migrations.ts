@@ -23,9 +23,7 @@ import type {
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
 import { GENERATOR_MAX_FUEL } from "../store/constants/buildings";
 import { MAP_SHOP_POS } from "../store/constants/map-layout";
-import {
-  createDefaultHubTargetStock,
-} from "../store/reducer";
+import { createDefaultHubTargetStock } from "../store/constants/hub/hub-target-stock";
 import type { NetworkSlice } from "../inventory/reservationTypes";
 import { createEmptyNetworkSlice } from "../inventory/reservationTypes";
 import type { CraftingQueueState } from "../crafting/types";

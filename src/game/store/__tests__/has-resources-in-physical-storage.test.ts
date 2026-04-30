@@ -14,10 +14,12 @@
 
 import {
   createInitialState,
+} from "../reducer";
+import { addResources } from "../inventory-ops";
+import {
   hasResourcesInPhysicalStorage,
   consumeFromPhysicalStorage,
-  addResources,
-} from "../reducer";
+} from "../../buildings/warehouse/warehouse-storage";
 import type { GameState, Inventory, ServiceHubEntry } from "../types";
 
 function emptyInv(): Inventory {

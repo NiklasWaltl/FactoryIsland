@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { CRAFTING_TICK_MS } from "../../store/reducer";
+import { CRAFTING_TICK_MS } from "../../store/constants/timing";
 import FactoryGame from "../FactoryApp";
 
 jest.mock("../../store/reducer", () => {

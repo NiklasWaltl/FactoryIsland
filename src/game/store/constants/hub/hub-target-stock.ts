@@ -23,6 +23,10 @@ export const PROTO_HUB_TARGET_STOCK: Readonly<Record<CollectableItemType, number
   copper: 0,
 };
 
+export function createDefaultHubTargetStock(): Record<CollectableItemType, number> {
+  return { ...SERVICE_HUB_TARGET_STOCK };
+}
+
 export function createDefaultProtoHubTargetStock(): Record<CollectableItemType, number> {
   return { ...PROTO_HUB_TARGET_STOCK };
 }

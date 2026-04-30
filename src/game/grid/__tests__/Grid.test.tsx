@@ -2,7 +2,7 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Grid } from "../Grid";
 import type { StaticAssetSnapshot } from "../../world/PhaserGame";
-import { createInitialState } from "../../store/reducer";
+import { createInitialState } from "../../store/initial-state";
 import type { GameState } from "../../store/types";
 
 let phaserHostProps: { staticAssets: StaticAssetSnapshot[] } | null = null;

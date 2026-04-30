@@ -19,9 +19,12 @@ import type {
 import type { ItemId, WarehouseId } from "../../items/types";
 import type { NetworkSlice } from "../../inventory/reservationTypes";
 import type { CraftingInventorySource } from "../types";
-import { GLOBAL_SOURCE_SCOPE_KEY } from "./hub-inventory-view";
-
-type PhysicalSourceKind = "warehouse" | "hub";
+import {
+  getLegacyScopeKeyForSource,
+  getReservedInScope,
+  getSourceScopedScopeKey,
+  type PhysicalSourceKind,
+} from "../scope-keys";
 
 interface CraftingSourceCandidateSnapshot {
   readonly lane: "primary" | "fallback";
@@ -58,36 +61,6 @@ export interface CraftingIngredientDecision {
   readonly reserved: number;
   readonly free: number;
   readonly attempts: readonly CraftingSourceCandidateSnapshot[];
-}
-
-function getLegacyScopeKeyForSource(source: CraftingInventorySource): string {
-  if (source.kind === "global") return GLOBAL_SOURCE_SCOPE_KEY;
-  if (source.kind === "warehouse") return `crafting:warehouse:${source.warehouseId}`;
-  return `crafting:zone:${source.zoneId}`;
-}
-
-function getSourceScopedScopeKey(
-  source: Exclude<CraftingInventorySource, { kind: "global" }>,
-  kind: PhysicalSourceKind,
-  sourceId: string,
-): string {
-  return `${getLegacyScopeKeyForSource(source)}:${kind}:${sourceId}`;
-}
-
-function getReservedInScope(
-  network: NetworkSlice,
-  itemId: ItemId,
-  scopeKey: string,
-  excludeReservationId?: string,
-): number {
-  let total = 0;
-  for (const reservation of network.reservations) {
-    if (excludeReservationId && reservation.id === excludeReservationId) continue;
-    if (reservation.itemId !== itemId) continue;
-    if (reservation.scopeKey !== scopeKey) continue;
-    total += reservation.amount;
-  }
-  return total;
 }
 
 function isHubCollectableItemId(itemId: ItemId): itemId is CollectableItemType {

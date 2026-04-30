@@ -1,15 +1,19 @@
 ﻿import React from "react";
 import type { GameState, Inventory } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import {
-  AUTO_SMELTER_BOOST_MULTIPLIER,
   AUTO_SMELTER_IDLE_ENERGY_PER_SEC,
   AUTO_SMELTER_PROCESSING_ENERGY_PER_SEC,
-  getCapacityPerResource,
-  getCraftingSourceInventory,
-  getSourceStatusInfo,
-  getZoneItemCapacity,
+} from "../../store/constants/energy/energy-smelter";
+import {
+  AUTO_SMELTER_BOOST_MULTIPLIER,
 } from "../../store/reducer";
+import { getSourceStatusInfo } from "../../store/selectors/source-status";
+import {
+  getCapacityPerResource,
+  getZoneItemCapacity,
+} from "../../store/warehouse-capacity";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings";
 import { getSmeltingRecipe } from "../../simulation/recipes";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";

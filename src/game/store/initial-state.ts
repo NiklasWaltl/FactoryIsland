@@ -29,20 +29,15 @@ import type {
   PlacedAsset,
   StarterDroneState,
 } from "./types";
-import {
-  DEFAULT_MACHINE_PRIORITY,
-  MAP_SHOP_POS,
-  assetHeight,
-  assetWidth,
-  cellKey,
-  createDefaultProtoHubTargetStock,
-  createEmptyInventory,
-  getAutoSmelterIoCells,
-  isEnergyConsumerType,
-  makeId,
-  placeAsset,
-  withDefaultMachinePriority,
-} from "./reducer";
+import { DEFAULT_MACHINE_PRIORITY } from "./constants/energy/energy-balance";
+import { MAP_SHOP_POS } from "./constants/map-layout";
+import { assetHeight, assetWidth, getAutoSmelterIoCells } from "./asset-geometry";
+import { cellKey } from "./cell-key";
+import { createDefaultProtoHubTargetStock } from "./constants/hub/hub-target-stock";
+import { createEmptyInventory } from "./inventory-ops";
+import { isEnergyConsumerType, withDefaultMachinePriority } from "./machine-priority";
+import { makeId } from "./make-id";
+import { placeAsset } from "./asset-mutation";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";
 
 export function createInitialState(mode: GameMode): GameState {

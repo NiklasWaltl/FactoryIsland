@@ -14,12 +14,12 @@ import { getDroneHomeDock } from "../drones/drone-dock";
 import { computeConnectedAssetIds } from "../logistics/connectivity";
 import { cleanBuildingZoneIds } from "../zones/production-zone-cleanup";
 import { MAP_SHOP_POS } from "../store/constants/map-layout";
-import { createDefaultProtoHubTargetStock } from "../store/constants/hub/hub-target-stock";
-import { cellKey } from "../store/cell-key";
-import { createInitialState } from "../store/initial-state";
 import {
   createDefaultHubTargetStock,
-} from "../store/reducer";
+  createDefaultProtoHubTargetStock,
+} from "../store/constants/hub/hub-target-stock";
+import { cellKey } from "../store/cell-key";
+import { createInitialState } from "../store/initial-state";
 import type { HubTier } from "../store/types";
 import { debugLog } from "../debug/debugLogger";
 import {

@@ -2,9 +2,9 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
 import {
   cellKey,
-} from "../store/reducer";
+} from "../store/cell-key";
 import type { Direction, GameState } from "../store/types";
-import type { GameAction } from "../store/actions";
+import type { GameAction } from "../store/game-actions";
 
 const WORLD_W = GRID_W * CELL_PX;
 const WORLD_H = GRID_H * CELL_PX;

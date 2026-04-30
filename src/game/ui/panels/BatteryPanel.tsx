@@ -1,7 +1,8 @@
 ﻿import React from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/actions";
-import { getConnectedDemandPerPeriod, getEnergyProductionPerPeriod } from "../../store/reducer";
+import { getConnectedConsumerDrainEntries } from "../../power/energy-consumers";
+import { getEnergyProductionPerPeriod } from "../../power/energy-production";
 import { BATTERY_CAPACITY } from "../../store/constants/energy/battery";
 
 interface BatteryPanelProps {
@@ -18,7 +19,7 @@ export const BatteryPanel: React.FC<BatteryPanelProps> = React.memo(({ state, di
 
   // Compute live energy balance from the same connected-consumer model as scheduler.
   const production = getEnergyProductionPerPeriod(state);
-  const consumption = getConnectedDemandPerPeriod(state);
+  const consumption = getConnectedConsumerDrainEntries(state).reduce((sum, entry) => sum + entry.drain, 0);
   const netEnergy = production - consumption;
 
   const isFull = b.stored >= BATTERY_CAPACITY;

@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import type { GameAction } from "../store/actions";
+import type { GameAction } from "../store/game-actions";
 import type { GameState } from "../store/types";
 import { useGridInput } from "./GridInput";
 import { GridRenderer } from "./GridRenderer";

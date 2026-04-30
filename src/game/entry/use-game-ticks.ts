@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Dispatch } from "react";
-import type { GameAction } from "../store/reducer";
+import type { GameAction } from "../store/game-actions";
 import {
   NATURAL_SPAWN_MS,
   SMITHY_TICK_MS,

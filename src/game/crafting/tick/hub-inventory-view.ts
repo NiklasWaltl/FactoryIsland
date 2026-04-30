@@ -13,8 +13,9 @@
 import type { Inventory, ServiceHubEntry } from "../../store/types";
 import type { WarehouseId } from "../../items/types";
 import type { CraftingInventorySource, CraftingJob } from "../types";
+import { GLOBAL_SOURCE_SCOPE_KEY, getLegacyScopeKeyForSource } from "../scope-keys";
 
-export const GLOBAL_SOURCE_SCOPE_KEY = "crafting:global";
+export { GLOBAL_SOURCE_SCOPE_KEY };
 export const GLOBAL_SOURCE_WAREHOUSE_ID = "__crafting_global__" as WarehouseId;
 export const GLOBAL_SOURCE_HUB_PREFIX = "__crafting_hub__:";
 export const HUB_COLLECTABLE_ITEM_IDS = ["wood", "stone", "iron", "copper"] as const;
@@ -84,7 +85,7 @@ export function getSourceView(
   if (source.kind === "warehouse") {
     const warehouse = warehouseInventories[source.warehouseId];
     return {
-      scopeKey: `crafting:warehouse:${source.warehouseId}`,
+      scopeKey: getLegacyScopeKeyForSource(source),
       warehouseInventories: warehouse ? { [source.warehouseId]: warehouse } : {},
     };
   }
@@ -97,7 +98,7 @@ export function getSourceView(
     }
   }
   return {
-    scopeKey: `crafting:zone:${source.zoneId}`,
+    scopeKey: getLegacyScopeKeyForSource(source),
     warehouseInventories: scopedWarehouses,
   };
 }

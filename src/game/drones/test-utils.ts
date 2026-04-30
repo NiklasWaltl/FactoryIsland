@@ -15,7 +15,7 @@ import type {
   ServiceHubEntry,
   StarterDroneState,
 } from "../store/types";
-import type { GameAction } from "../store/actions";
+import type { GameAction } from "../store/game-actions";
 
 export {
   BUILDING_COSTS,

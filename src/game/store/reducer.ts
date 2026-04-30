@@ -203,6 +203,8 @@ import {
 } from "./helpers/crafting-asset-lookup";
 import { resolveShopItemTarget } from "./helpers/shop";
 import { runEnergyNetTick } from "./energy-net-tick";
+import { resolveBuildingSource } from "./building-source";
+import { toCraftingJobInventorySource } from "./crafting/crafting-source-adapters";
 import {
   decideAutoSmelterTickEntryEligibility,
   decideAutoSmelterInputBeltEligibility,
@@ -420,7 +422,10 @@ export * from "./constants/workbench-timing";
 
 // Service hub target-stock defaults live in ./constants/hub-target-stock.
 // Imported for internal use and re-exported for backward compatibility.
-import { SERVICE_HUB_TARGET_STOCK } from "./constants/hub/hub-target-stock";
+import {
+  createDefaultHubTargetStock,
+  createDefaultProtoHubTargetStock,
+} from "./constants/hub/hub-target-stock";
 export * from "./constants/hub/hub-target-stock";
 
 // Service hub target-stock clamp constants live in ./constants/hub-target-stock-max.
@@ -481,8 +486,8 @@ export const KEEP_STOCK_OPEN_JOB_CAP = 2;
 // store/types (transitively via reducer.ts), so moving these deps into
 // crafting/ would create a circular module dependency:
 //   crafting/tickPhases → store/reducer → crafting/tickPhases
-// resolveBuildingSource and toCraftingJobInventorySource are reducer-internal
-// helpers that depend on GameState; they cannot be declared in crafting/.
+// resolveBuildingSource and toCraftingJobInventorySource are store-layer
+// helpers that depend on GameState; they cannot be declared in ../crafting.
 const PLANNING_TRIGGER_DEPS: PlanningTriggerDeps = {
   KEEP_STOCK_OPEN_JOB_CAP,
   KEEP_STOCK_MAX_TARGET,
@@ -518,7 +523,6 @@ import {
   fullCostAsRemaining,
   consumeBuildResources,
 } from "./inventory-ops";
-import { createDefaultProtoHubTargetStock } from "./constants/hub/hub-target-stock";
 export { isEnergyConsumerType };
 export {
   getConnectedConsumerDrainEntries,
@@ -583,12 +587,7 @@ export const MAX_DRONES_PER_HUB_RESTOCK_RESOURCE = 4;
 /** Hard cap for concurrent supply trips into the same building input buffer. */
 export const MAX_DRONES_PER_BUILDING_SUPPLY = 4;
 
-/** Create default target stock for Tier 2 (Service-Hub). */
-export function createDefaultHubTargetStock(): Record<CollectableItemType, number> {
-  return { ...SERVICE_HUB_TARGET_STOCK };
-}
-
-export { createDefaultProtoHubTargetStock };
+export { createDefaultHubTargetStock, createDefaultProtoHubTargetStock };
 
 /** Get all drones assigned to a specific hub. */
 export function getHubDrones(state: GameState, hubId: string): StarterDroneState[] {
@@ -953,22 +952,7 @@ export function devAssertInventoryNonNegative(label: string, inv: Inventory): vo
 // re-exported above. Determines where a crafting device reads/writes resources.
 // ============================================================
 
-export function toCraftingJobInventorySource(
-  state: GameState,
-  source: CraftingSource,
-): CraftingInventorySource {
-  if (source.kind === "global") {
-    return { kind: "global" };
-  }
-  if (source.kind === "zone") {
-    return {
-      kind: "zone",
-      zoneId: source.zoneId,
-      warehouseIds: getZoneWarehouseIds(state, source.zoneId),
-    };
-  }
-  return { kind: "warehouse", warehouseId: source.warehouseId };
-}
+export { toCraftingJobInventorySource };
 
 // ============================================================
 // PRODUCTION ZONE HELPERS
@@ -981,21 +965,7 @@ export { getZoneBuildingIds, getZoneItemCapacity };
  * Resolve crafting source for a specific building instance.
  * Priority: zone (if assigned + has warehouses) > legacy per-building warehouse > global.
  */
-export function resolveBuildingSource(state: GameState, buildingId: string | null): CraftingSource {
-  if (!buildingId) return { kind: "global" };
-  // Zone takes priority
-  const zoneId = state.buildingZoneIds[buildingId];
-  if (zoneId && state.productionZones[zoneId]) {
-    const whIds = getZoneWarehouseIds(state, zoneId);
-    if (whIds.length > 0) {
-      return { kind: "zone", zoneId };
-    }
-    // Zone exists but has no warehouses → fall through to legacy/global
-  }
-  // Legacy per-building warehouse mapping
-  const whId = state.buildingSourceWarehouseIds[buildingId] ?? null;
-  return resolveCraftingSource(state, whId);
-}
+export { resolveBuildingSource };
 
 /** @deprecated Use resolveBuildingSource */
 export function resolveWorkbenchSource(state: GameState): CraftingSource {

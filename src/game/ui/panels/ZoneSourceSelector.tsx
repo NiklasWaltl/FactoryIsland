@@ -1,13 +1,13 @@
 ﻿import React from "react";
 import type { BuildingType, GameState } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
+import { BUILDING_LABELS } from "../../store/constants/buildings";
+import { getSourceStatusInfo } from "../../store/selectors/source-status";
+import { getZoneItemCapacity } from "../../store/warehouse-capacity";
 import {
-  getSourceStatusInfo,
-  getZoneWarehouseIds,
   getZoneAggregateInventory,
-  getZoneItemCapacity,
-  BUILDING_LABELS,
-} from "../../store/reducer";
+  getZoneWarehouseIds,
+} from "../../zones/production-zone-aggregation";
 
 interface ZoneSourceSelectorProps {
   state: GameState;

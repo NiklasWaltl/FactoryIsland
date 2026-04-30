@@ -1,14 +1,12 @@
 ﻿import React from "react";
 import type { GameState, Inventory } from "../../store/types";
-import type { GameAction } from "../../store/actions";
+import type { GameAction } from "../../store/game-actions";
 import {
   RESOURCE_LABELS,
   RESOURCE_EMOJIS,
 } from "../../store/constants/resources";
-import {
-  getSourceStatusInfo,
-  getCraftingSourceInventory,
-} from "../../store/reducer";
+import { getSourceStatusInfo } from "../../store/selectors/source-status";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { WORKBENCH_RECIPES } from "../../simulation/recipes";
 import { getJobsForWorkbench, sortByPriorityFifo } from "../../crafting/queue";
 import type { CraftingJob, JobStatus } from "../../crafting/types";
