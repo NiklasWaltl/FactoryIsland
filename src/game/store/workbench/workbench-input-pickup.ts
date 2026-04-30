@@ -1,18 +1,18 @@
-import { applyNetworkAction } from "../inventory/reservations";
-import type { CraftingJob } from "../crafting/types";
+import { applyNetworkAction } from "../../inventory/reservations";
+import type { CraftingJob } from "../../crafting/types";
 import {
   getGlobalHubWarehouseId,
   hubInventoryToInventoryView,
   inventoryViewToHubInventory,
   pickCraftingPhysicalSourceForIngredient,
-} from "../crafting/tick";
+} from "../../crafting/tick";
 import type {
   CollectableItemType,
   GameState,
   Inventory,
-} from "./types";
+} from "../types";
 import { getCraftingReservationById } from "./workbench-task-utils";
-import { isCollectableCraftingItem } from "../crafting/workbench-input-buffer";
+import { isCollectableCraftingItem } from "../../crafting/workbench-input-buffer";
 
 export function resolveWorkbenchInputPickup(
   state: Pick<GameState, "assets" | "warehouseInventories" | "serviceHubs" | "network">,

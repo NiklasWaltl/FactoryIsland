@@ -24,8 +24,8 @@ import { applyDroneUpdate } from "../../drone-state-helpers";
 import {
   getCraftingJobById,
   parseWorkbenchTaskNodeId,
-} from "../../../store/workbench-task-utils";
-import { commitWorkbenchInputReservation } from "../../../store/workbench-input-pickup";
+} from "../../../store/workbench/workbench-task-utils";
+import { commitWorkbenchInputReservation } from "../../../store/workbench/workbench-input-pickup";
 import { resolveDroneDropoff } from "../../resolve-drone-dropoff";
 import type { DroneFinalizationDeps } from "./types";
 

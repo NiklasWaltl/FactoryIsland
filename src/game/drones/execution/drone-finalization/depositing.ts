@@ -6,7 +6,7 @@ import { getBuildingInputConfig } from "../../../store/constants/buildings";
 import { getMaxDrones } from "../../../store/selectors/hub-tier-selectors";
 import { addResources } from "../../../store/inventory-ops";
 import { syncDrones, applyDroneUpdate } from "../../drone-state-helpers";
-import { parseWorkbenchTaskNodeId } from "../../../store/workbench-task-utils";
+import { parseWorkbenchTaskNodeId } from "../../../store/workbench/workbench-task-utils";
 import {
   finalizeWorkbenchDelivery,
   finalizeWorkbenchInputDelivery,

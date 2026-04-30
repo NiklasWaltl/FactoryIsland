@@ -1,6 +1,6 @@
-import type { CraftingJob } from "../crafting/types";
-import type { GameState } from "./types";
-import type { WorkbenchTaskNodeId } from "../drones/utils/drone-utils";
+import type { CraftingJob } from "../../crafting/types";
+import type { GameState } from "../types";
+import type { WorkbenchTaskNodeId } from "../../drones/utils/drone-utils";
 
 export function getCraftingJobById(
   crafting: Pick<GameState, "crafting">["crafting"],

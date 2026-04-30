@@ -12,8 +12,8 @@ import {
   getCraftingJobById,
   getCraftingReservationById,
   parseWorkbenchTaskNodeId,
-} from "../../store/workbench-task-utils";
-import { resolveWorkbenchInputPickup } from "../../store/workbench-input-pickup";
+} from "../../store/workbench/workbench-task-utils";
+import { resolveWorkbenchInputPickup } from "../../store/workbench/workbench-input-pickup";
 import { finalizeWorkbenchDelivery } from "./workbench-finalizer-bindings";
 import type { TickOneDroneIoDeps } from "./tick-one-drone";
 import type {
