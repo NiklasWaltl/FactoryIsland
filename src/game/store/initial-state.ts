@@ -4,7 +4,7 @@
 // ============================================================
 
 import { GRID_W, GRID_H } from "../constants/grid";
-import { DEPOSIT_POSITIONS } from "./constants/deposit-positions";
+import { DEPOSIT_POSITIONS } from "./constants/map/deposit-positions";
 import {
   decideInitialWarehousePlacement,
   deriveDebugBootstrapLayout,
@@ -30,7 +30,7 @@ import type {
   StarterDroneState,
 } from "./types";
 import { DEFAULT_MACHINE_PRIORITY } from "./constants/energy/energy-balance";
-import { MAP_SHOP_POS } from "./constants/map-layout";
+import { MAP_SHOP_POS } from "./constants/map/map-layout";
 import { assetHeight, assetWidth, getAutoSmelterIoCells } from "./asset-geometry";
 import { cellKey } from "./utils/cell-key";
 import { createDefaultProtoHubTargetStock } from "./constants/hub/hub-target-stock";

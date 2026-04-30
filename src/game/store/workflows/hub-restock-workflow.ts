@@ -9,7 +9,7 @@ import {
   DRONE_STICKY_BONUS,
   DRONE_TASK_BASE_SCORE,
   DRONE_URGENCY_BONUS_MAX,
-} from "../constants/drone-config";
+} from "../constants/drone/drone-config";
 import type { CollectableItemType } from "../types";
 
 export interface HubRestockNodeInput {

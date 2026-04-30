@@ -13,7 +13,7 @@ import { cleanBuildingSourceIds } from "../buildings/warehouse/warehouse-assignm
 import { getDroneHomeDock } from "../drones/dock/drone-dock";
 import { computeConnectedAssetIds } from "../logistics/connectivity";
 import { cleanBuildingZoneIds } from "../zones/production-zone-cleanup";
-import { MAP_SHOP_POS } from "../store/constants/map-layout";
+import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
 import {
   createDefaultHubTargetStock,
   createDefaultProtoHubTargetStock,

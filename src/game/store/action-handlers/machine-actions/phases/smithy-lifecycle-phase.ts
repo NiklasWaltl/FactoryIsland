@@ -7,7 +7,7 @@ import {
 import {
   SMITHY_PROCESS_MS,
   SMITHY_TICK_MS,
-} from "../../../constants/workbench-timing";
+} from "../../../constants/timing/workbench-timing";
 import type { GameAction } from "../../../game-actions";
 import type { GameState } from "../../../types";
 import type { MachineActionDeps } from "../deps";

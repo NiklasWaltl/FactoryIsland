@@ -1,4 +1,4 @@
-import { DRONE_CAPACITY } from "../../../store/constants/drone-config";
+import { DRONE_CAPACITY } from "../../../store/constants/drone/drone-config";
 import { decideHubDispatchExecutionAction } from "../../../store/workflows/hub-dispatch-execution";
 import type {
   CollectableItemType,

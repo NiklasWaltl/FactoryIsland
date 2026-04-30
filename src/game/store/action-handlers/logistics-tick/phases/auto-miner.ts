@@ -1,4 +1,4 @@
-import { AUTO_MINER_PRODUCE_TICKS } from "../../../constants/drone-config";
+import { AUTO_MINER_PRODUCE_TICKS } from "../../../constants/drone/drone-config";
 import {
   getCraftingSourceInventory,
 } from "../../../../crafting/crafting-sources";

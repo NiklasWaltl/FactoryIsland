@@ -1,5 +1,5 @@
 import { droneTravelTicks, moveDroneToward, nudgeAwayFromDrones } from "../movement/drone-movement";
-import { DRONE_SPEED_TILES_PER_TICK } from "../../store/constants/drone-config";
+import { DRONE_SPEED_TILES_PER_TICK } from "../../store/constants/drone/drone-config";
 import {
   decideReturningToDockWorkbenchUrgentRoute,
   type WorkbenchTaskNodeId,

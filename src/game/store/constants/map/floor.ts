@@ -10,7 +10,7 @@
 // Type-only imports are fine (erased at runtime).
 // ============================================================
 
-import type { FloorTileType, Inventory } from "../types";
+import type { FloorTileType, Inventory } from "../../types";
 
 /** Floor tile costs (paid from inventory) */
 export const FLOOR_TILE_COSTS: Record<FloorTileType, Partial<Record<keyof Inventory, number>>> = {

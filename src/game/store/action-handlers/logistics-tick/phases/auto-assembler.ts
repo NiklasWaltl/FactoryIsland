@@ -9,8 +9,8 @@
 // - Recipe change only when idle: buffer 0, not processing, no pending output.
 // ============================================================
 
-import { LOGISTICS_TICK_MS } from "../../../constants/timing";
-import { AUTO_ASSEMBLER_BUFFER_CAPACITY } from "../../../constants/auto-assembler";
+import { LOGISTICS_TICK_MS } from "../../../constants/timing/timing";
+import { AUTO_ASSEMBLER_BUFFER_CAPACITY } from "../../../constants/auto/auto-assembler";
 import { CONVEYOR_TILE_CAPACITY } from "../../../constants/conveyor";
 import { getAutoAssemblerV1Recipe } from "../../../../simulation/recipes/AutoAssemblerV1Recipes";
 import {

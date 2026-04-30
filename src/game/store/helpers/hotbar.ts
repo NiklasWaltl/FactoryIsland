@@ -1,6 +1,6 @@
-import { HOTBAR_SIZE, HOTBAR_STACK_MAX, EMPTY_HOTBAR_SLOT } from "../constants/hotbar";
+import { HOTBAR_SIZE, HOTBAR_STACK_MAX, EMPTY_HOTBAR_SLOT } from "../constants/ui/hotbar";
 import { BUILDING_LABELS } from "../constants/buildings";
-import { ASSET_EMOJIS } from "../constants/assets";
+import { ASSET_EMOJIS } from "../constants/ui/assets";
 import { RESOURCE_EMOJIS, RESOURCE_LABELS } from "../constants/resources";
 import type { BuildingType, HotbarSlot, ToolKind } from "../types";
 

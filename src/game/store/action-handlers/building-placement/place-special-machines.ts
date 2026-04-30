@@ -1,6 +1,6 @@
 import type { AssetType, AutoSmelterStatus, Direction, GameState } from "../../types";
 import { BUILDING_LABELS } from "../../constants/buildings";
-import { DEPOSIT_RESOURCE, DEPOSIT_TYPES } from "../../constants/deposit-positions";
+import { DEPOSIT_RESOURCE, DEPOSIT_TYPES } from "../../constants/map/deposit-positions";
 import { DEFAULT_MACHINE_PRIORITY } from "../../constants/energy/energy-balance";
 import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";

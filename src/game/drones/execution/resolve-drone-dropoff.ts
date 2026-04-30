@@ -1,6 +1,6 @@
 import { debugLog } from "../../debug/debugLogger";
-import { DELIVERY_OFFSETS } from "../../store/constants/drone-config";
-import { MAP_SHOP_POS } from "../../store/constants/map-layout";
+import { DELIVERY_OFFSETS } from "../../store/constants/drone/drone-config";
+import { MAP_SHOP_POS } from "../../store/constants/map/map-layout";
 import {
   resolveDroneDropoffDecision,
   type DroneDropoffFallbackEvent,

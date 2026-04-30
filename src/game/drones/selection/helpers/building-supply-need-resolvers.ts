@@ -1,6 +1,6 @@
 import { getBuildingInputConfig } from "../../../store/constants/buildings";
-import { MAX_DRONES_PER_BUILDING_SUPPLY } from "../../../store/constants/drone-assignment-caps";
-import { DRONE_CAPACITY } from "../../../store/constants/drone-config";
+import { MAX_DRONES_PER_BUILDING_SUPPLY } from "../../../store/constants/drone/drone-assignment-caps";
+import { DRONE_CAPACITY } from "../../../store/constants/drone/drone-config";
 import type {
   CollectableItemType,
   GameState,

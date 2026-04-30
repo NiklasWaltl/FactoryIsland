@@ -1,6 +1,6 @@
 import { debugLog } from "../../../../debug/debugLogger";
-import { LOGISTICS_TICK_MS } from "../../../constants/timing";
-import { AUTO_SMELTER_BUFFER_CAPACITY } from "../../../constants/auto-smelter";
+import { LOGISTICS_TICK_MS } from "../../../constants/timing/timing";
+import { AUTO_SMELTER_BUFFER_CAPACITY } from "../../../constants/auto/auto-smelter";
 import { CONVEYOR_TILE_CAPACITY } from "../../../constants/conveyor";
 import { SMELTING_RECIPES, getSmeltingRecipe } from "../../../../simulation/recipes";
 import { getCraftingSourceInventory } from "../../../../crafting/crafting-sources";

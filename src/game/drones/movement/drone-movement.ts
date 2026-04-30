@@ -2,7 +2,7 @@ import {
   DRONE_SEPARATION_RADIUS,
   DRONE_SEPARATION_STRENGTH,
   DRONE_SPEED_TILES_PER_TICK,
-} from "../../store/constants/drone-config";
+} from "../../store/constants/drone/drone-config";
 import { GRID_H, GRID_W } from "../../constants/grid";
 import type { StarterDroneState } from "../../store/types";
 

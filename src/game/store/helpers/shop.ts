@@ -1,4 +1,4 @@
-import { HOTBAR_STACK_MAX } from "../constants/hotbar";
+import { HOTBAR_STACK_MAX } from "../constants/ui/hotbar";
 import type { GameState, ToolKind } from "../types";
 
 export type ShopItemTargetDecision =

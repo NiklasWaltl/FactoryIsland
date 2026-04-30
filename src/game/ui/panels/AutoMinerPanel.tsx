@@ -2,7 +2,7 @@
 import type { GameState, Inventory, MachinePriority } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
-import { AUTO_MINER_PRODUCE_TICKS } from "../../store/constants/drone-config";
+import { AUTO_MINER_PRODUCE_TICKS } from "../../store/constants/drone/drone-config";
 import {
   DEFAULT_MACHINE_PRIORITY,
   ENERGY_DRAIN,

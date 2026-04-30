@@ -16,7 +16,7 @@ import {
   FLOOR_TILE_COSTS,
   FLOOR_TILE_DESCRIPTIONS,
   FLOOR_TILE_LABELS,
-} from "../../store/constants/floor";
+} from "../../store/constants/map/floor";
 import {
   RESOURCE_EMOJIS,
   RESOURCE_LABELS,

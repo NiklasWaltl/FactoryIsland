@@ -2,7 +2,7 @@ import {
   DRONE_COLLECT_TICKS,
   DRONE_DEPOSIT_TICKS,
   DRONE_SPEED_TILES_PER_TICK,
-} from "../../store/constants/drone-config";
+} from "../../store/constants/drone/drone-config";
 import type {
   GameState,
   StarterDroneState,

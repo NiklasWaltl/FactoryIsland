@@ -5,7 +5,7 @@ import {
   NATURAL_SPAWN_CAP,
   NATURAL_SPAWN_CHANCE,
   SAPLING_GROW_MS,
-} from "../../../constants/timing";
+} from "../../../constants/timing/timing";
 import type { GameState } from "../../../types";
 import type { NaturalSpawnAction } from "../types";
 

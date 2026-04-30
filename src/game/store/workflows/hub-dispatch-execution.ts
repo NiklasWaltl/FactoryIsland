@@ -5,7 +5,7 @@
 // Reducer remains responsible for applying emitted actions.
 // ============================================================
 
-import { DRONE_CAPACITY } from "../constants/drone-config";
+import { DRONE_CAPACITY } from "../constants/drone/drone-config";
 import type { CollectableItemType } from "../types";
 
 export interface DecideHubDispatchExecutionInput {

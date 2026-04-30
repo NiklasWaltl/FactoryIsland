@@ -1,11 +1,11 @@
-﻿import React from "react";
+import React from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import {
   RESOURCE_EMOJIS,
   RESOURCE_LABELS,
 } from "../../store/constants/resources";
-import { MANUAL_ASSEMBLER_PROCESS_MS } from "../../store/constants/workbench-timing";
+import { MANUAL_ASSEMBLER_PROCESS_MS } from "../../store/constants/timing/workbench-timing";
 import { getSourceStatusInfo } from "../../store/selectors/source-status";
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";

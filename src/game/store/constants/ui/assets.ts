@@ -10,7 +10,7 @@
 // Type-only imports are fine (erased at runtime).
 // ============================================================
 
-import type { AssetType } from "../types";
+import type { AssetType } from "../../types";
 
 export const ASSET_LABELS: Record<AssetType, string> = {
   tree: "Baum",

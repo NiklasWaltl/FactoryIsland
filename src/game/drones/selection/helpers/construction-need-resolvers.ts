@@ -1,5 +1,5 @@
-import { MAX_DRONES_PER_CONSTRUCTION_TARGET } from "../../../store/constants/drone-assignment-caps";
-import { DRONE_CAPACITY } from "../../../store/constants/drone-config";
+import { MAX_DRONES_PER_CONSTRUCTION_TARGET } from "../../../store/constants/drone/drone-assignment-caps";
+import { DRONE_CAPACITY } from "../../../store/constants/drone/drone-config";
 import type {
   CollectableItemType,
   ConstructionSite,

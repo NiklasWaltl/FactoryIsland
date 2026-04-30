@@ -10,8 +10,8 @@
 // UI prelude/build-mode routing stays outside this handler.
 // ============================================================
 
-import { DEPOSIT_TYPES } from "../constants/deposit-positions";
-import { SAPLING_DROP_CHANCE, SAPLING_GROW_MS } from "../constants/timing";
+import { DEPOSIT_TYPES } from "../constants/map/deposit-positions";
+import { SAPLING_DROP_CHANCE, SAPLING_GROW_MS } from "../constants/timing/timing";
 import type {
   AssetType,
   BuildingType,

@@ -13,7 +13,7 @@ import {
   applyCraftingSourceInventory,
   getCraftingSourceInventory,
 } from "../../crafting/crafting-sources";
-import { MANUAL_ASSEMBLER_TICK_MS } from "../constants/workbench-timing";
+import { MANUAL_ASSEMBLER_TICK_MS } from "../constants/timing/workbench-timing";
 import type { GameAction } from "../game-actions";
 import type { CraftingSource } from "../types";
 import type {

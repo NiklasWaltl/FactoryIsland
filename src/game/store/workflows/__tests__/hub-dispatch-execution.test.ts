@@ -1,4 +1,4 @@
-import { DRONE_CAPACITY } from "../../constants/drone-config";
+import { DRONE_CAPACITY } from "../../constants/drone/drone-config";
 import { decideHubDispatchExecutionAction } from "../hub-dispatch-execution";
 
 describe("decideHubDispatchExecutionAction", () => {

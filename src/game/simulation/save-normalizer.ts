@@ -8,7 +8,7 @@ import type {
   KeepStockTargetEntry,
   KeepStockByWorkbench,
 } from "../store/types";
-import { MAP_SHOP_POS } from "../store/constants/map-layout";
+import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
 import {
   KEEP_STOCK_MAX_TARGET,
 } from "../store/reducer";

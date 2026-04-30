@@ -5,7 +5,7 @@ import {
 } from "../store/constants/buildings";
 import {
   FLOOR_TILE_EMOJIS,
-} from "../store/constants/floor";
+} from "../store/constants/map/floor";
 import {
   RESOURCE_EMOJIS,
 } from "../store/constants/resources";

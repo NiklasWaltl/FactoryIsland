@@ -1,5 +1,5 @@
 import type { GameAction } from "../game-actions";
-import type { MapShopItem } from "../constants/shop";
+import type { MapShopItem } from "../constants/ui/shop";
 import type {
   BuildingType,
   GameNotification,

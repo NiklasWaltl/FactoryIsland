@@ -9,7 +9,7 @@
 // store/reducer.ts to avoid an ESM initialization cycle.
 // ============================================================
 
-import type { DroneTaskType } from "../types";
+import type { DroneTaskType } from "../../types";
 
 /** Chebyshev tiles covered per tick while moving. */
 export const DRONE_SPEED_TILES_PER_TICK = 2;

@@ -6,11 +6,11 @@ import {
   LOGISTICS_TICK_MS,
   CRAFTING_TICK_MS,
   DRONE_TICK_MS,
-} from "../store/constants/timing";
+} from "../store/constants/timing/timing";
 import {
   SMITHY_TICK_MS,
   MANUAL_ASSEMBLER_TICK_MS,
-} from "../store/constants/workbench-timing";
+} from "../store/constants/timing/workbench-timing";
 import { GENERATOR_TICK_MS } from "../store/constants/energy/generator";
 import { ENERGY_NET_TICK_MS } from "../store/constants/energy/energy-smelter";
 import type { GameState } from "../store/types";

@@ -10,7 +10,7 @@ import {
   DRONE_SPREAD_PENALTY_PER_DRONE,
   DRONE_STICKY_BONUS,
   DRONE_TASK_BASE_SCORE,
-} from "../constants/drone-config";
+} from "../constants/drone/drone-config";
 import type { CollectableItemType } from "../types";
 
 export interface ConstructionDispatchNeedInput {

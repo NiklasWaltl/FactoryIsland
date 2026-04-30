@@ -10,7 +10,7 @@ import type {
   UIPanel,
 } from "../../types";
 import { BUILDING_COSTS } from "../../constants/buildings";
-import { ASSET_LABELS } from "../../constants/assets";
+import { ASSET_LABELS } from "../../constants/ui/assets";
 import { cellKey } from "../../utils/cell-key";
 import { addResources } from "../../inventory-ops";
 import { removeAsset } from "../../asset-mutation";

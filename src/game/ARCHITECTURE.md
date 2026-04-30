@@ -62,7 +62,7 @@ Alle Mutationen laufen über `dispatch`. Phaser ist read-only über `state`-Snap
 
 **Reihenfolge innerhalb eines Browser-Frames ist nicht garantiert** — jeder Tick ist ein eigener `setInterval`. React batcht Dispatches, aber zwei gleichzeitige Ticks werden sequenziell durch den Reducer geschickt.
 
-Konstanten in [`store/constants/timing.ts`](./store/constants/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/workbench-timing.ts`](./store/constants/workbench-timing.ts).
+Konstanten in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts).
 
 ---
 

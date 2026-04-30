@@ -341,20 +341,20 @@ export { GRID_W, GRID_H, CELL_PX };
 // Re-exported here so existing `from "../store/reducer"` imports keep working.
 export * from "./constants/buildings";
 
-// Asset display tables (labels/colors/emojis) live in ./constants/assets.
+// Asset display tables (labels/colors/emojis) live in ./constants/ui/assets.
 // Re-exported for backward compatibility.
-export * from "./constants/assets";
+export * from "./constants/ui/assets";
 
 // Resource display tables (labels/emojis) live in ./constants/resources.
 // Re-exported for backward compatibility.
 export * from "./constants/resources";
 
-// Floor tile constants live in ./constants/floor.
+// Floor tile constants live in ./constants/map/floor.
 // Imported for internal use and re-exported for backward compatibility.
-import { FLOOR_TILE_COSTS } from "./constants/floor";
-export * from "./constants/floor";
+import { FLOOR_TILE_COSTS } from "./constants/map/floor";
+export * from "./constants/map/floor";
 
-// Timing constants live in ./constants/timing.
+// Timing constants live in ./constants/timing/timing.
 // Imported for internal use and re-exported for backward compatibility.
 import {
   DRONE_TICK_MS,
@@ -362,24 +362,24 @@ import {
   NATURAL_SPAWN_CAP,
   NATURAL_SPAWN_CHANCE,
   SAPLING_GROW_MS,
-} from "./constants/timing";
-export * from "./constants/timing";
+} from "./constants/timing/timing";
+export * from "./constants/timing/timing";
 
-// Auto-delivery log limits live in ./constants/auto-delivery.
+// Auto-delivery log limits live in ./constants/auto/auto-delivery.
 import {
   AUTO_DELIVERY_BATCH_WINDOW_MS,
   AUTO_DELIVERY_LOG_MAX,
-} from "./constants/auto-delivery";
+} from "./constants/auto/auto-delivery";
 
-// Drone/logistics constants live in ./constants/drone-config.
+// Drone/logistics constants live in ./constants/drone/drone-config.
 // Imported for internal use and re-exported for backward compatibility.
 import {
   AUTO_MINER_PRODUCE_TICKS,
   DRONE_COLLECT_TICKS,
   DRONE_DEPOSIT_TICKS,
   DRONE_SPEED_TILES_PER_TICK,
-} from "./constants/drone-config";
-export * from "./constants/drone-config";
+} from "./constants/drone/drone-config";
+export * from "./constants/drone/drone-config";
 
 // Energy/auto-smelter coupled constants live in ./constants/energy-smelter.
 // Imported for internal use and re-exported for backward compatibility.
@@ -410,15 +410,15 @@ import {
 } from "./constants/energy/generator";
 export * from "./constants/energy/generator";
 
-// Workbench/Smithy timing constants live in ./constants/workbench-timing.
+// Workbench/Smithy timing constants live in ./constants/timing/workbench-timing.
 // Imported for internal use and re-exported for backward compatibility.
 import {
   MANUAL_ASSEMBLER_PROCESS_MS,
   MANUAL_ASSEMBLER_TICK_MS,
   SMITHY_PROCESS_MS,
   SMITHY_TICK_MS,
-} from "./constants/workbench-timing";
-export * from "./constants/workbench-timing";
+} from "./constants/timing/workbench-timing";
+export * from "./constants/timing/workbench-timing";
 
 // Service hub target-stock defaults live in ./constants/hub-target-stock.
 // Imported for internal use and re-exported for backward compatibility.
@@ -466,19 +466,19 @@ export {
 import { HUB_UPGRADE_COST } from "./constants/hub/hub-upgrade-cost";
 export * from "./constants/hub/hub-upgrade-cost";
 
-// Deposit constants live in ./constants/deposit-positions.
+// Deposit constants live in ./constants/map/deposit-positions.
 // Re-exported for backward compatibility.
-export * from "./constants/deposit-positions";
+export * from "./constants/map/deposit-positions";
 
-// Map shop offer constants live in ./constants/shop.
+// Map shop offer constants live in ./constants/ui/shop.
 // Imported for internal use and re-exported for backward compatibility.
-import { MAP_SHOP_ITEMS } from "./constants/shop";
-export * from "./constants/shop";
+import { MAP_SHOP_ITEMS } from "./constants/ui/shop";
+export * from "./constants/ui/shop";
 
 /** Drop amount for all 1×1 harvestable resources (tree, stone, iron, copper). */
 export const RESOURCE_1x1_DROP_AMOUNT = 10;
 if (import.meta.env.DEV) console.log(`[FactoryIsland] Drop-Multiplikator auf ${RESOURCE_1x1_DROP_AMOUNT}x für 1x1-Ressourcen gesetzt.`);
-export { HOTBAR_SIZE, HOTBAR_STACK_MAX } from "./constants/hotbar";
+export { HOTBAR_SIZE, HOTBAR_STACK_MAX } from "./constants/ui/hotbar";
 export const KEEP_STOCK_MAX_TARGET = 999;
 export const KEEP_STOCK_OPEN_JOB_CAP = 2;
 
@@ -867,7 +867,7 @@ export function selectDroneTask(state: GameState, droneOverride?: StarterDroneSt
   return selectDroneTaskBinding(state, droneOverride);
 }
 
-export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto-smelter";
+export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto/auto-smelter";
 
 /**
  * Overclocking-Stufe 1: Zwei feste Modi (normal / boosted), nur für auto_miner
@@ -1002,7 +1002,7 @@ function logCraftingSelectionComparison(
 export type { FallbackReason, SourceStatusInfo } from "./selectors/source-status";
 export { hasStaleWarehouseAssignment, getSourceStatusInfo } from "./selectors/source-status";
 
-export { MAP_SHOP_POS } from "./constants/map-layout";
+export { MAP_SHOP_POS } from "./constants/map/map-layout";
 
 /**
  * Manhattan distance between two grid positions.

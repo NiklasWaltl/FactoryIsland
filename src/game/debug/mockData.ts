@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Factory Island - Mock Data System
 // ============================================================
 // Provides mock / cheat data that can be toggled from the Debug UI.
@@ -7,7 +7,7 @@
 
 import type { GameState, Inventory, ServiceHubInventory } from "../store/types";
 import type { GameAction } from "../store/game-actions";
-import { HOTBAR_STACK_MAX } from "../store/constants/hotbar";
+import { HOTBAR_STACK_MAX } from "../store/constants/ui/hotbar";
 import { createInitialHotbar } from "../store/helpers/hotbar";
 import { debugLog } from "./debugLogger";
 

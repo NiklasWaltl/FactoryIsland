@@ -8,7 +8,7 @@
 // store/reducer.ts to avoid an ESM initialisation cycle.
 // ============================================================
 
-import type { Inventory } from "../types";
+import type { Inventory } from "../../types";
 
 export interface MapShopItem {
   key: string;

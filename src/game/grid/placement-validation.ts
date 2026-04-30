@@ -5,7 +5,7 @@ import {
 } from "../store/constants/buildings";
 import {
   DEPOSIT_TYPES,
-} from "../store/constants/deposit-positions";
+} from "../store/constants/map/deposit-positions";
 import {
   cellKey,
 } from "../store/utils/cell-key";

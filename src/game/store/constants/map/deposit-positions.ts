@@ -5,8 +5,8 @@
 // MUST NOT runtime-import from ../reducer to avoid ESM cycles.
 // ============================================================
 
-import { GRID_H, GRID_W } from "../../constants/grid";
-import type { AssetType } from "../types";
+import { GRID_H, GRID_W } from "../../../constants/grid";
+import type { AssetType } from "../../types";
 
 /** 2x2 infinite resource deposits (unbreakable, require Auto-Miner) */
 export const DEPOSIT_TYPES = new Set<AssetType>(["stone_deposit", "iron_deposit", "copper_deposit"]);
