@@ -54,7 +54,7 @@ Alle Mutationen laufen über `dispatch`. Phaser ist read-only über `state`-Snap
 | Smithy | 100 | `SMITHY_TICK` | nur wenn `smithy.processing` | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `smithy` |
 | Manual Assembler | 100 | `MANUAL_ASSEMBLER_TICK` | nur wenn `manualAssembler.processing` | [`manual-assembler-actions.ts`](./store/action-handlers/manual-assembler-actions.ts) | `manualAssembler`, Source-Inventar (`inventory` / `warehouseInventories` / Zone), `notifications` |
 | Generator | 200 | `GENERATOR_TICK` | nur wenn min. 1 Generator läuft | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `generators` |
-| Energy Net | 2000 | `ENERGY_NET_TICK` | immer | inline `switch` → [`energy-net-tick.ts`](./store/energy-net-tick.ts) | `connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio` |
+| Energy Net | 2000 | `ENERGY_NET_TICK` | immer | inline `switch` → [`energy-net-tick.ts`](./store/energy/energy-net-tick.ts) | `connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio` |
 | Logistics | 500 | `LOGISTICS_TICK` | immer | inline `switch` → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
 | Crafting Jobs | 500 | `JOB_TICK` | nur wenn pending Jobs ODER aktive Keep-Stock-Targets | [`crafting-queue-actions`](./store/action-handlers/crafting-queue-actions/) | `crafting`, `network`, physische Inventare (`inventory` / `warehouseInventories` / `serviceHubs[*].inventory`), `keepStockByWorkbench` |
 | Drones | 500 | `DRONE_TICK` | immer | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, Ziel-Inventare (Hub / Warehouse / global), `crafting` (Input-Buffer + Delivery-Übergänge), `collectionNodes` |
@@ -90,6 +90,40 @@ Konstanten in [`store/constants/timing.ts`](./store/constants/timing.ts), [`stor
 3. `network` — logische Reservierungen über (1)+(2). Physisches Inventar bleibt Source-of-Truth; `network` trackt nur `reserved`/`free`.
 
 `starterDrone` und `drones[id]` werden synchron gehalten — Legacy für Backward-Compat. (*Notes: Migrationspfad unklar; `syncDrones` siehe [`drones/drone-state-helpers.ts`](./drones/drone-state-helpers.ts).*)
+
+---
+
+## Store (`src/game/store/`)
+
+Der Store enthält ausschließlich folgende Dateien auf Root-Ebene:
+- `reducer.ts` — zentraler Reducer
+- `types.ts` — alle Store-Typen
+- `initial-state.ts` — initialer State
+- `game-actions.ts` — `GameAction` discriminated union (kanonische Quelle)
+- `index.ts` — öffentlicher Einstiegspunkt
+
+### Unterverzeichnisse
+
+| Verzeichnis | Inhalt |
+|---|---|
+| `action-handlers/` | Handler pro Action-Typ |
+| `constants/` | Spielkonstanten |
+| `conveyor/` | Conveyor-Geometrie, Routing, Underground-Pairing |
+| `decisions/` | Entscheidungslogik (Eligibility, Placement, Dropoff) |
+| `energy/` | Energy-Tick-Phasen und Netz-Tick |
+| `helpers/` | Store-interne stateless Helpers |
+| `selectors/` | State-Selektoren für UI und Drones |
+| `utils/` | Triviale Utilities (cell-key, direction, make-id, notifications) |
+| `workbench/` | Workbench-Input und Task-Utils |
+| `workflows/` | Multi-Step-Workflows |
+
+### Import-Konventionen Store
+
+- `GameAction` → immer von `./game-actions` (nie über Fassaden)
+- Store-Utils → `./utils/{name}` (cell-key, direction, make-id, notifications)
+- Store-Helpers → `./helpers/{name}` (equality, mutations, asset-status)
+- Decisions → `./decisions/{name}`
+- Selectors → `./selectors/{name}`
 
 ---
 
@@ -206,7 +240,7 @@ Grid- und Building-Konstanten (`GRID_W`, `GRID_H`, `CELL_PX`, `WAREHOUSE_CAPACIT
 | Begriff | Bedeutung |
 |---|---|
 | **Asset** | Platziertes World-Object (Building, Tree, Deposit, Drone-fähig). Keyed by `assetId`. |
-| **Cell** | 1×1 Grid-Tile. Adressiert via `cellKey(x,y)` aus [`store/cell-key.ts`](./store/cell-key.ts). |
+| **Cell** | 1×1 Grid-Tile. Adressiert via `cellKey(x,y)` aus [`store/utils/cell-key.ts`](./store/utils/cell-key.ts). |
 | **Hub / Service Hub** | Drone-Heimatbasis mit eigenem Inventar (`ServiceHubInventory`). |
 | **Workbench** | Crafting-Asset; wird von Crafting-Jobs belegt. |
 | **Network Slice** | Logische Reservierungen auf physischem Inventar. Definiert in [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts). |
