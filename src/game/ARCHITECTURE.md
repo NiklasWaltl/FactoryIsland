@@ -19,7 +19,7 @@ Für Onboarding genau in dieser Reihenfolge:
 2. [`entry/FactoryApp.tsx`](./entry/FactoryApp.tsx) — alle `setInterval`-Tick-Dispatches sichtbar
 3. [`store/types.ts`](./store/types.ts) — `GameState`-Shape (Zeile 432+) + alle Sub-Typen
 4. [`store/reducer.ts`](./store/reducer.ts) ab Zeile 1332 — `gameReducer`-Dispatcher
-5. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union (kanonische Quelle nach Wave 3; `actions.ts` und `reducer.ts` re-exportieren nur)
+5. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union (kanonische Quelle; alle Handler importieren direkt von hier)
 6. [`crafting/README.md`](./crafting/README.md) — Job-Lifecycle (komplexestes Subsystem)
 7. Cluster-Header in [`store/action-handlers/*/index.ts`](./store/action-handlers/) je nach Aufgabe
 
@@ -97,7 +97,7 @@ Konstanten in [`store/constants/timing.ts`](./store/constants/timing.ts), [`stor
 
 ### Architektur
 
-`GameAction` ist eine diskriminierte Union, kanonisch definiert in [`store/game-actions.ts:20`](./store/game-actions.ts#L20) (Wave 3 extrahiert). [`actions.ts`](./store/actions.ts) und [`reducer.ts`](./store/reducer.ts) sind beide Compat-Facades, die von dort re-exportieren — `grep "type GameAction ="` trifft genau den Single Point of Truth.
+`GameAction` ist eine diskriminierte Union, kanonisch definiert in [`store/game-actions.ts:20`](./store/game-actions.ts#L20). Alle Handler importieren direkt von dort: `import type { GameAction } from "../game-actions"` (bzw. `../../` oder `../../../` je nach Tiefe). `grep "type GameAction ="` trifft genau einen Treffer.
 
 `gameReducer` ist eine Dispatch-Kette aus `handleXAction(state, action, deps?) → GameState | null`. Jeder Handler entscheidet per `HANDLED_ACTION_TYPES`-Set, ob er zuständig ist; `null` = Fallthrough. Verbleibende Actions landen im inline `switch` ([`reducer.ts:1417`](./store/reducer.ts#L1417)).
 
@@ -164,7 +164,7 @@ Kurz: Jobs durchlaufen `queued → reserved → crafting → delivering → done
 
 Stolperfallen, die häufiger Tool-Calls kosten als nötig:
 
-1. **Drei Wege zu `GameAction`** — kanonisch [`game-actions.ts:20`](./store/game-actions.ts#L20) (Wave 3 extrahiert). [`actions.ts`](./store/actions.ts) und [`reducer.ts`](./store/reducer.ts) sind beide Compat-Facades. `grep "type GameAction ="` trifft genau einen Treffer.
+1. **Ein Weg zu `GameAction`** — kanonisch [`game-actions.ts:20`](./store/game-actions.ts#L20). `actions.ts` wurde entfernt (Wave 4); alle 45 Handler importieren direkt. `grep "type GameAction ="` trifft genau einen Treffer.
 2. **`reducer.ts` ist 1508 Zeilen** — überwiegend Imports + Re-Export-Hub. Echte Reducer-Logik: Zeile 1332–1506 (`gameReducer`-Dispatcher + `gameReducerWithInvariants`-Wrapper).
 3. **Resolver-Aliasings** in [`reducer.ts:82-97`](./store/reducer.ts#L82-L97) — Funktionen werden mit `as XResolver` umbenannt; Grep nach Originalnamen findet die Verwendung in `reducer.ts` nicht direkt.
 4. **Drei Inventarsysteme koexistieren** — `inventory` (global) / `warehouseInventories` (physisch) / `network` (logisch reserviert). Wer ist kanonisch? Antwort: physisch ist Source-of-Truth, `network` ist abgeleitete Holds.
@@ -181,7 +181,7 @@ Wave 2/3/3.5 hat drei Sauberkeits-Verbesserungen eingeführt, die die Findabilit
 
 **1. `GameAction` ist eigenständig**
 
-[`store/game-actions.ts`](./store/game-actions.ts) ist die einzige kanonische Quelle der `GameAction`-Union. Kein Reducer-Code, kein Logik-Mix — reine Type-Definition. Wer eine neue Action hinzufügt oder die Union liest, berührt **nur** diese Datei. `reducer.ts` und `actions.ts` sind Compat-Facades und können mittelfristig entfallen.
+[`store/game-actions.ts`](./store/game-actions.ts) ist die einzige kanonische Quelle der `GameAction`-Union. Kein Reducer-Code, kein Logik-Mix — reine Type-Definition. Wer eine neue Action hinzufügt oder die Union liest, berührt **nur** diese Datei. `actions.ts` (ehemals reiner Re-Export) wurde entfernt; direkter Import-Pfad ist `src/game/store/game-actions.ts`.
 
 **2. Read-only Selektoren in [`store/selectors/`](./store/selectors/)**
 
