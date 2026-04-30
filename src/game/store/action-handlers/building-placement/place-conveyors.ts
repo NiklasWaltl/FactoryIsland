@@ -7,7 +7,7 @@ import {
   explainUndergroundOutPairingFailure,
   findUnpairedUndergroundEntranceId,
   hasUndergroundOutSpanWindowInBounds,
-} from "../../underground-out-pairing-hint";
+} from "../../conveyor/underground-out-pairing-hint";
 import { type BuildingPlacementIoDeps } from "./shared";
 import { finalizePlacement } from "./place-building-shared";
 

@@ -28,7 +28,7 @@ import {
   findUnpairedUndergroundEntranceId,
   hasUndergroundOutSpanWindowInBounds,
   isUndergroundOutPlacementGeometricallyValid,
-} from "./underground-out-pairing-hint";
+} from "./conveyor/underground-out-pairing-hint";
 import type { BuildingType, Direction, GameState, Inventory } from "./types";
 
 export const CONVEYOR_PREVIEW_BUILDING_TYPES = [

@@ -1,5 +1,5 @@
-import { directionOffset } from "./utils/direction";
-import type { PlacedAsset } from "./types";
+import { directionOffset } from "../utils/direction";
+import type { PlacedAsset } from "../types";
 
 export type ConveyorMergerInputSide = "left" | "right";
 

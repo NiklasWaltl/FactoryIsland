@@ -4,7 +4,7 @@ import {
   explainUndergroundOutPairingFailure,
   findUnpairedUndergroundEntranceId,
   isUndergroundOutPlacementGeometricallyValid,
-} from "../underground-out-pairing-hint";
+} from "../conveyor/underground-out-pairing-hint";
 import type { Direction, PlacedAsset } from "../types";
 
 function ugIn(id: string, x: number, y: number, direction: Direction): PlacedAsset {

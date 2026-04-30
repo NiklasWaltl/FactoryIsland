@@ -3,15 +3,15 @@
  * as placement), geometric preview validity, and UX copy when pairing fails.
  */
 
-import { GRID_H, GRID_W } from "../constants/grid";
-import { cellKey } from "./utils/cell-key";
+import { GRID_H, GRID_W } from "../../constants/grid";
+import { cellKey } from "../utils/cell-key";
 import {
   MAX_UNDERGROUND_SPAN,
   MIN_UNDERGROUND_SPAN,
   undergroundSpanCellsInBounds,
-} from "./constants/conveyor";
-import { directionOffset } from "./utils/direction";
-import type { Direction, GameState, PlacedAsset } from "./types";
+} from "../constants/conveyor";
+import { directionOffset } from "../utils/direction";
+import type { Direction, GameState, PlacedAsset } from "../types";
 
 export type UndergroundOutPairScanDeps = Pick<
   GameState,

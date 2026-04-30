@@ -1,8 +1,8 @@
-import { GRID_H, GRID_W } from "../constants/grid";
-import { areZonesTransportCompatible } from "../logistics/conveyor-zone";
-import type { CraftingJob } from "../crafting/types";
-import { CONVEYOR_TILE_CAPACITY } from "./constants/conveyor";
-import { directionOffset } from "./utils/direction";
+import { GRID_H, GRID_W } from "../../constants/grid";
+import { areZonesTransportCompatible } from "../../logistics/conveyor-zone";
+import type { CraftingJob } from "../../crafting/types";
+import { CONVEYOR_TILE_CAPACITY } from "../constants/conveyor";
+import { directionOffset } from "../utils/direction";
 import type {
   ConveyorItem,
   ConveyorState,
@@ -12,7 +12,7 @@ import type {
   Inventory,
   PlacedAsset,
   SmithyState,
-} from "./types";
+} from "../types";
 import {
   canAssetReceiveFromConveyorSplitterOutput,
   getConveyorMergerInputCell,

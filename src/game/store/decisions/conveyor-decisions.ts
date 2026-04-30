@@ -1,6 +1,6 @@
 export type {
   ConveyorMergerInputSide,
-} from "../conveyor-geometry";
+} from "../conveyor/conveyor-geometry";
 export {
   canAssetReceiveFromConveyorSplitterOutput,
   getConveyorMergerInputCell,
@@ -9,7 +9,7 @@ export {
   getConveyorSplitterOutputCell,
   isValidConveyorSplitterInput,
   SPLITTER_OUTPUT_SIDE_PRIORITY,
-} from "../conveyor-geometry";
+} from "../conveyor/conveyor-geometry";
 export type {
   ConveyorTargetBlockReason,
   ConveyorTargetDecision,
@@ -19,10 +19,10 @@ export type {
   ConveyorNoTargetReason,
   ConveyorTickEligibilityDecision,
   DecideConveyorTargetSelectionInput,
-} from "../conveyor-routing";
+} from "../conveyor/conveyor-routing";
 export {
   classifyConveyorTargetEligibility,
   decideConveyorTargetSelection,
   decideConveyorTickEligibility,
   shouldDeferRightMergerInputToLeft,
-} from "../conveyor-routing";
+} from "../conveyor/conveyor-routing";
