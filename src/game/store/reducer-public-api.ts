@@ -63,6 +63,13 @@ export {
   getConnectedDemandPerPeriod,
 } from "./helpers/energy-helpers";
 export {
+  RESOURCE_1x1_DROP_AMOUNT,
+  getBoostMultiplier,
+  devAssertInventoryNonNegative,
+  resolveWorkbenchSource,
+  manhattanDist,
+} from "./helpers/misc-helpers";
+export {
   getHubDrones,
   getDroneDockSlotIndex,
   getDroneStatusDetail,

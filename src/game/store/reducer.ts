@@ -361,10 +361,6 @@ import { HUB_UPGRADE_COST } from "./constants/hub/hub-upgrade-cost";
 
 // Map shop offer constants live in ./constants/ui/shop.
 
-/** Drop amount for all 1×1 harvestable resources (tree, stone, iron, copper). */
-export const RESOURCE_1x1_DROP_AMOUNT = 10;
-if (import.meta.env.DEV) console.log(`[FactoryIsland] Drop-Multiplikator auf ${RESOURCE_1x1_DROP_AMOUNT}x für 1x1-Ressourcen gesetzt.`);
-
 // Action-handler dependency-injection containers live in ./action-handler-deps.
 // Imported here so the dispatch chain wiring (handle...Action(state, action, deps))
 // remains greppable from this file.
@@ -388,12 +384,26 @@ import {
   LOGISTICS_TICK_IO_DEPS,
 } from "./action-handler-deps";
 import {
+  RESOURCE_1x1_DROP_AMOUNT,
+  getBoostMultiplier,
+  devAssertInventoryNonNegative,
+  resolveWorkbenchSource,
+  manhattanDist,
+} from "./helpers/misc-helpers";
+import {
   isPowerCableConductorType,
   isPowerPoleRangeType,
   getConnectedDemandPerPeriod,
 } from "./helpers/energy-helpers";
 
 // ---- Energy / Generator ----
+export {
+  RESOURCE_1x1_DROP_AMOUNT,
+  getBoostMultiplier,
+  devAssertInventoryNonNegative,
+  resolveWorkbenchSource,
+  manhattanDist,
+};
 export {
   isPowerCableConductorType,
   isPowerPoleRangeType,
@@ -625,14 +635,6 @@ import {
 } from "./constants/energy/boost-multipliers";
 export { AUTO_MINER_BOOST_MULTIPLIER, AUTO_SMELTER_BOOST_MULTIPLIER };
 
-/** Effektiver Boost-Multiplikator für ein Asset. 1 wenn nicht boosted oder nicht unterstützt. */
-export function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">): number {
-  if (!asset.boosted) return 1;
-  if (asset.type === "auto_miner") return AUTO_MINER_BOOST_MULTIPLIER;
-  if (asset.type === "auto_smelter") return AUTO_SMELTER_BOOST_MULTIPLIER;
-  return 1;
-}
-
 export { createEmptyInventory };
 
 // Helpers extracted to ./helpers/reducer-helpers.
@@ -665,19 +667,6 @@ export { addResources };
 export { getEffectiveBuildInventory };
 // consumeBuildResources extracted to ./inventory-ops
 
-/**
- * DEV-only: assert no inventory field is negative.
- * Call after reducer transitions to catch silent corruption early.
- */
-export function devAssertInventoryNonNegative(label: string, inv: Inventory): void {
-  if (!import.meta.env.DEV) return;
-  for (const [key, val] of Object.entries(inv)) {
-    if ((val as number) < 0) {
-      console.error(`[Invariant] ${label}: "${key}" is negative (${val})`);
-    }
-  }
-}
-
 // ============================================================
 // CRAFTING SOURCE POLICY
 //
@@ -701,23 +690,11 @@ export { getZoneBuildingIds, getZoneItemCapacity };
  */
 export { resolveBuildingSource };
 
-/** @deprecated Use resolveBuildingSource */
-export function resolveWorkbenchSource(state: GameState): CraftingSource {
-  return resolveBuildingSource(state, state.selectedCraftingBuildingId);
-}
-
 // ============================================================
 // SOURCE STATUS VIEW-MODEL
 // Pure derivation for UI transparency — no side effects.
 // Re-exported via ./reducer-public-api (see end of file).
 // ============================================================
-
-/**
- * Manhattan distance between two grid positions.
- */
-export function manhattanDist(x1: number, y1: number, x2: number, y2: number): number {
-  return Math.abs(x1 - x2) + Math.abs(y1 - y2);
-}
 
 // ============================================================
 // HELPERS
