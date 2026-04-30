@@ -10,7 +10,7 @@ import type {
 import { GRID_H, GRID_W } from "../constants/grid";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
 import { cleanBuildingSourceIds } from "../buildings/warehouse/warehouse-assignment";
-import { getDroneHomeDock } from "../drones/drone-dock";
+import { getDroneHomeDock } from "../drones/dock/drone-dock";
 import { computeConnectedAssetIds } from "../logistics/connectivity";
 import { cleanBuildingZoneIds } from "../zones/production-zone-cleanup";
 import { MAP_SHOP_POS } from "../store/constants/map-layout";

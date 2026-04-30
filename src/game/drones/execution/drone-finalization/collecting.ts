@@ -10,7 +10,7 @@ import type {
   ServiceHubInventory,
   StarterDroneState,
 } from "../../../store/types";
-import { droneTravelTicks } from "../../drone-movement";
+import { droneTravelTicks } from "../../movement/drone-movement";
 import {
   getRemainingBuildingInputDemand,
   getRemainingConstructionNeed,
@@ -20,13 +20,13 @@ import {
   decideCollectionNodePickupPlan,
   decideSourceInventoryPickupEligibility,
 } from "../../utils/drone-utils";
-import { applyDroneUpdate } from "../../drone-state-helpers";
+import { applyDroneUpdate } from "../../utils/drone-state-helpers";
 import {
   getCraftingJobById,
   parseWorkbenchTaskNodeId,
 } from "../../../store/workbench/workbench-task-utils";
 import { commitWorkbenchInputReservation } from "../../../store/workbench/workbench-input-pickup";
-import { resolveDroneDropoff } from "../../resolve-drone-dropoff";
+import { resolveDroneDropoff } from "../resolve-drone-dropoff";
 import type { DroneFinalizationDeps } from "./types";
 
 export function handleCollectingStatus(

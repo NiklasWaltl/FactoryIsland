@@ -1,4 +1,4 @@
-import type { GameState, StarterDroneState } from "../store/types";
+import type { GameState, StarterDroneState } from "../../store/types";
 import { getDroneDockOffset } from "./drone-dock-geometry";
 
 export function getDroneDockSlotIndex(

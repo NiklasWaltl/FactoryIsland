@@ -7,16 +7,16 @@ import type {
   GameState,
   StarterDroneState,
 } from "../../store/types";
-import { droneTravelTicks, moveDroneToward, nudgeAwayFromDrones } from "../drone-movement";
+import { droneTravelTicks, moveDroneToward, nudgeAwayFromDrones } from "../movement/drone-movement";
 import { decideInventorySourceTravelTarget } from "../utils/drone-utils";
-import { applyDroneUpdate } from "../drone-state-helpers";
+import { applyDroneUpdate } from "../utils/drone-state-helpers";
 import {
   getCraftingJobById,
   getCraftingReservationById,
   parseWorkbenchTaskNodeId,
 } from "../../store/workbench/workbench-task-utils";
 import { resolveWorkbenchInputPickup } from "../../store/workbench/workbench-input-pickup";
-import { resolveDroneDropoff } from "../resolve-drone-dropoff";
+import { resolveDroneDropoff } from "./resolve-drone-dropoff";
 import { finalizeWorkbenchDelivery } from "./workbench-finalizer-bindings";
 import type { TickOneDroneIoDeps } from "./tick-one-drone";
 

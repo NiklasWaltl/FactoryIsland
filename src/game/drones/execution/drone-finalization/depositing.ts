@@ -5,7 +5,7 @@ import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import { getBuildingInputConfig } from "../../../store/constants/buildings";
 import { getMaxDrones } from "../../../store/selectors/hub-tier-selectors";
 import { addResources } from "../../../store/inventory-ops";
-import { syncDrones, applyDroneUpdate } from "../../drone-state-helpers";
+import { syncDrones, applyDroneUpdate } from "../../utils/drone-state-helpers";
 import { parseWorkbenchTaskNodeId } from "../../../store/workbench/workbench-task-utils";
 import {
   finalizeWorkbenchDelivery,
@@ -18,7 +18,7 @@ import type {
   ServiceHubInventory,
   StarterDroneState,
 } from "../../../store/types";
-import { getDroneDockOffset } from "../../drone-dock-geometry";
+import { getDroneDockOffset } from "../../dock/drone-dock-geometry";
 import { decideDepositingTaskRoute } from "../../utils/drone-utils";
 import type { WorkbenchInputTask } from "../workbench-finalizers";
 import type { DroneFinalizationDeps } from "./types";

@@ -9,8 +9,8 @@ import {
   MAP_SHOP_POS,
   placeServiceHub,
   withDrone,
-} from "../test-utils";
-import type { GameState } from "../test-utils";
+} from "./test-utils";
+import type { GameState } from "./test-utils";
 
 describe("DRONE_TICK – collecting", () => {
   let base: GameState;

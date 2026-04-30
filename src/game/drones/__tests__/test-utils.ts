@@ -5,7 +5,7 @@ import {
   getDroneDockOffset,
   getMaxDrones,
   MAP_SHOP_POS,
-} from "../store/reducer";
+} from "../../store/reducer";
 import type {
   CollectionNode,
   CollectableItemType,
@@ -14,8 +14,8 @@ import type {
   Inventory,
   ServiceHubEntry,
   StarterDroneState,
-} from "../store/types";
-import type { GameAction } from "../store/game-actions";
+} from "../../store/types";
+import type { GameAction } from "../../store/game-actions";
 
 export {
   BUILDING_COSTS,
@@ -38,7 +38,7 @@ export {
   scoreDroneTask,
   selectDroneTask,
   SERVICE_HUB_TARGET_STOCK,
-} from "../store/reducer";
+} from "../../store/reducer";
 
 export { addToCollectionNodeAt, createInitialState, gameReducer, MAP_SHOP_POS };
 

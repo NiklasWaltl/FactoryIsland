@@ -99,9 +99,9 @@ import {
   tickOneDrone as tickOneDroneExecution,
   type TickOneDroneIoDeps,
 } from "../drones/execution/tick-one-drone";
-import { droneTravelTicks } from "../drones/drone-movement";
-import { getDroneDockOffset } from "../drones/drone-dock-geometry";
-import { syncDrones } from "../drones/drone-state-helpers";
+import { droneTravelTicks } from "../drones/movement/drone-movement";
+import { getDroneDockOffset } from "../drones/dock/drone-dock-geometry";
+import { syncDrones } from "../drones/utils/drone-state-helpers";
 import { addErrorNotification, addNotification } from "./utils/notifications";
 import { directionOffset } from "./utils/direction";
 import { getWarehouseInputCell, isValidWarehouseInput } from "./warehouse-input";

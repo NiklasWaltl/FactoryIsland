@@ -6,7 +6,7 @@ import { getBuildingInputTargets } from "../../buildings/building-input-targets"
 import {
   getAvailableHubDispatchSupply,
   getNearbyWarehousesForDispatch,
-} from "../dispatch-supply";
+} from "../execution/dispatch-supply";
 import type { GameState, StarterDroneState, DroneTaskType } from "../../store/types";
 import {
   selectDroneTask as selectDroneTaskDecision,

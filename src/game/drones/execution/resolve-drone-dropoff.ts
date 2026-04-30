@@ -1,18 +1,18 @@
-import { debugLog } from "../debug/debugLogger";
-import { DELIVERY_OFFSETS } from "../store/constants/drone-config";
-import { MAP_SHOP_POS } from "../store/constants/map-layout";
+import { debugLog } from "../../debug/debugLogger";
+import { DELIVERY_OFFSETS } from "../../store/constants/drone-config";
+import { MAP_SHOP_POS } from "../../store/constants/map-layout";
 import {
   resolveDroneDropoffDecision,
   type DroneDropoffFallbackEvent,
-} from "../store/decisions/drone-dropoff-decision";
+} from "../../store/decisions/drone-dropoff-decision";
 import type {
   GameState,
   Inventory,
   PlacedAsset,
   ServiceHubEntry,
   StarterDroneState,
-} from "../store/types";
-import { getDroneHomeDock } from "./drone-dock";
+} from "../../store/types";
+import { getDroneHomeDock } from "../dock/drone-dock";
 
 /**
  * Deterministic delivery slot index for a drone, derived from its droneId.

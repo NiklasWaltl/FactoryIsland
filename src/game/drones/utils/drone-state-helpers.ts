@@ -1,4 +1,4 @@
-import type { GameState, StarterDroneState } from "../store/types";
+import type { GameState, StarterDroneState } from "../../store/types";
 
 /** Keep drones record and starterDrone in sync (backward compat). */
 export function syncDrones(state: GameState): GameState {

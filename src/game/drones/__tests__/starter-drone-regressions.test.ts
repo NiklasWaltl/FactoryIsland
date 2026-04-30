@@ -17,8 +17,8 @@ import {
   scoreDroneTask,
   selectDroneTask,
   withDrone,
-} from "../test-utils";
-import type { CollectableItemType, GameState } from "../test-utils";
+} from "./test-utils";
+import type { CollectableItemType, GameState } from "./test-utils";
 
 // ============================================================
 // Construction Site Tests

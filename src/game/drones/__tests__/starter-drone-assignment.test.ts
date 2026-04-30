@@ -15,8 +15,8 @@ import {
   withDrone,
   withHubInventory,
   withTier2HubAndDockedDrones,
-} from "../test-utils";
-import type { GameState } from "../test-utils";
+} from "./test-utils";
+import type { GameState } from "./test-utils";
 
 describe("DRONE_TICK – hub assignment", () => {
   let base: GameState;

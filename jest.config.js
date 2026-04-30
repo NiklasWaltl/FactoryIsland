@@ -12,6 +12,9 @@ module.exports = {
   // The test environment that will be used for testing
   testEnvironment: "jsdom",
 
+  // Ignore shared test helper files that live alongside tests
+  testPathIgnorePatterns: ["/node_modules/", "/__tests__/test-utils\\.ts$"],
+
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     "^game/(.*)": "<rootDir>/src/game/$1",

@@ -1,4 +1,4 @@
-import { getDroneDockOffset } from "../../drones/drone-dock-geometry";
+import { getDroneDockOffset } from "../../drones/dock/drone-dock-geometry";
 import { getMaxDrones } from "../selectors/hub-tier-selectors";
 import type { GameState } from "../types";
 

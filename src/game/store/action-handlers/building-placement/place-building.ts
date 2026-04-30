@@ -28,7 +28,7 @@ import {
 import { decideBuildingPlacementEligibility } from "../../decisions/build-placement-eligibility";
 import { getNearestWarehouseId } from "../../../buildings/warehouse/warehouse-assignment";
 import { createEmptyHubInventory } from "../../../buildings/service-hub/hub-upgrade-workflow";
-import { getDroneDockOffset } from "../../../drones/drone-dock-geometry";
+import { getDroneDockOffset } from "../../../drones/dock/drone-dock-geometry";
 import { type BuildingPlacementIoDeps } from "./shared";
 import {
   placeConveyorBranch,

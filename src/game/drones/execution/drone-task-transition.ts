@@ -1,12 +1,12 @@
-import { droneTravelTicks, moveDroneToward, nudgeAwayFromDrones } from "../drone-movement";
+import { droneTravelTicks, moveDroneToward, nudgeAwayFromDrones } from "../movement/drone-movement";
 import { DRONE_SPEED_TILES_PER_TICK } from "../../store/constants/drone-config";
 import {
   decideReturningToDockWorkbenchUrgentRoute,
   type WorkbenchTaskNodeId,
 } from "../utils/drone-utils";
 import { runIdleHubSelfHeal } from "./drone-preflight";
-import { applyDroneUpdate } from "../drone-state-helpers";
-import { getDroneHomeDock } from "../drone-dock";
+import { applyDroneUpdate } from "../utils/drone-state-helpers";
+import { getDroneHomeDock } from "../dock/drone-dock";
 import { selectDroneTask } from "../selection/select-drone-task-bindings";
 import {
   getCraftingJobById,

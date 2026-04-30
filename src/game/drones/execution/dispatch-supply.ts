@@ -1,11 +1,11 @@
-import { DRONE_NEARBY_WAREHOUSE_LIMIT } from "./candidates/scoring/scoring-constants";
+import { DRONE_NEARBY_WAREHOUSE_LIMIT } from "../candidates/scoring/scoring-constants";
 import {
   getInboundHubBuildingSupplyAmount,
   getInboundHubDispatchAmount,
   getInboundWarehouseDispatchAmount,
-} from "./selection/helpers/need-slot-resolvers";
-import { isUnderConstruction } from "../store/helpers/asset-status";
-import type { CollectableItemType, GameState } from "../store/types";
+} from "../selection/helpers/need-slot-resolvers";
+import { isUnderConstruction } from "../../store/helpers/asset-status";
+import type { CollectableItemType, GameState } from "../../store/types";
 
 export function getAvailableHubDispatchSupply(
   state: Pick<GameState, "drones" | "serviceHubs">,
