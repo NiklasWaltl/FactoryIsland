@@ -10,6 +10,15 @@ import {
   type PlacedAsset,
 } from "../reducer";
 import { SPLITTER_OUTPUT_SIDE_PRIORITY } from "../decisions/conveyor-decisions";
+import {
+  decideConveyorTargetSelection,
+  type DecideConveyorTargetSelectionInput,
+} from "../conveyor/conveyor-routing";
+import { resetSplitterRouteState, type SplitterRouteState } from "../slices/splitter-route-state";
+import { isValidWarehouseInput } from "../warehouse-input";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
+import { resolveBuildingSource } from "../building-source";
+import { getWarehouseCapacity } from "../warehouse-capacity";
 
 function makeConveyorAsset(
   id: string,
@@ -44,7 +53,59 @@ function allConveyorItems(state: GameState): ConveyorItem[] {
   return Object.values(state.conveyors).flatMap((entry) => entry.queue);
 }
 
+function makeRoundRobinInput(
+  splitterRouteState: SplitterRouteState,
+  leftQueueLength: number,
+  rightQueueLength: number,
+): DecideConveyorTargetSelectionInput {
+  const splitterAsset = makeSplitterAsset("splitter", 2, 2, "east");
+  const leftOut = makeConveyorAsset("leftOut", 2, 1, "north");
+  const rightOut = makeConveyorAsset("rightOut", 2, 3, "south");
+  const leftQueue = Array(leftQueueLength).fill("stone") as ConveyorItem[];
+  const rightQueue = Array(rightQueueLength).fill("stone") as ConveyorItem[];
+  const state = makeState({
+    assets: {
+      splitter: splitterAsset,
+      leftOut,
+      rightOut,
+    },
+    cellMap: {
+      [cellKey(2, 2)]: "splitter",
+      [cellKey(2, 1)]: "leftOut",
+      [cellKey(2, 3)]: "rightOut",
+    },
+    connectedAssetIds: ["splitter", "leftOut", "rightOut"],
+    poweredMachineIds: ["splitter", "leftOut", "rightOut"],
+    conveyors: {
+      splitter: { queue: ["iron"] },
+      leftOut: { queue: leftQueue },
+      rightOut: { queue: rightQueue },
+    },
+  });
+  return {
+    state,
+    liveState: state,
+    convId: "splitter",
+    convAsset: splitterAsset,
+    currentItem: "iron",
+    conveyors: state.conveyors,
+    warehouseInventories: state.warehouseInventories,
+    smithy: state.smithy,
+    movedThisTick: new Set<string>(),
+    isValidWarehouseInput,
+    resolveBuildingSource,
+    getCraftingSourceInventory,
+    getSourceCapacity: (_s, source) => getWarehouseCapacity(_s.mode),
+    getWarehouseCapacity,
+    splitterRouteState,
+  };
+}
+
 describe("conveyor_splitter V1", () => {
+  beforeEach(() => {
+    resetSplitterRouteState();
+  });
+
   test("explicit output priority is left before right", () => {
     expect([...SPLITTER_OUTPUT_SIDE_PRIORITY]).toEqual(["left", "right"]);
   });
@@ -240,6 +301,39 @@ describe("conveyor_splitter V1", () => {
     expect(after.conveyors.leftOut.queue).toEqual([]);
   });
 
+  test("Splitter-Queue voll → Vorgänger-Belt wird blockiert, kein Item-Verlust", () => {
+    const fullSplitter = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ConveyorItem[];
+    const fullOut = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ConveyorItem[];
+    const state = makeState({
+      assets: {
+        input: makeConveyorAsset("input", 1, 2, "east"),
+        splitter: makeSplitterAsset("splitter", 2, 2, "east"),
+        leftOut: makeConveyorAsset("leftOut", 2, 1, "north"),
+        rightOut: makeConveyorAsset("rightOut", 2, 3, "south"),
+      },
+      cellMap: {
+        [cellKey(1, 2)]: "input",
+        [cellKey(2, 2)]: "splitter",
+        [cellKey(2, 1)]: "leftOut",
+        [cellKey(2, 3)]: "rightOut",
+      },
+      connectedAssetIds: ["input", "splitter", "leftOut", "rightOut"],
+      poweredMachineIds: ["input", "splitter", "leftOut", "rightOut"],
+      conveyors: {
+        input: { queue: ["iron"] },
+        splitter: { queue: fullSplitter },
+        leftOut: { queue: fullOut },
+        rightOut: { queue: fullOut },
+      },
+    });
+
+    const before = allConveyorItems(state);
+    const after = runTick(state);
+    expect(after.conveyors.input.queue).toEqual(["iron"]);
+    expect(after.conveyors.splitter.queue).toEqual(fullSplitter);
+    expect(allConveyorItems(after)).toEqual(before);
+  });
+
   test("no item duplication across two logistics ticks", () => {
     const state = makeState({
       assets: {
@@ -266,5 +360,40 @@ describe("conveyor_splitter V1", () => {
     const t2 = runTick(t1);
     expect(allConveyorItems(t2).filter((x) => x === "iron").length).toBe(1);
     expect(t2.conveyors.leftOut.queue).toEqual(["iron"]);
+  });
+
+  test("Round-Robin — erstes Item geht links, lastSide wird 'left'", () => {
+    const routeState: SplitterRouteState = {};
+    const input = makeRoundRobinInput(routeState, 0, 0);
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("target");
+    expect((decision as any).nextAssetId).toBe("leftOut");
+    expect(routeState["splitter"]?.lastSide).toBe("left");
+  });
+
+  test("Round-Robin — zweites Item geht rechts, lastSide wird 'right'", () => {
+    const routeState: SplitterRouteState = { splitter: { lastSide: "left" } };
+    const input = makeRoundRobinInput(routeState, 0, 0);
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("target");
+    expect((decision as any).nextAssetId).toBe("rightOut");
+    expect(routeState["splitter"]?.lastSide).toBe("right");
+  });
+
+  test("Round-Robin — linker Output voll → Item geht rechts, lastSide wird 'right'", () => {
+    const routeState: SplitterRouteState = {};
+    const input = makeRoundRobinInput(routeState, CONVEYOR_TILE_CAPACITY, 0);
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("target");
+    expect((decision as any).nextAssetId).toBe("rightOut");
+    expect(routeState["splitter"]?.lastSide).toBe("right");
+  });
+
+  test("Round-Robin — beide Outputs voll → lastSide unverändert nach dem Tick", () => {
+    const routeState: SplitterRouteState = { splitter: { lastSide: "left" } };
+    const input = makeRoundRobinInput(routeState, CONVEYOR_TILE_CAPACITY, CONVEYOR_TILE_CAPACITY);
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("no_target");
+    expect(routeState["splitter"]?.lastSide).toBe("left");
   });
 });

@@ -33,7 +33,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 18;
+export const CURRENT_SAVE_VERSION = 19;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -176,7 +176,13 @@ export interface SaveGameV18 extends Omit<SaveGameV17, "version"> {
   autoAssemblers: Record<string, AutoAssemblerEntry>;
 }
 
-export type SaveGameLatest = SaveGameV18;
+export interface SaveGameV19 extends Omit<SaveGameV18, "version"> {
+  version: 19;
+  /** Per-splitter Round-Robin routing state (keyed by splitter asset ID). */
+  splitterRouteState: Record<string, { lastSide: "left" | "right" }>;
+}
+
+export type SaveGameLatest = SaveGameV19;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -422,6 +428,20 @@ function migrateV17ToV18(save: SaveGameV17): SaveGameV18 {
   };
 }
 
+function migrateV18ToV19(save: SaveGameV18): SaveGameV19 {
+  const splitterRouteState: Record<string, { lastSide: "left" | "right" }> = {};
+  for (const [id, asset] of Object.entries(save.assets ?? {})) {
+    if ((asset as PlacedAsset).type === "conveyor_splitter") {
+      splitterRouteState[id] = { lastSide: "left" };
+    }
+  }
+  return {
+    ...save,
+    version: 19,
+    splitterRouteState,
+  };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -441,6 +461,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 15, to: 16, migrate: migrateV15ToV16 },
   { from: 16, to: 17, migrate: migrateV16ToV17 },
   { from: 17, to: 18, migrate: migrateV17ToV18 },
+  { from: 18, to: 19, migrate: migrateV18ToV19 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {
