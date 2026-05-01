@@ -200,7 +200,6 @@ export {
 } from "./helpers/energy-helpers";
 export {
   devAssertInventoryNonNegative,
-  resolveWorkbenchSource,
   manhattanDist,
 } from "./helpers/misc-helpers";
 export {
