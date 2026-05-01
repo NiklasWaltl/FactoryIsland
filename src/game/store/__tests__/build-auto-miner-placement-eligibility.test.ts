@@ -7,10 +7,21 @@ describe("decideAutoMinerPlacementEligibility", () => {
       y: 6,
       cellMap: { "5,6": "dep-1" },
       assets: {
-        "dep-1": { id: "dep-1", type: "iron_deposit", x: 5, y: 6, size: 2, fixed: true },
+        "dep-1": {
+          id: "dep-1",
+          type: "iron_deposit",
+          x: 5,
+          y: 6,
+          size: 2,
+          fixed: true,
+        },
       },
       autoMiners: {},
-      depositTypes: new Set(["stone_deposit", "iron_deposit", "copper_deposit"]),
+      depositTypes: new Set([
+        "stone_deposit",
+        "iron_deposit",
+        "copper_deposit",
+      ]),
     });
 
     expect(decision).toEqual({ kind: "eligible" });
@@ -22,12 +33,23 @@ describe("decideAutoMinerPlacementEligibility", () => {
       y: 6,
       cellMap: { "5,6": "dep-1" },
       assets: {
-        "dep-1": { id: "dep-1", type: "iron_deposit", x: 5, y: 6, size: 2, fixed: true },
+        "dep-1": {
+          id: "dep-1",
+          type: "iron_deposit",
+          x: 5,
+          y: 6,
+          size: 2,
+          fixed: true,
+        },
       },
       autoMiners: {
         "miner-1": { depositId: "dep-1" },
       },
-      depositTypes: new Set(["stone_deposit", "iron_deposit", "copper_deposit"]),
+      depositTypes: new Set([
+        "stone_deposit",
+        "iron_deposit",
+        "copper_deposit",
+      ]),
     });
 
     expect(decision).toEqual({

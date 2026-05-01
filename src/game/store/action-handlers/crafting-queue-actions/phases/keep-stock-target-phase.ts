@@ -1,9 +1,6 @@
 import { getAssetOfType } from "../../../utils/asset-guards";
 import type { GameAction } from "../../../game-actions";
-import type {
-  GameState,
-  KeepStockTargetEntry,
-} from "../../../types";
+import type { GameState, KeepStockTargetEntry } from "../../../types";
 import type { CraftingQueueActionDeps } from "../deps";
 
 type KeepStockTargetAction = Extract<
@@ -34,7 +31,9 @@ function logKeepStockInvariantIfInvalid(
 ): void {
   if (!import.meta.env.DEV) return;
   if (isKeepStockStateConsistent(state)) return;
-  console.warn(`[CraftingQueue:${actionType}] keepStockByWorkbench inkonsistent`);
+  console.warn(
+    `[CraftingQueue:${actionType}] keepStockByWorkbench inkonsistent`,
+  );
 }
 
 export function runKeepStockTargetPhase(
@@ -44,7 +43,10 @@ export function runKeepStockTargetPhase(
 
   if (!getAssetOfType(state, action.workbenchId, "workbench")) return state;
 
-  const clampedAmount = Math.max(0, Math.min(deps.KEEP_STOCK_MAX_TARGET, Math.floor(action.amount)));
+  const clampedAmount = Math.max(
+    0,
+    Math.min(deps.KEEP_STOCK_MAX_TARGET, Math.floor(action.amount)),
+  );
   const nextTarget: KeepStockTargetEntry = {
     enabled: !!action.enabled && clampedAmount > 0,
     amount: clampedAmount,
@@ -67,7 +69,10 @@ export function runKeepStockTargetPhase(
     if (!currentTarget) return state;
     const { [action.recipeId]: _removed, ...remainingRecipes } = recipeTargets;
     if (Object.keys(remainingRecipes).length === 0) {
-      const { [action.workbenchId]: _removedWorkbench, ...remainingWorkbenches } = byWorkbench;
+      const {
+        [action.workbenchId]: _removedWorkbench,
+        ...remainingWorkbenches
+      } = byWorkbench;
       const nextState = {
         ...state,
         keepStockByWorkbench: remainingWorkbenches,

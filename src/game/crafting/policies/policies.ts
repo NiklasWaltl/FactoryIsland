@@ -6,7 +6,10 @@ export interface RecipeAutomationPolicyEntry {
   readonly manualOnly?: boolean;
 }
 
-export type RecipeAutomationPolicyMap = Record<string, RecipeAutomationPolicyEntry>;
+export type RecipeAutomationPolicyMap = Record<
+  string,
+  RecipeAutomationPolicyEntry
+>;
 
 export interface ResolvedRecipeAutomationPolicy {
   readonly autoCraftAllowed: boolean;
@@ -100,8 +103,10 @@ export function applyRecipeAutomationPolicyPatch(
   const normalizedCurrent = normalizeRecipeAutomationPolicyEntry(current);
   const merged = {
     manualOnly: patch.manualOnly ?? normalizedCurrent.manualOnly,
-    autoCraftAllowed: patch.autoCraftAllowed ?? normalizedCurrent.autoCraftAllowed,
-    keepInStockAllowed: patch.keepInStockAllowed ?? normalizedCurrent.keepInStockAllowed,
+    autoCraftAllowed:
+      patch.autoCraftAllowed ?? normalizedCurrent.autoCraftAllowed,
+    keepInStockAllowed:
+      patch.keepInStockAllowed ?? normalizedCurrent.keepInStockAllowed,
   } satisfies RecipeAutomationPolicyEntry;
   return normalizeRecipeAutomationPolicyEntry(merged);
 }
@@ -160,10 +165,9 @@ export type RecipeAutomationPolicyContext =
   | "plannerKeepStock"
   | "keepStockRefill";
 
-const KEEP_STOCK_CONTEXTS: ReadonlySet<RecipeAutomationPolicyContext> = new Set([
-  "plannerKeepStock",
-  "keepStockRefill",
-]);
+const KEEP_STOCK_CONTEXTS: ReadonlySet<RecipeAutomationPolicyContext> = new Set(
+  ["plannerKeepStock", "keepStockRefill"],
+);
 
 function formatPolicyBlockedMessage(
   context: RecipeAutomationPolicyContext,

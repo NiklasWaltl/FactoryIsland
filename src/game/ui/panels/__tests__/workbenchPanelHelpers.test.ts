@@ -15,7 +15,13 @@ import { getWorkbenchRecipe } from "../../../simulation/recipes";
 
 function baseState(): GameState {
   const base = createInitialState("release");
-  const wb: PlacedAsset = { id: "wb-1", type: "workbench", x: 0, y: 0, size: 2 };
+  const wb: PlacedAsset = {
+    id: "wb-1",
+    type: "workbench",
+    x: 0,
+    y: 0,
+    size: 2,
+  };
   return {
     ...base,
     assets: { ...base.assets, "wb-1": wb },
@@ -35,9 +41,9 @@ describe("workbenchPanelHelpers", () => {
   describe("scopeKeyForSource", () => {
     it("uses the same scope keys as crafting/tick.ts", () => {
       expect(scopeKeyForSource({ kind: "global" })).toBe("crafting:global");
-      expect(scopeKeyForSource({ kind: "warehouse", warehouseId: "wh-1" })).toBe(
-        "crafting:warehouse:wh-1",
-      );
+      expect(
+        scopeKeyForSource({ kind: "warehouse", warehouseId: "wh-1" }),
+      ).toBe("crafting:warehouse:wh-1");
       expect(
         scopeKeyForSource({ kind: "zone", zoneId: "z-1", warehouseIds: [] }),
       ).toBe("crafting:zone:z-1");
@@ -251,8 +257,12 @@ describe("workbenchPanelHelpers", () => {
 
   describe("isPlayerGearRecipe", () => {
     it("returns true for player_gear outputs", () => {
-      expect(isPlayerGearRecipe(getWorkbenchRecipe("wood_pickaxe")!)).toBe(true);
-      expect(isPlayerGearRecipe(getWorkbenchRecipe("stone_pickaxe")!)).toBe(true);
+      expect(isPlayerGearRecipe(getWorkbenchRecipe("wood_pickaxe")!)).toBe(
+        true,
+      );
+      expect(isPlayerGearRecipe(getWorkbenchRecipe("stone_pickaxe")!)).toBe(
+        true,
+      );
     });
   });
 });

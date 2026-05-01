@@ -33,6 +33,13 @@ export function addErrorNotification(
   );
   return [
     ...filtered.slice(-5),
-    { id: makeId(), resource: "error", displayName: message, amount: 0, kind: "error" as const, expiresAt: now + 3000 },
+    {
+      id: makeId(),
+      resource: "error",
+      displayName: message,
+      amount: 0,
+      kind: "error" as const,
+      expiresAt: now + 3000,
+    },
   ];
 }

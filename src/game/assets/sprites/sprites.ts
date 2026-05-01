@@ -323,7 +323,13 @@ export const GRASS_TUFTS: readonly [number, number, number, number][] = [
 ];
 
 export const STONE_FLOOR_BASE = "#7a7a8a";
-export const STONE_FLOOR_BLOCKS: readonly [number, number, number, number, string][] = [
+export const STONE_FLOOR_BLOCKS: readonly [
+  number,
+  number,
+  number,
+  number,
+  string,
+][] = [
   [0, 0, 15, 10, "#8a8a9a"],
   [17, 0, 15, 10, "#6a6a7a"],
   [0, 12, 10, 8, "#6a6a7a"],

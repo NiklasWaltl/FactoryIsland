@@ -4,9 +4,13 @@ import type { GameState, Inventory } from "../store/types";
 import type { CraftingSource } from "../store/types";
 
 /** Read the inventory for a resolved crafting source. */
-export function getCraftingSourceInventory(state: GameState, source: CraftingSource): Inventory {
+export function getCraftingSourceInventory(
+  state: GameState,
+  source: CraftingSource,
+): Inventory {
   if (source.kind === "global") return state.inventory;
-  if (source.kind === "zone") return getZoneAggregateInventory(state, source.zoneId);
+  if (source.kind === "zone")
+    return getZoneAggregateInventory(state, source.zoneId);
   return state.warehouseInventories[source.warehouseId];
 }
 
@@ -14,9 +18,13 @@ export function getCraftingSourceInventory(state: GameState, source: CraftingSou
  * Resolve a crafting resource source from an optional warehouse ID.
  * Returns "global" when null or when the warehouse is invalid/missing.
  */
-export function resolveCraftingSource(state: GameState, warehouseId: string | null): CraftingSource {
+export function resolveCraftingSource(
+  state: GameState,
+  warehouseId: string | null,
+): CraftingSource {
   if (!warehouseId) return { kind: "global" };
-  if (!state.assets[warehouseId] || !state.warehouseInventories[warehouseId]) return { kind: "global" };
+  if (!state.assets[warehouseId] || !state.warehouseInventories[warehouseId])
+    return { kind: "global" };
   return { kind: "warehouse", warehouseId };
 }
 
@@ -37,5 +45,10 @@ export function applyCraftingSourceInventory(
   if (source.kind === "zone") {
     return applyZoneDelta(state, source.zoneId, newInv);
   }
-  return { warehouseInventories: { ...state.warehouseInventories, [source.warehouseId]: newInv } };
+  return {
+    warehouseInventories: {
+      ...state.warehouseInventories,
+      [source.warehouseId]: newInv,
+    },
+  };
 }

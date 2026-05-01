@@ -18,7 +18,10 @@ import {
   isOpenCraftingJob,
   sortByPriorityFifo,
 } from "../../crafting/queue";
-import type { CraftingInventorySource, CraftingJob } from "../../crafting/types";
+import type {
+  CraftingInventorySource,
+  CraftingJob,
+} from "../../crafting/types";
 import {
   evaluateKeepStockTarget,
   listConfiguredKeepStockTargets,
@@ -28,7 +31,11 @@ import {
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { isKnownItemId, getItemDef } from "../../items/registry";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
-import type { CollectableItemType, CraftingSource, GameState } from "../../store/types";
+import type {
+  CollectableItemType,
+  CraftingSource,
+  GameState,
+} from "../../store/types";
 import {
   KEEP_STOCK_MAX_TARGET,
   KEEP_STOCK_OPEN_JOB_CAP,
@@ -97,7 +104,8 @@ const KEEP_STOCK_EVALUATION_DEPS: KeepStockEvaluationDeps = {
 
 function toCraftingSource(source: CraftingInventorySource): CraftingSource {
   if (source.kind === "global") return { kind: "global" };
-  if (source.kind === "warehouse") return { kind: "warehouse", warehouseId: source.warehouseId };
+  if (source.kind === "warehouse")
+    return { kind: "warehouse", warehouseId: source.warehouseId };
   return { kind: "zone", zoneId: source.zoneId };
 }
 
@@ -121,7 +129,8 @@ function getBufferedAmount(job: CraftingJob, itemId: string): number {
 
 function hasBufferedIngredients(job: CraftingJob): boolean {
   return job.ingredients.every(
-    (ingredient) => getBufferedAmount(job, ingredient.itemId) >= ingredient.count,
+    (ingredient) =>
+      getBufferedAmount(job, ingredient.itemId) >= ingredient.count,
   );
 }
 
@@ -180,7 +189,9 @@ function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
             other.workbenchId === job.workbenchId &&
             (other.status === "crafting" || other.status === "delivering"),
         );
-        reason = blockedByWorkbench ? "wartet auf freie Werkbank" : "wartet auf Start";
+        reason = blockedByWorkbench
+          ? "wartet auf freie Werkbank"
+          : "wartet auf Start";
       }
     } else if (job.status === "crafting") {
       status = "crafting";
@@ -193,7 +204,9 @@ function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
           drone.craftingJobId === job.id &&
           drone.status !== "idle",
       );
-      reason = hasActiveDelivery ? "delivery unterwegs" : "wartet auf Abholung/Lieferung";
+      reason = hasActiveDelivery
+        ? "delivery unterwegs"
+        : "wartet auf Abholung/Lieferung";
     } else {
       status = "waiting";
     }
@@ -212,11 +225,18 @@ function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
-function countInboundConstructionDrones(state: GameState, targetId: string): number {
+function countInboundConstructionDrones(
+  state: GameState,
+  targetId: string,
+): number {
   let total = 0;
   for (const drone of Object.values(state.drones)) {
     if (drone.deliveryTargetId !== targetId) continue;
-    if (drone.currentTaskType !== "construction_supply" && drone.currentTaskType !== "hub_dispatch") continue;
+    if (
+      drone.currentTaskType !== "construction_supply" &&
+      drone.currentTaskType !== "hub_dispatch"
+    )
+      continue;
     if (drone.status === "idle") continue;
     total += 1;
   }
@@ -228,8 +248,15 @@ function getPrimaryConstructionNeed(
 ): { itemType: CollectableItemType; amount: number } | null {
   const entries = Object.entries(remaining)
     .filter(([, amount]) => (amount ?? 0) > 0)
-    .map(([itemType, amount]) => ({ itemType: itemType as CollectableItemType, amount: amount ?? 0 }))
-    .sort((left, right) => right.amount - left.amount || left.itemType.localeCompare(right.itemType));
+    .map(([itemType, amount]) => ({
+      itemType: itemType as CollectableItemType,
+      amount: amount ?? 0,
+    }))
+    .sort(
+      (left, right) =>
+        right.amount - left.amount ||
+        left.itemType.localeCompare(right.itemType),
+    );
 
   return entries[0] ?? null;
 }
@@ -244,7 +271,9 @@ function getConstructionRows(state: GameState): ProductionJobStatusRow[] {
     if (!need) continue;
 
     const inbound = countInboundConstructionDrones(state, siteId);
-    const isUpgrade = site.buildingType === "service_hub" && !!state.serviceHubs[siteId]?.pendingUpgrade;
+    const isUpgrade =
+      site.buildingType === "service_hub" &&
+      !!state.serviceHubs[siteId]?.pendingUpgrade;
 
     rows.push({
       id: `${isUpgrade ? "upgrade" : "construction"}:${siteId}`,
@@ -361,7 +390,9 @@ function getKeepStockRows(state: GameState): KeepStockStatusRow[] {
   return rows;
 }
 
-export function buildProductionTransparency(state: GameState): ProductionTransparencySnapshot {
+export function buildProductionTransparency(
+  state: GameState,
+): ProductionTransparencySnapshot {
   const jobs = [...getCraftingJobRows(state), ...getConstructionRows(state)];
   const keepStock = getKeepStockRows(state);
   return { jobs, keepStock };

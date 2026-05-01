@@ -7,7 +7,11 @@ import {
   getAvailableHubDispatchSupply,
   getNearbyWarehousesForDispatch,
 } from "../execution/dispatch-supply";
-import type { GameState, StarterDroneState, DroneTaskType } from "../../store/types";
+import type {
+  GameState,
+  StarterDroneState,
+  DroneTaskType,
+} from "../../store/types";
 import {
   selectDroneTask as selectDroneTaskDecision,
   type SelectDroneTaskDeps,
@@ -26,6 +30,10 @@ const SELECT_DRONE_TASK_DEPS: SelectDroneTaskDeps = {
 export function selectDroneTask(
   state: GameState,
   droneOverride?: StarterDroneState,
-): { taskType: DroneTaskType; nodeId: string; deliveryTargetId: string } | null {
+): {
+  taskType: DroneTaskType;
+  nodeId: string;
+  deliveryTargetId: string;
+} | null {
   return selectDroneTaskDecision(state, droneOverride, SELECT_DRONE_TASK_DEPS);
 }

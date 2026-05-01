@@ -33,23 +33,48 @@ export interface WorkbenchInputCandidateDeps {
     excludeDroneId?: string,
   ) => number;
   resolveWorkbenchInputPickup: (
-    state: Pick<GameState, "assets" | "warehouseInventories" | "serviceHubs" | "network">,
+    state: Pick<
+      GameState,
+      "assets" | "warehouseInventories" | "serviceHubs" | "network"
+    >,
     job: CraftingJob,
     reservation: WorkbenchInputReservation,
-  ) => { x: number; y: number; sourceKind: "warehouse" | "hub"; sourceId: string } | null;
+  ) => {
+    x: number;
+    y: number;
+    sourceKind: "warehouse" | "hub";
+    sourceId: string;
+  } | null;
   scoreDroneTask: (
     taskType: DroneTaskType,
     droneX: number,
     droneY: number,
     nodeX: number,
     nodeY: number,
-    bonuses?: { role?: number; sticky?: number; urgency?: number; demand?: number; spread?: number },
+    bonuses?: {
+      role?: number;
+      sticky?: number;
+      urgency?: number;
+      demand?: number;
+      spread?: number;
+    },
   ) => number;
 }
 
 export function gatherWorkbenchInputCandidates(
-  state: Pick<GameState, "assets" | "warehouseInventories" | "serviceHubs" | "network" | "crafting" | "drones">,
-  drone: Pick<StarterDroneState, "droneId" | "tileX" | "tileY" | "targetNodeId">,
+  state: Pick<
+    GameState,
+    | "assets"
+    | "warehouseInventories"
+    | "serviceHubs"
+    | "network"
+    | "crafting"
+    | "drones"
+  >,
+  drone: Pick<
+    StarterDroneState,
+    "droneId" | "tileX" | "tileY" | "targetNodeId"
+  >,
   constants: WorkbenchInputCandidateConstants,
   deps: WorkbenchInputCandidateDeps,
 ): DroneSelectionCandidate[] {
@@ -60,20 +85,47 @@ export function gatherWorkbenchInputCandidates(
     if (job.inventorySource.kind === "global") continue;
     if (deps.hasCompleteWorkbenchInput(job)) continue;
     for (const reservation of state.network.reservations) {
-      if (reservation.ownerKind !== "crafting_job" || reservation.ownerId !== job.reservationOwnerId) continue;
+      if (
+        reservation.ownerKind !== "crafting_job" ||
+        reservation.ownerId !== job.reservationOwnerId
+      )
+        continue;
       if (!deps.isCollectableCraftingItem(reservation.itemId)) continue;
-      if (deps.getWorkbenchJobInputAmount(job, reservation.itemId) >= reservation.amount) continue;
-      if (deps.getAssignedWorkbenchInputDroneCount(state, reservation.id, drone.droneId) > 0) continue;
+      if (
+        deps.getWorkbenchJobInputAmount(job, reservation.itemId) >=
+        reservation.amount
+      )
+        continue;
+      if (
+        deps.getAssignedWorkbenchInputDroneCount(
+          state,
+          reservation.id,
+          drone.droneId,
+        ) > 0
+      )
+        continue;
       const pickup = deps.resolveWorkbenchInputPickup(state, job, reservation);
       if (!pickup) continue;
       const syntheticNodeId = `workbench_input:${job.workbenchId}:${job.id}:${reservation.id}`;
-      const stickyBonus = drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
+      const stickyBonus =
+        drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
       const bonuses = { sticky: stickyBonus };
-      candidates.push(buildScoredCandidate(
-        "workbench_delivery", syntheticNodeId, job.workbenchId,
-        deps.scoreDroneTask("workbench_delivery", drone.tileX, drone.tileY, pickup.x, pickup.y, bonuses),
-        bonuses,
-      ));
+      candidates.push(
+        buildScoredCandidate(
+          "workbench_delivery",
+          syntheticNodeId,
+          job.workbenchId,
+          deps.scoreDroneTask(
+            "workbench_delivery",
+            drone.tileX,
+            drone.tileY,
+            pickup.x,
+            pickup.y,
+            bonuses,
+          ),
+          bonuses,
+        ),
+      );
     }
   }
 

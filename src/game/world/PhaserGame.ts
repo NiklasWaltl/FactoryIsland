@@ -126,13 +126,19 @@ class WorldScene extends Phaser.Scene {
   /** Static world assets currently rendered by Phaser. */
   private staticAssetNodes = new Map<string, Phaser.GameObjects.Container>();
   /** Collection node drop markers (manual harvests). */
-  private collectionNodeContainers = new Map<string, Phaser.GameObjects.Container>();
+  private collectionNodeContainers = new Map<
+    string,
+    Phaser.GameObjects.Container
+  >();
   /** The single starter drone marker. */
   private droneContainers = new Map<string, Phaser.GameObjects.Container>();
   /** Last logged hub parking signature to avoid per-update spam in DEV. */
   private lastParkingDebugSignature = "";
   /** Previous parked/not-parked state per drone for transition logs. */
-  private lastDroneParkingState = new Map<string, { hubId: string | null; parked: boolean; status: string }>();
+  private lastDroneParkingState = new Map<
+    string,
+    { hubId: string | null; parked: boolean; status: string }
+  >();
 
   constructor() {
     super({ key: "WorldScene" });
@@ -156,8 +162,14 @@ class WorldScene extends Phaser.Scene {
     this.load.image("asset:conveyor_corner", ASSET_SPRITES.conveyor_corner);
     this.load.image("asset:conveyor_merger", ASSET_SPRITES.conveyor_merger);
     this.load.image("asset:conveyor_splitter", ASSET_SPRITES.conveyor_splitter);
-    this.load.image("asset:conveyor_underground_in", ASSET_SPRITES.conveyor_underground_in);
-    this.load.image("asset:conveyor_underground_out", ASSET_SPRITES.conveyor_underground_out);
+    this.load.image(
+      "asset:conveyor_underground_in",
+      ASSET_SPRITES.conveyor_underground_in,
+    );
+    this.load.image(
+      "asset:conveyor_underground_out",
+      ASSET_SPRITES.conveyor_underground_out,
+    );
     this.load.image("asset:auto_miner", ASSET_SPRITES.auto_miner);
     this.load.image("asset:auto_smelter", ASSET_SPRITES.auto_smelter);
     this.load.image("asset:auto_assembler", ASSET_SPRITES.auto_assembler);
@@ -242,9 +254,13 @@ class WorldScene extends Phaser.Scene {
   }
 
   /** Create a Phaser container for one static world asset. */
-  private createStaticAssetContainer(asset: StaticAssetSnapshot): Phaser.GameObjects.Container {
+  private createStaticAssetContainer(
+    asset: StaticAssetSnapshot,
+  ): Phaser.GameObjects.Container {
     const container = this.add.container(0, 0);
-    const image = this.add.image(0, 0, `asset:${asset.type}`).setOrigin(0.5, 0.5);
+    const image = this.add
+      .image(0, 0, `asset:${asset.type}`)
+      .setOrigin(0.5, 0.5);
     const label = this.add.text(0, 0, ASSET_LABELS[asset.type], {
       fontFamily: "Arial",
       fontSize: "9px",
@@ -264,7 +280,7 @@ class WorldScene extends Phaser.Scene {
   /** Keep a static world asset container aligned with the shared world grid. */
   private updateStaticAssetContainer(
     container: Phaser.GameObjects.Container,
-    asset: StaticAssetSnapshot
+    asset: StaticAssetSnapshot,
   ): void {
     const worldWidth = asset.width * CELL_PX;
     const worldHeight = asset.height * CELL_PX;
@@ -291,7 +307,11 @@ class WorldScene extends Phaser.Scene {
       image.setAngle(0);
     }
 
-    label.setText(asset.isUnderConstruction ? `${ASSET_LABELS[asset.type]} 🔧` : ASSET_LABELS[asset.type]);
+    label.setText(
+      asset.isUnderConstruction
+        ? `${ASSET_LABELS[asset.type]} 🔧`
+        : ASSET_LABELS[asset.type],
+    );
     label.setOrigin(0.5, 0);
     label.setPosition(worldWidth / 2, worldHeight - 15);
 
@@ -304,9 +324,15 @@ class WorldScene extends Phaser.Scene {
     for (const node of data) {
       nextIds.add(node.id);
       if (!this.collectionNodeContainers.has(node.id)) {
-        this.collectionNodeContainers.set(node.id, this.createCollectionNodeContainer());
+        this.collectionNodeContainers.set(
+          node.id,
+          this.createCollectionNodeContainer(),
+        );
       }
-      this.updateCollectionNodeContainer(this.collectionNodeContainers.get(node.id)!, node);
+      this.updateCollectionNodeContainer(
+        this.collectionNodeContainers.get(node.id)!,
+        node,
+      );
     }
     for (const [id, container] of this.collectionNodeContainers.entries()) {
       if (!nextIds.has(id)) {
@@ -320,13 +346,15 @@ class WorldScene extends Phaser.Scene {
     const container = this.add.container(0, 0);
     const gfx = this.add.graphics();
     gfx.name = "gfx";
-    const label = this.add.text(0, 0, "", {
-      fontFamily: "Arial",
-      fontSize: "10px",
-      color: "#ffffff",
-      backgroundColor: "rgba(0,0,0,0.7)",
-      padding: { left: 3, right: 3, top: 1, bottom: 1 },
-    }).setOrigin(0.5, 0);
+    const label = this.add
+      .text(0, 0, "", {
+        fontFamily: "Arial",
+        fontSize: "10px",
+        color: "#ffffff",
+        backgroundColor: "rgba(0,0,0,0.7)",
+        padding: { left: 3, right: 3, top: 1, bottom: 1 },
+      })
+      .setOrigin(0.5, 0);
     label.name = "label";
     container.add([gfx, label]);
     container.setDepth(10);
@@ -335,7 +363,7 @@ class WorldScene extends Phaser.Scene {
 
   private updateCollectionNodeContainer(
     container: Phaser.GameObjects.Container,
-    node: CollectionNodeSnapshot
+    node: CollectionNodeSnapshot,
   ): void {
     const cx = node.tileX * CELL_PX + CELL_PX / 2;
     const cy = node.tileY * CELL_PX + CELL_PX / 2;
@@ -381,13 +409,15 @@ class WorldScene extends Phaser.Scene {
     const container = this.add.container(0, 0);
     const gfx = this.add.graphics();
     gfx.name = "gfx";
-    const label = this.add.text(0, 0, "", {
-      fontFamily: "Arial",
-      fontSize: "10px",
-      color: "#ffffff",
-      backgroundColor: "rgba(0,0,50,0.85)",
-      padding: { left: 3, right: 3, top: 1, bottom: 1 },
-    }).setOrigin(0.5, 0);
+    const label = this.add
+      .text(0, 0, "", {
+        fontFamily: "Arial",
+        fontSize: "10px",
+        color: "#ffffff",
+        backgroundColor: "rgba(0,0,50,0.85)",
+        padding: { left: 3, right: 3, top: 1, bottom: 1 },
+      })
+      .setOrigin(0.5, 0);
     label.name = "label";
     container.add([gfx, label]);
     container.setDepth(15);
@@ -411,9 +441,16 @@ class WorldScene extends Phaser.Scene {
     gfx.strokeCircle(0, 0, radius);
     gfx.fillStyle(0x0044aa, 1);
     gfx.fillCircle(0, 0, 5);
-    const cargoText = data.cargo ? ` (${data.cargo.amount}x ${data.cargo.itemType})` : "";
-    const parkingText = data.isParkedAtHub && data.parkingSlot !== null ? ` [P${data.parkingSlot + 1}]` : "";
-    label.setText(`${DRONE_STATUS_LABELS[data.status] ?? data.status}${parkingText}${cargoText}`);
+    const cargoText = data.cargo
+      ? ` (${data.cargo.amount}x ${data.cargo.itemType})`
+      : "";
+    const parkingText =
+      data.isParkedAtHub && data.parkingSlot !== null
+        ? ` [P${data.parkingSlot + 1}]`
+        : "";
+    label.setText(
+      `${DRONE_STATUS_LABELS[data.status] ?? data.status}${parkingText}${cargoText}`,
+    );
     label.setPosition(0, 18);
     container.setDepth(data.isParkedAtHub ? 14 : 15);
   }
@@ -421,8 +458,14 @@ class WorldScene extends Phaser.Scene {
   private debugParkingSync(data: DroneSnapshot[]): void {
     if (!import.meta.env.DEV) return;
 
-    const hubStats = new Map<string, { total: number; parked: number; active: number }>();
-    const nextDroneParkingState = new Map<string, { hubId: string | null; parked: boolean; status: string }>();
+    const hubStats = new Map<
+      string,
+      { total: number; parked: number; active: number }
+    >();
+    const nextDroneParkingState = new Map<
+      string,
+      { hubId: string | null; parked: boolean; status: string }
+    >();
 
     for (const drone of data) {
       nextDroneParkingState.set(drone.droneId, {
@@ -432,17 +475,30 @@ class WorldScene extends Phaser.Scene {
       });
 
       const previous = this.lastDroneParkingState.get(drone.droneId);
-      if (!previous || previous.parked !== drone.isParkedAtHub || previous.status !== drone.status || previous.hubId !== drone.hubId) {
+      if (
+        !previous ||
+        previous.parked !== drone.isParkedAtHub ||
+        previous.status !== drone.status ||
+        previous.hubId !== drone.hubId
+      ) {
         if (previous?.parked && !drone.isParkedAtHub) {
-          console.debug(`[Parking visuals] Drone ${drone.droneId} status=${drone.status} -> remove from parked visuals`);
+          console.debug(
+            `[Parking visuals] Drone ${drone.droneId} status=${drone.status} -> remove from parked visuals`,
+          );
         }
         if ((!previous || !previous.parked) && drone.isParkedAtHub) {
-          console.debug(`[Parking visuals] Drone ${drone.droneId} returned -> show in parked visuals`);
+          console.debug(
+            `[Parking visuals] Drone ${drone.droneId} returned -> show in parked visuals`,
+          );
         }
       }
 
       if (!drone.hubId) continue;
-      const stats = hubStats.get(drone.hubId) ?? { total: 0, parked: 0, active: 0 };
+      const stats = hubStats.get(drone.hubId) ?? {
+        total: 0,
+        parked: 0,
+        active: 0,
+      };
       stats.total += 1;
       if (drone.isParkedAtHub) {
         stats.parked += 1;
@@ -454,13 +510,20 @@ class WorldScene extends Phaser.Scene {
 
     const nextSignature = [...hubStats.entries()]
       .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
-      .map(([hubId, stats]) => `${hubId}:${stats.total}:${stats.parked}:${stats.active}`)
+      .map(
+        ([hubId, stats]) =>
+          `${hubId}:${stats.total}:${stats.parked}:${stats.active}`,
+      )
       .join("|");
 
     if (nextSignature !== this.lastParkingDebugSignature) {
       for (const [hubId, stats] of hubStats.entries()) {
-        console.debug(`[Hub ${hubId}] total drones=${stats.total}, parked=${stats.parked}, active=${stats.active}`);
-        console.debug(`[Parking visuals] hub=${hubId} visibleSlots=${stats.parked}, expected=${stats.parked}`);
+        console.debug(
+          `[Hub ${hubId}] total drones=${stats.total}, parked=${stats.parked}, active=${stats.active}`,
+        );
+        console.debug(
+          `[Parking visuals] hub=${hubId} visibleSlots=${stats.parked}, expected=${stats.parked}`,
+        );
       }
       this.lastParkingDebugSignature = nextSignature;
     }
@@ -474,7 +537,11 @@ class WorldScene extends Phaser.Scene {
    */
   private buildLayers(): void {
     // === Grass spritesheet (2 variants side by side: 128�64) ===
-    const grassCt = this.textures.createCanvas("grass_tiles", CELL_PX * 2, CELL_PX)!;
+    const grassCt = this.textures.createCanvas(
+      "grass_tiles",
+      CELL_PX * 2,
+      CELL_PX,
+    )!;
     const grassCtx = grassCt.context;
 
     for (let v = 0; v < 2; v++) {
@@ -492,7 +559,11 @@ class WorldScene extends Phaser.Scene {
     grassCt.refresh();
 
     // === Stone floor spritesheet (single tile: 64�64) ===
-    const floorCt = this.textures.createCanvas("stone_floor_tiles", CELL_PX, CELL_PX)!;
+    const floorCt = this.textures.createCanvas(
+      "stone_floor_tiles",
+      CELL_PX,
+      CELL_PX,
+    )!;
     const floorCtx = floorCt.context;
 
     floorCtx.fillStyle = STONE_FLOOR_BASE;
@@ -518,17 +589,31 @@ class WorldScene extends Phaser.Scene {
     });
 
     // Grass tileset + layer (tile indices: firstgid, firstgid+1)
-    const grassTs = map.addTilesetImage("grass_tiles", "grass_tiles", CELL_PX, CELL_PX, 0, 0)!;
+    const grassTs = map.addTilesetImage(
+      "grass_tiles",
+      "grass_tiles",
+      CELL_PX,
+      CELL_PX,
+      0,
+      0,
+    )!;
     const grassLayer = map.createBlankLayer("grass", grassTs)!;
 
     for (let y = 0; y < GRID_H; y++) {
       for (let x = 0; x < GRID_W; x++) {
-        grassLayer.putTileAt((x + y) % 2 + grassTs.firstgid, x, y);
+        grassLayer.putTileAt(((x + y) % 2) + grassTs.firstgid, x, y);
       }
     }
 
     // Stone floor tileset + layer (initially empty, filled by applyFloorMap)
-    const floorTs = map.addTilesetImage("stone_floor_tiles", "stone_floor_tiles", CELL_PX, CELL_PX, 0, 0)!;
+    const floorTs = map.addTilesetImage(
+      "stone_floor_tiles",
+      "stone_floor_tiles",
+      CELL_PX,
+      CELL_PX,
+      0,
+      0,
+    )!;
     this.floorLayer = map.createBlankLayer("floor", floorTs)!;
     this.floorLayer.setDepth(1); // Above grass layer (depth 0)
     this.floorFirstGid = floorTs.firstgid;

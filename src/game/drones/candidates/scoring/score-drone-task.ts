@@ -33,5 +33,13 @@ export function scoreDroneTask(
 ): number {
   const dist = Math.max(Math.abs(droneX - nodeX), Math.abs(droneY - nodeY));
   const { role = 0, sticky = 0, urgency = 0, demand = 0, spread = 0 } = bonuses;
-  return deps.taskBaseScore[taskType] - dist + role + sticky + urgency + demand + spread;
+  return (
+    deps.taskBaseScore[taskType] -
+    dist +
+    role +
+    sticky +
+    urgency +
+    demand +
+    spread
+  );
 }

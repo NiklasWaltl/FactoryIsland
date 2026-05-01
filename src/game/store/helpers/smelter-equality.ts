@@ -16,7 +16,10 @@ function areNumberArraysEqual(a: number[], b: number[]): boolean {
   return true;
 }
 
-export function areAutoSmelterEntriesEqual(a: AutoSmelterEntry, b: AutoSmelterEntry): boolean {
+export function areAutoSmelterEntriesEqual(
+  a: AutoSmelterEntry,
+  b: AutoSmelterEntry,
+): boolean {
   const aProc = a.processing;
   const bProc = b.processing;
   const sameProcessing =

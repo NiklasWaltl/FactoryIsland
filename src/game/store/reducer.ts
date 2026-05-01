@@ -31,7 +31,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 }
 
 /** Wraps the core reducer with dev-mode invariant assertions. */
-export function gameReducerWithInvariants(state: GameState, action: GameAction): GameState {
+export function gameReducerWithInvariants(
+  state: GameState,
+  action: GameAction,
+): GameState {
   const next = gameReducer(state, action);
   if (import.meta.env.DEV && next !== state) {
     devAssertInventoryNonNegative("state.inventory", next.inventory);

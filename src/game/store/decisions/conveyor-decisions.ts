@@ -1,6 +1,4 @@
-export type {
-  ConveyorMergerInputSide,
-} from "../conveyor/conveyor-geometry";
+export type { ConveyorMergerInputSide } from "../conveyor/conveyor-geometry";
 export {
   canAssetReceiveFromConveyorSplitterOutput,
   getConveyorMergerInputCell,

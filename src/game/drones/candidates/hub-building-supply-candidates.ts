@@ -17,9 +17,15 @@ export interface HubBuildingSupplyCandidateDeps {
   getBuildingInputTargets: (
     state: Pick<GameState, "assets">,
   ) => { assetId: string; resource: CollectableItemType; capacity: number }[];
-  isUnderConstruction: (state: Pick<GameState, "constructionSites">, assetId: string) => boolean;
+  isUnderConstruction: (
+    state: Pick<GameState, "constructionSites">,
+    assetId: string,
+  ) => boolean;
   getRemainingBuildingInputDemand: (
-    state: Pick<GameState, "assets" | "generators" | "drones" | "collectionNodes">,
+    state: Pick<
+      GameState,
+      "assets" | "generators" | "drones" | "collectionNodes"
+    >,
     assetId: string,
     itemType: CollectableItemType,
     excludeDroneId?: string,
@@ -47,13 +53,22 @@ export interface HubBuildingSupplyCandidateDeps {
     droneY: number,
     nodeX: number,
     nodeY: number,
-    bonuses?: { role?: number; sticky?: number; urgency?: number; demand?: number; spread?: number },
+    bonuses?: {
+      role?: number;
+      sticky?: number;
+      urgency?: number;
+      demand?: number;
+      spread?: number;
+    },
   ) => number;
 }
 
 export function gatherHubBuildingSupplyCandidates(
   state: GameState,
-  drone: Pick<StarterDroneState, "droneId" | "hubId" | "tileX" | "tileY" | "targetNodeId">,
+  drone: Pick<
+    StarterDroneState,
+    "droneId" | "hubId" | "tileX" | "tileY" | "targetNodeId"
+  >,
   constants: HubBuildingSupplyCandidateConstants,
   deps: HubBuildingSupplyCandidateDeps,
 ): DroneSelectionCandidate[] {
@@ -73,23 +88,51 @@ export function gatherHubBuildingSupplyCandidates(
       drone.droneId,
     );
     if (remainingDemand <= 0) continue;
-    const openSlots = deps.getOpenBuildingSupplyDroneSlots(state, target.assetId, target.resource, drone.droneId);
+    const openSlots = deps.getOpenBuildingSupplyDroneSlots(
+      state,
+      target.assetId,
+      target.resource,
+      drone.droneId,
+    );
     if (openSlots <= 0) continue;
-    const availableHubSupply = deps.getAvailableHubDispatchSupply(state, drone.hubId, target.resource, drone.droneId);
+    const availableHubSupply = deps.getAvailableHubDispatchSupply(
+      state,
+      drone.hubId,
+      target.resource,
+      drone.droneId,
+    );
     if (availableHubSupply <= 0) continue;
-    const assignedSoFar = deps.getAssignedBuildingSupplyDroneCount(state, target.assetId, drone.droneId);
+    const assignedSoFar = deps.getAssignedBuildingSupplyDroneCount(
+      state,
+      target.assetId,
+      drone.droneId,
+    );
     const spreadPenalty = -constants.spreadPenaltyPerDrone * assignedSoFar;
     const demandBonus = Math.min(constants.demandBonusMax, remainingDemand);
     const syntheticNodeId = `hub:${drone.hubId}:${target.resource}`;
-    const stickyBonus = drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
-    const bonuses = { sticky: stickyBonus, demand: demandBonus, spread: spreadPenalty };
-    candidates.push(buildScoredCandidate(
-      "building_supply",
-      syntheticNodeId,
-      target.assetId,
-      deps.scoreDroneTask("building_supply", drone.tileX, drone.tileY, hubAsset.x, hubAsset.y, bonuses),
-      bonuses,
-    ));
+    const stickyBonus =
+      drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
+    const bonuses = {
+      sticky: stickyBonus,
+      demand: demandBonus,
+      spread: spreadPenalty,
+    };
+    candidates.push(
+      buildScoredCandidate(
+        "building_supply",
+        syntheticNodeId,
+        target.assetId,
+        deps.scoreDroneTask(
+          "building_supply",
+          drone.tileX,
+          drone.tileY,
+          hubAsset.x,
+          hubAsset.y,
+          bonuses,
+        ),
+        bonuses,
+      ),
+    );
   }
 
   return candidates;

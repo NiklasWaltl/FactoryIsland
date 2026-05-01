@@ -16,7 +16,8 @@ export function deriveSmithyRuntimeContext(input: {
   poweredMachineIds: string[] | undefined;
   smithyAssetId: string;
 }): SmithyRuntimeContext {
-  const { selectedRecipe, iron, copper, poweredMachineIds, smithyAssetId } = input;
+  const { selectedRecipe, iron, copper, poweredMachineIds, smithyAssetId } =
+    input;
   return {
     smithyPowered: (poweredMachineIds ?? []).includes(smithyAssetId),
     rawAmt: selectedRecipe === "iron" ? iron : copper,

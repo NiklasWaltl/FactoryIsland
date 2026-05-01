@@ -59,7 +59,12 @@ function placeGenerator(
       newCellMap[`${x + dx},${y + dy}`] = id;
     }
   }
-  const gen: GeneratorState = { fuel, progress: 0, running: false, requestedRefill };
+  const gen: GeneratorState = {
+    fuel,
+    progress: 0,
+    running: false,
+    requestedRefill,
+  };
   return {
     ...state,
     assets: { ...state.assets, [id]: asset },
@@ -68,23 +73,40 @@ function placeGenerator(
   };
 }
 
-function withDrone(state: GameState, patch: Partial<StarterDroneState>): GameState {
+function withDrone(
+  state: GameState,
+  patch: Partial<StarterDroneState>,
+): GameState {
   const updated = { ...state.starterDrone, ...patch };
-  return { ...state, starterDrone: updated, drones: { ...state.drones, starter: updated } };
+  return {
+    ...state,
+    starterDrone: updated,
+    drones: { ...state.drones, starter: updated },
+  };
 }
 
-function withHubInventory(state: GameState, hubId: string, inv: Partial<Record<CollectableItemType, number>>): GameState {
+function withHubInventory(
+  state: GameState,
+  hubId: string,
+  inv: Partial<Record<CollectableItemType, number>>,
+): GameState {
   const hub = state.serviceHubs[hubId];
   return {
     ...state,
     serviceHubs: {
       ...state.serviceHubs,
-      [hubId]: { ...hub, inventory: { ...hub.inventory, ...inv } as typeof hub.inventory },
+      [hubId]: {
+        ...hub,
+        inventory: { ...hub.inventory, ...inv } as typeof hub.inventory,
+      },
     },
   };
 }
 
-function tick(state: GameState, action: Parameters<typeof gameReducer>[1]): GameState {
+function tick(
+  state: GameState,
+  action: Parameters<typeof gameReducer>[1],
+): GameState {
   return gameReducer(state, action);
 }
 
@@ -179,7 +201,16 @@ describe("Drone task selection — building_supply candidates", () => {
     const hubId = state.starterDrone.hubId!;
     state = withHubInventory(state, hubId, { wood: 0 });
     // Wood drop near the generator
-    state = { ...state, collectionNodes: addToCollectionNodeAt(state.collectionNodes, "wood", 6, 5, 4) };
+    state = {
+      ...state,
+      collectionNodes: addToCollectionNodeAt(
+        state.collectionNodes,
+        "wood",
+        6,
+        5,
+        4,
+      ),
+    };
     state = withDrone(state, { tileX: 6, tileY: 5 });
     const task = selectDroneTask(state);
     expect(task).not.toBeNull();
@@ -230,7 +261,11 @@ describe("Full delivery round-trip — hub source", () => {
     state = placeGenerator(state, "gen-1", 8, 5, 0, GENERATOR_MAX_FUEL);
     const hubId = state.starterDrone.hubId!;
     state = withHubInventory(state, hubId, { wood: 6 });
-    state = withDrone(state, { tileX: HUB_POS.x, tileY: HUB_POS.y, status: "idle" });
+    state = withDrone(state, {
+      tileX: HUB_POS.x,
+      tileY: HUB_POS.y,
+      status: "idle",
+    });
 
     state = runDroneUntilIdle(state);
 
@@ -238,15 +273,28 @@ describe("Full delivery round-trip — hub source", () => {
     const expectedTransfer = Math.min(DRONE_CAPACITY, 6);
     expect(state.serviceHubs[hubId].inventory.wood).toBe(6 - expectedTransfer);
     expect(state.generators["gen-1"].fuel).toBe(expectedTransfer);
-    expect(state.generators["gen-1"].fuel).toBeLessThanOrEqual(GENERATOR_MAX_FUEL);
+    expect(state.generators["gen-1"].fuel).toBeLessThanOrEqual(
+      GENERATOR_MAX_FUEL,
+    );
   });
 
   it("never overfills past GENERATOR_MAX_FUEL even with abundant hub stock", () => {
     let state = createInitialState("release");
-    state = placeGenerator(state, "gen-1", 8, 5, GENERATOR_MAX_FUEL - 2, GENERATOR_MAX_FUEL);
+    state = placeGenerator(
+      state,
+      "gen-1",
+      8,
+      5,
+      GENERATOR_MAX_FUEL - 2,
+      GENERATOR_MAX_FUEL,
+    );
     const hubId = state.starterDrone.hubId!;
     state = withHubInventory(state, hubId, { wood: 50 });
-    state = withDrone(state, { tileX: HUB_POS.x, tileY: HUB_POS.y, status: "idle" });
+    state = withDrone(state, {
+      tileX: HUB_POS.x,
+      tileY: HUB_POS.y,
+      status: "idle",
+    });
 
     state = runDroneUntilIdle(state);
 
@@ -262,7 +310,16 @@ describe("Full delivery round-trip — drop source", () => {
     state = placeGenerator(state, "gen-1", 8, 5, 0, GENERATOR_MAX_FUEL);
     const hubId = state.starterDrone.hubId!;
     state = withHubInventory(state, hubId, { wood: 0, stone: 0 });
-    state = { ...state, collectionNodes: addToCollectionNodeAt(state.collectionNodes, "wood", 7, 5, 3) };
+    state = {
+      ...state,
+      collectionNodes: addToCollectionNodeAt(
+        state.collectionNodes,
+        "wood",
+        7,
+        5,
+        3,
+      ),
+    };
     state = withDrone(state, { tileX: 7, tileY: 5, status: "idle" });
 
     state = runDroneUntilIdle(state);
@@ -287,7 +344,10 @@ describe("Generator consumption — local buffer only", () => {
         ...state.warehouseInventories,
         "wh-1": { ...({} as Inventory), wood: 99 } as Inventory,
       },
-      generators: { ...state.generators, "gen-1": { fuel: 5, progress: 0, running: true } },
+      generators: {
+        ...state.generators,
+        "gen-1": { fuel: 5, progress: 0, running: true },
+      },
     };
 
     // Run enough ticks to consume one wood from the local buffer.
@@ -308,7 +368,10 @@ describe("Generator consumption — local buffer only", () => {
     state = withHubInventory(state, hubId, { wood: 50 });
     state = {
       ...state,
-      generators: { ...state.generators, "gen-1": { fuel: 1, progress: 0, running: true } },
+      generators: {
+        ...state.generators,
+        "gen-1": { fuel: 1, progress: 0, running: true },
+      },
     };
 
     for (let i = 0; i < GENERATOR_TICKS_PER_WOOD + 1; i++) {

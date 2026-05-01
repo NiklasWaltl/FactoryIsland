@@ -58,7 +58,10 @@ describe("enqueueJob", () => {
     expect(r.job.status).toBe("queued");
     expect(r.job.priority).toBe("high"); // player default
     expect(r.job.enqueuedAt).toBe(1);
-    expect(r.job.inventorySource).toEqual({ kind: "warehouse", warehouseId: "wh-1" });
+    expect(r.job.inventorySource).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-1",
+    });
     expect(r.job.ingredients).toEqual([{ itemId: "wood", count: 5 }]);
     expect(r.job.output).toEqual({ itemId: "wood_pickaxe", count: 1 });
     expect(r.queue.nextJobSeq).toBe(2);
@@ -184,8 +187,12 @@ describe("assertTransition", () => {
     expect(() => assertTransition("queued", "cancelled")).not.toThrow();
   });
   it("throws on invalid transitions", () => {
-    expect(() => assertTransition("queued", "crafting")).toThrow(/Invalid status transition/);
-    expect(() => assertTransition("crafting", "done")).toThrow(/Invalid status transition/);
+    expect(() => assertTransition("queued", "crafting")).toThrow(
+      /Invalid status transition/,
+    );
+    expect(() => assertTransition("crafting", "done")).toThrow(
+      /Invalid status transition/,
+    );
     expect(() => assertTransition("done", "crafting")).toThrow();
     expect(() => assertTransition("cancelled", "queued")).toThrow();
   });
@@ -248,22 +255,31 @@ describe("workbench selectors", () => {
       nextJobSeq: 4,
       lastError: null,
     };
-    expect(getJobsForWorkbench(queue, "wb-A").map((j) => j.id)).toEqual(["x1", "x3"]);
+    expect(getJobsForWorkbench(queue, "wb-A").map((j) => j.id)).toEqual([
+      "x1",
+      "x3",
+    ]);
   });
 
   it("isWorkbenchBusy stays true for `crafting` and `delivering`", () => {
     const queue = {
-      jobs: [
-        fakeJob({ id: "x1", workbenchId: "wb-A", status: "reserved" }),
-      ],
+      jobs: [fakeJob({ id: "x1", workbenchId: "wb-A", status: "reserved" })],
       nextJobSeq: 2,
       lastError: null,
     };
     expect(isWorkbenchBusy(queue, "wb-A")).toBe(false);
-    queue.jobs[0] = fakeJob({ id: "x1", workbenchId: "wb-A", status: "crafting" });
+    queue.jobs[0] = fakeJob({
+      id: "x1",
+      workbenchId: "wb-A",
+      status: "crafting",
+    });
     expect(isWorkbenchBusy(queue, "wb-A")).toBe(true);
     expect(getActiveCraftingJob(queue, "wb-A")?.id).toBe("x1");
-    queue.jobs[0] = fakeJob({ id: "x1", workbenchId: "wb-A", status: "delivering" });
+    queue.jobs[0] = fakeJob({
+      id: "x1",
+      workbenchId: "wb-A",
+      status: "delivering",
+    });
     expect(isWorkbenchBusy(queue, "wb-A")).toBe(true);
     expect(getActiveCraftingJob(queue, "wb-A")?.id).toBe("x1");
   });

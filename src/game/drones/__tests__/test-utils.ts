@@ -170,7 +170,9 @@ export function placeServiceHub(
   };
 
   const existingHubIds = new Set(
-    Object.keys(state.assets).filter((id) => state.assets[id].type === "service_hub"),
+    Object.keys(state.assets).filter(
+      (id) => state.assets[id].type === "service_hub",
+    ),
   );
   s = gameReducer(s, { type: "BUILD_PLACE_BUILDING", x, y });
   const hubId = Object.keys(s.assets).find(

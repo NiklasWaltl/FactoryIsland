@@ -17,12 +17,24 @@ export function getAutoSmelterIoCells(asset: PlacedAsset): {
   const h = assetHeight(asset);
   switch (dir) {
     case "east":
-      return { input: { x: asset.x - 1, y: asset.y }, output: { x: asset.x + w, y: asset.y } };
+      return {
+        input: { x: asset.x - 1, y: asset.y },
+        output: { x: asset.x + w, y: asset.y },
+      };
     case "west":
-      return { input: { x: asset.x + w, y: asset.y }, output: { x: asset.x - 1, y: asset.y } };
+      return {
+        input: { x: asset.x + w, y: asset.y },
+        output: { x: asset.x - 1, y: asset.y },
+      };
     case "north":
-      return { input: { x: asset.x, y: asset.y + h }, output: { x: asset.x, y: asset.y - 1 } };
+      return {
+        input: { x: asset.x, y: asset.y + h },
+        output: { x: asset.x, y: asset.y - 1 },
+      };
     case "south":
-      return { input: { x: asset.x, y: asset.y - 1 }, output: { x: asset.x, y: asset.y + h } };
+      return {
+        input: { x: asset.x, y: asset.y - 1 },
+        output: { x: asset.x, y: asset.y + h },
+      };
   }
 }

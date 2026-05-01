@@ -4,14 +4,21 @@
 // `../reducer`.
 
 import type { AssetType, MachinePriority, PlacedAsset } from "../types";
-import { DEFAULT_MACHINE_PRIORITY, ENERGY_DRAIN } from "../constants/energy/energy-balance";
+import {
+  DEFAULT_MACHINE_PRIORITY,
+  ENERGY_DRAIN,
+} from "../constants/energy/energy-balance";
 import {
   AUTO_MINER_BOOST_MULTIPLIER,
   AUTO_SMELTER_BOOST_MULTIPLIER,
 } from "../constants/energy/boost-multipliers";
 
-export function clampMachinePriority(priority: number | undefined): MachinePriority {
-  const raw = Number.isFinite(priority) ? Math.round(priority as number) : DEFAULT_MACHINE_PRIORITY;
+export function clampMachinePriority(
+  priority: number | undefined,
+): MachinePriority {
+  const raw = Number.isFinite(priority)
+    ? Math.round(priority as number)
+    : DEFAULT_MACHINE_PRIORITY;
   const clamped = Math.max(1, Math.min(5, raw));
   return clamped as MachinePriority;
 }
@@ -24,12 +31,16 @@ export function isBoostSupportedType(type: AssetType): boolean {
   return type === "auto_miner" || type === "auto_smelter";
 }
 
-export function withDefaultMachinePriority(type: AssetType): Pick<PlacedAsset, "priority"> | Record<never, never> {
+export function withDefaultMachinePriority(
+  type: AssetType,
+): Pick<PlacedAsset, "priority"> | Record<never, never> {
   if (!isEnergyConsumerType(type)) return {};
   return { priority: DEFAULT_MACHINE_PRIORITY };
 }
 
-export function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">): number {
+export function getBoostMultiplier(
+  asset: Pick<PlacedAsset, "type" | "boosted">,
+): number {
   if (!asset.boosted) return 1;
   if (asset.type === "auto_miner") return AUTO_MINER_BOOST_MULTIPLIER;
   if (asset.type === "auto_smelter") return AUTO_SMELTER_BOOST_MULTIPLIER;

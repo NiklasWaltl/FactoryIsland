@@ -9,9 +9,7 @@ export interface HotbarRemoveContext {
   deps: WarehouseHotbarActionDeps;
 }
 
-export function runHotbarRemovePhase(
-  ctx: HotbarRemoveContext,
-): GameState {
+export function runHotbarRemovePhase(ctx: HotbarRemoveContext): GameState {
   const { state, action, deps } = ctx;
 
   const hs = state.hotbarSlots[action.slot];
@@ -43,7 +41,10 @@ export function runHotbarRemovePhase(
   } else if (hs.toolKind === "wood_pickaxe") {
     newWhInv = { ...newWhInv, wood_pickaxe: newWhInv.wood_pickaxe + hs.amount };
   } else if (hs.toolKind === "stone_pickaxe") {
-    newWhInv = { ...newWhInv, stone_pickaxe: newWhInv.stone_pickaxe + hs.amount };
+    newWhInv = {
+      ...newWhInv,
+      stone_pickaxe: newWhInv.stone_pickaxe + hs.amount,
+    };
   } else if (hs.toolKind === "sapling") {
     newWhInv = { ...newWhInv, sapling: newWhInv.sapling + hs.amount };
   }

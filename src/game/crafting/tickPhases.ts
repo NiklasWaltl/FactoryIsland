@@ -72,7 +72,8 @@ export function applyExecutionTick(
     Object.values(state.assets)
       .filter(
         (asset) =>
-          asset.type === "workbench" && !deps.isUnderConstruction(state, asset.id),
+          asset.type === "workbench" &&
+          !deps.isUnderConstruction(state, asset.id),
       )
       .map((asset) => asset.id),
   );

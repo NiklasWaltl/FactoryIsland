@@ -66,7 +66,12 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     selectedAutoSmelterId: null,
     autoAssemblers: {},
     selectedAutoAssemblerId: null,
-    manualAssembler: { processing: false, recipe: null, progress: 0, buildingId: null },
+    manualAssembler: {
+      processing: false,
+      recipe: null,
+      progress: 0,
+      buildingId: null,
+    },
     machinePowerRatio: {},
     energyDebugOverlay: false,
     autoDeliveryLog: [],

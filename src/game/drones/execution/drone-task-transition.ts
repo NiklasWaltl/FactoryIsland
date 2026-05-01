@@ -1,4 +1,8 @@
-import { droneTravelTicks, moveDroneToward, nudgeAwayFromDrones } from "../movement/drone-movement";
+import {
+  droneTravelTicks,
+  moveDroneToward,
+  nudgeAwayFromDrones,
+} from "../movement/drone-movement";
 import { DRONE_SPEED_TILES_PER_TICK } from "../../store/constants/drone/drone-config";
 import {
   decideReturningToDockWorkbenchUrgentRoute,
@@ -45,7 +49,12 @@ export function handleIdleStatus(
       return applyDroneUpdate(currentState, droneId, {
         ...drone,
         status: "returning_to_dock",
-        ticksRemaining: droneTravelTicks(drone.tileX, drone.tileY, dock.x, dock.y),
+        ticksRemaining: droneTravelTicks(
+          drone.tileX,
+          drone.tileY,
+          dock.x,
+          dock.y,
+        ),
       });
     }
     return currentState;
@@ -59,7 +68,9 @@ export function handleIdleStatus(
     const sourceAsset = currentState.assets[sourceId];
     if (!sourceAsset) return currentState; // source gone
     const sourceKind = task.nodeId.startsWith("wh:") ? "warehouse" : "hub";
-    debugLog.inventory(`[Drone] hub_dispatch: flying to ${sourceKind} ${sourceId} for ${task.nodeId.split(":")[2]} → site ${task.deliveryTargetId}`);
+    debugLog.inventory(
+      `[Drone] hub_dispatch: flying to ${sourceKind} ${sourceId} for ${task.nodeId.split(":")[2]} → site ${task.deliveryTargetId}`,
+    );
     return applyDroneUpdate(currentState, droneId, {
       ...drone,
       status: "moving_to_collect",
@@ -67,7 +78,12 @@ export function handleIdleStatus(
       currentTaskType: "hub_dispatch",
       deliveryTargetId: task.deliveryTargetId || null,
       craftingJobId: null,
-      ticksRemaining: droneTravelTicks(drone.tileX, drone.tileY, sourceAsset.x, sourceAsset.y),
+      ticksRemaining: droneTravelTicks(
+        drone.tileX,
+        drone.tileY,
+        sourceAsset.x,
+        sourceAsset.y,
+      ),
     });
   }
 
@@ -81,7 +97,9 @@ export function handleIdleStatus(
     const sourceAsset = currentState.assets[sourceId];
     if (!sourceAsset) return currentState;
     const sourceKind = task.nodeId.startsWith("wh:") ? "warehouse" : "hub";
-    debugLog.inventory(`[Drone] building_supply: flying to ${sourceKind} ${sourceId} for ${resource} → building ${task.deliveryTargetId}`);
+    debugLog.inventory(
+      `[Drone] building_supply: flying to ${sourceKind} ${sourceId} for ${resource} → building ${task.deliveryTargetId}`,
+    );
     return applyDroneUpdate(currentState, droneId, {
       ...drone,
       status: "moving_to_collect",
@@ -89,7 +107,12 @@ export function handleIdleStatus(
       currentTaskType: "building_supply",
       deliveryTargetId: task.deliveryTargetId || null,
       craftingJobId: null,
-      ticksRemaining: droneTravelTicks(drone.tileX, drone.tileY, sourceAsset.x, sourceAsset.y),
+      ticksRemaining: droneTravelTicks(
+        drone.tileX,
+        drone.tileY,
+        sourceAsset.x,
+        sourceAsset.y,
+      ),
     });
   }
 
@@ -98,9 +121,18 @@ export function handleIdleStatus(
     if (!workbenchTask) return currentState;
 
     if (workbenchTask.kind === "input") {
-      const job = getCraftingJobById(currentState.crafting, workbenchTask.jobId);
-      const reservation = getCraftingReservationById(currentState.network, workbenchTask.reservationId);
-      const pickup = job && reservation ? resolveWorkbenchInputPickup(currentState, job, reservation) : null;
+      const job = getCraftingJobById(
+        currentState.crafting,
+        workbenchTask.jobId,
+      );
+      const reservation = getCraftingReservationById(
+        currentState.network,
+        workbenchTask.reservationId,
+      );
+      const pickup =
+        job && reservation
+          ? resolveWorkbenchInputPickup(currentState, job, reservation)
+          : null;
       if (!job || job.status !== "reserved" || !reservation || !pickup) {
         return currentState;
       }
@@ -114,11 +146,19 @@ export function handleIdleStatus(
         currentTaskType: "workbench_delivery",
         deliveryTargetId: task.deliveryTargetId || null,
         craftingJobId: workbenchTask.jobId,
-        ticksRemaining: droneTravelTicks(drone.tileX, drone.tileY, pickup.x, pickup.y),
+        ticksRemaining: droneTravelTicks(
+          drone.tileX,
+          drone.tileY,
+          pickup.x,
+          pickup.y,
+        ),
       });
     }
 
-    const outputTask = workbenchTask as Extract<WorkbenchTaskNodeId, { kind: "output" }>;
+    const outputTask = workbenchTask as Extract<
+      WorkbenchTaskNodeId,
+      { kind: "output" }
+    >;
     const workbenchAsset = currentState.assets[outputTask.workbenchId];
     if (!workbenchAsset || workbenchAsset.type !== "workbench") {
       const idleDrone: StarterDroneState = {
@@ -139,7 +179,9 @@ export function handleIdleStatus(
       );
     }
 
-    debugLog.inventory(`[Drone] workbench_delivery: flying to workbench ${outputTask.workbenchId} for job ${outputTask.jobId}`);
+    debugLog.inventory(
+      `[Drone] workbench_delivery: flying to workbench ${outputTask.workbenchId} for job ${outputTask.jobId}`,
+    );
     return applyDroneUpdate(currentState, droneId, {
       ...drone,
       status: "moving_to_collect",
@@ -160,7 +202,10 @@ export function handleIdleStatus(
   if (!node) return currentState;
 
   // Claim the node so no other drone selects it while this one is en route
-  const claimedNode: CollectionNode = { ...node, reservedByDroneId: drone.droneId };
+  const claimedNode: CollectionNode = {
+    ...node,
+    reservedByDroneId: drone.droneId,
+  };
   return applyDroneUpdate(
     {
       ...currentState,
@@ -177,7 +222,12 @@ export function handleIdleStatus(
       currentTaskType: task.taskType,
       deliveryTargetId: task.deliveryTargetId || null,
       craftingJobId: null,
-      ticksRemaining: droneTravelTicks(drone.tileX, drone.tileY, node.tileX, node.tileY),
+      ticksRemaining: droneTravelTicks(
+        drone.tileX,
+        drone.tileY,
+        node.tileX,
+        node.tileY,
+      ),
     },
   );
 }
@@ -193,7 +243,11 @@ export function handleReturningToDockStatus(
   const dock = getDroneHomeDock(drone, state);
   if (!dock) {
     // homeHub gone - reset to idle in place
-    return applyDroneUpdate(state, droneId, { ...drone, status: "idle", ticksRemaining: 0 });
+    return applyDroneUpdate(state, droneId, {
+      ...drone,
+      status: "idle",
+      ticksRemaining: 0,
+    });
   }
 
   // If a task appears while returning, abort the return and take it immediately
@@ -212,7 +266,10 @@ export function handleReturningToDockStatus(
       getCraftingReservationById,
       resolveWorkbenchInputPickup,
     });
-    if (urgentWorkbenchRoute.kind === "ready" && urgentWorkbenchRoute.routeKind === "input") {
+    if (
+      urgentWorkbenchRoute.kind === "ready" &&
+      urgentWorkbenchRoute.routeKind === "input"
+    ) {
       return applyDroneUpdate(state, droneId, {
         ...drone,
         status: "moving_to_collect",
@@ -228,7 +285,10 @@ export function handleReturningToDockStatus(
         ),
       });
     }
-    if (urgentWorkbenchRoute.kind === "ready" && urgentWorkbenchRoute.routeKind === "output") {
+    if (
+      urgentWorkbenchRoute.kind === "ready" &&
+      urgentWorkbenchRoute.routeKind === "output"
+    ) {
       return applyDroneUpdate(state, droneId, {
         ...drone,
         status: "moving_to_collect",
@@ -247,7 +307,10 @@ export function handleReturningToDockStatus(
 
     const urgentNode = state.collectionNodes[urgentTask.nodeId];
     if (urgentNode) {
-      const claimedNode: CollectionNode = { ...urgentNode, reservedByDroneId: drone.droneId };
+      const claimedNode: CollectionNode = {
+        ...urgentNode,
+        reservedByDroneId: drone.droneId,
+      };
       return applyDroneUpdate(
         {
           ...state,

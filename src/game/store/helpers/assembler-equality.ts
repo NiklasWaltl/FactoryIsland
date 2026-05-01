@@ -8,7 +8,10 @@ function areConveyorItemsEqual(a: ConveyorItem[], b: ConveyorItem[]): boolean {
   return true;
 }
 
-export function areAutoAssemblerEntriesEqual(a: AutoAssemblerEntry, b: AutoAssemblerEntry): boolean {
+export function areAutoAssemblerEntriesEqual(
+  a: AutoAssemblerEntry,
+  b: AutoAssemblerEntry,
+): boolean {
   const aProc = a.processing;
   const bProc = b.processing;
   const sameProcessing =

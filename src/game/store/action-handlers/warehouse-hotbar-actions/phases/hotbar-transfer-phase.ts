@@ -37,9 +37,7 @@ export interface HotbarTransferContext {
   deps: WarehouseHotbarActionDeps;
 }
 
-export function runHotbarTransferPhase(
-  ctx: HotbarTransferContext,
-): GameState {
+export function runHotbarTransferPhase(ctx: HotbarTransferContext): GameState {
   const { state, action, deps } = ctx;
 
   switch (action.type) {
@@ -61,15 +59,23 @@ export function runHotbarTransferPhase(
       const whCurrent = readyWhInv[item] as number;
       const spaceInWarehouse =
         item === "coins" ? Infinity : Math.max(0, whCap - whCurrent);
-      const transferAmount = Math.min(amount, globalAvailable, spaceInWarehouse);
+      const transferAmount = Math.min(
+        amount,
+        globalAvailable,
+        spaceInWarehouse,
+      );
       if (transferAmount <= 0) return state;
 
       return {
         ...state,
-        inventory: deps.consumeResources(state.inventory, { [item]: transferAmount }),
+        inventory: deps.consumeResources(state.inventory, {
+          [item]: transferAmount,
+        }),
         warehouseInventories: {
           ...state.warehouseInventories,
-          [readyWhId]: deps.addResources(readyWhInv, { [item]: transferAmount }),
+          [readyWhId]: deps.addResources(readyWhInv, {
+            [item]: transferAmount,
+          }),
         },
       };
     }
@@ -93,10 +99,14 @@ export function runHotbarTransferPhase(
 
       return {
         ...state,
-        inventory: deps.addResources(state.inventory, { [item]: transferAmount }),
+        inventory: deps.addResources(state.inventory, {
+          [item]: transferAmount,
+        }),
         warehouseInventories: {
           ...state.warehouseInventories,
-          [readyWhId]: deps.consumeResources(readyWhInv, { [item]: transferAmount }),
+          [readyWhId]: deps.consumeResources(readyWhInv, {
+            [item]: transferAmount,
+          }),
         },
       };
     }

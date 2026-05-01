@@ -21,7 +21,9 @@ function emptyInv(): Inventory {
   return createInitialState("release").inventory;
 }
 
-function invWith(overrides: Partial<Record<keyof Inventory, number>>): Inventory {
+function invWith(
+  overrides: Partial<Record<keyof Inventory, number>>,
+): Inventory {
   const base = emptyInv();
   for (const [k, v] of Object.entries(overrides)) {
     (base as any)[k] = v;

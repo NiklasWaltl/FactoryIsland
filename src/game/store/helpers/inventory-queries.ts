@@ -1,8 +1,15 @@
-import { getEffectiveBuildInventory, createEmptyInventory, COLLECTABLE_KEYS } from "../inventory-ops";
+import {
+  getEffectiveBuildInventory,
+  createEmptyInventory,
+  COLLECTABLE_KEYS,
+} from "../inventory-ops";
 import type { CollectableItemType, GameState, Inventory } from "../types";
 
 /** Read the available amount of a single resource from the global pool. */
-export function getAvailableResource(state: { inventory: Inventory }, key: keyof Inventory): number {
+export function getAvailableResource(
+  state: { inventory: Inventory },
+  key: keyof Inventory,
+): number {
   return state.inventory[key] as number;
 }
 
@@ -46,7 +53,8 @@ export function selectBuildMenuInventoryView(
 
   for (const node of Object.values(state.collectionNodes)) {
     if (node.amount <= 0) continue;
-    effective[node.itemType] = (effective[node.itemType] as number) + node.amount;
+    effective[node.itemType] =
+      (effective[node.itemType] as number) + node.amount;
   }
 
   return effective;

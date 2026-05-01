@@ -6,7 +6,9 @@ export interface RemovePowerPoleContext {
   action: RemovePowerPoleAction;
 }
 
-export function runRemovePowerPolePhase(ctx: RemovePowerPoleContext): GameState {
+export function runRemovePowerPolePhase(
+  ctx: RemovePowerPoleContext,
+): GameState {
   const { state } = ctx;
   // Power poles are removed exclusively via BUILD_REMOVE_ASSET in Build Mode.
   return state;

@@ -64,10 +64,20 @@ export interface CraftingIngredientDecision {
 }
 
 function isHubCollectableItemId(itemId: ItemId): itemId is CollectableItemType {
-  return itemId === "wood" || itemId === "stone" || itemId === "iron" || itemId === "copper";
+  return (
+    itemId === "wood" ||
+    itemId === "stone" ||
+    itemId === "iron" ||
+    itemId === "copper"
+  );
 }
 
-function chebyshevDistance(ax: number, ay: number, bx: number, by: number): number {
+function chebyshevDistance(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+): number {
   return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 }
 
@@ -113,7 +123,11 @@ function getPrimaryWarehouseCandidateIds(
     if (assets && assets[warehouseId]?.type !== "warehouse") continue;
     out.push(warehouseId);
   }
-  return sortCandidateIdsByLocalDistance(out, assets, preferredFromAssetId) as WarehouseId[];
+  return sortCandidateIdsByLocalDistance(
+    out,
+    assets,
+    preferredFromAssetId,
+  ) as WarehouseId[];
 }
 
 function getFallbackHubCandidateIds(
@@ -202,14 +216,22 @@ export function pickCraftingPhysicalSourceForIngredient(args: {
     preferredFromAssetId,
   );
   for (const warehouseId of primaryWarehouseIds) {
-    const stored = (warehouseInventories[warehouseId] as unknown as Record<string, number>)[itemId] ?? 0;
+    const stored =
+      (warehouseInventories[warehouseId] as unknown as Record<string, number>)[
+        itemId
+      ] ?? 0;
     const scopedReserved = getReservedInScope(
       network,
       itemId,
       getSourceScopedScopeKey(source, "warehouse", warehouseId),
       excludeReservationId,
     );
-    const legacyReserved = getReservedInScope(network, itemId, legacyScope, excludeReservationId);
+    const legacyReserved = getReservedInScope(
+      network,
+      itemId,
+      legacyScope,
+      excludeReservationId,
+    );
     const reserved = scopedReserved + legacyReserved;
     const free = Math.max(0, stored - reserved);
     const attempt: CraftingSourceCandidateSnapshot = {
@@ -242,7 +264,11 @@ export function pickCraftingPhysicalSourceForIngredient(args: {
   }
 
   if (isHubCollectableItemId(itemId)) {
-    const hubIds = getFallbackHubCandidateIds(serviceHubs, assets, preferredFromAssetId);
+    const hubIds = getFallbackHubCandidateIds(
+      serviceHubs,
+      assets,
+      preferredFromAssetId,
+    );
     for (const hubId of hubIds) {
       const hubStored = serviceHubs[hubId]?.inventory[itemId] ?? 0;
       const scopedReserved = getReservedInScope(
@@ -251,7 +277,12 @@ export function pickCraftingPhysicalSourceForIngredient(args: {
         getSourceScopedScopeKey(source, "hub", hubId),
         excludeReservationId,
       );
-      const legacyReserved = getReservedInScope(network, itemId, legacyScope, excludeReservationId);
+      const legacyReserved = getReservedInScope(
+        network,
+        itemId,
+        legacyScope,
+        excludeReservationId,
+      );
       const reserved = scopedReserved + legacyReserved;
       const free = Math.max(0, hubStored - reserved);
       const attempt: CraftingSourceCandidateSnapshot = {
@@ -284,7 +315,10 @@ export function pickCraftingPhysicalSourceForIngredient(args: {
     }
   }
 
-  const blocked = attempts.find((attempt) => attempt.stored >= required && attempt.free < required) ?? null;
+  const blocked =
+    attempts.find(
+      (attempt) => attempt.stored >= required && attempt.free < required,
+    ) ?? null;
   if (blocked) {
     return {
       source: null,

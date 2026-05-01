@@ -21,7 +21,10 @@ type QueueManagementAction = Extract<
 
 type JobCancelAction = Extract<QueueManagementAction, { type: "JOB_CANCEL" }>;
 type JobMoveAction = Extract<QueueManagementAction, { type: "JOB_MOVE" }>;
-type JobSetPriorityAction = Extract<QueueManagementAction, { type: "JOB_SET_PRIORITY" }>;
+type JobSetPriorityAction = Extract<
+  QueueManagementAction,
+  { type: "JOB_SET_PRIORITY" }
+>;
 type JobTickAction = Extract<QueueManagementAction, { type: "JOB_TICK" }>;
 
 export interface QueueManagementContext {
@@ -46,9 +49,7 @@ type JobTickContext = Omit<QueueManagementContext, "action"> & {
   action: JobTickAction;
 };
 
-export function runJobCancelPhase(
-  ctx: JobCancelContext,
-): GameState {
+export function runJobCancelPhase(ctx: JobCancelContext): GameState {
   const { state, action } = ctx;
 
   const r = craftingCancelJob(state.crafting, action.jobId);
@@ -63,9 +64,7 @@ export function runJobCancelPhase(
   return { ...state, crafting: r.queue, network: nextNetwork };
 }
 
-export function runJobMovePhase(
-  ctx: JobMoveContext,
-): GameState {
+export function runJobMovePhase(ctx: JobMoveContext): GameState {
   const { state, action } = ctx;
 
   const r = craftingMoveJob(state.crafting, action.jobId, action.direction);
@@ -73,19 +72,19 @@ export function runJobMovePhase(
   return { ...state, crafting: r.queue };
 }
 
-export function runJobSetPriorityPhase(
-  ctx: JobSetPriorityContext,
-): GameState {
+export function runJobSetPriorityPhase(ctx: JobSetPriorityContext): GameState {
   const { state, action } = ctx;
 
-  const r = craftingSetJobPriority(state.crafting, action.jobId, action.priority);
+  const r = craftingSetJobPriority(
+    state.crafting,
+    action.jobId,
+    action.priority,
+  );
   if (r.queue === state.crafting) return state;
   return { ...state, crafting: r.queue };
 }
 
-export function runJobTickPhase(
-  ctx: JobTickContext,
-): GameState {
+export function runJobTickPhase(ctx: JobTickContext): GameState {
   const { state, deps } = ctx;
 
   // Architecture rule: JOB_TICK is split into two clearly named

@@ -32,7 +32,10 @@ function logZoneInvariantIfInvalid(state: GameState, actionType: string): void {
   console.warn(`[ZoneAction:${actionType}] buildingZoneIds inkonsistent`);
 }
 
-function finalizeZoneAction(nextState: GameState, actionType: string): GameState {
+function finalizeZoneAction(
+  nextState: GameState,
+  actionType: string,
+): GameState {
   logZoneInvariantIfInvalid(nextState, actionType);
   return nextState;
 }
@@ -54,7 +57,10 @@ export function handleZoneAction(
       const name = action.name || `Zone ${idx}`;
       const nextState = {
         ...state,
-        productionZones: { ...state.productionZones, [zoneId]: { id: zoneId, name } },
+        productionZones: {
+          ...state.productionZones,
+          [zoneId]: { id: zoneId, name },
+        },
       };
       return finalizeZoneAction(nextState, action.type);
     }

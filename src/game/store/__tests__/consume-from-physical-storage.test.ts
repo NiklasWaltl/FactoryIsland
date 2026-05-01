@@ -11,9 +11,7 @@
 //      physical store holds anything (it acts only as last-resort fallback;
 //      this is verified by ensuring physical stores are preferred).
 
-import {
-  createInitialState,
-} from "../reducer";
+import { createInitialState } from "../reducer";
 import { addResources } from "../inventory-ops";
 import { consumeFromPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 import type { GameState, Inventory, ServiceHubEntry } from "../types";
@@ -26,7 +24,11 @@ function emptyInv(): Inventory {
   return inv;
 }
 
-function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): GameState {
+function withWarehouse(
+  state: GameState,
+  id: string,
+  inv: Partial<Inventory>,
+): GameState {
   return {
     ...state,
     warehousesPlaced: state.warehousesPlaced + 1,
@@ -37,7 +39,11 @@ function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): G
   };
 }
 
-function withHub(state: GameState, id: string, inv: Partial<Record<"wood" | "stone" | "iron" | "copper", number>>): GameState {
+function withHub(
+  state: GameState,
+  id: string,
+  inv: Partial<Record<"wood" | "stone" | "iron" | "copper", number>>,
+): GameState {
   const hub: ServiceHubEntry = {
     inventory: { wood: 0, stone: 0, iron: 0, copper: 0, ...inv },
     targetStock: { wood: 0, stone: 0, iron: 0, copper: 0 },
@@ -87,7 +93,11 @@ describe("consumeFromPhysicalStorage", () => {
 
   it("leaves all stores untouched when total stock is insufficient", () => {
     let s = createInitialState("release");
-    s = { ...s, inventory: addResources(emptyInv(), { wood: 1 }), warehouseInventories: {} };
+    s = {
+      ...s,
+      inventory: addResources(emptyInv(), { wood: 1 }),
+      warehouseInventories: {},
+    };
     s = withWarehouse(s, "wh-A", { wood: 2 });
     s = withHub(s, "hub-1", { wood: 1 });
     // Snapshot deep references – they must be byref-equal after the failed call.
@@ -104,7 +114,11 @@ describe("consumeFromPhysicalStorage", () => {
 
   it("prefers the warehouse over state.inventory (physical-first)", () => {
     let s = createInitialState("release");
-    s = { ...s, inventory: addResources(emptyInv(), { wood: 100 }), warehouseInventories: {} };
+    s = {
+      ...s,
+      inventory: addResources(emptyInv(), { wood: 100 }),
+      warehouseInventories: {},
+    };
     s = withWarehouse(s, "wh-A", { wood: 10 });
 
     const result = consumeFromPhysicalStorage(s, { wood: 5 });
@@ -117,7 +131,11 @@ describe("consumeFromPhysicalStorage", () => {
 
   it("falls back to state.inventory only when no physical store holds the key (e.g. coins)", () => {
     let s = createInitialState("release");
-    s = { ...s, inventory: addResources(emptyInv(), { coins: 50 }), warehouseInventories: {} };
+    s = {
+      ...s,
+      inventory: addResources(emptyInv(), { coins: 50 }),
+      warehouseInventories: {},
+    };
 
     const result = consumeFromPhysicalStorage(s, { coins: 30 });
     expect(result.ok).toBe(true);

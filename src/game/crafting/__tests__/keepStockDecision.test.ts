@@ -12,7 +12,12 @@ function makeBaseState(overrides: Partial<GameState> = {}): GameState {
     assets: {
       "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0 },
     } as unknown as GameState["assets"],
-    network: { reservations: {}, sequence: 0, lastUpdated: 0, capabilities: {} },
+    network: {
+      reservations: {},
+      sequence: 0,
+      lastUpdated: 0,
+      capabilities: {},
+    },
     warehouseInventories: {},
     serviceHubs: {},
     crafting: { jobs: [], nextJobSeq: 1, lastError: null },
@@ -45,10 +50,7 @@ function makeDeps(
 const RECIPE_ID = "wood_pickaxe";
 const OUTPUT_ITEM = "wood_pickaxe";
 
-function configFor(
-  amount: number,
-  enabled = true,
-): KeepStockTargetConfig {
+function configFor(amount: number, enabled = true): KeepStockTargetConfig {
   return {
     workbenchId: "wb-1",
     recipeId: RECIPE_ID,
@@ -59,14 +61,22 @@ function configFor(
 describe("crafting/keepStockDecision.evaluateKeepStockTarget", () => {
   it("skips with code=disabled when target.enabled is false", () => {
     const state = makeBaseState();
-    const result = evaluateKeepStockTarget(state, configFor(5, false), makeDeps());
+    const result = evaluateKeepStockTarget(
+      state,
+      configFor(5, false),
+      makeDeps(),
+    );
     expect(result.kind).toBe("skip");
     if (result.kind === "skip") expect(result.code).toBe("disabled");
   });
 
   it("skips with code=disabled when amount is zero", () => {
     const state = makeBaseState();
-    const result = evaluateKeepStockTarget(state, configFor(0, true), makeDeps());
+    const result = evaluateKeepStockTarget(
+      state,
+      configFor(0, true),
+      makeDeps(),
+    );
     expect(result.kind).toBe("skip");
     if (result.kind === "skip") expect(result.code).toBe("disabled");
   });
@@ -97,7 +107,8 @@ describe("crafting/keepStockDecision.evaluateKeepStockTarget", () => {
     });
     const result = evaluateKeepStockTarget(state, configFor(5), makeDeps());
     expect(result.kind).toBe("skip");
-    if (result.kind === "skip") expect(result.code).toBe("higherPriorityBlockers");
+    if (result.kind === "skip")
+      expect(result.code).toBe("higherPriorityBlockers");
   });
 
   it("skips with code=workbenchMissing when workbench asset is gone", () => {
@@ -196,6 +207,8 @@ describe("crafting/keepStockDecision.evaluateKeepStockTarget", () => {
       configFor(10_000),
       makeDeps({ KEEP_STOCK_MAX_TARGET: 50 }),
     );
-    expect(result.kind === "skip" ? result.targetAmount : result.ctx.targetAmount).toBe(50);
+    expect(
+      result.kind === "skip" ? result.targetAmount : result.ctx.targetAmount,
+    ).toBe(50);
   });
 });

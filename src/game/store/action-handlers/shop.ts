@@ -49,11 +49,16 @@ export function handleShopAction(
 ): GameState | null {
   switch (action.type) {
     case "BUY_MAP_SHOP_ITEM": {
-      const item = deps.MAP_SHOP_ITEMS.find((entry) => entry.key === action.itemKey);
+      const item = deps.MAP_SHOP_ITEMS.find(
+        (entry) => entry.key === action.itemKey,
+      );
       if (!item) return state;
-      if (!deps.hasResources(state.inventory, { coins: item.costCoins })) return state;
+      if (!deps.hasResources(state.inventory, { coins: item.costCoins }))
+        return state;
 
-      const baseInv = deps.consumeResources(state.inventory, { coins: item.costCoins });
+      const baseInv = deps.consumeResources(state.inventory, {
+        coins: item.costCoins,
+      });
       const notifs = deps.addNotification(state.notifications, item.key, 1);
       const shopItemTarget = deps.resolveShopItemTarget({
         itemId: item.key,

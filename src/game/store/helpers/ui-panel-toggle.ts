@@ -15,7 +15,9 @@ export function tryTogglePanelFromAsset(
   if (isUnderConstruction(state, asset.id)) return null;
 
   if (asset.type === "conveyor_splitter") {
-    const opening = state.openPanel !== "conveyor_splitter" || state.selectedSplitterId !== asset.id;
+    const opening =
+      state.openPanel !== "conveyor_splitter" ||
+      state.selectedSplitterId !== asset.id;
     return {
       ...state,
       openPanel: opening ? "conveyor_splitter" : null,
@@ -23,19 +25,49 @@ export function tryTogglePanelFromAsset(
     };
   }
 
-  if ((["workbench", "warehouse", "smithy", "generator", "battery", "power_pole", "manual_assembler", "service_hub"] as string[]).includes(asset.type)) {
+  if (
+    (
+      [
+        "workbench",
+        "warehouse",
+        "smithy",
+        "generator",
+        "battery",
+        "power_pole",
+        "manual_assembler",
+        "service_hub",
+      ] as string[]
+    ).includes(asset.type)
+  ) {
     const panel = asset.type as UIPanel;
     if (asset.type === "warehouse") {
-      const newPanel = state.openPanel === panel && state.selectedWarehouseId === asset.id ? null : panel;
-      return { ...state, openPanel: newPanel, selectedWarehouseId: newPanel ? asset.id : null };
+      const newPanel =
+        state.openPanel === panel && state.selectedWarehouseId === asset.id
+          ? null
+          : panel;
+      return {
+        ...state,
+        openPanel: newPanel,
+        selectedWarehouseId: newPanel ? asset.id : null,
+      };
     }
     if (asset.type === "power_pole") {
       const newPanel = state.openPanel === panel ? null : panel;
-      return { ...state, openPanel: newPanel, selectedPowerPoleId: newPanel ? asset.id : state.selectedPowerPoleId };
+      return {
+        ...state,
+        openPanel: newPanel,
+        selectedPowerPoleId: newPanel ? asset.id : state.selectedPowerPoleId,
+      };
     }
     // Crafting buildings: track which specific instance is open
-    if (asset.type === "workbench" || asset.type === "smithy" || asset.type === "manual_assembler") {
-      const opening = state.openPanel !== panel || state.selectedCraftingBuildingId !== asset.id;
+    if (
+      asset.type === "workbench" ||
+      asset.type === "smithy" ||
+      asset.type === "manual_assembler"
+    ) {
+      const opening =
+        state.openPanel !== panel ||
+        state.selectedCraftingBuildingId !== asset.id;
       return {
         ...state,
         openPanel: opening ? panel : null,
@@ -43,7 +75,8 @@ export function tryTogglePanelFromAsset(
       };
     }
     if (asset.type === "generator") {
-      const opening = state.openPanel !== panel || state.selectedGeneratorId !== asset.id;
+      const opening =
+        state.openPanel !== panel || state.selectedGeneratorId !== asset.id;
       return {
         ...state,
         openPanel: opening ? panel : null,
@@ -51,7 +84,8 @@ export function tryTogglePanelFromAsset(
       };
     }
     if (asset.type === "service_hub") {
-      const opening = state.openPanel !== panel || state.selectedServiceHubId !== asset.id;
+      const opening =
+        state.openPanel !== panel || state.selectedServiceHubId !== asset.id;
       return {
         ...state,
         openPanel: opening ? panel : null,
@@ -62,7 +96,9 @@ export function tryTogglePanelFromAsset(
   }
 
   if (asset.type === "auto_miner") {
-    const opening = state.openPanel !== "auto_miner" || state.selectedAutoMinerId !== asset.id;
+    const opening =
+      state.openPanel !== "auto_miner" ||
+      state.selectedAutoMinerId !== asset.id;
     return {
       ...state,
       openPanel: opening ? "auto_miner" : null,
@@ -71,7 +107,9 @@ export function tryTogglePanelFromAsset(
   }
 
   if (asset.type === "auto_smelter") {
-    const opening = state.openPanel !== "auto_smelter" || state.selectedAutoSmelterId !== asset.id;
+    const opening =
+      state.openPanel !== "auto_smelter" ||
+      state.selectedAutoSmelterId !== asset.id;
     return {
       ...state,
       openPanel: opening ? "auto_smelter" : null,
@@ -80,7 +118,9 @@ export function tryTogglePanelFromAsset(
   }
 
   if (asset.type === "auto_assembler") {
-    const opening = state.openPanel !== "auto_assembler" || state.selectedAutoAssemblerId !== asset.id;
+    const opening =
+      state.openPanel !== "auto_assembler" ||
+      state.selectedAutoAssemblerId !== asset.id;
     return {
       ...state,
       openPanel: opening ? "auto_assembler" : null,

@@ -1,7 +1,10 @@
 import { cellKey } from "../../store/utils/cell-key";
 import { createInitialState } from "../../store/initial-state";
 import type { GameState, Inventory, PlacedAsset } from "../../store/types";
-import { WORKBENCH_RECIPES, type WorkbenchRecipe } from "../../simulation/recipes";
+import {
+  WORKBENCH_RECIPES,
+  type WorkbenchRecipe,
+} from "../../simulation/recipes";
 import { buildWorkbenchAutoCraftPlan } from "../planner/planner";
 import { pickOutputWarehouseId, routeOutput } from "../output";
 import type { CraftingInventorySource, CraftingJob, JobStatus } from "../types";
@@ -11,8 +14,20 @@ const WH = "wh-plan";
 
 function baseState(overrides?: Partial<Inventory>): GameState {
   const base = createInitialState("release");
-  const workbench: PlacedAsset = { id: WB, type: "workbench", x: 2, y: 2, size: 1 };
-  const warehouse: PlacedAsset = { id: WH, type: "warehouse", x: 5, y: 5, size: 2 };
+  const workbench: PlacedAsset = {
+    id: WB,
+    type: "workbench",
+    x: 2,
+    y: 2,
+    size: 1,
+  };
+  const warehouse: PlacedAsset = {
+    id: WH,
+    type: "warehouse",
+    x: 5,
+    y: 5,
+    size: 2,
+  };
   return {
     ...base,
     assets: {
@@ -45,7 +60,10 @@ function warehouseSource(): CraftingInventorySource {
   return { kind: "warehouse", warehouseId: WH };
 }
 
-function withWorkbenchRecipes(recipes: WorkbenchRecipe[], run: () => void): void {
+function withWorkbenchRecipes(
+  recipes: WorkbenchRecipe[],
+  run: () => void,
+): void {
   const snapshot = [...WORKBENCH_RECIPES];
   WORKBENCH_RECIPES.splice(WORKBENCH_RECIPES.length, 0, ...recipes);
   try {
@@ -447,7 +465,11 @@ describe("Schritt 8 Fixes - planner", () => {
       () => {
         // Setup: one future gear output already in a committed lifecycle state.
         const state = baseState({ wood: 2, gear: 0, axe: 0 });
-        const statuses: ReadonlyArray<JobStatus> = ["reserved", "crafting", "delivering"];
+        const statuses: ReadonlyArray<JobStatus> = [
+          "reserved",
+          "crafting",
+          "delivering",
+        ];
 
         for (const status of statuses) {
           const existing = makeExistingJob({
@@ -473,7 +495,11 @@ describe("Schritt 8 Fixes - planner", () => {
           expect(result.ok).toBe(true);
           if (!result.ok) continue;
           expect(result.steps).toEqual([
-            { recipeId: "auto_fix_r1_active_axe", count: 1, label: "Auto Fix R1 Active Axe" },
+            {
+              recipeId: "auto_fix_r1_active_axe",
+              count: 1,
+              label: "Auto Fix R1 Active Axe",
+            },
           ]);
         }
       },
@@ -593,6 +619,8 @@ describe("Schritt 8 Fixes - planner", () => {
 
     expect(routed.destination).toEqual({ kind: "global" });
     expect(routed.serviceHubs[hubId].inventory.wood).toBe(10);
-    expect(routed.globalInventory.wood_pickaxe).toBe(base.inventory.wood_pickaxe + 1);
+    expect(routed.globalInventory.wood_pickaxe).toBe(
+      base.inventory.wood_pickaxe + 1,
+    );
   });
 });

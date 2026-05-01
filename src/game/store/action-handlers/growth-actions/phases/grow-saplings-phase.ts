@@ -14,8 +14,18 @@ export function runGrowSaplingsPhase(ctx: GrowSaplingsContext): GameState {
   for (const assetId of action.assetIds) {
     const asset = assets[assetId];
     if (!asset || asset.type !== "sapling") continue;
-    const removed = removeAsset({ ...state, assets, cellMap, saplingGrowAt }, assetId);
-    const placed = placeAsset(removed.assets, removed.cellMap, "tree", asset.x, asset.y, 1);
+    const removed = removeAsset(
+      { ...state, assets, cellMap, saplingGrowAt },
+      assetId,
+    );
+    const placed = placeAsset(
+      removed.assets,
+      removed.cellMap,
+      "tree",
+      asset.x,
+      asset.y,
+      1,
+    );
     if (placed) {
       assets = placed.assets;
       cellMap = placed.cellMap;

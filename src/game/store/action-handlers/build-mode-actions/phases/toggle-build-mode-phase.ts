@@ -6,7 +6,9 @@ export interface ToggleBuildModeContext {
   action: ToggleBuildModeAction;
 }
 
-export function runToggleBuildModePhase(ctx: ToggleBuildModeContext): GameState {
+export function runToggleBuildModePhase(
+  ctx: ToggleBuildModeContext,
+): GameState {
   const { state } = ctx;
   const newBuildMode = !state.buildMode;
   return {

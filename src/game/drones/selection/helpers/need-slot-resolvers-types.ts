@@ -1,8 +1,5 @@
 import type { CraftingJob } from "../../../crafting/types";
-import type {
-  CollectableItemType,
-  GameState,
-} from "../../../store/types";
+import type { CollectableItemType, GameState } from "../../../store/types";
 
 export interface NeedSlotResolverDeps {
   getOpenConstructionDroneSlots: (
@@ -22,19 +19,28 @@ export interface NeedSlotResolverDeps {
     excludeDroneId?: string,
   ) => number;
   getRemainingHubRestockNeed: (
-    state: Pick<GameState, "drones" | "collectionNodes" | "serviceHubs" | "constructionSites">,
+    state: Pick<
+      GameState,
+      "drones" | "collectionNodes" | "serviceHubs" | "constructionSites"
+    >,
     hubId: string,
     itemType: CollectableItemType,
     excludeDroneId?: string,
   ) => number;
   getOpenHubRestockDroneSlots: (
-    state: Pick<GameState, "drones" | "collectionNodes" | "serviceHubs" | "constructionSites">,
+    state: Pick<
+      GameState,
+      "drones" | "collectionNodes" | "serviceHubs" | "constructionSites"
+    >,
     hubId: string,
     itemType: CollectableItemType,
     excludeDroneId?: string,
   ) => number;
   getRemainingBuildingInputDemand: (
-    state: Pick<GameState, "assets" | "generators" | "drones" | "collectionNodes">,
+    state: Pick<
+      GameState,
+      "assets" | "generators" | "drones" | "collectionNodes"
+    >,
     assetId: string,
     itemType: CollectableItemType,
     excludeDroneId?: string,

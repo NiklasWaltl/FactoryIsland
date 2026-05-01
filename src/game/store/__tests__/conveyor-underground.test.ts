@@ -12,15 +12,30 @@ import {
 import { serializeState, deserializeState } from "../../simulation/save";
 import { migrateSave } from "../../simulation/save-migrations";
 
-function makeConveyor(id: string, x: number, y: number, direction: Direction): PlacedAsset {
+function makeConveyor(
+  id: string,
+  x: number,
+  y: number,
+  direction: Direction,
+): PlacedAsset {
   return { id, type: "conveyor", x, y, size: 1, direction };
 }
 
-function makeUgIn(id: string, x: number, y: number, direction: Direction): PlacedAsset {
+function makeUgIn(
+  id: string,
+  x: number,
+  y: number,
+  direction: Direction,
+): PlacedAsset {
   return { id, type: "conveyor_underground_in", x, y, size: 1, direction };
 }
 
-function makeUgOut(id: string, x: number, y: number, direction: Direction): PlacedAsset {
+function makeUgOut(
+  id: string,
+  x: number,
+  y: number,
+  direction: Direction,
+): PlacedAsset {
   return { id, type: "conveyor_underground_out", x, y, size: 1, direction };
 }
 
@@ -180,8 +195,14 @@ describe("conveyor_underground", () => {
     const blob = serializeState(state);
     const migrated = migrateSave(blob);
     expect(migrated).not.toBeNull();
-    expect(migrated!.conveyorUndergroundPeers).toEqual({ tin: "tout", tout: "tin" });
+    expect(migrated!.conveyorUndergroundPeers).toEqual({
+      tin: "tout",
+      tout: "tin",
+    });
     const loaded = deserializeState(migrated!);
-    expect(loaded.conveyorUndergroundPeers).toEqual({ tin: "tout", tout: "tin" });
+    expect(loaded.conveyorUndergroundPeers).toEqual({
+      tin: "tout",
+      tout: "tin",
+    });
   });
 });

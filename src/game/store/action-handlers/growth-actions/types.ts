@@ -18,17 +18,8 @@ export type GrowthHandledAction = Extract<
   { type: GrowthHandledActionType }
 >;
 
-export type GrowSaplingAction = Extract<
-  GameAction,
-  { type: "GROW_SAPLING" }
->;
+export type GrowSaplingAction = Extract<GameAction, { type: "GROW_SAPLING" }>;
 
-export type GrowSaplingsAction = Extract<
-  GameAction,
-  { type: "GROW_SAPLINGS" }
->;
+export type GrowSaplingsAction = Extract<GameAction, { type: "GROW_SAPLINGS" }>;
 
-export type NaturalSpawnAction = Extract<
-  GameAction,
-  { type: "NATURAL_SPAWN" }
->;
+export type NaturalSpawnAction = Extract<GameAction, { type: "NATURAL_SPAWN" }>;

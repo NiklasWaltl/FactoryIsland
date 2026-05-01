@@ -34,10 +34,10 @@ export const DRONE_DOCK_COLUMNS = 2;
  * Multiple drones delivering to the same target land at slightly different tiles.
  */
 export const DELIVERY_OFFSETS: readonly { dx: number; dy: number }[] = [
-	{ dx: 0, dy: 0 },
-	{ dx: 0, dy: 1 },
-	{ dx: 1, dy: 0 },
-	{ dx: 1, dy: 1 },
+  { dx: 0, dy: 0 },
+  { dx: 0, dy: 1 },
+  { dx: 1, dy: 0 },
+  { dx: 1, dy: 1 },
 ];
 
 /**
@@ -67,9 +67,9 @@ export const DRONE_SPREAD_PENALTY_PER_DRONE = 5;
 
 /** Base priority scores for drone task types. */
 export const DRONE_TASK_BASE_SCORE: Record<DroneTaskType, number> = {
-	construction_supply: 1000,
-	hub_dispatch: 500,
-	workbench_delivery: 300,
-	building_supply: 200,
-	hub_restock: 100,
+  construction_supply: 1000,
+  hub_dispatch: 500,
+  workbench_delivery: 300,
+  building_supply: 200,
+  hub_restock: 100,
 };

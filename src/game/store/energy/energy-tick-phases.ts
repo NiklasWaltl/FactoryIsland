@@ -75,7 +75,9 @@ function getEnergyAllocationRank(type: AssetType): number {
   return ENERGY_ALLOCATION_RANK[type] ?? 4;
 }
 
-function getBoostMultiplier(asset: Pick<PlacedAsset, "type" | "boosted">): number {
+function getBoostMultiplier(
+  asset: Pick<PlacedAsset, "type" | "boosted">,
+): number {
   if (!asset.boosted) return 1;
   if (asset.type === "auto_miner") return AUTO_MINER_BOOST_MULTIPLIER;
   if (asset.type === "auto_smelter") return AUTO_SMELTER_BOOST_MULTIPLIER;
@@ -123,7 +125,9 @@ export function buildEnergyTickPhase1Snapshot(
         a.index - b.index,
     );
 
-  const batteryAsset = Object.values(state.assets).find((a) => a.type === "battery");
+  const batteryAsset = Object.values(state.assets).find(
+    (a) => a.type === "battery",
+  );
   const batteryConnected = batteryAsset
     ? state.connectedAssetIds.includes(batteryAsset.id) &&
       !state.constructionSites[batteryAsset.id]
@@ -171,7 +175,9 @@ export function allocateEnergyByPriority(
   };
 }
 
-export function hasEnergyTickChanges(input: EnergyTickChangeCheckInput): boolean {
+export function hasEnergyTickChanges(
+  input: EnergyTickChangeCheckInput,
+): boolean {
   const prevPowered = input.previousPoweredMachineIds ?? [];
   const samePoweredSet =
     input.nextPoweredMachineIds.length === prevPowered.length &&
@@ -180,8 +186,9 @@ export function hasEnergyTickChanges(input: EnergyTickChangeCheckInput): boolean
   const samePowerRatio =
     Object.keys(input.nextMachinePowerRatio).length ===
       Object.keys(input.previousMachinePowerRatio ?? {}).length &&
-    Object.entries(input.nextMachinePowerRatio).every(([id, ratio]) =>
-      Math.abs((input.previousMachinePowerRatio?.[id] ?? 0) - ratio) < 0.0001,
+    Object.entries(input.nextMachinePowerRatio).every(
+      ([id, ratio]) =>
+        Math.abs((input.previousMachinePowerRatio?.[id] ?? 0) - ratio) < 0.0001,
     );
 
   return !(

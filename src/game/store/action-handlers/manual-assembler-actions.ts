@@ -34,8 +34,14 @@ export interface ManualAssemblerActionDeps {
     selectedId?: string | null,
   ): void;
   isUnderConstruction(state: GameState, assetId: string): boolean;
-  resolveBuildingSource(state: GameState, buildingId: string | null): CraftingSource;
-  getCapacityPerResource(state: { mode: string; warehousesPlaced: number }): number;
+  resolveBuildingSource(
+    state: GameState,
+    buildingId: string | null,
+  ): CraftingSource;
+  getCapacityPerResource(state: {
+    mode: string;
+    warehousesPlaced: number;
+  }): number;
   getZoneItemCapacity(state: GameState, zoneId: string): number;
   addErrorNotification(
     notifications: GameNotification[],
@@ -64,13 +70,8 @@ function deriveManualAssemblerSourceCapacity(input: {
   globalCapacity: number | null;
   zoneCapacity: number | null;
 }): number {
-  const {
-    sourceKind,
-    mode,
-    warehouseCapacity,
-    globalCapacity,
-    zoneCapacity,
-  } = input;
+  const { sourceKind, mode, warehouseCapacity, globalCapacity, zoneCapacity } =
+    input;
 
   if (sourceKind === "global") return globalCapacity as number;
   if (sourceKind === "zone") return zoneCapacity as number;
@@ -86,7 +87,11 @@ export function handleManualAssemblerAction(
     case "MANUAL_ASSEMBLER_START": {
       const maAsset = deps.getSelectedCraftingAsset(state, "manual_assembler");
       if (!maAsset) return state;
-      deps.logCraftingSelectionComparison(state, "manual_assembler", maAsset.id);
+      deps.logCraftingSelectionComparison(
+        state,
+        "manual_assembler",
+        maAsset.id,
+      );
       if (deps.isUnderConstruction(state, maAsset.id)) {
         return {
           ...state,
@@ -104,12 +109,12 @@ export function handleManualAssemblerAction(
       const sourceInv = getCraftingSourceInventory(state, source);
       const outputKey = recipe.outputItem as keyof Inventory;
       const inputKey = recipe.inputItem as keyof Inventory;
-      const globalCapacity = source.kind === "global"
-        ? deps.getCapacityPerResource(state)
-        : null;
-      const zoneCapacity = source.kind === "zone"
-        ? deps.getZoneItemCapacity(state, source.zoneId)
-        : null;
+      const globalCapacity =
+        source.kind === "global" ? deps.getCapacityPerResource(state) : null;
+      const zoneCapacity =
+        source.kind === "zone"
+          ? deps.getZoneItemCapacity(state, source.zoneId)
+          : null;
       const cap = deriveManualAssemblerSourceCapacity({
         sourceKind: source.kind,
         mode: state.mode,
@@ -127,9 +132,10 @@ export function handleManualAssemblerAction(
         };
       }
       if ((sourceInv[inputKey] as number) < recipe.inputAmount) {
-        const error = recipe.key === "metal_plate"
-          ? "Nicht genug Metallbarren!"
-          : "Nicht genug Metallplatten!";
+        const error =
+          recipe.key === "metal_plate"
+            ? "Nicht genug Metallbarren!"
+            : "Nicht genug Metallplatten!";
         return {
           ...state,
           notifications: deps.addErrorNotification(state.notifications, error),
@@ -169,7 +175,8 @@ export function handleManualAssemblerAction(
       }
 
       const newProgress =
-        m.progress + MANUAL_ASSEMBLER_TICK_MS / Math.max(1, recipe.processingTime * 1000);
+        m.progress +
+        MANUAL_ASSEMBLER_TICK_MS / Math.max(1, recipe.processingTime * 1000);
       if (newProgress < 1) {
         return { ...state, manualAssembler: { ...m, progress: newProgress } };
       }
@@ -177,12 +184,12 @@ export function handleManualAssemblerAction(
       const source = deps.resolveBuildingSource(state, m.buildingId);
       const sourceInv = getCraftingSourceInventory(state, source);
       const outputKey = recipe.outputItem as keyof Inventory;
-      const globalCapacity = source.kind === "global"
-        ? deps.getCapacityPerResource(state)
-        : null;
-      const zoneCapacity = source.kind === "zone"
-        ? deps.getZoneItemCapacity(state, source.zoneId)
-        : null;
+      const globalCapacity =
+        source.kind === "global" ? deps.getCapacityPerResource(state) : null;
+      const zoneCapacity =
+        source.kind === "zone"
+          ? deps.getZoneItemCapacity(state, source.zoneId)
+          : null;
       const cap = deriveManualAssemblerSourceCapacity({
         sourceKind: source.kind,
         mode: state.mode,

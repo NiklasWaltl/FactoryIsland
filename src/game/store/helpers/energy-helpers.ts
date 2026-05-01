@@ -17,7 +17,13 @@ export function isPowerPoleRangeType(type: AssetType): boolean {
 }
 
 export function getConnectedDemandPerPeriod(
-  state: Pick<GameState, "assets" | "connectedAssetIds" | "autoSmelters" | "autoAssemblers">,
+  state: Pick<
+    GameState,
+    "assets" | "connectedAssetIds" | "autoSmelters" | "autoAssemblers"
+  >,
 ): number {
-  return getConnectedConsumerDrainEntries(state).reduce((sum, entry) => sum + entry.drain, 0);
+  return getConnectedConsumerDrainEntries(state).reduce(
+    (sum, entry) => sum + entry.drain,
+    0,
+  );
 }

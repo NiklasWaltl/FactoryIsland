@@ -10,14 +10,21 @@ import type { StarterDroneState } from "../../store/types";
  * Ticks for the drone to travel between two tile positions (Chebyshev distance,
  * rounded up to at least 1).
  */
-export function droneTravelTicks(x1: number, y1: number, x2: number, y2: number): number {
+export function droneTravelTicks(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+): number {
   const dist = Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2));
   return Math.max(1, Math.ceil(dist / DRONE_SPEED_TILES_PER_TICK));
 }
 
 export function moveDroneToward(
-  fromX: number, fromY: number,
-  toX: number, toY: number,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
   maxStep: number,
 ): { x: number; y: number } {
   const dx = toX - fromX;
@@ -68,15 +75,23 @@ export function nudgeAwayFromDrones(
     const d = Math.max(Math.abs(dx), Math.abs(dy));
     if (d > DRONE_SEPARATION_RADIUS) continue;
     const strength = (DRONE_SEPARATION_RADIUS - d) / DRONE_SEPARATION_RADIUS;
-    nudgeX += Math.abs(dx) > 0 ? dx * strength : (selfId > id ? 0.5 : -0.5) * strength;
-    nudgeY += Math.abs(dy) > 0 ? dy * strength : (selfId > id ? 0.5 : -0.5) * strength;
+    nudgeX +=
+      Math.abs(dx) > 0 ? dx * strength : (selfId > id ? 0.5 : -0.5) * strength;
+    nudgeY +=
+      Math.abs(dy) > 0 ? dy * strength : (selfId > id ? 0.5 : -0.5) * strength;
   }
 
   if (nudgeX === 0 && nudgeY === 0) return { x: nextX, y: nextY };
 
   const mag = Math.max(Math.abs(nudgeX), Math.abs(nudgeY));
   const scale = DRONE_SEPARATION_STRENGTH / mag;
-  const nx = Math.max(0, Math.min(GRID_W - 1, Math.round(nextX + nudgeX * scale)));
-  const ny = Math.max(0, Math.min(GRID_H - 1, Math.round(nextY + nudgeY * scale)));
+  const nx = Math.max(
+    0,
+    Math.min(GRID_W - 1, Math.round(nextX + nudgeX * scale)),
+  );
+  const ny = Math.max(
+    0,
+    Math.min(GRID_H - 1, Math.round(nextY + nudgeY * scale)),
+  );
   return { x: nx, y: ny };
 }

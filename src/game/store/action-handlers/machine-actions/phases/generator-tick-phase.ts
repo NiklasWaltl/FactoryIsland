@@ -16,9 +16,7 @@ export interface GeneratorTickContext {
   deps: MachineActionDeps;
 }
 
-export function runGeneratorTickPhase(
-  ctx: GeneratorTickContext,
-): GameState {
+export function runGeneratorTickPhase(ctx: GeneratorTickContext): GameState {
   const { state, deps } = ctx;
 
   const newGenerators = { ...state.generators };

@@ -96,7 +96,10 @@ export function handleFloorPlacementAction(
       }
 
       if (tileType === "stone_floor") {
-        const newFloorMap = { ...state.floorMap, [key]: "stone_floor" as const };
+        const newFloorMap = {
+          ...state.floorMap,
+          [key]: "stone_floor" as const,
+        };
         const consumed = deps.consumeBuildResources(state, costs);
         deps.debugLog.building(`[BuildMode] Placed stone_floor at (${x},${y})`);
         return {

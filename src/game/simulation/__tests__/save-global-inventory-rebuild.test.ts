@@ -28,19 +28,38 @@ function emptyInv(): Inventory {
 
 function bareState(): GameState {
   const s = createInitialState("release");
-  return { ...s, inventory: emptyInv(), warehouseInventories: {}, serviceHubs: {} };
-}
-
-function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): GameState {
   return {
-    ...state,
-    assets: { ...state.assets, [id]: { id, type: "warehouse", x: 0, y: 0, size: 2, direction: "south" } },
-    warehousesPlaced: state.warehousesPlaced + 1,
-    warehouseInventories: { ...state.warehouseInventories, [id]: addResources(emptyInv(), inv) },
+    ...s,
+    inventory: emptyInv(),
+    warehouseInventories: {},
+    serviceHubs: {},
   };
 }
 
-function withHub(state: GameState, id: string, inv: Partial<Record<"wood" | "stone" | "iron" | "copper", number>>): GameState {
+function withWarehouse(
+  state: GameState,
+  id: string,
+  inv: Partial<Inventory>,
+): GameState {
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      [id]: { id, type: "warehouse", x: 0, y: 0, size: 2, direction: "south" },
+    },
+    warehousesPlaced: state.warehousesPlaced + 1,
+    warehouseInventories: {
+      ...state.warehouseInventories,
+      [id]: addResources(emptyInv(), inv),
+    },
+  };
+}
+
+function withHub(
+  state: GameState,
+  id: string,
+  inv: Partial<Record<"wood" | "stone" | "iron" | "copper", number>>,
+): GameState {
   const hub: ServiceHubEntry = {
     inventory: { wood: 0, stone: 0, iron: 0, copper: 0, ...inv },
     targetStock: { wood: 0, stone: 0, iron: 0, copper: 0 },
@@ -49,7 +68,10 @@ function withHub(state: GameState, id: string, inv: Partial<Record<"wood" | "sto
   };
   return {
     ...state,
-    assets: { ...state.assets, [id]: { id, type: "service_hub", x: 0, y: 0, size: 2 } },
+    assets: {
+      ...state.assets,
+      [id]: { id, type: "service_hub", x: 0, y: 0, size: 2 },
+    },
     serviceHubs: { ...state.serviceHubs, [id]: hub },
   };
 }
@@ -61,7 +83,12 @@ describe("deserializeState — globalInventory rebuild", () => {
     s = withWarehouse(s, "wh-A", { wood: 20, iron: 5, ironIngot: 2 });
     s = {
       ...s,
-      inventory: addResources(s.inventory, { wood: 99, iron: 99, ironIngot: 99, coins: 100 }),
+      inventory: addResources(s.inventory, {
+        wood: 99,
+        iron: 99,
+        ironIngot: 99,
+        coins: 100,
+      }),
     };
 
     const loaded = deserializeState(serializeState(s));
@@ -82,7 +109,11 @@ describe("deserializeState — globalInventory rebuild", () => {
     s = withHub(s, "hub-1", { wood: 4 });
     s = {
       ...s,
-      inventory: addResources(s.inventory, { wood: 50, ironIngot: 50, coins: 10 }),
+      inventory: addResources(s.inventory, {
+        wood: 50,
+        ironIngot: 50,
+        coins: 10,
+      }),
     };
 
     const loaded = deserializeState(serializeState(s));
@@ -112,7 +143,14 @@ describe("deserializeState — globalInventory rebuild", () => {
     s = withWarehouse(s, "wh-A", { wood: 12, iron: 3 });
     s = withHub(s, "hub-1", { wood: 8, stone: 4 });
     // Bogus legacy global amounts that would double-count pre-fix:
-    s = { ...s, inventory: addResources(s.inventory, { wood: 999, iron: 999, stone: 999 }) };
+    s = {
+      ...s,
+      inventory: addResources(s.inventory, {
+        wood: 999,
+        iron: 999,
+        stone: 999,
+      }),
+    };
 
     const loaded = deserializeState(serializeState(s));
     const view = selectGlobalInventoryView(loaded);
@@ -181,7 +219,8 @@ describe("rebuildGlobalInventoryFromStorage — helper guards", () => {
     const broken = {
       inventory: addResources(emptyInv(), { wood: 12, coins: 1 }),
       // Cast intentionally: simulate a malformed runtime snapshot
-      warehouseInventories: undefined as unknown as GameState["warehouseInventories"],
+      warehouseInventories:
+        undefined as unknown as GameState["warehouseInventories"],
       serviceHubs: undefined as unknown as GameState["serviceHubs"],
     };
     const next = rebuildGlobalInventoryFromStorage({
@@ -202,7 +241,11 @@ describe("rebuildGlobalInventoryFromStorage — helper guards", () => {
     s = withHub(s, "hub-1", { wood: 2 });
     s = {
       ...s,
-      inventory: addResources(emptyInv(), { wood: 50, ironIngot: 50, coins: 1 }),
+      inventory: addResources(emptyInv(), {
+        wood: 50,
+        ironIngot: 50,
+        coins: 1,
+      }),
     };
 
     const next = rebuildGlobalInventoryFromStorage(s);

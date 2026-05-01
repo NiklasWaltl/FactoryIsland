@@ -1,17 +1,25 @@
 import { debugLog } from "../../../debug/debugLogger";
 import { assertTransition, sortByPriorityFifo } from "../../queue/queue";
 import type { CraftingJob } from "../../types";
-import { cancelReservedJob, finishCraftingJob, hasBufferedIngredients } from "../job-lifecycle";
+import {
+  cancelReservedJob,
+  finishCraftingJob,
+  hasBufferedIngredients,
+} from "../job-lifecycle";
 import type { TickInput } from "../../tick";
 import type { CraftingTickState } from "./types";
 
-export function promoteReservedPhase(state: CraftingTickState, input: TickInput): void {
+export function promoteReservedPhase(
+  state: CraftingTickState,
+  input: TickInput,
+): void {
   const reservedSorted = sortByPriorityFifo(
     state.jobs.filter((j) => j.status === "reserved"),
   );
   const busyByWorkbench = new Set<string>();
   for (const j of state.jobs) {
-    if (j.status === "crafting" || j.status === "delivering") busyByWorkbench.add(j.workbenchId);
+    if (j.status === "crafting" || j.status === "delivering")
+      busyByWorkbench.add(j.workbenchId);
   }
   const idIndex = new Map<string, number>();
   state.jobs.forEach((j, i) => idIndex.set(j.id, i));
@@ -20,7 +28,9 @@ export function promoteReservedPhase(state: CraftingTickState, input: TickInput)
   for (const job of reservedSorted) {
     if (busyByWorkbench.has(job.workbenchId)) {
       if (import.meta.env.DEV) {
-        debugLog.general(`Job ${job.id} waiting: workbench ${job.workbenchId} already busy`);
+        debugLog.general(
+          `Job ${job.id} waiting: workbench ${job.workbenchId} already busy`,
+        );
       }
       continue;
     }
@@ -31,7 +41,9 @@ export function promoteReservedPhase(state: CraftingTickState, input: TickInput)
       const canc = cancelReservedJob(job, state.network);
       state.network = canc.network;
       if (import.meta.env.DEV) {
-        debugLog.general(`Job ${job.id} cancelled: workbench ${job.workbenchId} missing`);
+        debugLog.general(
+          `Job ${job.id} cancelled: workbench ${job.workbenchId} missing`,
+        );
       }
       const idx = idIndex.get(job.id)!;
       phase3[idx] = canc.job;
@@ -40,13 +52,20 @@ export function promoteReservedPhase(state: CraftingTickState, input: TickInput)
     }
     if (!hasBufferedIngredients(job)) {
       if (import.meta.env.DEV) {
-        debugLog.general(`Job ${job.id} waiting: workbench ${job.workbenchId} missing delivered input`);
+        debugLog.general(
+          `Job ${job.id} waiting: workbench ${job.workbenchId} missing delivered input`,
+        );
       }
       continue;
     }
-    if (input.readyWorkbenchIds && !input.readyWorkbenchIds.has(job.workbenchId)) {
+    if (
+      input.readyWorkbenchIds &&
+      !input.readyWorkbenchIds.has(job.workbenchId)
+    ) {
       if (import.meta.env.DEV) {
-        debugLog.general(`Job ${job.id} waiting: workbench ${job.workbenchId} not ready`);
+        debugLog.general(
+          `Job ${job.id} waiting: workbench ${job.workbenchId} not ready`,
+        );
       }
       continue;
     }
@@ -59,7 +78,9 @@ export function promoteReservedPhase(state: CraftingTickState, input: TickInput)
       finishesAt: input.now,
     };
     if (import.meta.env.DEV) {
-      debugLog.general(`Job ${job.id} moved to crafting on workbench ${job.workbenchId}`);
+      debugLog.general(
+        `Job ${job.id} moved to crafting on workbench ${job.workbenchId}`,
+      );
     }
     // For 0-tick recipes, finish crafting immediately in the same tick.
     if (promoted.processingTime === 0) {

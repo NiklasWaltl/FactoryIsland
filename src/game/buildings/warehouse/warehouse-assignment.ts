@@ -75,7 +75,12 @@ export function reassignBuildingSourceIds(
     } else {
       const building = state.assets[buildingId];
       const replacement = building
-        ? getNearestWarehouseId(state, building.x, building.y, deletedWarehouseId)
+        ? getNearestWarehouseId(
+            state,
+            building.x,
+            building.y,
+            deletedWarehouseId,
+          )
         : null;
       if (replacement) {
         result[buildingId] = replacement;

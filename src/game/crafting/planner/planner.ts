@@ -62,7 +62,9 @@ function getRecipeLabel(recipeId: RecipeId): string {
   return getWorkbenchRecipe(recipeId)?.label ?? recipeId;
 }
 
-export function buildAutoCraftPlan(input: BuildAutoCraftPlanInput): AutoCraftPlanResult {
+export function buildAutoCraftPlan(
+  input: BuildAutoCraftPlanInput,
+): AutoCraftPlanResult {
   const { stepsInOrder, stepCounts, error } = buildAutoCraftPlanCore(input);
   if (error) {
     return { ok: false, error };
@@ -80,6 +82,8 @@ export function buildAutoCraftPlan(input: BuildAutoCraftPlanInput): AutoCraftPla
   };
 }
 
-export function buildWorkbenchAutoCraftPlan(input: BuildAutoCraftPlanInput): AutoCraftPlanResult {
+export function buildWorkbenchAutoCraftPlan(
+  input: BuildAutoCraftPlanInput,
+): AutoCraftPlanResult {
   return buildAutoCraftPlan(input);
 }

@@ -6,23 +6,27 @@ import {
   inventoryViewToHubInventory,
   pickCraftingPhysicalSourceForIngredient,
 } from "../../crafting/tick";
-import type {
-  CollectableItemType,
-  GameState,
-  Inventory,
-} from "../types";
+import type { CollectableItemType, GameState, Inventory } from "../types";
 import { getCraftingReservationById } from "./workbench-task-utils";
 import { isCollectableCraftingItem } from "../../crafting/workbench-input-buffer";
 
 export function resolveWorkbenchInputPickup(
-  state: Pick<GameState, "assets" | "warehouseInventories" | "serviceHubs" | "network">,
+  state: Pick<
+    GameState,
+    "assets" | "warehouseInventories" | "serviceHubs" | "network"
+  >,
   job: CraftingJob,
   reservation: {
     id: string;
     itemId: CraftingJob["ingredients"][number]["itemId"];
     amount: number;
   },
-): { x: number; y: number; sourceKind: "warehouse" | "hub"; sourceId: string } | null {
+): {
+  x: number;
+  y: number;
+  sourceKind: "warehouse" | "hub";
+  sourceId: string;
+} | null {
   if (job.inventorySource.kind === "global") return null;
   const decision = pickCraftingPhysicalSourceForIngredient({
     source: job.inventorySource,
@@ -36,9 +40,10 @@ export function resolveWorkbenchInputPickup(
     excludeReservationId: reservation.id,
   });
   if (!decision.source) return null;
-  const sourceId = decision.source.kind === "warehouse"
-    ? decision.source.warehouseId
-    : decision.source.hubId;
+  const sourceId =
+    decision.source.kind === "warehouse"
+      ? decision.source.warehouseId
+      : decision.source.hubId;
   const asset = state.assets[sourceId];
   if (!asset) return null;
   return {
@@ -62,7 +67,11 @@ export function commitWorkbenchInputReservation(
 } | null {
   const reservation = getCraftingReservationById(state.network, reservationId);
   if (!reservation) return null;
-  if (reservation.ownerKind !== "crafting_job" || reservation.ownerId !== job.reservationOwnerId) return null;
+  if (
+    reservation.ownerKind !== "crafting_job" ||
+    reservation.ownerId !== job.reservationOwnerId
+  )
+    return null;
   if (!isCollectableCraftingItem(reservation.itemId)) return null;
   if (job.inventorySource.kind === "global") return null;
 
@@ -83,7 +92,10 @@ export function commitWorkbenchInputReservation(
     const warehouseId = decision.source.warehouseId;
     const warehouseInventory = state.warehouseInventories[warehouseId];
     if (!warehouseInventory) return null;
-    const beforeAmount = (warehouseInventory as unknown as Record<string, number>)[reservation.itemId] ?? 0;
+    const beforeAmount =
+      (warehouseInventory as unknown as Record<string, number>)[
+        reservation.itemId
+      ] ?? 0;
     const scoped = { [warehouseId]: warehouseInventory };
     const result = applyNetworkAction(scoped, state.network, {
       type: "NETWORK_COMMIT_RESERVATION",
@@ -91,15 +103,21 @@ export function commitWorkbenchInputReservation(
     });
     if (result.network.lastError) return null;
     if (import.meta.env.DEV) {
-      const afterInventory = result.warehouseInventories[warehouseId] ?? warehouseInventory;
-      const afterAmount = (afterInventory as unknown as Record<string, number>)[reservation.itemId] ?? 0;
+      const afterInventory =
+        result.warehouseInventories[warehouseId] ?? warehouseInventory;
+      const afterAmount =
+        (afterInventory as unknown as Record<string, number>)[
+          reservation.itemId
+        ] ?? 0;
       if (beforeAmount - afterAmount !== reservation.amount) {
         throw new Error(
           `[workbench] Invariant violated: commit ${reservation.id} debited ${beforeAmount - afterAmount} ` +
             `of ${reservation.itemId}, expected ${reservation.amount}.`,
         );
       }
-      if (result.network.reservations.some((entry) => entry.id === reservation.id)) {
+      if (
+        result.network.reservations.some((entry) => entry.id === reservation.id)
+      ) {
         throw new Error(
           `[workbench] Invariant violated: reservation ${reservation.id} still present after commit.`,
         );
@@ -128,28 +146,40 @@ export function commitWorkbenchInputReservation(
   const scoped: Record<string, Inventory> = {
     [pseudoWarehouseId]: hubInventoryToInventoryView(hubEntry.inventory),
   };
-  const beforeAmount = (scoped[pseudoWarehouseId] as unknown as Record<string, number>)[reservation.itemId] ?? 0;
+  const beforeAmount =
+    (scoped[pseudoWarehouseId] as unknown as Record<string, number>)[
+      reservation.itemId
+    ] ?? 0;
   const result = applyNetworkAction(scoped, state.network, {
     type: "NETWORK_COMMIT_RESERVATION",
     reservationId,
   });
   if (result.network.lastError) return null;
-  const committedHubView = result.warehouseInventories[pseudoWarehouseId] ?? scoped[pseudoWarehouseId];
+  const committedHubView =
+    result.warehouseInventories[pseudoWarehouseId] ?? scoped[pseudoWarehouseId];
   if (import.meta.env.DEV) {
-    const afterAmount = (committedHubView as unknown as Record<string, number>)[reservation.itemId] ?? 0;
+    const afterAmount =
+      (committedHubView as unknown as Record<string, number>)[
+        reservation.itemId
+      ] ?? 0;
     if (beforeAmount - afterAmount !== reservation.amount) {
       throw new Error(
         `[workbench] Invariant violated: hub commit ${reservation.id} debited ${beforeAmount - afterAmount} ` +
           `of ${reservation.itemId}, expected ${reservation.amount}.`,
       );
     }
-    if (result.network.reservations.some((entry) => entry.id === reservation.id)) {
+    if (
+      result.network.reservations.some((entry) => entry.id === reservation.id)
+    ) {
       throw new Error(
         `[workbench] Invariant violated: reservation ${reservation.id} still present after hub commit.`,
       );
     }
   }
-  const nextHubInventory = inventoryViewToHubInventory(hubEntry.inventory, committedHubView);
+  const nextHubInventory = inventoryViewToHubInventory(
+    hubEntry.inventory,
+    committedHubView,
+  );
   return {
     nextState: {
       ...state,

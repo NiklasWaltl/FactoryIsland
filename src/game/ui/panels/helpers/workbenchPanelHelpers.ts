@@ -26,7 +26,8 @@ import { pickCraftingPhysicalSourceForIngredient } from "../../../crafting/tick"
 /** Mirror of `tick.ts` scope-key convention (not exported from tick.ts). */
 export function scopeKeyForSource(source: CraftingSource): string {
   if (source.kind === "global") return "crafting:global";
-  if (source.kind === "warehouse") return `crafting:warehouse:${source.warehouseId}`;
+  if (source.kind === "warehouse")
+    return `crafting:warehouse:${source.warehouseId}`;
   return `crafting:zone:${source.zoneId}`;
 }
 
@@ -44,7 +45,8 @@ export type MissingHint = "manual" | "craftable" | "unknown";
 export function isItemCraftable(itemId: string): boolean {
   for (const r of WORKBENCH_RECIPES) if (r.outputItem === itemId) return true;
   for (const r of SMELTING_RECIPES) if (r.outputItem === itemId) return true;
-  for (const r of MANUAL_ASSEMBLER_RECIPES) if (r.outputItem === itemId) return true;
+  for (const r of MANUAL_ASSEMBLER_RECIPES)
+    if (r.outputItem === itemId) return true;
   return false;
 }
 
@@ -101,13 +103,14 @@ export function computeIngredientLines(
     // Keep global-source behavior as-is; for physical sources, reuse the exact
     // warehouse-primary / hub-fallback decision from the crafting reservation path.
     if (source.kind !== "global" && isKnownItemId(res)) {
-      const inventorySource = source.kind === "zone"
-        ? {
-            kind: "zone" as const,
-            zoneId: source.zoneId,
-            warehouseIds: getZoneWarehouseIds(state, source.zoneId),
-          }
-        : source;
+      const inventorySource =
+        source.kind === "zone"
+          ? {
+              kind: "zone" as const,
+              zoneId: source.zoneId,
+              warehouseIds: getZoneWarehouseIds(state, source.zoneId),
+            }
+          : source;
       const decision = pickCraftingPhysicalSourceForIngredient({
         source: inventorySource,
         itemId: res as ItemId,
@@ -134,7 +137,15 @@ export function computeIngredientLines(
 
     const missingHint: MissingHint | undefined =
       status === "missing" ? classifyMissing(res) : undefined;
-    lines.push({ resource: res, required, stored, reserved, free, status, missingHint });
+    lines.push({
+      resource: res,
+      required,
+      stored,
+      reserved,
+      free,
+      status,
+      missingHint,
+    });
   }
   return lines;
 }
@@ -150,7 +161,11 @@ export function summarizeAvailability(
   lines: readonly IngredientLine[],
 ): RecipeAvailability {
   if (lines.length === 0) {
-    return { canCraft: true, worstStatus: "available", maxBatchByStock: Infinity };
+    return {
+      canCraft: true,
+      worstStatus: "available",
+      maxBatchByStock: Infinity,
+    };
   }
   let worst: IngredientStatus = "available";
   let canCraft = true;
@@ -167,7 +182,11 @@ export function summarizeAvailability(
     const possible = Math.floor(line.free / line.required);
     if (possible < maxBatch) maxBatch = possible;
   }
-  return { canCraft, worstStatus: worst, maxBatchByStock: Number.isFinite(maxBatch) ? maxBatch : 0 };
+  return {
+    canCraft,
+    worstStatus: worst,
+    maxBatchByStock: Number.isFinite(maxBatch) ? maxBatch : 0,
+  };
 }
 
 /** True if this recipe's output item is in the `player_gear` category. */

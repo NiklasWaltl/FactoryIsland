@@ -16,9 +16,19 @@ export function getAvailableHubDispatchSupply(
   const hubEntry = state.serviceHubs[hubId];
   if (!hubEntry) return 0;
   const current = hubEntry.inventory[itemType] ?? 0;
-  const inbound = getInboundHubDispatchAmount(state, hubId, itemType, excludeDroneId);
+  const inbound = getInboundHubDispatchAmount(
+    state,
+    hubId,
+    itemType,
+    excludeDroneId,
+  );
   // Building_supply trips that pull from the same hub also reduce what's left for hub_dispatch.
-  const inboundBuildingFromHub = getInboundHubBuildingSupplyAmount(state, hubId, itemType, excludeDroneId);
+  const inboundBuildingFromHub = getInboundHubBuildingSupplyAmount(
+    state,
+    hubId,
+    itemType,
+    excludeDroneId,
+  );
   return Math.max(0, current - inbound - inboundBuildingFromHub);
 }
 
@@ -32,7 +42,12 @@ export function getAvailableWarehouseDispatchSupply(
   if (!inv) return 0;
   const current = (inv as unknown as Record<string, number>)[itemType] ?? 0;
   if (current <= 0) return 0;
-  const inbound = getInboundWarehouseDispatchAmount(state, warehouseId, itemType, excludeDroneId);
+  const inbound = getInboundWarehouseDispatchAmount(
+    state,
+    warehouseId,
+    itemType,
+    excludeDroneId,
+  );
   return Math.max(0, current - inbound);
 }
 
@@ -59,10 +74,24 @@ export function getNearbyWarehousesForDispatch(
     const whAsset = state.assets[whId];
     if (!whAsset || whAsset.type !== "warehouse") continue;
     if (isUnderConstruction(state, whId)) continue;
-    const available = getAvailableWarehouseDispatchSupply(state, whId, itemType, excludeDroneId);
+    const available = getAvailableWarehouseDispatchSupply(
+      state,
+      whId,
+      itemType,
+      excludeDroneId,
+    );
     if (available <= 0) continue;
-    const distance = Math.max(Math.abs(fromX - whAsset.x), Math.abs(fromY - whAsset.y));
-    out.push({ warehouseId: whId, x: whAsset.x, y: whAsset.y, available, distance });
+    const distance = Math.max(
+      Math.abs(fromX - whAsset.x),
+      Math.abs(fromY - whAsset.y),
+    );
+    out.push({
+      warehouseId: whId,
+      x: whAsset.x,
+      y: whAsset.y,
+      available,
+      distance,
+    });
   }
   out.sort((a, b) => a.distance - b.distance);
   return out.slice(0, DRONE_NEARBY_WAREHOUSE_LIMIT);

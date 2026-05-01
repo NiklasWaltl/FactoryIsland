@@ -4,7 +4,11 @@ import { previewBuildingPlacementAtCell } from "../building-placement-preview";
 import { cellKey, createInitialState, gameReducer } from "../reducer";
 import type { GameState } from "../types";
 
-function clearCellForPlacement(state: GameState, x: number, y: number): GameState {
+function clearCellForPlacement(
+  state: GameState,
+  x: number,
+  y: number,
+): GameState {
   const key = cellKey(x, y);
   const occupantId = state.cellMap[key];
   if (!occupantId) return state;

@@ -20,7 +20,10 @@ export interface MachineActionDeps {
     selectedId?: string | null,
   ): void;
   isUnderConstruction(state: GameState, assetId: string): boolean;
-  resolveBuildingSource(state: GameState, buildingId: string | null): CraftingSource;
+  resolveBuildingSource(
+    state: GameState,
+    buildingId: string | null,
+  ): CraftingSource;
   addErrorNotification(
     notifications: GameNotification[],
     message: string,

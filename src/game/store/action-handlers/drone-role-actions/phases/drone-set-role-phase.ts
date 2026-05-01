@@ -8,7 +8,10 @@ export interface DroneSetRoleContext {
   deps: DroneRoleActionDeps;
 }
 
-function applyRole(drone: GameState["starterDrone"], role: DroneSetRoleAction["role"]) {
+function applyRole(
+  drone: GameState["starterDrone"],
+  role: DroneSetRoleAction["role"],
+) {
   return { ...drone, role };
 }
 

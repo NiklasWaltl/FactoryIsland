@@ -80,7 +80,9 @@ export function tryStoreInWarehouse(
     ctx.newWarehouseInventoriesL === state.warehouseInventories
       ? { ...state.warehouseInventories }
       : ctx.newWarehouseInventoriesL;
-  ctx.newWarehouseInventoriesL[warehouseId] = addResources(whInv, { [resKey]: 1 });
+  ctx.newWarehouseInventoriesL[warehouseId] = addResources(whInv, {
+    [resKey]: 1,
+  });
   return true;
 }
 
@@ -105,7 +107,8 @@ export function getSourceCapacity(
   source: CraftingSource,
 ): number {
   if (source.kind === "global") return getCapacityPerResource(liveState);
-  if (source.kind === "zone") return getZoneItemCapacity(liveState, source.zoneId);
+  if (source.kind === "zone")
+    return getZoneItemCapacity(liveState, source.zoneId);
   return getWarehouseCapacity(liveState.mode);
 }
 
@@ -114,7 +117,11 @@ export function applySourceInventory(
   source: CraftingSource,
   nextInv: Inventory,
 ): void {
-  const partial = applyCraftingSourceInventory(getLiveLogisticsState(ctx), source, nextInv);
+  const partial = applyCraftingSourceInventory(
+    getLiveLogisticsState(ctx),
+    source,
+    nextInv,
+  );
   if (partial.inventory) {
     ctx.newInvL = partial.inventory;
   }
@@ -123,12 +130,16 @@ export function applySourceInventory(
   }
 }
 
-export function getMachinePowerRatio(ctx: LogisticsTickContext, assetId: string): number {
+export function getMachinePowerRatio(
+  ctx: LogisticsTickContext,
+  assetId: string,
+): number {
   return Math.max(
     0,
     Math.min(
       1,
-      ctx.state.machinePowerRatio?.[assetId] ?? (ctx.poweredSet.has(assetId) ? 1 : 0),
+      ctx.state.machinePowerRatio?.[assetId] ??
+        (ctx.poweredSet.has(assetId) ? 1 : 0),
     ),
   );
 }

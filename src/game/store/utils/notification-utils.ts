@@ -5,7 +5,9 @@ export type AddErrorNotification = (
   message: string,
 ) => GameNotification[];
 
-export function withErrorNotification<T extends Pick<GameState, "notifications">>(
+export function withErrorNotification<
+  T extends Pick<GameState, "notifications">,
+>(
   state: T,
   addErrorNotification: AddErrorNotification,
   message: string,

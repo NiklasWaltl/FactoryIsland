@@ -24,5 +24,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
 ];
 
 export function getSmeltingRecipe(inputItem: string): SmeltingRecipe | null {
-  return SMELTING_RECIPES.find((recipe) => recipe.inputItem === inputItem) ?? null;
+  return (
+    SMELTING_RECIPES.find((recipe) => recipe.inputItem === inputItem) ?? null
+  );
 }

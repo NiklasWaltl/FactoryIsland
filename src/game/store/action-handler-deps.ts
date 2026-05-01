@@ -68,51 +68,21 @@ import {
   type PlanningTriggerDeps,
 } from "../crafting/tickPhases";
 
-import {
-  type BuildingPlacementIoDeps,
-} from "./action-handlers/building-placement";
-import {
-  type BuildingSiteActionDeps,
-} from "./action-handlers/building-site";
-import {
-  type ClickCellActionDeps,
-} from "./action-handlers/click-cell";
-import {
-  type ClickCellToolActionDeps,
-} from "./action-handlers/click-cell-tools";
-import {
-  type CraftingQueueActionDeps,
-} from "./action-handlers/crafting-queue-actions";
-import {
-  type DroneAssignmentActionDeps,
-} from "./action-handlers/drone-assignment";
-import {
-  type DroneRoleActionDeps,
-} from "./action-handlers/drone-role-actions";
-import {
-  type DroneTickActionDeps,
-} from "./action-handlers/drone-tick-actions";
-import {
-  type FloorPlacementActionDeps,
-} from "./action-handlers/floor-placement";
-import {
-  type LogisticsTickIoDeps,
-} from "./action-handlers/logistics-tick";
-import {
-  type MachineActionDeps,
-} from "./action-handlers/machine-actions";
-import {
-  type ManualAssemblerActionDeps,
-} from "./action-handlers/manual-assembler-actions";
-import {
-  type ShopActionDeps,
-} from "./action-handlers/shop";
-import {
-  type UiCellPreludeDeps,
-} from "./action-handlers/ui-cell-prelude";
-import {
-  type WarehouseHotbarActionDeps,
-} from "./action-handlers/warehouse-hotbar-actions";
+import { type BuildingPlacementIoDeps } from "./action-handlers/building-placement";
+import { type BuildingSiteActionDeps } from "./action-handlers/building-site";
+import { type ClickCellActionDeps } from "./action-handlers/click-cell";
+import { type ClickCellToolActionDeps } from "./action-handlers/click-cell-tools";
+import { type CraftingQueueActionDeps } from "./action-handlers/crafting-queue-actions";
+import { type DroneAssignmentActionDeps } from "./action-handlers/drone-assignment";
+import { type DroneRoleActionDeps } from "./action-handlers/drone-role-actions";
+import { type DroneTickActionDeps } from "./action-handlers/drone-tick-actions";
+import { type FloorPlacementActionDeps } from "./action-handlers/floor-placement";
+import { type LogisticsTickIoDeps } from "./action-handlers/logistics-tick";
+import { type MachineActionDeps } from "./action-handlers/machine-actions";
+import { type ManualAssemblerActionDeps } from "./action-handlers/manual-assembler-actions";
+import { type ShopActionDeps } from "./action-handlers/shop";
+import { type UiCellPreludeDeps } from "./action-handlers/ui-cell-prelude";
+import { type WarehouseHotbarActionDeps } from "./action-handlers/warehouse-hotbar-actions";
 
 // ---- Crafting tick phase deps (must stay store-layer, not crafting/) ----
 

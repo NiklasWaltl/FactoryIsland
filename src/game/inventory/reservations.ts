@@ -7,10 +7,7 @@
 // ============================================================
 
 import type { Inventory } from "../store/types";
-import {
-  assertItemExists,
-  isKnownItemId,
-} from "../items/registry";
+import { assertItemExists, isKnownItemId } from "../items/registry";
 import type { ItemId, ItemStack, WarehouseId } from "../items/types";
 import { getNetworkAmount, type NetworkStateSlice } from "./network";
 import type {
@@ -138,14 +135,19 @@ export function previewReserveBatch(
   const requested = new Map<ItemId, number>();
   for (const stack of items) {
     if (!isKnownItemId(stack.itemId)) {
-      throw new Error(`[reservations] Unknown item id: ${String(stack.itemId)}`);
+      throw new Error(
+        `[reservations] Unknown item id: ${String(stack.itemId)}`,
+      );
     }
     if (!Number.isFinite(stack.count) || stack.count <= 0) {
       throw new Error(
         `[reservations] Invalid amount for "${stack.itemId}": ${stack.count}`,
       );
     }
-    requested.set(stack.itemId, (requested.get(stack.itemId) ?? 0) + stack.count);
+    requested.set(
+      stack.itemId,
+      (requested.get(stack.itemId) ?? 0) + stack.count,
+    );
   }
 
   // All-or-nothing availability check.
@@ -294,7 +296,11 @@ export function applyNetworkAction(
         warehouseInventories,
         network,
       };
-      const scopedPreview = previewReserveBatch(slice, action.items, action.scopeKey);
+      const scopedPreview = previewReserveBatch(
+        slice,
+        action.items,
+        action.scopeKey,
+      );
       if (!scopedPreview.ok) {
         return {
           warehouseInventories,
@@ -335,7 +341,10 @@ export function applyNetworkAction(
         r.itemId,
         r.amount,
       );
-      const nextReservations = removeReservationByIndex(network.reservations, idx);
+      const nextReservations = removeReservationByIndex(
+        network.reservations,
+        idx,
+      );
       return {
         warehouseInventories: nextWarehouses,
         network: {
@@ -375,7 +384,10 @@ export function applyNetworkAction(
         warehouseInventories: nextWarehouses,
         network: {
           ...network,
-          reservations: removeReservationsByIds(network.reservations, matchingIds),
+          reservations: removeReservationsByIds(
+            network.reservations,
+            matchingIds,
+          ),
           lastError: null,
         },
       };
@@ -423,7 +435,10 @@ export function applyNetworkAction(
         warehouseInventories,
         network: {
           ...network,
-          reservations: removeReservationsByIds(network.reservations, matchingIds),
+          reservations: removeReservationsByIds(
+            network.reservations,
+            matchingIds,
+          ),
           lastError: null,
         },
       };

@@ -31,7 +31,11 @@ function emptyInv(): Inventory {
   return inv;
 }
 
-function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): GameState {
+function withWarehouse(
+  state: GameState,
+  id: string,
+  inv: Partial<Inventory>,
+): GameState {
   return {
     ...state,
     warehousesPlaced: state.warehousesPlaced + 1,
@@ -42,7 +46,11 @@ function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): G
   };
 }
 
-function withHub(state: GameState, id: string, inv: Partial<Record<"wood" | "stone" | "iron" | "copper", number>>): GameState {
+function withHub(
+  state: GameState,
+  id: string,
+  inv: Partial<Record<"wood" | "stone" | "iron" | "copper", number>>,
+): GameState {
   const hub: ServiceHubEntry = {
     inventory: { wood: 0, stone: 0, iron: 0, copper: 0, ...inv },
     targetStock: { wood: 0, stone: 0, iron: 0, copper: 0 },
@@ -55,7 +63,11 @@ function withHub(state: GameState, id: string, inv: Partial<Record<"wood" | "sto
 describe("selectGlobalInventoryView – derived read-only inventory", () => {
   it("matches the sum of global + warehouses + hubs (collectables)", () => {
     let s = createInitialState("release");
-    s = { ...s, inventory: addResources(emptyInv(), { wood: 5, coins: 100 }), warehouseInventories: {} };
+    s = {
+      ...s,
+      inventory: addResources(emptyInv(), { wood: 5, coins: 100 }),
+      warehouseInventories: {},
+    };
     s = withWarehouse(s, "wh-A", { wood: 20, iron: 30, ironIngot: 7 });
     s = withWarehouse(s, "wh-B", { wood: 10, copper: 4 });
     s = withHub(s, "hub-1", { wood: 3, stone: 2 });
@@ -73,7 +85,10 @@ describe("selectGlobalInventoryView – derived read-only inventory", () => {
 
   it("does not mutate state.inventory", () => {
     const s = withWarehouse(
-      { ...createInitialState("release"), inventory: addResources(emptyInv(), { wood: 1 }) },
+      {
+        ...createInitialState("release"),
+        inventory: addResources(emptyInv(), { wood: 1 }),
+      },
       "wh-A",
       { wood: 5 },
     );
@@ -132,7 +147,10 @@ describe("UPGRADE_HUB – drone-delivery flow (no instant warehouse drain)", () 
     const hubId = "hub-1";
     s = {
       ...s,
-      assets: { ...s.assets, [hubId]: { id: hubId, type: "service_hub", x: 10, y: 10, size: 2 } },
+      assets: {
+        ...s.assets,
+        [hubId]: { id: hubId, type: "service_hub", x: 10, y: 10, size: 2 },
+      },
       serviceHubs: {
         ...s.serviceHubs,
         [hubId]: {
@@ -167,7 +185,10 @@ describe("UPGRADE_HUB – drone-delivery flow (no instant warehouse drain)", () 
     const hubId = "hub-2";
     s = {
       ...s,
-      assets: { ...s.assets, [hubId]: { id: hubId, type: "service_hub", x: 10, y: 10, size: 2 } },
+      assets: {
+        ...s.assets,
+        [hubId]: { id: hubId, type: "service_hub", x: 10, y: 10, size: 2 },
+      },
       serviceHubs: {
         ...s.serviceHubs,
         [hubId]: {
@@ -197,7 +218,11 @@ describe("UPGRADE_HUB – drone-delivery flow (no instant warehouse drain)", () 
     // Construction demand mirrors the upgrade costs.
     for (const [key, amt] of Object.entries(cost)) {
       if ((amt ?? 0) <= 0) continue;
-      expect((after.constructionSites[hubId].remaining as Record<string, number>)[key]).toBe(amt);
+      expect(
+        (after.constructionSites[hubId].remaining as Record<string, number>)[
+          key
+        ],
+      ).toBe(amt);
     }
   });
 

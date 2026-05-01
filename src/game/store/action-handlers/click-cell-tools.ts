@@ -11,7 +11,10 @@
 // ============================================================
 
 import { DEPOSIT_TYPES } from "../constants/map/deposit-positions";
-import { SAPLING_DROP_CHANCE, SAPLING_GROW_MS } from "../constants/timing/timing";
+import {
+  SAPLING_DROP_CHANCE,
+  SAPLING_GROW_MS,
+} from "../constants/timing/timing";
 import type {
   AssetType,
   BuildingType,
@@ -46,14 +49,20 @@ export interface ClickCellToolActionDeps {
     amount: number,
   ) => Record<string, CollectionNode>;
   hotbarDecrement: (slots: HotbarSlot[], idx: number) => HotbarSlot[];
-  getCapacityPerResource: (state: { mode: string; warehousesPlaced: number }) => number;
+  getCapacityPerResource: (state: {
+    mode: string;
+    warehousesPlaced: number;
+  }) => number;
   hotbarAdd: (
     slots: HotbarSlot[],
     toolKind: Exclude<ToolKind, "empty">,
     buildingType?: BuildingType,
     add?: number,
   ) => HotbarSlot[] | null;
-  addResources: (inv: Inventory, items: Partial<Record<keyof Inventory, number>>) => Inventory;
+  addResources: (
+    inv: Inventory,
+    items: Partial<Record<keyof Inventory, number>>,
+  ) => Inventory;
   addNotification: (
     notifications: GameNotification[],
     resource: string,
@@ -69,14 +78,15 @@ export interface ClickCellToolActionDeps {
     width?: 1 | 2,
     height?: 1 | 2,
     fixed?: boolean,
-  ) =>
-    | {
-        assets: Record<string, PlacedAsset>;
-        cellMap: Record<string, string>;
-        id: string;
-      }
-    | null;
-  addErrorNotification: (notifications: GameNotification[], message: string) => GameNotification[];
+  ) => {
+    assets: Record<string, PlacedAsset>;
+    cellMap: Record<string, string>;
+    id: string;
+  } | null;
+  addErrorNotification: (
+    notifications: GameNotification[],
+    message: string,
+  ) => GameNotification[];
   debugLog: {
     mining(message: string): void;
     inventory(message: string): void;
@@ -114,17 +124,27 @@ export function handleClickCellToolAction(
   if (asset && DEPOSIT_TYPES.has(asset.type)) {
     return {
       ...state,
-      notifications: addErrorNotification(state.notifications, "Benötigt Auto-Miner"),
+      notifications: addErrorNotification(
+        state.notifications,
+        "Benötigt Auto-Miner",
+      ),
     };
   }
 
   if (slot.toolKind === "axe") {
     if (!asset || asset.type !== "tree") {
-      if (asset && (["stone", "iron", "copper"] as string[]).includes(asset.type)) {
-        const msg = asset.type === "stone"
-          ? "Du brauchst eine Holz- oder Steinspitzhacke."
-          : "Du brauchst eine Steinspitzhacke.";
-        return { ...state, notifications: addErrorNotification(state.notifications, msg) };
+      if (
+        asset &&
+        (["stone", "iron", "copper"] as string[]).includes(asset.type)
+      ) {
+        const msg =
+          asset.type === "stone"
+            ? "Du brauchst eine Holz- oder Steinspitzhacke."
+            : "Du brauchst eine Steinspitzhacke.";
+        return {
+          ...state,
+          notifications: addErrorNotification(state.notifications, msg),
+        };
       }
       return state;
     }
@@ -177,13 +197,19 @@ export function handleClickCellToolAction(
       if (asset && asset.type === "tree") {
         return {
           ...state,
-          notifications: addErrorNotification(state.notifications, "Du brauchst eine Axt."),
+          notifications: addErrorNotification(
+            state.notifications,
+            "Du brauchst eine Axt.",
+          ),
         };
       }
       if (asset && (["iron", "copper"] as string[]).includes(asset.type)) {
         return {
           ...state,
-          notifications: addErrorNotification(state.notifications, "Du brauchst eine Steinspitzhacke."),
+          notifications: addErrorNotification(
+            state.notifications,
+            "Du brauchst eine Steinspitzhacke.",
+          ),
         };
       }
       return state;
@@ -216,11 +242,17 @@ export function handleClickCellToolAction(
   }
 
   if (slot.toolKind === "stone_pickaxe") {
-    if (!asset || !(["stone", "iron", "copper"] as string[]).includes(asset.type)) {
+    if (
+      !asset ||
+      !(["stone", "iron", "copper"] as string[]).includes(asset.type)
+    ) {
       if (asset && asset.type === "tree") {
         return {
           ...state,
-          notifications: addErrorNotification(state.notifications, "Du brauchst eine Axt."),
+          notifications: addErrorNotification(
+            state.notifications,
+            "Du brauchst eine Axt.",
+          ),
         };
       }
       return state;

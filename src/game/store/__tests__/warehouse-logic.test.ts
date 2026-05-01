@@ -30,9 +30,30 @@ function emptyInv(): Inventory {
  */
 function stateWithTwoWarehouses(): GameState {
   const base = createInitialState("release");
-  const whA: PlacedAsset = { id: "wh-A", type: "warehouse", x: 5, y: 5, size: 2, direction: "south" };
-  const whB: PlacedAsset = { id: "wh-B", type: "warehouse", x: 10, y: 5, size: 2, direction: "south" };
-  const conv: PlacedAsset = { id: "conv-1", type: "conveyor", x: 5, y: 7, size: 1, direction: "north" };
+  const whA: PlacedAsset = {
+    id: "wh-A",
+    type: "warehouse",
+    x: 5,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
+  const whB: PlacedAsset = {
+    id: "wh-B",
+    type: "warehouse",
+    x: 10,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
+  const conv: PlacedAsset = {
+    id: "conv-1",
+    type: "conveyor",
+    x: 5,
+    y: 7,
+    size: 1,
+    direction: "north",
+  };
 
   const assets: Record<string, PlacedAsset> = {
     "wh-A": whA,
@@ -112,7 +133,9 @@ describe("LOGISTICS_TICK – warehouse capacity", () => {
   it("respects per-warehouse capacity limit", () => {
     const before = stateWithTwoWarehouses();
     // Fill warehouse A to capacity for iron
-    before.warehouseInventories["wh-A"] = addResources(emptyInv(), { iron: WAREHOUSE_CAPACITY });
+    before.warehouseInventories["wh-A"] = addResources(emptyInv(), {
+      iron: WAREHOUSE_CAPACITY,
+    });
     before.conveyors["conv-1"] = { queue: ["iron"] };
 
     const after = gameReducer(before, { type: "LOGISTICS_TICK" });
@@ -125,7 +148,9 @@ describe("LOGISTICS_TICK – warehouse capacity", () => {
 
   it("accepts item when warehouse has room just below capacity", () => {
     const before = stateWithTwoWarehouses();
-    before.warehouseInventories["wh-A"] = addResources(emptyInv(), { iron: WAREHOUSE_CAPACITY - 1 });
+    before.warehouseInventories["wh-A"] = addResources(emptyInv(), {
+      iron: WAREHOUSE_CAPACITY - 1,
+    });
     before.conveyors["conv-1"] = { queue: ["iron"] };
 
     const after = gameReducer(before, { type: "LOGISTICS_TICK" });
@@ -167,7 +192,10 @@ describe("global inventory isolation", () => {
     };
 
     // Try to buy something that costs coins — should use global inventory
-    const result = gameReducer(state, { type: "BUY_MAP_SHOP_ITEM", itemKey: "axe" });
+    const result = gameReducer(state, {
+      type: "BUY_MAP_SHOP_ITEM",
+      itemKey: "axe",
+    });
 
     // If global coins = 0 (or insufficient), purchase should fail → state unchanged
     // The warehouse's resources must NOT be used for purchases.
@@ -184,12 +212,20 @@ describe("global inventory isolation", () => {
 describe("TRANSFER_TO_WAREHOUSE", () => {
   function stateWithWarehouse(): GameState {
     const base = stateWithTwoWarehouses();
-    return { ...base, selectedWarehouseId: "wh-A", inventory: addResources(emptyInv(), { iron: 50, wood: 30 }) };
+    return {
+      ...base,
+      selectedWarehouseId: "wh-A",
+      inventory: addResources(emptyInv(), { iron: 50, wood: 30 }),
+    };
   }
 
   it("moves requested amount from global to selected warehouse", () => {
     const before = stateWithWarehouse();
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 10 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 10,
+    });
 
     expect(after.inventory.iron).toBe(40);
     expect(after.warehouseInventories["wh-A"].iron).toBe(10);
@@ -199,7 +235,11 @@ describe("TRANSFER_TO_WAREHOUSE", () => {
     const before = stateWithWarehouse();
     // Set global iron below warehouse capacity so global amount is the binding constraint
     before.inventory = addResources(emptyInv(), { iron: 5, wood: 30 });
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 999 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 999,
+    });
 
     expect(after.inventory.iron).toBe(0);
     expect(after.warehouseInventories["wh-A"].iron).toBe(5);
@@ -207,8 +247,14 @@ describe("TRANSFER_TO_WAREHOUSE", () => {
 
   it("clamps to remaining warehouse capacity", () => {
     const before = stateWithWarehouse();
-    before.warehouseInventories["wh-A"] = addResources(emptyInv(), { iron: WAREHOUSE_CAPACITY - 3 });
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 10 });
+    before.warehouseInventories["wh-A"] = addResources(emptyInv(), {
+      iron: WAREHOUSE_CAPACITY - 3,
+    });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 10,
+    });
 
     expect(after.warehouseInventories["wh-A"].iron).toBe(WAREHOUSE_CAPACITY);
     expect(after.inventory.iron).toBe(50 - 3);
@@ -216,8 +262,14 @@ describe("TRANSFER_TO_WAREHOUSE", () => {
 
   it("returns unchanged state when warehouse is full", () => {
     const before = stateWithWarehouse();
-    before.warehouseInventories["wh-A"] = addResources(emptyInv(), { iron: WAREHOUSE_CAPACITY });
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 1 });
+    before.warehouseInventories["wh-A"] = addResources(emptyInv(), {
+      iron: WAREHOUSE_CAPACITY,
+    });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 1,
+    });
 
     expect(after).toBe(before);
   });
@@ -225,14 +277,22 @@ describe("TRANSFER_TO_WAREHOUSE", () => {
   it("returns unchanged state when global has no resource", () => {
     const before = stateWithWarehouse();
     before.inventory = addResources(emptyInv(), { iron: 0 });
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 5 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 5,
+    });
 
     expect(after).toBe(before);
   });
 
   it("does not affect warehouse B", () => {
     const before = stateWithWarehouse();
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 10 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 10,
+    });
 
     expect(after.warehouseInventories["wh-B"].iron).toBe(0);
   });
@@ -240,7 +300,11 @@ describe("TRANSFER_TO_WAREHOUSE", () => {
   it("returns unchanged state with no selectedWarehouseId", () => {
     const before = stateWithWarehouse();
     before.selectedWarehouseId = null;
-    const after = gameReducer(before, { type: "TRANSFER_TO_WAREHOUSE", item: "iron", amount: 5 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_TO_WAREHOUSE",
+      item: "iron",
+      amount: 5,
+    });
 
     expect(after).toBe(before);
   });
@@ -253,14 +317,21 @@ describe("TRANSFER_TO_WAREHOUSE", () => {
 describe("TRANSFER_FROM_WAREHOUSE", () => {
   function stateWithWarehouse(): GameState {
     const base = stateWithTwoWarehouses();
-    base.warehouseInventories["wh-A"] = addResources(emptyInv(), { iron: 15, wood: 8 });
+    base.warehouseInventories["wh-A"] = addResources(emptyInv(), {
+      iron: 15,
+      wood: 8,
+    });
     return { ...base, selectedWarehouseId: "wh-A" };
   }
 
   it("moves requested amount from warehouse to global", () => {
     const before = stateWithWarehouse();
     const globalIronBefore = before.inventory.iron;
-    const after = gameReducer(before, { type: "TRANSFER_FROM_WAREHOUSE", item: "iron", amount: 5 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_FROM_WAREHOUSE",
+      item: "iron",
+      amount: 5,
+    });
 
     expect(after.warehouseInventories["wh-A"].iron).toBe(10);
     expect(after.inventory.iron).toBe(globalIronBefore + 5);
@@ -269,7 +340,11 @@ describe("TRANSFER_FROM_WAREHOUSE", () => {
   it("clamps to available warehouse amount", () => {
     const before = stateWithWarehouse();
     const globalIronBefore = before.inventory.iron;
-    const after = gameReducer(before, { type: "TRANSFER_FROM_WAREHOUSE", item: "iron", amount: 999 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_FROM_WAREHOUSE",
+      item: "iron",
+      amount: 999,
+    });
 
     expect(after.warehouseInventories["wh-A"].iron).toBe(0);
     expect(after.inventory.iron).toBe(globalIronBefore + 15);
@@ -277,7 +352,11 @@ describe("TRANSFER_FROM_WAREHOUSE", () => {
 
   it("returns unchanged state when warehouse has none of the resource", () => {
     const before = stateWithWarehouse();
-    const after = gameReducer(before, { type: "TRANSFER_FROM_WAREHOUSE", item: "copper", amount: 5 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_FROM_WAREHOUSE",
+      item: "copper",
+      amount: 5,
+    });
 
     expect(after).toBe(before);
   });
@@ -285,7 +364,11 @@ describe("TRANSFER_FROM_WAREHOUSE", () => {
   it("does not affect warehouse B", () => {
     const before = stateWithWarehouse();
     before.warehouseInventories["wh-B"] = addResources(emptyInv(), { iron: 7 });
-    const after = gameReducer(before, { type: "TRANSFER_FROM_WAREHOUSE", item: "iron", amount: 5 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_FROM_WAREHOUSE",
+      item: "iron",
+      amount: 5,
+    });
 
     expect(after.warehouseInventories["wh-B"].iron).toBe(7);
   });
@@ -293,7 +376,11 @@ describe("TRANSFER_FROM_WAREHOUSE", () => {
   it("returns unchanged state with no selectedWarehouseId", () => {
     const before = stateWithWarehouse();
     before.selectedWarehouseId = null;
-    const after = gameReducer(before, { type: "TRANSFER_FROM_WAREHOUSE", item: "iron", amount: 5 });
+    const after = gameReducer(before, {
+      type: "TRANSFER_FROM_WAREHOUSE",
+      item: "iron",
+      amount: 5,
+    });
 
     expect(after).toBe(before);
   });

@@ -75,11 +75,14 @@ describe("DRONE_TICK – moving_to_collect", () => {
   it("falls back to idle if target node was removed", () => {
     // Remove the node
     const { [nodeId]: _removed, ...rest } = base.collectionNodes;
-    const state = withDrone({ ...base, collectionNodes: rest }, {
-      status: "moving_to_collect",
-      targetNodeId: nodeId,
-      ticksRemaining: 1,
-    });
+    const state = withDrone(
+      { ...base, collectionNodes: rest },
+      {
+        status: "moving_to_collect",
+        targetNodeId: nodeId,
+        ticksRemaining: 1,
+      },
+    );
     const next = droneTick(state);
     expect(next.starterDrone.status).toBe("idle");
     expect(next.starterDrone.targetNodeId).toBeNull();
@@ -99,7 +102,9 @@ describe("Claim layer – node reservation on task start", () => {
     expect(state.collectionNodes[nodeId].reservedByDroneId).toBeNull();
     state = droneTick(state); // idle → moving_to_collect
     expect(state.starterDrone.status).toBe("moving_to_collect");
-    expect(state.collectionNodes[nodeId].reservedByDroneId).toBe(state.starterDrone.droneId);
+    expect(state.collectionNodes[nodeId].reservedByDroneId).toBe(
+      state.starterDrone.droneId,
+    );
   });
 
   it("skips a node reserved by another drone", () => {
@@ -110,7 +115,10 @@ describe("Claim layer – node reservation on task start", () => {
       ...state,
       collectionNodes: {
         ...state.collectionNodes,
-        [nodeId]: { ...state.collectionNodes[nodeId], reservedByDroneId: "other-drone" },
+        [nodeId]: {
+          ...state.collectionNodes[nodeId],
+          reservedByDroneId: "other-drone",
+        },
       },
     };
     // Add a second unclaimed node
@@ -128,7 +136,10 @@ describe("Claim layer – node reservation on task start", () => {
       ...state,
       collectionNodes: {
         ...state.collectionNodes,
-        [nodeId]: { ...state.collectionNodes[nodeId], reservedByDroneId: "other-drone" },
+        [nodeId]: {
+          ...state.collectionNodes[nodeId],
+          reservedByDroneId: "other-drone",
+        },
       },
     };
     const next = droneTick(state);
@@ -151,7 +162,10 @@ describe("Claim layer – reservation released on collection", () => {
       ...state,
       collectionNodes: {
         ...state.collectionNodes,
-        [nodeId]: { ...state.collectionNodes[nodeId], reservedByDroneId: "starter" },
+        [nodeId]: {
+          ...state.collectionNodes[nodeId],
+          reservedByDroneId: "starter",
+        },
       },
     };
     state = withDrone(state, {
@@ -203,7 +217,10 @@ describe("Claim layer – reservation released on collection", () => {
       ...state,
       collectionNodes: {
         ...state.collectionNodes,
-        [nodeId]: { ...state.collectionNodes[nodeId], reservedByDroneId: "starter" },
+        [nodeId]: {
+          ...state.collectionNodes[nodeId],
+          reservedByDroneId: "starter",
+        },
       },
     };
     // Drone is idle — selectDroneTask should still see its own claimed node

@@ -6,7 +6,12 @@ function makeBaseState(overrides: Partial<GameState> = {}): GameState {
   const base = {
     inventory: {} as Record<string, number>,
     assets: {},
-    network: { reservations: {}, sequence: 0, lastUpdated: 0, capabilities: {} },
+    network: {
+      reservations: {},
+      sequence: 0,
+      lastUpdated: 0,
+      capabilities: {},
+    },
     warehouseInventories: {},
     serviceHubs: {},
     crafting: { jobs: [], nextJobSeq: 1, lastError: null },
@@ -48,7 +53,10 @@ describe("crafting/workflows/keepStockWorkflow", () => {
     });
     const deps = makeDeps();
     const resolveSpy = jest.fn(deps.resolveBuildingSource);
-    const result = applyKeepStockRefills(state, { ...deps, resolveBuildingSource: resolveSpy });
+    const result = applyKeepStockRefills(state, {
+      ...deps,
+      resolveBuildingSource: resolveSpy,
+    });
     expect(result).toBe(state);
     expect(resolveSpy).not.toHaveBeenCalled();
   });
@@ -61,7 +69,10 @@ describe("crafting/workflows/keepStockWorkflow", () => {
     });
     const deps = makeDeps();
     const resolveSpy = jest.fn(deps.resolveBuildingSource);
-    const result = applyKeepStockRefills(state, { ...deps, resolveBuildingSource: resolveSpy });
+    const result = applyKeepStockRefills(state, {
+      ...deps,
+      resolveBuildingSource: resolveSpy,
+    });
     expect(result).toBe(state);
     expect(resolveSpy).not.toHaveBeenCalled();
   });

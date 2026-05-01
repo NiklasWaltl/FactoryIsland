@@ -1,11 +1,6 @@
 import type { GameState, Inventory, ServiceHubEntry } from "../types";
-import {
-  createInitialState,
-} from "../reducer";
-import {
-  addResources,
-  hasResources,
-} from "../inventory-ops";
+import { createInitialState } from "../reducer";
+import { addResources, hasResources } from "../inventory-ops";
 import { selectBuildMenuInventoryView } from "../helpers/inventory-queries";
 
 function emptyInv(): Inventory {
@@ -27,7 +22,11 @@ function bareState(): GameState {
   };
 }
 
-function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): GameState {
+function withWarehouse(
+  state: GameState,
+  id: string,
+  inv: Partial<Inventory>,
+): GameState {
   return {
     ...state,
     warehouseInventories: {

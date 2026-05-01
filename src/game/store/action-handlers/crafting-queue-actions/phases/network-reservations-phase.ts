@@ -37,7 +37,10 @@ export function runNetworkReservationsPhase(
   }
   return {
     ...state,
-    warehouseInventories: result.warehouseInventories as Record<string, Inventory>,
+    warehouseInventories: result.warehouseInventories as Record<
+      string,
+      Inventory
+    >,
     network: result.network,
   };
 }

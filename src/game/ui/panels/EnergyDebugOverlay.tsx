@@ -7,9 +7,7 @@ import {
   GENERATOR_TICK_MS,
 } from "../../store/constants/energy/generator";
 import { ENERGY_NET_TICK_MS } from "../../store/constants/energy/energy-smelter";
-import {
-  getConnectedConsumerDrainEntries,
-} from "../../power/energy-consumers";
+import { getConnectedConsumerDrainEntries } from "../../power/energy-consumers";
 import { POWER_POLE_RANGE } from "../../store/constants/energy/power-pole";
 
 const WORLD_W = GRID_W * CELL_PX;
@@ -36,7 +34,8 @@ function getEnergyStats(state: GameState): EnergyStats {
         return a?.type === "generator" && state.generators[id]?.running;
       }).length
     : 0;
-  const production = runningConnectedGenerators * ticksPerPeriod * GENERATOR_ENERGY_PER_TICK;
+  const production =
+    runningConnectedGenerators * ticksPerPeriod * GENERATOR_ENERGY_PER_TICK;
 
   let consumption = 0;
   for (const cId of state.poweredMachineIds ?? []) {
@@ -56,9 +55,11 @@ function getEnergyStats(state: GameState): EnergyStats {
  * - Consumer power status (green / yellow / red)
  * - Production vs. consumption HUD
  */
-export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state }) => {
-    const aw = (asset: PlacedAsset) => asset.width ?? asset.size;
-    const ah = (asset: PlacedAsset) => asset.height ?? asset.size;
+export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({
+  state,
+}) => {
+  const aw = (asset: PlacedAsset) => asset.width ?? asset.size;
+  const ah = (asset: PlacedAsset) => asset.height ?? asset.size;
   const allAssets = Object.values(state.assets);
   const connectedSet = new Set(state.connectedAssetIds);
   const poweredSet = new Set(state.poweredMachineIds ?? []);
@@ -73,7 +74,9 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
 
   // ---- Collect power poles for markers/range ----
   const allPoles = allAssets.filter((a) => a.type === "power_pole");
-  const generators = allAssets.filter((a) => a.type === "generator" && connectedSet.has(a.id));
+  const generators = allAssets.filter(
+    (a) => a.type === "generator" && connectedSet.has(a.id),
+  );
 
   // ---- Determine consumer status colors ----
   function getConsumerColor(asset: PlacedAsset): string | null {
@@ -89,7 +92,13 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
       <svg
         width={WORLD_W}
         height={WORLD_H}
-        style={{ position: "absolute", top: 0, left: 0, zIndex: 15, pointerEvents: "none" }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          zIndex: 15,
+          pointerEvents: "none",
+        }}
       >
         {/* Power pole range areas (semi-transparent) */}
         {allPoles.map((pole) => {
@@ -103,8 +112,12 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
               cx={cx}
               cy={cy}
               r={r}
-              fill={isActive ? "rgba(59,130,246,0.07)" : "rgba(156,163,175,0.06)"}
-              stroke={isActive ? "rgba(59,130,246,0.35)" : "rgba(156,163,175,0.25)"}
+              fill={
+                isActive ? "rgba(59,130,246,0.07)" : "rgba(156,163,175,0.06)"
+              }
+              stroke={
+                isActive ? "rgba(59,130,246,0.35)" : "rgba(156,163,175,0.25)"
+              }
               strokeWidth={2}
               strokeDasharray="8 4"
             />
@@ -133,7 +146,9 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
                 fontSize={11}
                 fontWeight="bold"
                 fill="#fff"
-              >⚡</text>
+              >
+                ⚡
+              </text>
             </React.Fragment>
           );
         })}
@@ -159,7 +174,9 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
                 fontSize={13}
                 fontWeight="bold"
                 fill="#fff"
-              >G</text>
+              >
+                G
+              </text>
             </React.Fragment>
           );
         })}
@@ -192,7 +209,7 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
           if (!ENERGY_DRAIN[asset.type]) return null;
           const connected = connectedSet.has(asset.id);
           const drain = connected
-            ? drainById.get(asset.id) ?? 0
+            ? (drainById.get(asset.id) ?? 0)
             : ENERGY_DRAIN[asset.type];
           const label = connected ? `-${drain} E/t` : `(${drain} E/t)`;
           const px = asset.x * CELL_PX;
@@ -224,9 +241,12 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
           .map((bat) => {
             const cx = (bat.x + aw(bat) / 2) * CELL_PX;
             const cy = (bat.y + ah(bat) / 2) * CELL_PX;
-            const pct = state.battery.capacity > 0
-              ? Math.round((state.battery.stored / state.battery.capacity) * 100)
-              : 0;
+            const pct =
+              state.battery.capacity > 0
+                ? Math.round(
+                    (state.battery.stored / state.battery.capacity) * 100,
+                  )
+                : 0;
             return (
               <React.Fragment key={`bat-${bat.id}`}>
                 <circle
@@ -244,17 +264,20 @@ export const EnergyDebugOverlay: React.FC<EnergyDebugOverlayProps> = ({ state })
                   fontSize={9}
                   fontWeight="bold"
                   fill="#fff"
-                >{pct}%</text>
+                >
+                  {pct}%
+                </text>
               </React.Fragment>
             );
           })}
       </svg>
-
     </>
   );
 };
 
-export const EnergyDebugHud: React.FC<EnergyDebugOverlayProps> = ({ state }) => {
+export const EnergyDebugHud: React.FC<EnergyDebugOverlayProps> = ({
+  state,
+}) => {
   const { production, consumption, difference } = getEnergyStats(state);
 
   return (
@@ -276,25 +299,34 @@ export const EnergyDebugHud: React.FC<EnergyDebugOverlayProps> = ({ state }) => 
         border: "1px solid rgba(255,255,255,0.15)",
       }}
     >
-      <div style={{ fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>⚡ Stromnetz-Analyse</div>
-      <div>
-        Produktion:{" "}
-        <span style={{ color: "#22c55e" }}>{production} E/t</span>
+      <div style={{ fontWeight: "bold", marginBottom: 4, fontSize: 14 }}>
+        ⚡ Stromnetz-Analyse
       </div>
       <div>
-        Verbrauch:{" "}
-        <span style={{ color: "#ef4444" }}>{consumption} E/t</span>
+        Produktion: <span style={{ color: "#22c55e" }}>{production} E/t</span>
+      </div>
+      <div>
+        Verbrauch: <span style={{ color: "#ef4444" }}>{consumption} E/t</span>
       </div>
       <div>
         Differenz:{" "}
         <span style={{ color: difference >= 0 ? "#22c55e" : "#ef4444" }}>
-          {difference >= 0 ? "+" : ""}{difference} E/t
+          {difference >= 0 ? "+" : ""}
+          {difference} E/t
         </span>
       </div>
-      <div style={{ marginTop: 4, borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 4 }}>
+      <div
+        style={{
+          marginTop: 4,
+          borderTop: "1px solid rgba(255,255,255,0.15)",
+          paddingTop: 4,
+        }}
+      >
         Batterie: {Math.round(state.battery.stored)}/{state.battery.capacity} J
       </div>
-      <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+      <div
+        style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.5)" }}
+      >
         <span style={{ color: "#3b82f6" }}>●</span> Aktiver Knoten{" "}
         <span style={{ color: "#6b7280" }}>●</span> Inaktiv
       </div>

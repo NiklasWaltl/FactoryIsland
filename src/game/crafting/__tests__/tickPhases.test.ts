@@ -6,7 +6,12 @@ function makeBaseState(overrides: Partial<GameState> = {}): GameState {
   const base = {
     inventory: {} as Record<string, number>,
     assets: {},
-    network: { reservations: {}, sequence: 0, lastUpdated: 0, capabilities: {} },
+    network: {
+      reservations: {},
+      sequence: 0,
+      lastUpdated: 0,
+      capabilities: {},
+    },
     warehouseInventories: {},
     serviceHubs: {},
     crafting: { jobs: [], nextJobSeq: 1, lastError: null },
@@ -63,11 +68,15 @@ describe("crafting/tickPhases architecture boundary", () => {
       } as never,
     });
     const next = applyExecutionTick(state, executionDeps);
-    expect(next.crafting.jobs.length).toBeLessThanOrEqual(state.crafting.jobs.length);
+    expect(next.crafting.jobs.length).toBeLessThanOrEqual(
+      state.crafting.jobs.length,
+    );
     // Execution can only mutate / drop jobs, never add brand-new ones.
     const newIds = next.crafting.jobs
       .map((j) => j.id)
-      .filter((id) => !state.crafting.jobs.some((existing) => existing.id === id));
+      .filter(
+        (id) => !state.crafting.jobs.some((existing) => existing.id === id),
+      );
     expect(newIds).toEqual([]);
   });
 });

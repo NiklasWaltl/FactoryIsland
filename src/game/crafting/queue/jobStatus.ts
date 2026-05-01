@@ -30,8 +30,12 @@ export function isOpenCraftingJob(status: CraftingJob["status"]): boolean {
   return status !== "done" && status !== "cancelled";
 }
 
-export function isGuaranteedPendingCraftingJob(status: CraftingJob["status"]): boolean {
-  return status === "reserved" || status === "crafting" || status === "delivering";
+export function isGuaranteedPendingCraftingJob(
+  status: CraftingJob["status"],
+): boolean {
+  return (
+    status === "reserved" || status === "crafting" || status === "delivering"
+  );
 }
 
 export function areCraftingSourcesEqual(
@@ -91,7 +95,9 @@ export function isAutomationCraftingJob(job: CraftingJob): boolean {
  * Counts open automation crafting jobs in a queue snapshot. Used for
  * the keep-stock refill cap (`KEEP_STOCK_OPEN_JOB_CAP`).
  */
-export function countOpenAutomationCraftingJobs(jobs: readonly CraftingJob[]): number {
+export function countOpenAutomationCraftingJobs(
+  jobs: readonly CraftingJob[],
+): number {
   let total = 0;
   for (const job of jobs) {
     if (isAutomationCraftingJob(job)) total += 1;
@@ -142,8 +148,8 @@ export function hasHigherPriorityKeepStockBlockers(
   );
   if (hasOpenPlayerCraftingJobs) return true;
 
-  const hasOpenConstruction = Object.values(state.constructionSites).some((site) =>
-    Object.values(site.remaining).some((amount) => (amount ?? 0) > 0),
+  const hasOpenConstruction = Object.values(state.constructionSites).some(
+    (site) => Object.values(site.remaining).some((amount) => (amount ?? 0) > 0),
   );
   if (hasOpenConstruction) return true;
 

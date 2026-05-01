@@ -36,9 +36,23 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     cablesPlaced: 0,
     powerPolesPlaced: 0,
     selectedPowerPoleId: null,
-    hotbarSlots: Array.from({ length: 9 }, () => ({ toolKind: "empty" as const, amount: 0, label: "", emoji: "" })),
+    hotbarSlots: Array.from({ length: 9 }, () => ({
+      toolKind: "empty" as const,
+      amount: 0,
+      label: "",
+      emoji: "",
+    })),
     activeSlot: 0,
-    smithy: { fuel: 0, iron: 0, copper: 0, selectedRecipe: "iron", processing: false, progress: 0, outputIngots: 0, outputCopperIngots: 0 },
+    smithy: {
+      fuel: 0,
+      iron: 0,
+      copper: 0,
+      selectedRecipe: "iron",
+      processing: false,
+      progress: 0,
+      outputIngots: 0,
+      outputCopperIngots: 0,
+    },
     generator: { fuel: 0, progress: 0, running: false },
     battery: { stored: 0, capacity: 100 },
     connectedAssetIds: [],
@@ -55,7 +69,12 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     selectedAutoMinerId: null,
     autoSmelters: {},
     selectedAutoSmelterId: null,
-    manualAssembler: { processing: false, recipe: null, progress: 0, buildingId: null },
+    manualAssembler: {
+      processing: false,
+      recipe: null,
+      progress: 0,
+      buildingId: null,
+    },
     machinePowerRatio: {},
     energyDebugOverlay: false,
     autoDeliveryLog: [],
@@ -67,7 +86,9 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
   };
 }
 
-function makeMinerEntry(resource: "stone" | "iron" | "copper" = "iron"): AutoMinerEntry {
+function makeMinerEntry(
+  resource: "stone" | "iron" | "copper" = "iron",
+): AutoMinerEntry {
   return {
     depositId: "dep1",
     resource,
@@ -126,11 +147,11 @@ describe("Auto Miner source integration", () => {
     const after = runTicks(state, 1);
 
     // Zone warehouse must have received the iron
-    expect((after.warehouseInventories.whA.iron as number)).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(1);
     // Miner progress must have reset
     expect(after.autoMiners.mn1.progress).toBe(0);
     // Global inventory must be unchanged
-    expect((after.inventory.iron as number)).toBe(0);
+    expect(after.inventory.iron as number).toBe(0);
   });
 
   // ---- Zone Isolation -----------------------------------------------------
@@ -167,8 +188,8 @@ describe("Auto Miner source integration", () => {
 
     const after = runTicks(state, 1);
 
-    expect((after.warehouseInventories.whA.iron as number)).toBe(1);
-    expect((after.warehouseInventories.whB.iron as number)).toBe(0);
+    expect(after.warehouseInventories.whA.iron as number).toBe(1);
+    expect(after.warehouseInventories.whB.iron as number).toBe(0);
   });
 
   // ---- Fallback: Legacy Warehouse ------------------------------------------
@@ -197,8 +218,8 @@ describe("Auto Miner source integration", () => {
 
     const after = runTicks(state, 1);
 
-    expect((after.warehouseInventories.whA.iron as number)).toBe(1);
-    expect((after.inventory.iron as number)).toBe(0);
+    expect(after.warehouseInventories.whA.iron as number).toBe(1);
+    expect(after.inventory.iron as number).toBe(0);
   });
 
   // ---- Fallback: Global ---------------------------------------------------
@@ -215,7 +236,7 @@ describe("Auto Miner source integration", () => {
 
     const after = runTicks(state, 1);
 
-    expect((after.inventory.iron as number)).toBe(1);
+    expect(after.inventory.iron as number).toBe(1);
     expect(after.autoMiners.mn1.progress).toBe(0);
   });
 
@@ -247,11 +268,13 @@ describe("Auto Miner source integration", () => {
     const after = runTicks(state, 1);
 
     // Warehouse stays at capacity — no item added
-    expect((after.warehouseInventories.whA.iron as number)).toBe(WAREHOUSE_CAPACITY);
+    expect(after.warehouseInventories.whA.iron as number).toBe(
+      WAREHOUSE_CAPACITY,
+    );
     // Miner stays blocked at max progress — no item lost
     expect(after.autoMiners.mn1.progress).toBe(AUTO_MINER_PRODUCE_TICKS);
     // Global inventory untouched
-    expect((after.inventory.iron as number)).toBe(0);
+    expect(after.inventory.iron as number).toBe(0);
   });
 
   test("No item lost when all targets are at capacity", () => {
@@ -270,8 +293,8 @@ describe("Auto Miner source integration", () => {
     // Progress stays blocked — no negative inventory, no items dropped
     expect(after.autoMiners.mn1.progress).toBe(AUTO_MINER_PRODUCE_TICKS);
     // Iron count must not decrease
-    const ironBefore = (state.inventory.iron as number);
-    const ironAfter = (after.inventory.iron as number);
+    const ironBefore = state.inventory.iron as number;
+    const ironAfter = after.inventory.iron as number;
     expect(ironAfter).toBeGreaterThanOrEqual(ironBefore);
   });
 
@@ -295,7 +318,7 @@ describe("Auto Miner source integration", () => {
     const after = runTicks(state, 1);
 
     // Fell back to global inventory
-    expect((after.inventory.iron as number)).toBe(1);
+    expect(after.inventory.iron as number).toBe(1);
   });
 
   // ---- Conveyor path unaffected ------------------------------------------
@@ -305,7 +328,14 @@ describe("Auto Miner source integration", () => {
     const state = makeBaseState({
       assets: {
         mn1: makeMinerAsset("mn1", 5, 5),
-        cv1: { id: "cv1", type: "conveyor", x: 6, y: 5, size: 1, direction: "east" } as PlacedAsset,
+        cv1: {
+          id: "cv1",
+          type: "conveyor",
+          x: 6,
+          y: 5,
+          size: 1,
+          direction: "east",
+        } as PlacedAsset,
       },
       cellMap: {
         [cellKey(5, 5)]: "mn1",
@@ -326,7 +356,7 @@ describe("Auto Miner source integration", () => {
     // Progress reset
     expect(after.autoMiners.mn1.progress).toBe(0);
     // Global inventory untouched
-    expect((after.inventory.iron as number)).toBe(0);
+    expect(after.inventory.iron as number).toBe(0);
   });
 
   // Characterization test: documents that the Priority-2 source-fallback path

@@ -12,7 +12,11 @@ import type {
 export interface FinalizeHubTier2UpgradeDeps {
   makeId: () => string;
   getDroneDockOffset: (slotIndex: number) => { dx: number; dy: number };
-  addNotification: (notifications: GameNotification[], resource: string, amount: number) => GameNotification[];
+  addNotification: (
+    notifications: GameNotification[],
+    resource: string,
+    amount: number,
+  ) => GameNotification[];
   syncDrones: (state: GameState) => GameState;
 }
 
@@ -44,7 +48,10 @@ export function finalizeHubTier2Upgrade(
       const needed = v ?? 0;
       if (needed <= 0) continue;
       const key = k as CollectableItemType;
-      upgradedInventory[key] = Math.max(0, (upgradedInventory[key] ?? 0) - needed);
+      upgradedInventory[key] = Math.max(
+        0,
+        (upgradedInventory[key] ?? 0) - needed,
+      );
     }
   }
 

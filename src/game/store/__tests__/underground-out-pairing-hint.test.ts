@@ -7,7 +7,12 @@ import {
 } from "../conveyor/underground-out-pairing-hint";
 import type { Direction, PlacedAsset } from "../types";
 
-function ugIn(id: string, x: number, y: number, direction: Direction): PlacedAsset {
+function ugIn(
+  id: string,
+  x: number,
+  y: number,
+  direction: Direction,
+): PlacedAsset {
   return { id, type: "conveyor_underground_in", x, y, size: 1, direction };
 }
 

@@ -65,7 +65,9 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
     activeQueue: ConveyorItem[],
   ): void => {
     ctx.newConveyorsL =
-      ctx.newConveyorsL === state.conveyors ? { ...state.conveyors } : ctx.newConveyorsL;
+      ctx.newConveyorsL === state.conveyors
+        ? { ...state.conveyors }
+        : ctx.newConveyorsL;
     ctx.newConveyorsL[convId] = { queue: activeQueue.slice(1) };
     ctx.changed = true;
   };
@@ -94,7 +96,9 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
     nextQueue: ConveyorItem[],
   ): void => {
     ctx.newConveyorsL =
-      ctx.newConveyorsL === state.conveyors ? { ...state.conveyors } : ctx.newConveyorsL;
+      ctx.newConveyorsL === state.conveyors
+        ? { ...state.conveyors }
+        : ctx.newConveyorsL;
     ctx.newConveyorsL[nextConveyorId] = { queue: [...nextQueue, currentItem] };
     dequeueConveyorFrontItemAndMarkChanged(convId, activeQueue);
     movedThisTick.add(nextConveyorId);
@@ -108,7 +112,11 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
     wbSourceInv: Inventory,
   ): void => {
     const resKey = currentItem as keyof Inventory;
-    applySourceInventory(ctx, wbSource, addResources(wbSourceInv, { [resKey]: 1 }));
+    applySourceInventory(
+      ctx,
+      wbSource,
+      addResources(wbSourceInv, { [resKey]: 1 }),
+    );
     ctx.newNotifsL = deps.addNotification(ctx.newNotifsL, currentItem, 1);
     dequeueConveyorFrontItemAndMarkChanged(convId, activeQueue);
   };
@@ -141,7 +149,11 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
     if (preflight.kind === "blocked") continue;
     const { conveyorAsset } = preflight;
     const currentItem = queueHead;
-    const routingDecision = decideRoutingFor(convId, conveyorAsset, currentItem);
+    const routingDecision = decideRoutingFor(
+      convId,
+      conveyorAsset,
+      currentItem,
+    );
 
     if (routingDecision.kind === "no_target") continue;
 
@@ -218,12 +230,21 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
 
     if (routingDecision.targetType === "workbench") {
       const liveForWb = getLiveLogisticsState(ctx);
-      const wbSource = resolveBuildingSource(liveForWb, routingDecision.targetId);
+      const wbSource = resolveBuildingSource(
+        liveForWb,
+        routingDecision.targetId,
+      );
       const wbSourceInv = getCraftingSourceInventory(liveForWb, wbSource);
       const wbCap = getSourceCapacity(ctx, liveForWb, wbSource);
       const resKey = currentItem as keyof Inventory;
       if ((wbSourceInv[resKey] as number) < wbCap) {
-        commitConveyorToWorkbench(convId, activeQueue, currentItem, wbSource, wbSourceInv);
+        commitConveyorToWorkbench(
+          convId,
+          activeQueue,
+          currentItem,
+          wbSource,
+          wbSourceInv,
+        );
         if (import.meta.env.DEV) {
           debugLog.inventory(
             `[Conveyor] Drohne/Band: delivering ${currentItem} for Job ${routingDecision.workbenchJob.id} (${routingDecision.workbenchJob.status})`,

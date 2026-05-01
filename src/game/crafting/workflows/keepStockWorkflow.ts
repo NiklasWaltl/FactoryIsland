@@ -26,9 +26,7 @@ import {
   countOpenAutomationCraftingJobs,
   hasActiveAutomationRefillForItem,
 } from "../queue/jobStatus";
-import {
-  checkRecipeAutomationPolicy,
-} from "../policies/policies";
+import { checkRecipeAutomationPolicy } from "../policies/policies";
 import {
   evaluateKeepStockTarget,
   listConfiguredKeepStockTargets,
@@ -37,9 +35,7 @@ import {
 import { buildWorkbenchAutoCraftPlan } from "../planner/planner";
 import { enqueueJob as craftingEnqueueJob } from "../queue/queue";
 import { getWorkbenchRecipe } from "../../simulation/recipes";
-import type {
-  GameState,
-} from "../../store/types";
+import type { GameState } from "../../store/types";
 
 export type KeepStockWorkflowDeps = KeepStockEvaluationDeps;
 
@@ -126,7 +122,11 @@ export function applyKeepStockRefills(
       assets: nextState.assets,
       existingJobs: nextState.crafting.jobs,
       canUseRecipe: (recipeId) =>
-        checkRecipeAutomationPolicy(recipePolicies, recipeId, "plannerKeepStock"),
+        checkRecipeAutomationPolicy(
+          recipePolicies,
+          recipeId,
+          "plannerKeepStock",
+        ),
     });
 
     if (!plan.ok) {
@@ -143,7 +143,10 @@ export function applyKeepStockRefills(
     let enqueuedCount = 0;
     for (const step of plan.steps) {
       for (let i = 0; i < step.count; i++) {
-        if (countOpenAutomationCraftingJobs(queue.jobs) >= deps.KEEP_STOCK_OPEN_JOB_CAP) {
+        if (
+          countOpenAutomationCraftingJobs(queue.jobs) >=
+          deps.KEEP_STOCK_OPEN_JOB_CAP
+        ) {
           if (import.meta.env.DEV) {
             debugLog.general(
               `[KeepStock] Skip keep-in-stock: global refill cap reached`,

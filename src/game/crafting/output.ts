@@ -73,7 +73,11 @@ export function pickOutputWarehouseId(
     return true;
   });
 
-  const ordered = sortByPreferredDistance(candidateIds, assets, preferredFromAssetId);
+  const ordered = sortByPreferredDistance(
+    candidateIds,
+    assets,
+    preferredFromAssetId,
+  );
   return (ordered[0] ?? null) as WarehouseId | null;
 }
 
@@ -107,7 +111,12 @@ export function resolveOutputDestination(
     return { kind: "global" };
   }
 
-  const hubId = pickFallbackHubId(stackItemId, serviceHubs, assets, preferredFromAssetId);
+  const hubId = pickFallbackHubId(
+    stackItemId,
+    serviceHubs,
+    assets,
+    preferredFromAssetId,
+  );
   if (hubId) {
     return { kind: "hub", id: hubId };
   }
@@ -190,7 +199,11 @@ export function routeOutput(input: RouteOutputInput): RouteOutputResult {
         destination: { kind: "global" },
       };
     }
-    const nextHubInventory = depositIntoHubInventory(hub.inventory, stack.itemId, stack.count);
+    const nextHubInventory = depositIntoHubInventory(
+      hub.inventory,
+      stack.itemId,
+      stack.count,
+    );
     return {
       warehouseInventories,
       globalInventory,
@@ -215,7 +228,9 @@ export function routeOutput(input: RouteOutputInput): RouteOutputResult {
   };
 }
 
-function getLogicalSection(itemId: ItemStack["itemId"]): "player_gear" | "seed" | "storage" {
+function getLogicalSection(
+  itemId: ItemStack["itemId"],
+): "player_gear" | "seed" | "storage" {
   if (isPlayerGear(itemId)) return "player_gear";
   if (isSeed(itemId)) return "seed";
   return "storage";
@@ -232,8 +247,15 @@ function depositInto(inv: Inventory, stack: ItemStack): Inventory {
 
 type HubStorableItemId = "wood" | "stone" | "iron" | "copper";
 
-function isHubStorableItemId(itemId: ItemStack["itemId"]): itemId is HubStorableItemId {
-  return itemId === "wood" || itemId === "stone" || itemId === "iron" || itemId === "copper";
+function isHubStorableItemId(
+  itemId: ItemStack["itemId"],
+): itemId is HubStorableItemId {
+  return (
+    itemId === "wood" ||
+    itemId === "stone" ||
+    itemId === "iron" ||
+    itemId === "copper"
+  );
 }
 
 function depositIntoHubInventory(
@@ -278,13 +300,22 @@ function sortByPreferredDistance(
   return sortedById.sort((leftId, rightId) => {
     const left = assets[leftId];
     const right = assets[rightId];
-    const leftDistance = left ? chebyshevDistance(from.x, from.y, left.x, left.y) : Number.POSITIVE_INFINITY;
-    const rightDistance = right ? chebyshevDistance(from.x, from.y, right.x, right.y) : Number.POSITIVE_INFINITY;
+    const leftDistance = left
+      ? chebyshevDistance(from.x, from.y, left.x, left.y)
+      : Number.POSITIVE_INFINITY;
+    const rightDistance = right
+      ? chebyshevDistance(from.x, from.y, right.x, right.y)
+      : Number.POSITIVE_INFINITY;
     if (leftDistance !== rightDistance) return leftDistance - rightDistance;
     return leftId.localeCompare(rightId);
   });
 }
 
-function chebyshevDistance(ax: number, ay: number, bx: number, by: number): number {
+function chebyshevDistance(
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number,
+): number {
   return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 }

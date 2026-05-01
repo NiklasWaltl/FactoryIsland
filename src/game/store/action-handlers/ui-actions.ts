@@ -44,11 +44,17 @@ export function handleUiAction(
     case "SET_ACTIVE_SLOT":
       return {
         ...state,
-        activeSlot: Math.min(action.slot, Math.max(0, state.hotbarSlots.length - 1)),
+        activeSlot: Math.min(
+          action.slot,
+          Math.max(0, state.hotbarSlots.length - 1),
+        ),
       };
 
     case "TOGGLE_PANEL":
-      return { ...state, openPanel: state.openPanel === action.panel ? null : action.panel };
+      return {
+        ...state,
+        openPanel: state.openPanel === action.panel ? null : action.panel,
+      };
 
     case "CLOSE_PANEL":
       return {

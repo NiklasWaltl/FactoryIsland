@@ -20,14 +20,15 @@ export interface RecipePolicyContext {
   deps: CraftingQueueActionDeps;
 }
 
-export function runRecipePolicyPhase(
-  ctx: RecipePolicyContext,
-): GameState {
+export function runRecipePolicyPhase(ctx: RecipePolicyContext): GameState {
   const { state, action, deps } = ctx;
 
   const byRecipe = deps.getRecipeAutomationPolicies(state);
   const currentEntry = byRecipe[action.recipeId];
-  const nextEntry = applyRecipeAutomationPolicyPatch(currentEntry, action.patch);
+  const nextEntry = applyRecipeAutomationPolicyPatch(
+    currentEntry,
+    action.patch,
+  );
 
   if (areRecipeAutomationPolicyEntriesEqual(currentEntry, nextEntry)) {
     return state;

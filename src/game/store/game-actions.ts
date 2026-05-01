@@ -35,15 +35,31 @@ export type GameAction =
   | { type: "SMITHY_WITHDRAW" }
   | { type: "MANUAL_ASSEMBLER_START"; recipe: "metal_plate" | "gear" }
   | { type: "MANUAL_ASSEMBLER_TICK" }
-  | { type: "AUTO_SMELTER_SET_RECIPE"; assetId: string; recipe: "iron" | "copper" }
-  | { type: "AUTO_ASSEMBLER_SET_RECIPE"; assetId: string; recipe: "metal_plate" | "gear" }
+  | {
+      type: "AUTO_SMELTER_SET_RECIPE";
+      assetId: string;
+      recipe: "iron" | "copper";
+    }
+  | {
+      type: "AUTO_ASSEMBLER_SET_RECIPE";
+      assetId: string;
+      recipe: "metal_plate" | "gear";
+    }
   | { type: "GROW_SAPLING"; assetId: string }
   | { type: "GROW_SAPLINGS"; assetIds: string[] }
   | { type: "NATURAL_SPAWN" }
   | { type: "REMOVE_BUILDING"; buildingType: BuildingType }
   | { type: "REMOVE_FROM_HOTBAR"; slot: number }
-  | { type: "EQUIP_BUILDING_FROM_WAREHOUSE"; buildingType: BuildingType; amount?: number }
-  | { type: "EQUIP_FROM_WAREHOUSE"; itemKind: "axe" | "wood_pickaxe" | "stone_pickaxe" | "sapling"; amount?: number }
+  | {
+      type: "EQUIP_BUILDING_FROM_WAREHOUSE";
+      buildingType: BuildingType;
+      amount?: number;
+    }
+  | {
+      type: "EQUIP_FROM_WAREHOUSE";
+      itemKind: "axe" | "wood_pickaxe" | "stone_pickaxe" | "sapling";
+      amount?: number;
+    }
   | { type: "TRANSFER_TO_WAREHOUSE"; item: keyof Inventory; amount: number }
   | { type: "TRANSFER_FROM_WAREHOUSE"; item: keyof Inventory; amount: number }
   | { type: "SMITHY_ADD_COPPER"; amount: number }
@@ -64,7 +80,12 @@ export type GameAction =
   | { type: "TOGGLE_BUILD_MODE" }
   | { type: "SELECT_BUILD_BUILDING"; buildingType: BuildingType | null }
   | { type: "SELECT_BUILD_FLOOR_TILE"; tileType: FloorTileType | null }
-  | { type: "BUILD_PLACE_BUILDING"; x: number; y: number; direction?: Direction }
+  | {
+      type: "BUILD_PLACE_BUILDING";
+      x: number;
+      y: number;
+      direction?: Direction;
+    }
   | { type: "BUILD_PLACE_FLOOR_TILE"; x: number; y: number }
   | { type: "BUILD_REMOVE_ASSET"; assetId: string }
   | { type: "LOGISTICS_TICK" }
@@ -72,11 +93,25 @@ export type GameAction =
   | { type: "SET_MACHINE_PRIORITY"; assetId: string; priority: MachinePriority }
   | { type: "SET_MACHINE_BOOST"; assetId: string; boosted: boolean }
   // Per-building resource source selection
-  | { type: "SET_BUILDING_SOURCE"; buildingId: string; warehouseId: string | null }
+  | {
+      type: "SET_BUILDING_SOURCE";
+      buildingId: string;
+      warehouseId: string | null;
+    }
   // Per-workbench keep-in-stock targets for workbench recipes
-  | { type: "SET_KEEP_STOCK_TARGET"; workbenchId: string; recipeId: string; amount: number; enabled: boolean }
+  | {
+      type: "SET_KEEP_STOCK_TARGET";
+      workbenchId: string;
+      recipeId: string;
+      amount: number;
+      enabled: boolean;
+    }
   // Per-recipe automation policy overrides
-  | { type: "SET_RECIPE_AUTOMATION_POLICY"; recipeId: string; patch: RecipeAutomationPolicyPatch }
+  | {
+      type: "SET_RECIPE_AUTOMATION_POLICY";
+      recipeId: string;
+      patch: RecipeAutomationPolicyPatch;
+    }
   // Per-splitter pro-Output-Filter
   | {
       type: "SET_SPLITTER_FILTER";
@@ -91,7 +126,12 @@ export type GameAction =
   // Starter drone state machine tick
   | { type: "DRONE_TICK" }
   // Service hub target stock adjustment
-  | { type: "SET_HUB_TARGET_STOCK"; hubId: string; resource: CollectableItemType; amount: number }
+  | {
+      type: "SET_HUB_TARGET_STOCK";
+      hubId: string;
+      resource: CollectableItemType;
+      amount: number;
+    }
   // Hub upgrade from Tier 1 to Tier 2
   | { type: "UPGRADE_HUB"; hubId: string }
   /**

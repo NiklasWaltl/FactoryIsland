@@ -1,7 +1,5 @@
 import { AUTO_MINER_PRODUCE_TICKS } from "../../../constants/drone/drone-config";
-import {
-  getCraftingSourceInventory,
-} from "../../../../crafting/crafting-sources";
+import { getCraftingSourceInventory } from "../../../../crafting/crafting-sources";
 import { getZoneWarehouseIds } from "../../../../zones/production-zone-aggregation";
 import {
   decideAutoMinerOutputTarget,
@@ -55,7 +53,9 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
       const outputDecision = decideAutoMinerOutputTarget({
         state,
         conveyors:
-          ctx.newConveyorsL === state.conveyors ? state.conveyors : ctx.newConveyorsL,
+          ctx.newConveyorsL === state.conveyors
+            ? state.conveyors
+            : ctx.newConveyorsL,
         outputX: outX,
         outputY: outY,
         resource: miner.resource,
@@ -80,8 +80,12 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
             : ctx.newConveyorsL[outAssetId];
         const outQueue = outConv?.queue ?? [];
         ctx.newConveyorsL =
-          ctx.newConveyorsL === state.conveyors ? { ...state.conveyors } : ctx.newConveyorsL;
-        ctx.newConveyorsL[outAssetId] = { queue: [...outQueue, miner.resource] };
+          ctx.newConveyorsL === state.conveyors
+            ? { ...state.conveyors }
+            : ctx.newConveyorsL;
+        ctx.newConveyorsL[outAssetId] = {
+          queue: [...outQueue, miner.resource],
+        };
         progress = 0;
         ctx.changed = true;
         outputDone = true;
@@ -109,7 +113,8 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
       }
 
       // If still at max, stay blocked (output-Ziel hat keinen Platz).
-      if (progress >= AUTO_MINER_PRODUCE_TICKS) progress = AUTO_MINER_PRODUCE_TICKS;
+      if (progress >= AUTO_MINER_PRODUCE_TICKS)
+        progress = AUTO_MINER_PRODUCE_TICKS;
     }
     if (progress !== miner.progress) {
       ctx.newAutoMinersL =

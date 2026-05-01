@@ -1,20 +1,23 @@
 import React, { useState } from "react";
 import type { AutoDeliveryEntry } from "../../store/types";
-import { RESOURCE_EMOJIS, RESOURCE_LABELS } from "../../store/constants/resources";
+import {
+  RESOURCE_EMOJIS,
+  RESOURCE_LABELS,
+} from "../../store/constants/resources";
 
 interface Props {
   log: AutoDeliveryEntry[];
 }
 
 const SOURCE_EMOJI: Record<AutoDeliveryEntry["sourceType"], string> = {
-  auto_miner:   "⛏️",
-  conveyor:     "🏭",
+  auto_miner: "⛏️",
+  conveyor: "🏭",
   auto_smelter: "🔥",
 };
 
 const SOURCE_LABEL: Record<AutoDeliveryEntry["sourceType"], string> = {
-  auto_miner:   "Auto-Miner",
-  conveyor:     "Förderband",
+  auto_miner: "Auto-Miner",
+  conveyor: "Förderband",
   auto_smelter: "Auto-Smelter",
 };
 
@@ -38,20 +41,32 @@ export const AutoDeliveryFeed: React.FC<Props> = React.memo(({ log }) => {
   const aggregated = [...log]
     .reverse()
     .slice(0, 20)
-    .reduce<Array<{ key: string; sourceType: AutoDeliveryEntry["sourceType"]; resource: string; amount: number; timestamp: number }>>(
-      (acc, entry) => {
-        const key = `${entry.sourceType}:${entry.resource}`;
-        const existing = acc.find((e) => e.key === key);
-        if (existing) {
-          existing.amount += entry.amount;
-          if (entry.timestamp > existing.timestamp) existing.timestamp = entry.timestamp;
-        } else {
-          acc.push({ key, sourceType: entry.sourceType, resource: entry.resource, amount: entry.amount, timestamp: entry.timestamp });
-        }
-        return acc;
-      },
-      []
-    )
+    .reduce<
+      Array<{
+        key: string;
+        sourceType: AutoDeliveryEntry["sourceType"];
+        resource: string;
+        amount: number;
+        timestamp: number;
+      }>
+    >((acc, entry) => {
+      const key = `${entry.sourceType}:${entry.resource}`;
+      const existing = acc.find((e) => e.key === key);
+      if (existing) {
+        existing.amount += entry.amount;
+        if (entry.timestamp > existing.timestamp)
+          existing.timestamp = entry.timestamp;
+      } else {
+        acc.push({
+          key,
+          sourceType: entry.sourceType,
+          resource: entry.resource,
+          amount: entry.amount,
+          timestamp: entry.timestamp,
+        });
+      }
+      return acc;
+    }, [])
     .slice(0, 8);
 
   return (
@@ -80,7 +95,9 @@ export const AutoDeliveryFeed: React.FC<Props> = React.memo(({ log }) => {
                 {RESOURCE_LABELS[entry.resource] ?? entry.resource}
               </span>
               <span className="fi-auto-delivery-amount">×{entry.amount}</span>
-              <span className="fi-auto-delivery-time">{relativeTime(entry.timestamp)}</span>
+              <span className="fi-auto-delivery-time">
+                {relativeTime(entry.timestamp)}
+              </span>
             </div>
           ))}
         </div>

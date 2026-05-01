@@ -7,7 +7,10 @@ export interface KeepStockTargetEntry {
 }
 
 /** Keep-in-stock config map: workbenchId -> recipeId -> target entry. */
-export type KeepStockByWorkbench = Record<string, Record<string, KeepStockTargetEntry>>;
+export type KeepStockByWorkbench = Record<
+  string,
+  Record<string, KeepStockTargetEntry>
+>;
 
 // ---- Crafting source (read/write resource scope) ----
 //

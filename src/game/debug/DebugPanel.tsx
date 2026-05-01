@@ -130,25 +130,45 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
             </label>
             <div style={sectionTitle}>Mock-Daten laden</div>
             <div style={btnGridStyle}>
-              <button style={mockBtnStyle} onClick={() => onMock("DEBUG_MOCK_RESOURCES")}>
+              <button
+                style={mockBtnStyle}
+                onClick={() => onMock("DEBUG_MOCK_RESOURCES")}
+              >
                 🪵 Ressourcen (999)
               </button>
-              <button style={mockBtnStyle} onClick={() => onMock("DEBUG_MOCK_DRONE_HUB_INVENTORY")}>
+              <button
+                style={mockBtnStyle}
+                onClick={() => onMock("DEBUG_MOCK_DRONE_HUB_INVENTORY")}
+              >
                 🚁 Alle Drohnen-Hubs fuellen
               </button>
-              <button style={mockBtnStyle} onClick={() => onMock("DEBUG_MOCK_TOOLS")}>
+              <button
+                style={mockBtnStyle}
+                onClick={() => onMock("DEBUG_MOCK_TOOLS")}
+              >
                 🪓 Werkzeuge (alle)
               </button>
-              <button style={mockBtnStyle} onClick={() => onMock("DEBUG_MOCK_BUILDINGS")}>
+              <button
+                style={mockBtnStyle}
+                onClick={() => onMock("DEBUG_MOCK_BUILDINGS")}
+              >
                 🏗 Gebäude (alle)
               </button>
-              <button style={mockBtnStyle} onClick={() => onMock("DEBUG_MOCK_ALL")}>
+              <button
+                style={mockBtnStyle}
+                onClick={() => onMock("DEBUG_MOCK_ALL")}
+              >
                 ✨ Alles laden
               </button>
             </div>
             <hr style={hrStyle} />
             <button
-              style={{ ...mockBtnStyle, background: "rgba(255,50,50,0.2)", borderColor: "rgba(255,50,50,0.4)", color: "#ff6666" }}
+              style={{
+                ...mockBtnStyle,
+                background: "rgba(255,50,50,0.2)",
+                borderColor: "rgba(255,50,50,0.4)",
+                color: "#ff6666",
+              }}
               onClick={onResetState}
             >
               🔄 State zurücksetzen
@@ -158,7 +178,13 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
         {tab === "logs" && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 6,
+              }}
+            >
               <span style={{ fontSize: 11, color: "#888" }}>
                 {logs.length} Einträge
               </span>
@@ -217,7 +243,10 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 </div>
               )}
               {hmrModules.map((m, i) => (
-                <div key={i} style={{ fontSize: 11, padding: "2px 0", color: "#e040fb" }}>
+                <div
+                  key={i}
+                  style={{ fontSize: 11, padding: "2px 0", color: "#e040fb" }}
+                >
                   🔄 {m}
                 </div>
               ))}

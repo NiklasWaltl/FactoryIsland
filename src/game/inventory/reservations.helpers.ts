@@ -12,16 +12,17 @@ export function unknownReservationErrorNetwork(
     | { reservationId: ReservationId }
     | { ownerKind: ReservationOwnerKind; ownerId: string },
 ): NetworkSlice {
-  const lastError: NetworkError = "reservationId" in input
-    ? {
-      kind: "UNKNOWN_RESERVATION",
-      message: `Reservation "${input.reservationId}" does not exist.`,
-      reservationId: input.reservationId,
-    }
-    : {
-      kind: "UNKNOWN_RESERVATION",
-      message: `No reservations for owner "${input.ownerKind}:${input.ownerId}".`,
-    };
+  const lastError: NetworkError =
+    "reservationId" in input
+      ? {
+          kind: "UNKNOWN_RESERVATION",
+          message: `Reservation "${input.reservationId}" does not exist.`,
+          reservationId: input.reservationId,
+        }
+      : {
+          kind: "UNKNOWN_RESERVATION",
+          message: `No reservations for owner "${input.ownerKind}:${input.ownerId}".`,
+        };
   return {
     ...network,
     lastError,
@@ -32,10 +33,7 @@ export function removeReservationByIndex(
   reservations: readonly Reservation[],
   idx: number,
 ): readonly Reservation[] {
-  return [
-    ...reservations.slice(0, idx),
-    ...reservations.slice(idx + 1),
-  ];
+  return [...reservations.slice(0, idx), ...reservations.slice(idx + 1)];
 }
 
 export function reservationsByOwner(

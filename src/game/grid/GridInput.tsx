@@ -1,8 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
-import {
-  cellKey,
-} from "../store/utils/cell-key";
+import { cellKey } from "../store/utils/cell-key";
 import type { Direction, GameState } from "../store/types";
 import type { GameAction } from "../store/game-actions";
 
@@ -48,7 +46,9 @@ export function useGridInput(
   const dragStart = useRef({ x: 0, y: 0, camX: 0, camY: 0 });
   const didDrag = useRef(false);
   const [buildDirection, setBuildDirection] = useState<Direction>("east");
-  const [pendingRemoveAssetId, setPendingRemoveAssetId] = useState<string | null>(null);
+  const [pendingRemoveAssetId, setPendingRemoveAssetId] = useState<
+    string | null
+  >(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
 
   const clampCam = useCallback((cx: number, cy: number, z: number) => {
@@ -71,7 +71,12 @@ export function useGridInput(
       if (e.button !== 0) return;
       setDragging(true);
       didDrag.current = false;
-      dragStart.current = { x: e.clientX, y: e.clientY, camX: cam.x, camY: cam.y };
+      dragStart.current = {
+        x: e.clientX,
+        y: e.clientY,
+        camX: cam.x,
+        camY: cam.y,
+      };
     },
     [cam],
   );
@@ -82,7 +87,11 @@ export function useGridInput(
       const dx = e.clientX - dragStart.current.x;
       const dy = e.clientY - dragStart.current.y;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag.current = true;
-      const newCam = clampCam(dragStart.current.camX + dx, dragStart.current.camY + dy, zoom);
+      const newCam = clampCam(
+        dragStart.current.camX + dx,
+        dragStart.current.camY + dy,
+        zoom,
+      );
       setCam(newCam);
     },
     [dragging, zoom, clampCam],
@@ -131,12 +140,23 @@ export function useGridInput(
       const gx = Math.floor(wx / CELL_PX);
       const gy = Math.floor(wy / CELL_PX);
       const slot = state.hotbarSlots[state.activeSlot];
-      const hotbarBuildingType = slot?.toolKind === "building" ? slot.buildingType : null;
+      const hotbarBuildingType =
+        slot?.toolKind === "building" ? slot.buildingType : null;
       if (gx >= 0 && gx < GRID_W && gy >= 0 && gy < GRID_H) {
         if (state.buildMode && state.selectedBuildingType) {
-          dispatch({ type: "BUILD_PLACE_BUILDING", x: gx, y: gy, direction: buildDirection });
+          dispatch({
+            type: "BUILD_PLACE_BUILDING",
+            x: gx,
+            y: gy,
+            direction: buildDirection,
+          });
         } else if (!state.buildMode && hotbarBuildingType) {
-          dispatch({ type: "BUILD_PLACE_BUILDING", x: gx, y: gy, direction: buildDirection });
+          dispatch({
+            type: "BUILD_PLACE_BUILDING",
+            x: gx,
+            y: gy,
+            direction: buildDirection,
+          });
         } else if (state.buildMode && state.selectedFloorTile) {
           dispatch({ type: "BUILD_PLACE_FLOOR_TILE", x: gx, y: gy });
         } else {
@@ -185,7 +205,16 @@ export function useGridInput(
         }
       }
     },
-    [cam, zoom, state.buildMode, state.hotbarSlots, state.activeSlot, state.cellMap, state.assets, dispatch],
+    [
+      cam,
+      zoom,
+      state.buildMode,
+      state.hotbarSlots,
+      state.activeSlot,
+      state.cellMap,
+      state.assets,
+      dispatch,
+    ],
   );
 
   useEffect(() => {
@@ -230,7 +259,9 @@ export function useGridInput(
       const wy = (my - cam.y) / zoom;
       const gx = Math.floor(wx / CELL_PX);
       const gy = Math.floor(wy / CELL_PX);
-      setHover((prev) => (prev && prev.x === gx && prev.y === gy ? prev : { x: gx, y: gy }));
+      setHover((prev) =>
+        prev && prev.x === gx && prev.y === gy ? prev : { x: gx, y: gy },
+      );
     },
     [onMouseMove, cam, zoom],
   );

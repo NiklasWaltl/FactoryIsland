@@ -5,7 +5,12 @@ import type {
   ServiceHubEntry,
 } from "./types";
 
-export const COLLECTABLE_KEYS = new Set<string>(["wood", "stone", "iron", "copper"]);
+export const COLLECTABLE_KEYS = new Set<string>([
+  "wood",
+  "stone",
+  "iron",
+  "copper",
+]);
 
 export function createEmptyInventory(): Inventory {
   return {
@@ -35,14 +40,21 @@ export function createEmptyInventory(): Inventory {
   };
 }
 
-export function hasResources(inv: Inventory, costs: Partial<Record<keyof Inventory, number>>): boolean {
+export function hasResources(
+  inv: Inventory,
+  costs: Partial<Record<keyof Inventory, number>>,
+): boolean {
   for (const [key, amt] of Object.entries(costs)) {
-    if (((inv as unknown as Record<string, number>)[key] ?? 0) < (amt ?? 0)) return false;
+    if (((inv as unknown as Record<string, number>)[key] ?? 0) < (amt ?? 0))
+      return false;
   }
   return true;
 }
 
-export function addResources(inv: Inventory, items: Partial<Record<keyof Inventory, number>>): Inventory {
+export function addResources(
+  inv: Inventory,
+  items: Partial<Record<keyof Inventory, number>>,
+): Inventory {
   const result = { ...inv } as Record<string, number>;
   for (const [key, amt] of Object.entries(items)) {
     result[key] = (result[key] ?? 0) + (amt ?? 0);
@@ -59,17 +71,23 @@ export function getEffectiveBuildInventory(state: GameState): Inventory {
   }
   for (const hub of Object.values(state.serviceHubs)) {
     for (const res of COLLECTABLE_KEYS) {
-      effective[res] = (effective[res] ?? 0) + (hub.inventory[res as CollectableItemType] ?? 0);
+      effective[res] =
+        (effective[res] ?? 0) +
+        (hub.inventory[res as CollectableItemType] ?? 0);
     }
   }
   return effective as unknown as Inventory;
 }
 
-export function costIsFullyCollectable(costs: Partial<Record<keyof Inventory, number>>): boolean {
+export function costIsFullyCollectable(
+  costs: Partial<Record<keyof Inventory, number>>,
+): boolean {
   return Object.keys(costs).every((k) => COLLECTABLE_KEYS.has(k));
 }
 
-export function fullCostAsRemaining(costs: Partial<Record<keyof Inventory, number>>): Partial<Record<CollectableItemType, number>> {
+export function fullCostAsRemaining(
+  costs: Partial<Record<keyof Inventory, number>>,
+): Partial<Record<CollectableItemType, number>> {
   const remaining: Partial<Record<CollectableItemType, number>> = {};
   for (const [k, v] of Object.entries(costs)) {
     if ((v ?? 0) > 0 && COLLECTABLE_KEYS.has(k)) {
@@ -97,7 +115,7 @@ export function consumeBuildResources(
     if (needed <= 0) continue;
     for (const [whId, whInv] of Object.entries(warehouses)) {
       if (needed <= 0) break;
-      const whHave = ((whInv as unknown as Record<string, number>)[key] ?? 0);
+      const whHave = (whInv as unknown as Record<string, number>)[key] ?? 0;
       const fromWh = Math.min(whHave, needed);
       if (fromWh > 0) {
         warehouses = {

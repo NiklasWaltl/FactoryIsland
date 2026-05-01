@@ -71,7 +71,9 @@ export function useGameTicks(
   }, []);
 
   // Generator tick - fires when any generator is running
-  const anyGeneratorRunning = Object.values(state.generators).some((g) => g.running);
+  const anyGeneratorRunning = Object.values(state.generators).some(
+    (g) => g.running,
+  );
   useEffect(() => {
     if (!anyGeneratorRunning) return;
     const id = setInterval(() => {
@@ -100,11 +102,16 @@ export function useGameTicks(
     (job) => job.status !== "done" && job.status !== "cancelled",
   );
 
-  const hasActiveKeepStockTargets = Object.values(state.keepStockByWorkbench ?? {}).some(
-    (recipes) => Object.values(recipes).some((target) => !!target.enabled && target.amount > 0),
+  const hasActiveKeepStockTargets = Object.values(
+    state.keepStockByWorkbench ?? {},
+  ).some((recipes) =>
+    Object.values(recipes).some(
+      (target) => !!target.enabled && target.amount > 0,
+    ),
   );
 
-  const shouldRunCraftingTick = hasPendingCraftingJobs || hasActiveKeepStockTargets;
+  const shouldRunCraftingTick =
+    hasPendingCraftingJobs || hasActiveKeepStockTargets;
 
   useEffect(() => {
     if (!shouldRunCraftingTick) return;

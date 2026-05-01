@@ -1,7 +1,10 @@
 import React, { useCallback, useMemo } from "react";
 import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
 import type { Direction, GameState } from "../store/types";
-import { EnergyDebugOverlay, EnergyDebugHud } from "../ui/panels/EnergyDebugOverlay";
+import {
+  EnergyDebugOverlay,
+  EnergyDebugHud,
+} from "../ui/panels/EnergyDebugOverlay";
 import { PhaserHost } from "../world/PhaserHost";
 import { buildWorldOverlayData } from "./GridOverlays";
 import { buildSelectionOverlays } from "./GridSelection";
@@ -30,10 +33,19 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
   buildDirection,
   warnedUnmigratedTypesRef,
 }) => {
-  const assetW = useCallback((asset: { size: 1 | 2; width?: 1 | 2 }) => asset.width ?? asset.size, []);
-  const assetH = useCallback((asset: { size: 1 | 2; height?: 1 | 2 }) => asset.height ?? asset.size, []);
+  const assetW = useCallback(
+    (asset: { size: 1 | 2; width?: 1 | 2 }) => asset.width ?? asset.size,
+    [],
+  );
+  const assetH = useCallback(
+    (asset: { size: 1 | 2; height?: 1 | 2 }) => asset.height ?? asset.size,
+    [],
+  );
 
-  const connectedSet = useMemo(() => new Set(state.connectedAssetIds), [state.connectedAssetIds]);
+  const connectedSet = useMemo(
+    () => new Set(state.connectedAssetIds),
+    [state.connectedAssetIds],
+  );
 
   const el = containerRef.current;
   const vw = el?.clientWidth ?? window.innerWidth;
@@ -70,7 +82,10 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
         `${asset.id}|${asset.type}|${asset.x}|${asset.y}|${asset.width}|${asset.height}|${asset.direction ?? ""}|${asset.isUnderConstruction ? 1 : 0}`,
     )
     .join(";");
-  const stableStaticAssets = useMemo(() => phaserStaticAssets, [staticAssetsSignature]);
+  const stableStaticAssets = useMemo(
+    () => phaserStaticAssets,
+    [staticAssetsSignature],
+  );
 
   const droneSnapshots = useMemo(() => {
     return Object.values(state.drones).map((drone) => ({
@@ -78,7 +93,9 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
       status: drone.status,
       tileX: drone.tileX,
       tileY: drone.tileY,
-      cargo: drone.cargo ? { itemType: drone.cargo.itemType, amount: drone.cargo.amount } : null,
+      cargo: drone.cargo
+        ? { itemType: drone.cargo.itemType, amount: drone.cargo.amount }
+        : null,
       hubId: drone.hubId,
       isParkedAtHub: drone.status === "idle" && drone.hubId !== null,
       parkingSlot: null as number | null,
@@ -104,19 +121,23 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     Object.values(state.collectionNodes)
-      .map((node) => `${node.id}|${node.itemType}|${node.amount}|${node.tileX}|${node.tileY}`)
+      .map(
+        (node) =>
+          `${node.id}|${node.itemType}|${node.amount}|${node.tileX}|${node.tileY}`,
+      )
       .join(";"),
   ]);
 
-  const { placementOverlayElement, inspectionOverlayElement } = buildSelectionOverlays({
-    state,
-    hover,
-    dragging,
-    buildDirection,
-    connectedSet,
-    assetW,
-    assetH,
-  });
+  const { placementOverlayElement, inspectionOverlayElement } =
+    buildSelectionOverlays({
+      state,
+      hover,
+      dragging,
+      buildDirection,
+      connectedSet,
+      assetW,
+      assetH,
+    });
 
   const worldTransformStyle: React.CSSProperties = {
     position: "absolute",

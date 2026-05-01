@@ -8,7 +8,11 @@ interface ModeSelectProps {
 
 export const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect }) => {
   const handleDebugReset = () => {
-    if (confirm("Alle Caches clearen und neu laden? (Debug Mode wird automatisch ausgewählt)")) {
+    if (
+      confirm(
+        "Alle Caches clearen und neu laden? (Debug Mode wird automatisch ausgewählt)",
+      )
+    ) {
       localStorage.removeItem("factory-island-save");
       delete (window as any).__FI_HMR_STATE__;
       delete (window as any).__FI_HMR_MODULES__;
@@ -44,8 +48,16 @@ export const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect }) => {
           </button>
         </div>
         {IS_DEV && (
-          <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
-            <p style={{ fontSize: 12, opacity: 0.7, marginBottom: 8 }}>🧪 Dev-Tools:</p>
+          <div
+            style={{
+              marginTop: 20,
+              paddingTop: 20,
+              borderTop: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            <p style={{ fontSize: 12, opacity: 0.7, marginBottom: 8 }}>
+              🧪 Dev-Tools:
+            </p>
             <button
               onClick={handleDebugReset}
               style={{

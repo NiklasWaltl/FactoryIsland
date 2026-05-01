@@ -25,7 +25,7 @@ function consumeBuildResources(
     // 1) Warehouses first (any key they happen to hold).
     for (const [whId, whInv] of Object.entries(warehouses)) {
       if (needed <= 0) break;
-      const whHave = ((whInv as unknown as Record<string, number>)[key] ?? 0);
+      const whHave = (whInv as unknown as Record<string, number>)[key] ?? 0;
       const fromWh = Math.min(whHave, needed);
       if (fromWh > 0) {
         warehouses = {
@@ -102,17 +102,31 @@ export function hasResourcesInPhysicalStorage(
 export function consumeFromPhysicalStorage(
   state: GameState,
   costs: Partial<Record<keyof Inventory, number>>,
-): { ok: true; next: Pick<GameState, "inventory" | "warehouseInventories" | "serviceHubs"> } | { ok: false } {
+):
+  | {
+      ok: true;
+      next: Pick<
+        GameState,
+        "inventory" | "warehouseInventories" | "serviceHubs"
+      >;
+    }
+  | { ok: false } {
   if (!hasResourcesInPhysicalStorage(state, costs)) {
     if (import.meta.env.DEV) {
-      console.warn("[consumeFromPhysicalStorage] Insufficient physical stock for", costs);
+      console.warn(
+        "[consumeFromPhysicalStorage] Insufficient physical stock for",
+        costs,
+      );
     }
     return { ok: false };
   }
   const consumed = consumeBuildResources(state, costs);
   // hasResources guarantees remaining is empty; assert in DEV to catch logic drift.
   if (import.meta.env.DEV && Object.keys(consumed.remaining).length > 0) {
-    console.error("[consumeFromPhysicalStorage] remaining after pre-check:", consumed.remaining);
+    console.error(
+      "[consumeFromPhysicalStorage] remaining after pre-check:",
+      consumed.remaining,
+    );
     return { ok: false };
   }
   return {

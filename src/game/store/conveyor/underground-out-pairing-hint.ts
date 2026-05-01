@@ -66,11 +66,19 @@ export function isUndergroundOutPlacementGeometricallyValid(
   outY: number,
   direction: Direction,
 ): boolean {
-  const entranceId = findUnpairedUndergroundEntranceId(deps, outX, outY, direction);
+  const entranceId = findUnpairedUndergroundEntranceId(
+    deps,
+    outX,
+    outY,
+    direction,
+  );
   if (!entranceId) return false;
   const entrance = deps.assets[entranceId];
   if (!entrance || entrance.type !== "conveyor_underground_in") return false;
-  const tempOut: Pick<PlacedAsset, "x" | "y" | "direction" | "type" | "size" | "id"> = {
+  const tempOut: Pick<
+    PlacedAsset,
+    "x" | "y" | "direction" | "type" | "size" | "id"
+  > = {
     id: "temp",
     type: "conveyor_underground_out",
     x: outX,

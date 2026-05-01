@@ -80,7 +80,9 @@ export function collectDroneTaskCandidates(input: {
     ),
   );
 
-  const hubEntry = drone.hubId ? state.serviceHubs[drone.hubId] ?? null : null;
+  const hubEntry = drone.hubId
+    ? (state.serviceHubs[drone.hubId] ?? null)
+    : null;
   if (hubEntry && drone.hubId) {
     candidates.push(
       ...gatherHubRestockCandidates(
@@ -242,15 +244,23 @@ export function collectDroneTaskCandidates(input: {
 
   if (!drone.hubId || !hubEntry) {
     for (const node of availableNodes) {
-      const stickyBonus = node.reservedByDroneId === drone.droneId ? DRONE_STICKY_BONUS : 0;
+      const stickyBonus =
+        node.reservedByDroneId === drone.droneId ? DRONE_STICKY_BONUS : 0;
       candidates.push({
         taskType: "hub_restock",
         nodeId: node.id,
         deliveryTargetId: "",
-        score: scoreDroneTask("hub_restock", drone.tileX, drone.tileY, node.tileX, node.tileY, {
-          role: restockRoleBonus,
-          sticky: stickyBonus,
-        }),
+        score: scoreDroneTask(
+          "hub_restock",
+          drone.tileX,
+          drone.tileY,
+          node.tileX,
+          node.tileY,
+          {
+            role: restockRoleBonus,
+            sticky: stickyBonus,
+          },
+        ),
         _roleBonus: restockRoleBonus,
         _stickyBonus: stickyBonus,
         _urgencyBonus: 0,
@@ -274,7 +284,10 @@ export function buildCandidateInputs(
 } {
   const role = drone.role ?? "auto";
   const availableNodes = Object.values(state.collectionNodes).filter(
-    (node) => node.amount > 0 && (node.reservedByDroneId === null || node.reservedByDroneId === drone.droneId),
+    (node) =>
+      node.amount > 0 &&
+      (node.reservedByDroneId === null ||
+        node.reservedByDroneId === drone.droneId),
   );
   const availableTypes = new Set<CollectableItemType>();
   for (const node of availableNodes) availableTypes.add(node.itemType);

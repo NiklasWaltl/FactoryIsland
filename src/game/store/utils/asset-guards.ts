@@ -23,13 +23,20 @@ export function hasWarehouseAssetWithInventory(
   warehouseId: string | null | undefined,
 ): boolean {
   const warehouse = getAssetOfType(state, warehouseId, "warehouse");
-  return !!warehouse && !!warehouseId && !!state.warehouseInventories[warehouseId];
+  return (
+    !!warehouse && !!warehouseId && !!state.warehouseInventories[warehouseId]
+  );
 }
 
 export function isBuildingSourceStateConsistent(
-  state: Pick<GameState, "assets" | "warehouseInventories" | "buildingSourceWarehouseIds">,
+  state: Pick<
+    GameState,
+    "assets" | "warehouseInventories" | "buildingSourceWarehouseIds"
+  >,
 ): boolean {
-  for (const [buildingId, warehouseId] of Object.entries(state.buildingSourceWarehouseIds)) {
+  for (const [buildingId, warehouseId] of Object.entries(
+    state.buildingSourceWarehouseIds,
+  )) {
     if (!state.assets[buildingId]) return false;
     if (!hasWarehouseAssetWithInventory(state, warehouseId)) return false;
   }

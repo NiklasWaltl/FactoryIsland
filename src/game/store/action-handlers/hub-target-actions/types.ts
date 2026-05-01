@@ -4,9 +4,7 @@ import type { GameAction } from "../../game-actions";
 
 export type HubTargetHandledActionType = "SET_HUB_TARGET_STOCK";
 
-export const HANDLED_ACTION_TYPES = new Set<string>([
-  "SET_HUB_TARGET_STOCK",
-]);
+export const HANDLED_ACTION_TYPES = new Set<string>(["SET_HUB_TARGET_STOCK"]);
 
 export type HubTargetAction = Extract<
   GameAction,

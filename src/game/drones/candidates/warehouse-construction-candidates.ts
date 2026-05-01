@@ -52,7 +52,13 @@ export interface WarehouseConstructionCandidateDeps {
     droneY: number,
     nodeX: number,
     nodeY: number,
-    bonuses?: { role?: number; sticky?: number; urgency?: number; demand?: number; spread?: number },
+    bonuses?: {
+      role?: number;
+      sticky?: number;
+      urgency?: number;
+      demand?: number;
+      spread?: number;
+    },
   ) => number;
 }
 
@@ -66,7 +72,10 @@ export interface WarehouseConstructionCandidateDeps {
  */
 export function gatherWarehouseConstructionCandidates(
   state: GameState,
-  drone: Pick<StarterDroneState, "droneId" | "tileX" | "tileY" | "targetNodeId">,
+  drone: Pick<
+    StarterDroneState,
+    "droneId" | "tileX" | "tileY" | "targetNodeId"
+  >,
   constructionRoleBonus: number,
   constants: WarehouseConstructionCandidateConstants,
   deps: WarehouseConstructionCandidateDeps,
@@ -75,24 +84,64 @@ export function gatherWarehouseConstructionCandidates(
 
   for (const [siteId, site] of Object.entries(state.constructionSites)) {
     if (!state.assets[siteId]) continue;
-    const openSlots = deps.getOpenConstructionDroneSlots(state, siteId, drone.droneId);
+    const openSlots = deps.getOpenConstructionDroneSlots(
+      state,
+      siteId,
+      drone.droneId,
+    );
     if (openSlots <= 0) continue;
-    const assignedSoFar = deps.getAssignedConstructionDroneCount(state, siteId, drone.droneId);
+    const assignedSoFar = deps.getAssignedConstructionDroneCount(
+      state,
+      siteId,
+      drone.droneId,
+    );
     const spreadPenalty = -constants.spreadPenaltyPerDrone * assignedSoFar;
     for (const [res, amt] of Object.entries(site.remaining)) {
       if ((amt ?? 0) <= 0) continue;
       const itemType = res as CollectableItemType;
-      const remainingNeed = deps.getRemainingConstructionNeed(state, siteId, itemType, drone.droneId);
+      const remainingNeed = deps.getRemainingConstructionNeed(
+        state,
+        siteId,
+        itemType,
+        drone.droneId,
+      );
       if (remainingNeed <= 0) continue;
       const demandBonus = Math.min(constants.demandBonusMax, remainingNeed);
-      const nearby = deps.getNearbyWarehousesForDispatch(state, drone.tileX, drone.tileY, itemType, drone.droneId);
+      const nearby = deps.getNearbyWarehousesForDispatch(
+        state,
+        drone.tileX,
+        drone.tileY,
+        itemType,
+        drone.droneId,
+      );
       for (const wh of nearby) {
         const syntheticNodeId = `wh:${wh.warehouseId}:${itemType}`;
-        const stickyBonus = drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
-        const bonuses = { role: constructionRoleBonus, sticky: stickyBonus, demand: demandBonus, spread: spreadPenalty };
-        const score = deps.scoreDroneTask("hub_dispatch", drone.tileX, drone.tileY, wh.x, wh.y, bonuses)
-          + constants.warehousePriorityBonus;
-        candidates.push(buildScoredCandidate("hub_dispatch", syntheticNodeId, siteId, score, bonuses));
+        const stickyBonus =
+          drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
+        const bonuses = {
+          role: constructionRoleBonus,
+          sticky: stickyBonus,
+          demand: demandBonus,
+          spread: spreadPenalty,
+        };
+        const score =
+          deps.scoreDroneTask(
+            "hub_dispatch",
+            drone.tileX,
+            drone.tileY,
+            wh.x,
+            wh.y,
+            bonuses,
+          ) + constants.warehousePriorityBonus;
+        candidates.push(
+          buildScoredCandidate(
+            "hub_dispatch",
+            syntheticNodeId,
+            siteId,
+            score,
+            bonuses,
+          ),
+        );
       }
     }
   }

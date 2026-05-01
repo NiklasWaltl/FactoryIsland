@@ -85,12 +85,18 @@ export interface TickOutput {
 export function tickCraftingJobs(input: TickInput): TickOutput {
   if (import.meta.env.DEV) {
     const jobs = input.crafting.jobs;
-    if (jobs.some((job) => job.status !== "done" && job.status !== "cancelled")) {
+    if (
+      jobs.some((job) => job.status !== "done" && job.status !== "cancelled")
+    ) {
       const queued = jobs.filter((job) => job.status === "queued").length;
       const reserved = jobs.filter((job) => job.status === "reserved").length;
       const crafting = jobs.filter((job) => job.status === "crafting").length;
-      const delivering = jobs.filter((job) => job.status === "delivering").length;
-      debugLog.general(`JOB_TICK sees ${queued} queued / ${reserved} reserved / ${crafting} crafting / ${delivering} delivering jobs`);
+      const delivering = jobs.filter(
+        (job) => job.status === "delivering",
+      ).length;
+      debugLog.general(
+        `JOB_TICK sees ${queued} queued / ${reserved} reserved / ${crafting} crafting / ${delivering} delivering jobs`,
+      );
     }
   }
 

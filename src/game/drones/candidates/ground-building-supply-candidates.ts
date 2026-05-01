@@ -18,9 +18,15 @@ export interface GroundBuildingSupplyCandidateDeps {
   getBuildingInputTargets: (
     state: Pick<GameState, "assets">,
   ) => { assetId: string; resource: CollectableItemType; capacity: number }[];
-  isUnderConstruction: (state: Pick<GameState, "constructionSites">, assetId: string) => boolean;
+  isUnderConstruction: (
+    state: Pick<GameState, "constructionSites">,
+    assetId: string,
+  ) => boolean;
   getRemainingBuildingInputDemand: (
-    state: Pick<GameState, "assets" | "generators" | "drones" | "collectionNodes">,
+    state: Pick<
+      GameState,
+      "assets" | "generators" | "drones" | "collectionNodes"
+    >,
     assetId: string,
     itemType: CollectableItemType,
     excludeDroneId?: string,
@@ -42,12 +48,21 @@ export interface GroundBuildingSupplyCandidateDeps {
     droneY: number,
     nodeX: number,
     nodeY: number,
-    bonuses?: { role?: number; sticky?: number; urgency?: number; demand?: number; spread?: number },
+    bonuses?: {
+      role?: number;
+      sticky?: number;
+      urgency?: number;
+      demand?: number;
+      spread?: number;
+    },
   ) => number;
 }
 
 export function gatherGroundBuildingSupplyCandidates(
-  state: Pick<GameState, "assets" | "constructionSites" | "generators" | "drones" | "collectionNodes">,
+  state: Pick<
+    GameState,
+    "assets" | "constructionSites" | "generators" | "drones" | "collectionNodes"
+  >,
   drone: Pick<StarterDroneState, "droneId" | "tileX" | "tileY">,
   availableNodes: readonly CollectionNode[],
   availableTypes: ReadonlySet<CollectableItemType>,
@@ -59,22 +74,52 @@ export function gatherGroundBuildingSupplyCandidates(
   for (const target of deps.getBuildingInputTargets(state)) {
     if (deps.isUnderConstruction(state, target.assetId)) continue;
     if (!availableTypes.has(target.resource)) continue;
-    const remainingDemand = deps.getRemainingBuildingInputDemand(state, target.assetId, target.resource, drone.droneId);
+    const remainingDemand = deps.getRemainingBuildingInputDemand(
+      state,
+      target.assetId,
+      target.resource,
+      drone.droneId,
+    );
     if (remainingDemand <= 0) continue;
-    const openSlots = deps.getOpenBuildingSupplyDroneSlots(state, target.assetId, target.resource, drone.droneId);
+    const openSlots = deps.getOpenBuildingSupplyDroneSlots(
+      state,
+      target.assetId,
+      target.resource,
+      drone.droneId,
+    );
     if (openSlots <= 0) continue;
-    const assignedSoFar = deps.getAssignedBuildingSupplyDroneCount(state, target.assetId, drone.droneId);
+    const assignedSoFar = deps.getAssignedBuildingSupplyDroneCount(
+      state,
+      target.assetId,
+      drone.droneId,
+    );
     const spreadPenalty = -constants.spreadPenaltyPerDrone * assignedSoFar;
     const demandBonus = Math.min(constants.demandBonusMax, remainingDemand);
     for (const node of availableNodes) {
       if (node.itemType !== target.resource) continue;
-      const stickyBonus = node.reservedByDroneId === drone.droneId ? constants.stickyBonus : 0;
-      const bonuses = { sticky: stickyBonus, demand: demandBonus, spread: spreadPenalty };
-      candidates.push(buildScoredCandidate(
-        "building_supply", node.id, target.assetId,
-        deps.scoreDroneTask("building_supply", drone.tileX, drone.tileY, node.tileX, node.tileY, bonuses),
-        bonuses,
-      ));
+      const stickyBonus =
+        node.reservedByDroneId === drone.droneId ? constants.stickyBonus : 0;
+      const bonuses = {
+        sticky: stickyBonus,
+        demand: demandBonus,
+        spread: spreadPenalty,
+      };
+      candidates.push(
+        buildScoredCandidate(
+          "building_supply",
+          node.id,
+          target.assetId,
+          deps.scoreDroneTask(
+            "building_supply",
+            drone.tileX,
+            drone.tileY,
+            node.tileX,
+            node.tileY,
+            bonuses,
+          ),
+          bonuses,
+        ),
+      );
     }
   }
 

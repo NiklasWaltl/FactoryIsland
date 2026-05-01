@@ -114,7 +114,10 @@ describe("gameReducer + NETWORK_* actions", () => {
     // Simulate the deserializeState pattern: spread base, omit `network`.
     const base = createInitialState("release");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const restored: GameState = { ...base, network: createInitialState("release").network };
+    const restored: GameState = {
+      ...base,
+      network: createInitialState("release").network,
+    };
     // After "loading", reservations are empty and reducer still works.
     const next = gameReducer(restored, {
       type: "NETWORK_RESERVE_BATCH",

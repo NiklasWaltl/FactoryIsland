@@ -31,11 +31,18 @@ import type {
 } from "./types";
 import { DEFAULT_MACHINE_PRIORITY } from "./constants/energy/energy-balance";
 import { MAP_SHOP_POS } from "./constants/map/map-layout";
-import { assetHeight, assetWidth, getAutoSmelterIoCells } from "./asset-geometry";
+import {
+  assetHeight,
+  assetWidth,
+  getAutoSmelterIoCells,
+} from "./asset-geometry";
 import { cellKey } from "./utils/cell-key";
 import { createDefaultProtoHubTargetStock } from "./constants/hub/hub-target-stock";
 import { createEmptyInventory } from "./inventory-ops";
-import { isEnergyConsumerType, withDefaultMachinePriority } from "./helpers/machine-priority";
+import {
+  isEnergyConsumerType,
+  withDefaultMachinePriority,
+} from "./helpers/machine-priority";
 import { makeId } from "./utils/make-id";
 import { placeAsset } from "./asset-mutation";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";
@@ -44,7 +51,13 @@ export function createInitialState(mode: GameMode): GameState {
   const assets: Record<string, PlacedAsset> = {};
   const cellMap: Record<string, string> = {};
 
-  function tryPlace(type: AssetType, x: number, y: number, size: 1 | 2, fixed?: boolean): string | undefined {
+  function tryPlace(
+    type: AssetType,
+    x: number,
+    y: number,
+    size: 1 | 2,
+    fixed?: boolean,
+  ): string | undefined {
     if (x + size > GRID_W || y + size > GRID_H) return;
     for (let dy = 0; dy < size; dy++) {
       for (let dx = 0; dx < size; dx++) {
@@ -73,7 +86,13 @@ export function createInitialState(mode: GameMode): GameState {
   tryPlace("map_shop", MAP_SHOP_POS.x, MAP_SHOP_POS.y, 2, true);
 
   // Place fixed proto-hub (2x2) next to map shop
-  const protoHubId = tryPlace("service_hub", MAP_SHOP_POS.x + 3, MAP_SHOP_POS.y, 2, true);
+  const protoHubId = tryPlace(
+    "service_hub",
+    MAP_SHOP_POS.x + 3,
+    MAP_SHOP_POS.y,
+    2,
+    true,
+  );
 
   // Place fixed 2\u00d72 resource deposits at predetermined positions
   for (const dp of DEPOSIT_POSITIONS) {
@@ -146,7 +165,12 @@ export function createInitialState(mode: GameMode): GameState {
     }
   }
 
-  function placeDirectedForDebug(type: AssetType, x: number, y: number, direction: Direction) {
+  function placeDirectedForDebug(
+    type: AssetType,
+    x: number,
+    y: number,
+    direction: Direction,
+  ) {
     clearAreaForDebug(x, y, 1);
     const placedId = tryPlace(type, x, y, 1);
     if (!placedId) return null;
@@ -158,7 +182,8 @@ export function createInitialState(mode: GameMode): GameState {
     // Deterministisches Debug-Setup:
     // Auto-Miner (Eisen) -> 3 Förderbänder -> Auto Smelter -> 3 Förderbänder -> Lagerhaus,
     // plus 2 Generatoren + Stromknoten für stabile Vollversorgung.
-    const ironDeposit = Object.values(assets).find((a) => a.type === "iron_deposit") ?? null;
+    const ironDeposit =
+      Object.values(assets).find((a) => a.type === "iron_deposit") ?? null;
     if (ironDeposit) {
       const {
         minerPos,
@@ -181,7 +206,8 @@ export function createInitialState(mode: GameMode): GameState {
       clearAreaForDebug(generatorA.x, generatorA.y, 2);
       clearAreaForDebug(generatorB.x, generatorB.y, 2);
       for (const p of polePositions) clearAreaForDebug(p.x, p.y, 1);
-      for (const belt of [...inputBelts, ...outputBelts]) clearAreaForDebug(belt.x, belt.y, 1);
+      for (const belt of [...inputBelts, ...outputBelts])
+        clearAreaForDebug(belt.x, belt.y, 1);
 
       for (const g of [generatorA, generatorB]) {
         for (let dy = 0; dy < 2; dy++) {
@@ -223,11 +249,25 @@ export function createInitialState(mode: GameMode): GameState {
       }
 
       for (const belt of [...inputBelts, ...outputBelts]) {
-        const convId = placeDirectedForDebug("conveyor", belt.x, belt.y, belt.dir);
+        const convId = placeDirectedForDebug(
+          "conveyor",
+          belt.x,
+          belt.y,
+          belt.dir,
+        );
         if (convId) conveyors[convId] = { queue: [] };
       }
 
-      const smelterPlaced = placeAsset(assets, cellMap, "auto_smelter", autoSmelterPos.x, autoSmelterPos.y, 2, 2, 1);
+      const smelterPlaced = placeAsset(
+        assets,
+        cellMap,
+        "auto_smelter",
+        autoSmelterPos.x,
+        autoSmelterPos.y,
+        2,
+        2,
+        1,
+      );
       if (smelterPlaced) {
         Object.assign(assets, smelterPlaced.assets);
         assets[smelterPlaced.id] = {
@@ -253,15 +293,30 @@ export function createInitialState(mode: GameMode): GameState {
         const inputNeighborId = cellMap[cellKey(io.input.x, io.input.y)];
         const outputNeighborId = cellMap[cellKey(io.output.x, io.output.y)];
         const inputNeighbor = inputNeighborId ? assets[inputNeighborId] : null;
-        const outputNeighbor = outputNeighborId ? assets[outputNeighborId] : null;
+        const outputNeighbor = outputNeighborId
+          ? assets[outputNeighborId]
+          : null;
         const beltFound =
-          (inputNeighbor?.type === "conveyor" || inputNeighbor?.type === "conveyor_corner") &&
-          (outputNeighbor?.type === "conveyor" || outputNeighbor?.type === "conveyor_corner");
+          (inputNeighbor?.type === "conveyor" ||
+            inputNeighbor?.type === "conveyor_corner") &&
+          (outputNeighbor?.type === "conveyor" ||
+            outputNeighbor?.type === "conveyor_corner");
 
-        console.log("[DebugSetup] Auto-Miner:", minerId ? assets[minerId] : null);
+        console.log(
+          "[DebugSetup] Auto-Miner:",
+          minerId ? assets[minerId] : null,
+        );
         console.log("[DebugSetup] Auto-Smelter:", assets[smelterPlaced.id]);
-        console.log("[DebugSetup] Lagerhaus:", Object.values(assets).find((a) => a.type === "warehouse"));
-        console.log("[DebugSetup] Generator A:", generatorA, "Generator B:", generatorB);
+        console.log(
+          "[DebugSetup] Lagerhaus:",
+          Object.values(assets).find((a) => a.type === "warehouse"),
+        );
+        console.log(
+          "[DebugSetup] Generator A:",
+          generatorA,
+          "Generator B:",
+          generatorB,
+        );
         console.log("[DebugSetup] Smelter Input-Tile:", io.input);
         console.log("[DebugSetup] Smelter Output-Tile:", io.output);
         console.log("[DebugSetup] Förderbänder korrekt erkannt:", beltFound, {
@@ -271,10 +326,11 @@ export function createInitialState(mode: GameMode): GameState {
         console.log("[DebugSetup] Miner -> Input-Band verbunden:", {
           minerOutputTile: { x: minerPos.x - 1, y: minerPos.y },
           inputTile: io.input,
-          connected: minerPos.x - 1 === inputBelts[0].x && minerPos.y === inputBelts[0].y,
+          connected:
+            minerPos.x - 1 === inputBelts[0].x &&
+            minerPos.y === inputBelts[0].y,
         });
       }
-
     }
   }
 
@@ -304,10 +360,20 @@ export function createInitialState(mode: GameMode): GameState {
 
   const hotbar = createInitialHotbar();
   // No pre-filled debug hotbar – tools come from Debug Panel → warehouse → hotbar.
-  const warehouseCount = Object.values(assets).filter((a) => a.type === "warehouse").length;
-  const powerPoleCount = Object.values(assets).filter((a) => a.type === "power_pole").length;
-  const hasGenerator = Object.values(assets).some((a) => a.type === "generator");
-  const connectedAssetIds = computeConnectedAssetIds({ assets, cellMap, constructionSites: {} });
+  const warehouseCount = Object.values(assets).filter(
+    (a) => a.type === "warehouse",
+  ).length;
+  const powerPoleCount = Object.values(assets).filter(
+    (a) => a.type === "power_pole",
+  ).length;
+  const hasGenerator = Object.values(assets).some(
+    (a) => a.type === "generator",
+  );
+  const connectedAssetIds = computeConnectedAssetIds({
+    assets,
+    cellMap,
+    constructionSites: {},
+  });
   const anyGeneratorRunning = Object.values(generators).some((g) => g.running);
   const poweredMachineIds = anyGeneratorRunning
     ? connectedAssetIds.filter((id) => {
@@ -332,7 +398,17 @@ export function createInitialState(mode: GameMode): GameState {
     selectedPowerPoleId,
     hotbarSlots: hotbar,
     activeSlot: 0,
-    smithy: { fuel: 0, iron: 0, copper: 0, selectedRecipe: "iron", processing: false, progress: 0, outputIngots: 0, outputCopperIngots: 0, buildingId: null },
+    smithy: {
+      fuel: 0,
+      iron: 0,
+      copper: 0,
+      selectedRecipe: "iron",
+      processing: false,
+      progress: 0,
+      outputIngots: 0,
+      outputCopperIngots: 0,
+      buildingId: null,
+    },
     generators,
     battery: { stored: 0, capacity: BATTERY_CAPACITY },
     connectedAssetIds,
@@ -354,7 +430,12 @@ export function createInitialState(mode: GameMode): GameState {
     selectedAutoAssemblerId: null,
     selectedGeneratorId: null,
     selectedServiceHubId: null,
-    manualAssembler: { processing: false, recipe: null, progress: 0, buildingId: null },
+    manualAssembler: {
+      processing: false,
+      recipe: null,
+      progress: 0,
+      buildingId: null,
+    },
     machinePowerRatio: {},
     energyDebugOverlay: false,
     autoDeliveryLog: [],
@@ -378,7 +459,14 @@ export function createInitialState(mode: GameMode): GameState {
     },
     drones: {} as Record<string, StarterDroneState>,
     serviceHubs: protoHubId
-      ? { [protoHubId]: { inventory: createEmptyHubInventory(), targetStock: createDefaultProtoHubTargetStock(), tier: 1 as HubTier, droneIds: ["starter"] } }
+      ? {
+          [protoHubId]: {
+            inventory: createEmptyHubInventory(),
+            targetStock: createDefaultProtoHubTargetStock(),
+            tier: 1 as HubTier,
+            droneIds: ["starter"],
+          },
+        }
       : {},
     constructionSites: {},
     network: createEmptyNetworkSlice(),

@@ -14,7 +14,10 @@ import {
   decideConveyorTargetSelection,
   type DecideConveyorTargetSelectionInput,
 } from "../conveyor/conveyor-routing";
-import { resetSplitterRouteState, type SplitterRouteState } from "../slices/splitter-route-state";
+import {
+  resetSplitterRouteState,
+  type SplitterRouteState,
+} from "../slices/splitter-route-state";
 import type { SplitterFilterState } from "../slices/splitter-filter-state";
 import { isValidWarehouseInput } from "../warehouse-input";
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
@@ -62,7 +65,9 @@ function makeRoundRobinInput(
     currentItem?: ConveyorItem;
     splitterFilterState?: SplitterFilterState;
   } = {},
-): DecideConveyorTargetSelectionInput<ReturnType<typeof resolveBuildingSource>> {
+): DecideConveyorTargetSelectionInput<
+  ReturnType<typeof resolveBuildingSource>
+> {
   const currentItem = options.currentItem ?? "iron";
   const splitterAsset = makeSplitterAsset("splitter", 2, 2, "east");
   const leftOut = makeConveyorAsset("leftOut", 2, 1, "north");
@@ -149,7 +154,9 @@ describe("conveyor_splitter V1", () => {
   });
 
   test("routes to right output when left arm is full", () => {
-    const fullLeft = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ConveyorItem[];
+    const fullLeft = Array(CONVEYOR_TILE_CAPACITY).fill(
+      "stone",
+    ) as ConveyorItem[];
     const state = makeState({
       assets: {
         splitter: makeSplitterAsset("splitter", 2, 2, "east"),
@@ -309,8 +316,12 @@ describe("conveyor_splitter V1", () => {
   });
 
   test("Splitter-Queue voll → Vorgänger-Belt wird blockiert, kein Item-Verlust", () => {
-    const fullSplitter = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ConveyorItem[];
-    const fullOut = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ConveyorItem[];
+    const fullSplitter = Array(CONVEYOR_TILE_CAPACITY).fill(
+      "stone",
+    ) as ConveyorItem[];
+    const fullOut = Array(CONVEYOR_TILE_CAPACITY).fill(
+      "stone",
+    ) as ConveyorItem[];
     const state = makeState({
       assets: {
         input: makeConveyorAsset("input", 1, 2, "east"),
@@ -398,7 +409,11 @@ describe("conveyor_splitter V1", () => {
 
   test("Round-Robin — beide Outputs voll → lastSide unverändert nach dem Tick", () => {
     const routeState: SplitterRouteState = { splitter: { lastSide: "left" } };
-    const input = makeRoundRobinInput(routeState, CONVEYOR_TILE_CAPACITY, CONVEYOR_TILE_CAPACITY);
+    const input = makeRoundRobinInput(
+      routeState,
+      CONVEYOR_TILE_CAPACITY,
+      CONVEYOR_TILE_CAPACITY,
+    );
     const decision = decideConveyorTargetSelection(input);
     expect(decision.kind).toBe("no_target");
     expect(routeState["splitter"]?.lastSide).toBe("left");

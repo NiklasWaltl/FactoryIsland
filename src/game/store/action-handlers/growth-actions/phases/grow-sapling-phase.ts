@@ -12,7 +12,14 @@ export function runGrowSaplingPhase(ctx: GrowSaplingContext): GameState {
   const asset = state.assets[action.assetId];
   if (!asset || asset.type !== "sapling") return state;
   const removed = removeAsset(state, action.assetId);
-  const placed = placeAsset(removed.assets, removed.cellMap, "tree", asset.x, asset.y, 1);
+  const placed = placeAsset(
+    removed.assets,
+    removed.cellMap,
+    "tree",
+    asset.x,
+    asset.y,
+    1,
+  );
   if (!placed) return state;
   return {
     ...state,

@@ -13,17 +13,11 @@ import {
 import type { GameState } from "../types";
 
 export function runEnergyNetTick(state: GameState): GameState {
-  const {
-    prioritizedConsumers,
-    batteryConnected,
-    initialAvailableEnergy,
-  } = buildEnergyTickPhase1Snapshot(state);
+  const { prioritizedConsumers, batteryConnected, initialAvailableEnergy } =
+    buildEnergyTickPhase1Snapshot(state);
 
-  const {
-    remainingEnergy,
-    poweredMachineIds,
-    machinePowerRatio,
-  } = allocateEnergyByPriority(initialAvailableEnergy, prioritizedConsumers);
+  const { remainingEnergy, poweredMachineIds, machinePowerRatio } =
+    allocateEnergyByPriority(initialAvailableEnergy, prioritizedConsumers);
 
   const newBatteryStored = batteryConnected
     ? Math.min(state.battery.capacity, Math.max(0, remainingEnergy))

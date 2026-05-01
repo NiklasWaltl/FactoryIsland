@@ -6,7 +6,10 @@ export function getWarehouseCapacity(mode: GameMode): number {
   return mode === "debug" ? Infinity : WAREHOUSE_CAPACITY;
 }
 
-export function getCapacityPerResource(state: { mode: string; warehousesPlaced: number }): number {
+export function getCapacityPerResource(state: {
+  mode: string;
+  warehousesPlaced: number;
+}): number {
   if (state.mode === "debug") return Infinity;
   return (state.warehousesPlaced + 1) * WAREHOUSE_CAPACITY;
 }

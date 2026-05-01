@@ -59,8 +59,15 @@ import { handleDroneTickAction } from "./action-handlers/drone-tick-actions";
 import { handleDroneAssignmentAction } from "./action-handlers/drone-assignment";
 import { handleLogisticsTickAction } from "./action-handlers/logistics-tick";
 
-export function dispatchAction(state: GameState, action: GameAction): GameState {
-  const craftingQueueResult = handleCraftingQueueAction(state, action, CRAFTING_QUEUE_ACTION_DEPS);
+export function dispatchAction(
+  state: GameState,
+  action: GameAction,
+): GameState {
+  const craftingQueueResult = handleCraftingQueueAction(
+    state,
+    action,
+    CRAFTING_QUEUE_ACTION_DEPS,
+  );
   if (craftingQueueResult !== null) return craftingQueueResult;
   const zoneResult = handleZoneAction(state, action);
   if (zoneResult !== null) return zoneResult;
@@ -78,11 +85,7 @@ export function dispatchAction(state: GameState, action: GameAction): GameState 
     BUILDING_SITE_ACTION_DEPS,
   );
   if (buildingSiteResult !== null) return buildingSiteResult;
-  const machineResult = handleMachineAction(
-    state,
-    action,
-    MACHINE_ACTION_DEPS,
-  );
+  const machineResult = handleMachineAction(state, action, MACHINE_ACTION_DEPS);
   if (machineResult !== null) return machineResult;
   const warehouseHotbarResult = handleWarehouseHotbarAction(
     state,
@@ -102,11 +105,7 @@ export function dispatchAction(state: GameState, action: GameAction): GameState 
     FLOOR_PLACEMENT_ACTION_DEPS,
   );
   if (floorPlacementResult !== null) return floorPlacementResult;
-  const shopResult = handleShopAction(
-    state,
-    action,
-    SHOP_ACTION_DEPS,
-  );
+  const shopResult = handleShopAction(state, action, SHOP_ACTION_DEPS);
   if (shopResult !== null) return shopResult;
   const machineConfigResult = handleMachineConfigAction(state, action);
   if (machineConfigResult !== null) return machineConfigResult;

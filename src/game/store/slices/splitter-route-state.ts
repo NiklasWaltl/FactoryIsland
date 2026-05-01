@@ -8,8 +8,14 @@ export function getSplitterRouteState(): SplitterRouteState {
   return _splitterRouteState;
 }
 
-export function setSplitterLastSide(splitterId: string, side: "left" | "right"): void {
-  _splitterRouteState = { ..._splitterRouteState, [splitterId]: { lastSide: side } };
+export function setSplitterLastSide(
+  splitterId: string,
+  side: "left" | "right",
+): void {
+  _splitterRouteState = {
+    ..._splitterRouteState,
+    [splitterId]: { lastSide: side },
+  };
 }
 
 export function loadSplitterRouteState(state: SplitterRouteState): void {

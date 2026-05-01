@@ -156,7 +156,10 @@ export function evaluateKeepStockTarget(
     return { kind: "skip", code: "underConstruction", targetAmount };
   }
 
-  if (countOpenAutomationCraftingJobs(jobsSnapshot) >= deps.KEEP_STOCK_OPEN_JOB_CAP) {
+  if (
+    countOpenAutomationCraftingJobs(jobsSnapshot) >=
+    deps.KEEP_STOCK_OPEN_JOB_CAP
+  ) {
     return { kind: "skip", code: "capReached", targetAmount };
   }
 
@@ -209,7 +212,9 @@ export function evaluateKeepStockTarget(
   }
 
   const missingOutput = targetAmount - projectedAmount;
-  const craftsNeeded = Math.ceil(missingOutput / Math.max(1, recipe.outputAmount));
+  const craftsNeeded = Math.ceil(
+    missingOutput / Math.max(1, recipe.outputAmount),
+  );
   if (craftsNeeded <= 0) {
     return { kind: "satisfied", ctx };
   }
@@ -234,7 +239,8 @@ export function listConfiguredKeepStockTargets(
     }
   }
   out.sort((a, b) => {
-    if (a.workbenchId === b.workbenchId) return a.recipeId.localeCompare(b.recipeId);
+    if (a.workbenchId === b.workbenchId)
+      return a.recipeId.localeCompare(b.recipeId);
     return a.workbenchId.localeCompare(b.workbenchId);
   });
   return out;

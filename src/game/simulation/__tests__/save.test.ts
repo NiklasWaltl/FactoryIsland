@@ -55,7 +55,13 @@ describe("serializeState", () => {
 
   it("persists keep-in-stock targets", () => {
     const state = createInitialState("release");
-    state.assets["wb-save"] = { id: "wb-save", type: "workbench", x: 1, y: 1, size: 1 };
+    state.assets["wb-save"] = {
+      id: "wb-save",
+      type: "workbench",
+      x: 1,
+      y: 1,
+      size: 1,
+    };
     state.keepStockByWorkbench = {
       "wb-save": {
         wood_pickaxe: { enabled: true, amount: 3 },
@@ -88,7 +94,9 @@ describe("serializeState", () => {
     const state = createInitialState("release");
     state.connectedAssetIds = ["a", "b"];
     state.poweredMachineIds = ["x"];
-    state.notifications = [{ id: "n1", message: "test", type: "info", timestamp: 0 } as any];
+    state.notifications = [
+      { id: "n1", message: "test", type: "info", timestamp: 0 } as any,
+    ];
     state.openPanel = "workbench";
     const save = serializeState(state);
     // These should not exist on the save type
@@ -126,7 +134,13 @@ describe("deserializeState", () => {
 
   it("restores keep-stock targets and drops stale workbench entries", () => {
     const state = createInitialState("release");
-    state.assets["wb-valid"] = { id: "wb-valid", type: "workbench", x: 5, y: 5, size: 1 };
+    state.assets["wb-valid"] = {
+      id: "wb-valid",
+      type: "workbench",
+      x: 5,
+      y: 5,
+      size: 1,
+    };
     state.keepStockByWorkbench = {
       "wb-valid": {
         wood_pickaxe: { enabled: true, amount: 2 },
@@ -199,7 +213,12 @@ describe("migrateSave – v0 → v1", () => {
     const legacySave = {
       mode: "release",
       autoSmelters: {
-        "sm-1": { selectedRecipe: "copper", inputBuffer: [], pendingOutput: [], status: "IDLE" },
+        "sm-1": {
+          selectedRecipe: "copper",
+          inputBuffer: [],
+          pendingOutput: [],
+          status: "IDLE",
+        },
         "sm-2": { selectedRecipe: "banana", inputBuffer: [] },
       },
     };
@@ -286,7 +305,8 @@ describe("migrateSave – missing fields get defaults", () => {
 
   it("migrates v15 saves by seeding empty automation policies", () => {
     const latest = serializeState(createInitialState("release"));
-    const { recipeAutomationPolicies: _dropPolicies, ...legacyShape } = latest as any;
+    const { recipeAutomationPolicies: _dropPolicies, ...legacyShape } =
+      latest as any;
     const v15 = { ...legacyShape, version: 15 };
 
     const result = migrateSave(v15);
@@ -297,7 +317,8 @@ describe("migrateSave – missing fields get defaults", () => {
 
   it("migrates v16 saves by seeding empty underground belt peer map", () => {
     const latest = serializeState(createInitialState("release"));
-    const { conveyorUndergroundPeers: _dropPeers, ...legacyShape } = latest as any;
+    const { conveyorUndergroundPeers: _dropPeers, ...legacyShape } =
+      latest as any;
     const v16 = { ...legacyShape, version: 16 };
 
     const result = migrateSave(v16);
@@ -308,7 +329,11 @@ describe("migrateSave – missing fields get defaults", () => {
 
   it("migrates v17 saves by seeding empty auto-assemblers map", () => {
     const latest = serializeState(createInitialState("release"));
-    const { autoAssemblers: _dropAsm, version: _ignoreVersion, ...legacyShape } = latest as any;
+    const {
+      autoAssemblers: _dropAsm,
+      version: _ignoreVersion,
+      ...legacyShape
+    } = latest as any;
     const v17 = { ...legacyShape, version: 17 };
 
     const result = migrateSave(v17);
@@ -425,8 +450,20 @@ describe("round-trip", () => {
     const warehouseId = "wh-rt";
 
     let original = createInitialState("release");
-    const workbench: PlacedAsset = { id: workbenchId, type: "workbench", x: 8, y: 8, size: 1 };
-    const warehouse: PlacedAsset = { id: warehouseId, type: "warehouse", x: 6, y: 6, size: 2 };
+    const workbench: PlacedAsset = {
+      id: workbenchId,
+      type: "workbench",
+      x: 8,
+      y: 8,
+      size: 1,
+    };
+    const warehouse: PlacedAsset = {
+      id: warehouseId,
+      type: "warehouse",
+      x: 6,
+      y: 6,
+      size: 2,
+    };
     const warehouseInventory: Inventory = { ...original.inventory, wood: 5 };
 
     original = {
@@ -466,12 +503,15 @@ describe("round-trip", () => {
     const parsed = JSON.parse(json);
     const loaded = loadAndHydrate(parsed, "release");
 
-    const loadedJob = loaded.crafting.jobs.find((job) => job.id === originalJob.id);
+    const loadedJob = loaded.crafting.jobs.find(
+      (job) => job.id === originalJob.id,
+    );
     expect(loadedJob).toBeDefined();
     expect(loadedJob?.status).toBe("reserved");
 
     const expectedWood =
-      loadedJob?.ingredients.find((ingredient) => ingredient.itemId === "wood")?.count ?? 0;
+      loadedJob?.ingredients.find((ingredient) => ingredient.itemId === "wood")
+        ?.count ?? 0;
     const ownerReservations = loaded.network.reservations.filter(
       (reservation) =>
         reservation.ownerKind === "crafting_job" &&

@@ -21,10 +21,14 @@ function cellKey(x: number, y: number): string {
 
 function directionOffset(dir: Direction): [number, number] {
   switch (dir) {
-    case "north": return [0, -1];
-    case "south": return [0, 1];
-    case "east": return [1, 0];
-    case "west": return [-1, 0];
+    case "north":
+      return [0, -1];
+    case "south":
+      return [0, 1];
+    case "east":
+      return [1, 0];
+    case "west":
+      return [-1, 0];
   }
 }
 
@@ -32,7 +36,10 @@ function directionOffset(dir: Direction): [number, number] {
  * Derive zone/conflict status for a conveyor belt.
  * Pure function - safe to call from any UI component.
  */
-export function getConveyorZoneStatus(state: GameState, conveyorId: string): ConveyorZoneStatus {
+export function getConveyorZoneStatus(
+  state: GameState,
+  conveyorId: string,
+): ConveyorZoneStatus {
   const convAsset = state.assets[conveyorId];
   const zone = state.buildingZoneIds[conveyorId] ?? null;
   const zoneName = zone ? (state.productionZones[zone]?.name ?? zone) : null;
@@ -45,12 +52,13 @@ export function getConveyorZoneStatus(state: GameState, conveyorId: string): Con
     const dir = convAsset.direction ?? "east";
     const nextId =
       convAsset.type === "conveyor_underground_in"
-        ? state.conveyorUndergroundPeers[conveyorId] ?? null
+        ? (state.conveyorUndergroundPeers[conveyorId] ?? null)
         : (() => {
             const [ox, oy] = directionOffset(dir);
             const nextX = convAsset.x + ox;
             const nextY = convAsset.y + oy;
-            if (nextX < 0 || nextX >= GRID_W || nextY < 0 || nextY >= GRID_H) return null;
+            if (nextX < 0 || nextX >= GRID_W || nextY < 0 || nextY >= GRID_H)
+              return null;
             return state.cellMap[cellKey(nextX, nextY)] ?? null;
           })();
     if (nextId) {
@@ -58,7 +66,9 @@ export function getConveyorZoneStatus(state: GameState, conveyorId: string): Con
       if (!areZonesTransportCompatible(zone, nextTileZone)) {
         hasConflict = true;
         const thisName = zoneName ?? zone ?? "Global";
-        const nextName = nextTileZone ? (state.productionZones[nextTileZone]?.name ?? nextTileZone) : "Global";
+        const nextName = nextTileZone
+          ? (state.productionZones[nextTileZone]?.name ?? nextTileZone)
+          : "Global";
         conflictReason = `Ziel-Zone mismatch: ${thisName} → ${nextName}`;
       }
     }

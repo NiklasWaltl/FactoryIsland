@@ -1,4 +1,10 @@
-import React, { useReducer, useEffect, useState, useCallback, useRef } from "react";
+import React, {
+  useReducer,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import {
   gameReducer,
   gameReducerWithInvariants,
@@ -68,11 +74,30 @@ class GameErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, color: "#fff", background: "#1a1a2e", textAlign: "center", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            padding: 40,
+            color: "#fff",
+            background: "#1a1a2e",
+            textAlign: "center",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <h2>Etwas ist schiefgelaufen</h2>
-          <p style={{ color: "#aaa", maxWidth: 500 }}>{this.state.error?.message}</p>
+          <p style={{ color: "#aaa", maxWidth: 500 }}>
+            {this.state.error?.message}
+          </p>
           <button
-            style={{ marginTop: 16, padding: "8px 24px", fontSize: 16, cursor: "pointer" }}
+            style={{
+              marginTop: 16,
+              padding: "8px 24px",
+              fontSize: 16,
+              cursor: "pointer",
+            }}
             onClick={() => {
               this.setState({ hasError: false, error: null });
               this.props.onReset?.();
@@ -102,9 +127,12 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
         const saved = localStorage.getItem(SAVE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && parsed.mode === m) return normalizeLoadedState(parsed, m);
+          if (parsed && parsed.mode === m)
+            return normalizeLoadedState(parsed, m);
         }
-      } catch { /* corrupt save, ignore */ }
+      } catch {
+        /* corrupt save, ignore */
+      }
       return createInitialState(m);
     },
   );
@@ -120,11 +148,21 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   // Periodic localStorage save (every 10s + on unload)
   useEffect(() => {
     const save = () => {
-      try { localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState(stateRef.current))); } catch { /* quota */ }
+      try {
+        localStorage.setItem(
+          SAVE_KEY,
+          JSON.stringify(serializeState(stateRef.current)),
+        );
+      } catch {
+        /* quota */
+      }
     };
     const id = setInterval(save, 10_000);
     window.addEventListener("beforeunload", save);
-    return () => { clearInterval(id); window.removeEventListener("beforeunload", save); };
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("beforeunload", save);
+    };
   }, []);
 
   // HMR status tracking
@@ -163,7 +201,11 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Ignore when typing in input fields
-      if ((e.target as HTMLElement)?.tagName === "INPUT" || (e.target as HTMLElement)?.tagName === "TEXTAREA") return;
+      if (
+        (e.target as HTMLElement)?.tagName === "INPUT" ||
+        (e.target as HTMLElement)?.tagName === "TEXTAREA"
+      )
+        return;
       const num = parseInt(e.key, 10);
       if (num >= 1 && num <= 9) {
         const idx = num - 1;
@@ -248,9 +290,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       </button>
 
       {/* Build Menu overlay */}
-      {state.buildMode && (
-        <BuildMenu state={state} dispatch={dispatch} />
-      )}
+      {state.buildMode && <BuildMenu state={state} dispatch={dispatch} />}
 
       {IS_DEV && state.mode === "debug" && (
         <>
@@ -280,7 +320,13 @@ export const FactoryGame: React.FC = () => {
 
   return (
     <div className="fi-root">
-      <GameErrorBoundary onReset={() => { try { localStorage.removeItem(SAVE_KEY); } catch {} }}>
+      <GameErrorBoundary
+        onReset={() => {
+          try {
+            localStorage.removeItem(SAVE_KEY);
+          } catch {}
+        }}
+      >
         <GameInner key={mode} mode={mode} />
       </GameErrorBoundary>
     </div>

@@ -36,11 +36,28 @@ interface WorkbenchFinalizerDebugLog {
 }
 
 export interface FinalizerDeps {
-  applyDroneUpdate: (state: GameState, droneId: string, updated: StarterDroneState) => GameState;
-  getCraftingJobById: (crafting: Pick<GameState, "crafting">["crafting"], jobId: string | null) => CraftingJob | null;
-  addWorkbenchInputToJob: (job: CraftingJob, stack: CraftingJob["ingredients"][number]) => CraftingJob;
-  addResources: (inv: Inventory, items: Partial<Record<keyof Inventory, number>>) => Inventory;
-  addNotification: (notifications: GameNotification[], resource: string, amount: number) => GameNotification[];
+  applyDroneUpdate: (
+    state: GameState,
+    droneId: string,
+    updated: StarterDroneState,
+  ) => GameState;
+  getCraftingJobById: (
+    crafting: Pick<GameState, "crafting">["crafting"],
+    jobId: string | null,
+  ) => CraftingJob | null;
+  addWorkbenchInputToJob: (
+    job: CraftingJob,
+    stack: CraftingJob["ingredients"][number],
+  ) => CraftingJob;
+  addResources: (
+    inv: Inventory,
+    items: Partial<Record<keyof Inventory, number>>,
+  ) => Inventory;
+  addNotification: (
+    notifications: GameNotification[],
+    resource: string,
+    amount: number,
+  ) => GameNotification[];
   routeOutput: typeof RouteOutputFn;
   debugLog: WorkbenchFinalizerDebugLog;
 }
@@ -68,9 +85,10 @@ export function finalizeWorkbenchDelivery(
   });
 
   if (import.meta.env.DEV) {
-    const destinationLabel = routed.destination.kind === "global"
-      ? "global"
-      : `${routed.destination.kind}:${routed.destination.id}`;
+    const destinationLabel =
+      routed.destination.kind === "global"
+        ? "global"
+        : `${routed.destination.kind}:${routed.destination.id}`;
     deps.debugLog.general(
       `Job ${job.id} delivered: ${job.output.count}x ${job.output.itemId} -> ${destinationLabel}`,
     );
@@ -79,14 +97,23 @@ export function finalizeWorkbenchDelivery(
   return deps.applyDroneUpdate(
     {
       ...state,
-      warehouseInventories: routed.warehouseInventories as Record<string, Inventory>,
+      warehouseInventories: routed.warehouseInventories as Record<
+        string,
+        Inventory
+      >,
       inventory: routed.globalInventory,
       serviceHubs: routed.serviceHubs as Record<string, ServiceHubEntry>,
       crafting: {
         ...state.crafting,
-        jobs: state.crafting.jobs.map((entry) => (entry.id === job.id ? { ...entry, status: "done" } : entry)),
+        jobs: state.crafting.jobs.map((entry) =>
+          entry.id === job.id ? { ...entry, status: "done" } : entry,
+        ),
       },
-      notifications: deps.addNotification(state.notifications, job.output.itemId, job.output.count),
+      notifications: deps.addNotification(
+        state.notifications,
+        job.output.itemId,
+        job.output.count,
+      ),
     },
     droneId,
     idleDrone,
@@ -102,7 +129,9 @@ function routeWorkbenchInputCargoBack(
   if (!job) {
     return {
       ...state,
-      inventory: deps.addResources(state.inventory, { [cargo.itemType]: cargo.amount }),
+      inventory: deps.addResources(state.inventory, {
+        [cargo.itemType]: cargo.amount,
+      }),
     };
   }
 
@@ -118,7 +147,10 @@ function routeWorkbenchInputCargoBack(
 
   return {
     ...state,
-    warehouseInventories: routed.warehouseInventories as Record<string, Inventory>,
+    warehouseInventories: routed.warehouseInventories as Record<
+      string,
+      Inventory
+    >,
     inventory: routed.globalInventory,
     serviceHubs: routed.serviceHubs as Record<string, ServiceHubEntry>,
   };
@@ -155,7 +187,10 @@ export function finalizeWorkbenchInputDelivery(
     ...state.crafting,
     jobs: state.crafting.jobs.map((entry) =>
       entry.id === job.id
-        ? deps.addWorkbenchInputToJob(entry, { itemId: cargo.itemType, count: cargo.amount })
+        ? deps.addWorkbenchInputToJob(entry, {
+            itemId: cargo.itemType,
+            count: cargo.amount,
+          })
         : entry,
     ),
   };

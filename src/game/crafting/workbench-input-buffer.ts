@@ -4,7 +4,12 @@ import type { CraftingJob } from "./types";
 export function isCollectableCraftingItem(
   itemId: CraftingJob["ingredients"][number]["itemId"],
 ): itemId is CollectableItemType {
-  return itemId === "wood" || itemId === "stone" || itemId === "iron" || itemId === "copper";
+  return (
+    itemId === "wood" ||
+    itemId === "stone" ||
+    itemId === "iron" ||
+    itemId === "copper"
+  );
 }
 
 export function addWorkbenchInputToJob(

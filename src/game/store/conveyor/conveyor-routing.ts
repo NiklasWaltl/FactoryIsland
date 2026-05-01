@@ -42,13 +42,8 @@ export const decideConveyorTickEligibility = (input: {
   poweredSet: ReadonlySet<string>;
   movedThisTick: ReadonlySet<string>;
 }): ConveyorTickEligibilityDecision => {
-  const {
-    conveyorId,
-    assets,
-    connectedAssetIds,
-    poweredSet,
-    movedThisTick,
-  } = input;
+  const { conveyorId, assets, connectedAssetIds, poweredSet, movedThisTick } =
+    input;
 
   if (movedThisTick.has(conveyorId)) return { kind: "blocked" };
 
@@ -107,7 +102,10 @@ export type ConveyorTargetDecision =
     }
   | {
       kind: "target";
-      targetType: Exclude<ConveyorTargetType, "smithy" | "next_conveyor" | "workbench">;
+      targetType: Exclude<
+        ConveyorTargetType,
+        "smithy" | "next_conveyor" | "workbench"
+      >;
       targetId: string;
     }
   | {
@@ -192,10 +190,12 @@ export function shouldDeferRightMergerInputToLeft(input: {
 
   const mergerAsset = assets[targetMergerId];
   if (!mergerAsset || mergerAsset.type !== "conveyor_merger") return false;
-  if (getConveyorMergerInputSide(conveyorAsset, mergerAsset) !== "right") return false;
+  if (getConveyorMergerInputSide(conveyorAsset, mergerAsset) !== "right")
+    return false;
 
   const leftInputCell = getConveyorMergerInputCell(mergerAsset, "left");
-  const leftInputId = cellMap[cellKey(leftInputCell.x, leftInputCell.y)] ?? null;
+  const leftInputId =
+    cellMap[cellKey(leftInputCell.x, leftInputCell.y)] ?? null;
   if (!leftInputId || leftInputId === convId) return false;
 
   const leftAsset = assets[leftInputId];
@@ -243,7 +243,10 @@ export interface DecideConveyorTargetSelectionInput<TSource = unknown> {
     entityDir: Direction,
     warehouse: PlacedAsset,
   ) => boolean;
-  resolveBuildingSource: (state: GameState, buildingId: string | null) => TSource;
+  resolveBuildingSource: (
+    state: GameState,
+    buildingId: string | null,
+  ) => TSource;
   getCraftingSourceInventory: (state: GameState, source: TSource) => Inventory;
   getSourceCapacity: (state: GameState, source: TSource) => number;
   getWarehouseCapacity: (mode: GameMode) => number;
@@ -263,7 +266,10 @@ export const decideConveyorTargetSelection = <TSource>(
   // Priority 1: conveyor stands directly on a warehouse input tile.
   for (const wAsset of Object.values(input.state.assets)) {
     if (wAsset.type !== "warehouse") continue;
-    if (input.convAsset.x === wAsset.x && input.convAsset.y === wAsset.y + assetHeight(wAsset)) {
+    if (
+      input.convAsset.x === wAsset.x &&
+      input.convAsset.y === wAsset.y + assetHeight(wAsset)
+    ) {
       const whZone = input.state.buildingZoneIds[wAsset.id] ?? null;
       const whInv = input.warehouseInventories[wAsset.id];
       const warehouseInputEligibility = classifyConveyorTargetEligibility([
@@ -299,7 +305,8 @@ export const decideConveyorTargetSelection = <TSource>(
   if (input.convAsset.type === "conveyor_splitter") {
     const splitterId = input.convId;
     const routeState = input.splitterRouteState ?? getSplitterRouteState();
-    const filterState = input.splitterFilterState ?? input.state.splitterFilterState;
+    const filterState =
+      input.splitterFilterState ?? input.state.splitterFilterState;
     const lastSide = routeState[splitterId]?.lastSide ?? "right";
     const orderedSides: ["left", "right"] | ["right", "left"] =
       lastSide === "left" ? ["right", "left"] : ["left", "right"];
@@ -309,16 +316,25 @@ export const decideConveyorTargetSelection = <TSource>(
       if (sideFilter !== null && sideFilter !== input.currentItem) continue;
 
       const arm = getConveyorSplitterOutputCell(input.convAsset, side);
-      if (arm.x < 0 || arm.x >= GRID_W || arm.y < 0 || arm.y >= GRID_H) continue;
+      if (arm.x < 0 || arm.x >= GRID_W || arm.y < 0 || arm.y >= GRID_H)
+        continue;
 
       const nextAssetId = input.state.cellMap[cellKey(arm.x, arm.y)] ?? null;
       const nextAsset = nextAssetId ? input.state.assets[nextAssetId] : null;
-      if (!nextAsset || !canAssetReceiveFromConveyorSplitterOutput(input.convAsset, nextAsset)) {
+      if (
+        !nextAsset ||
+        !canAssetReceiveFromConveyorSplitterOutput(input.convAsset, nextAsset)
+      ) {
         continue;
       }
 
-      const nextTileZone = nextAssetId ? (input.state.buildingZoneIds[nextAssetId] ?? null) : null;
-      const beltToNextZoneOk = areZonesTransportCompatible(convZone, nextTileZone);
+      const nextTileZone = nextAssetId
+        ? (input.state.buildingZoneIds[nextAssetId] ?? null)
+        : null;
+      const beltToNextZoneOk = areZonesTransportCompatible(
+        convZone,
+        nextTileZone,
+      );
       const nextConv = input.conveyors[nextAssetId!];
       const nextQueue = nextConv?.queue ?? [];
       const nextConveyorEligibility = classifyConveyorTargetEligibility([
@@ -411,14 +427,17 @@ export const decideConveyorTargetSelection = <TSource>(
 
   const nextBeltCompatible =
     nextAsset?.type === "conveyor_corner" ||
-    (nextAsset?.type === "conveyor" && (nextAsset.direction ?? "east") === dir) ||
+    (nextAsset?.type === "conveyor" &&
+      (nextAsset.direction ?? "east") === dir) ||
     (nextAsset?.type === "conveyor_underground_in" &&
       (nextAsset.direction ?? "east") === dir) ||
     (nextAsset?.type === "conveyor_merger" &&
       getConveyorMergerInputSide(input.convAsset, nextAsset) !== null) ||
     (nextAsset?.type === "conveyor_splitter" &&
       isValidConveyorSplitterInput(input.convAsset, nextAsset));
-  const nextTileZone = nextAssetId ? (input.state.buildingZoneIds[nextAssetId] ?? null) : null;
+  const nextTileZone = nextAssetId
+    ? (input.state.buildingZoneIds[nextAssetId] ?? null)
+    : null;
   const beltToNextZoneOk = areZonesTransportCompatible(convZone, nextTileZone);
 
   if (nextBeltCompatible) {
@@ -465,12 +484,25 @@ export const decideConveyorTargetSelection = <TSource>(
     nextAsset?.type === "conveyor_splitter" ||
     nextAsset?.type === "conveyor_underground_out"
   ) {
-    return { kind: "no_target", blockReason: "next_conveyor_direction_mismatch" };
+    return {
+      kind: "no_target",
+      blockReason: "next_conveyor_direction_mismatch",
+    };
   }
 
   if (nextAsset?.type === "warehouse") {
-    if (!input.isValidWarehouseInput(input.convAsset.x, input.convAsset.y, dir, nextAsset)) {
-      return { kind: "no_target", blockReason: "adjacent_warehouse_input_mismatch" };
+    if (
+      !input.isValidWarehouseInput(
+        input.convAsset.x,
+        input.convAsset.y,
+        dir,
+        nextAsset,
+      )
+    ) {
+      return {
+        kind: "no_target",
+        blockReason: "adjacent_warehouse_input_mismatch",
+      };
     }
     const adjWhZone = input.state.buildingZoneIds[nextAsset.id] ?? null;
     const whInv = input.warehouseInventories[nextAsset.id];
@@ -540,7 +572,10 @@ export const decideConveyorTargetSelection = <TSource>(
       };
     }
     const wbSource = input.resolveBuildingSource(input.liveState, nextAsset.id);
-    const wbSourceInv = input.getCraftingSourceInventory(input.liveState, wbSource);
+    const wbSourceInv = input.getCraftingSourceInventory(
+      input.liveState,
+      wbSource,
+    );
     const wbCap = input.getSourceCapacity(input.liveState, wbSource);
     const workbenchCapacityEligibility = classifyConveyorTargetEligibility([
       {
@@ -566,7 +601,8 @@ export const decideConveyorTargetSelection = <TSource>(
 
   if (nextAsset?.type === "smithy") {
     const smithyZone = input.state.buildingZoneIds[nextAsset.id] ?? null;
-    const smithyItemSupported = input.currentItem === "iron" || input.currentItem === "copper";
+    const smithyItemSupported =
+      input.currentItem === "iron" || input.currentItem === "copper";
     const oreKey = input.currentItem === "iron" ? "iron" : "copper";
     const smithyEligibility = classifyConveyorTargetEligibility([
       {

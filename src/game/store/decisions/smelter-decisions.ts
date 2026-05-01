@@ -98,9 +98,7 @@ export interface DecideAutoSmelterStartProcessingEligibilityInput {
   requiredInputAmount: number;
 }
 
-export type AutoSmelterOutputTargetType =
-  | "output_conveyor"
-  | "source_fallback";
+export type AutoSmelterOutputTargetType = "output_conveyor" | "source_fallback";
 export type AutoSmelterOutputBlockReason =
   | "output_conveyor_full"
   | "source_fallback_full";
@@ -168,11 +166,17 @@ export const decideAutoSmelterInputBeltEligibility = (
     return { kind: "blocked", blockReason: "input_buffer_full" };
   }
 
-  if (input.inputX < 0 || input.inputX >= GRID_W || input.inputY < 0 || input.inputY >= GRID_H) {
+  if (
+    input.inputX < 0 ||
+    input.inputX >= GRID_W ||
+    input.inputY < 0 ||
+    input.inputY >= GRID_H
+  ) {
     return { kind: "blocked", blockReason: "input_tile_out_of_bounds" };
   }
 
-  const inAssetId = input.state.cellMap[cellKey(input.inputX, input.inputY)] ?? null;
+  const inAssetId =
+    input.state.cellMap[cellKey(input.inputX, input.inputY)] ?? null;
   const inAsset = inAssetId ? input.state.assets[inAssetId] : null;
   if (
     inAsset?.type !== "conveyor" &&
@@ -226,8 +230,14 @@ export const decideAutoSmelterOutputTarget = (
   const outputItem = pendingRecipe.outputItem as ConveyorItem;
   const outputAmount = pendingRecipe.outputAmount;
 
-  if (input.outputX >= 0 && input.outputX < GRID_W && input.outputY >= 0 && input.outputY < GRID_H) {
-    const outAssetId = input.state.cellMap[cellKey(input.outputX, input.outputY)] ?? null;
+  if (
+    input.outputX >= 0 &&
+    input.outputX < GRID_W &&
+    input.outputY >= 0 &&
+    input.outputY < GRID_H
+  ) {
+    const outAssetId =
+      input.state.cellMap[cellKey(input.outputX, input.outputY)] ?? null;
     const outAsset = outAssetId ? input.state.assets[outAssetId] : null;
     if (
       outAsset?.type === "conveyor" ||
@@ -254,7 +264,10 @@ export const decideAutoSmelterOutputTarget = (
     }
   }
 
-  if ((input.sourceInv[outputKey] as number) + outputAmount > input.sourceCapacity) {
+  if (
+    (input.sourceInv[outputKey] as number) + outputAmount >
+    input.sourceCapacity
+  ) {
     return {
       kind: "blocked",
       targetType: "source_fallback",

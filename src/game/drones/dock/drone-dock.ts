@@ -31,7 +31,12 @@ export function isDroneParkedAtHub(
   drone: StarterDroneState,
 ): boolean {
   const dock = getDroneHomeDock(drone, state);
-  return !!dock && drone.status === "idle" && drone.tileX === dock.x && drone.tileY === dock.y;
+  return (
+    !!dock &&
+    drone.status === "idle" &&
+    drone.tileX === dock.x &&
+    drone.tileY === dock.y
+  );
 }
 
 export function getParkedDrones(

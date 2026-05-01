@@ -23,10 +23,7 @@ import type {
   AutoAssemblerEntry,
 } from "./types/conveyor-types";
 
-export type {
-  RecipeAutomationPolicyEntry,
-  RecipeAutomationPolicyMap,
-};
+export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
 export type {
   DroneRole,
   DroneStatus,
@@ -82,7 +79,25 @@ export type AssetType =
   | "auto_assembler"
   | "service_hub";
 
-export type BuildingType = "workbench" | "warehouse" | "smithy" | "generator" | "cable" | "battery" | "power_pole" | "auto_miner" | "conveyor" | "conveyor_corner" | "conveyor_merger" | "conveyor_splitter" | "conveyor_underground_in" | "conveyor_underground_out" | "manual_assembler" | "auto_smelter" | "auto_assembler" | "service_hub";
+export type BuildingType =
+  | "workbench"
+  | "warehouse"
+  | "smithy"
+  | "generator"
+  | "cable"
+  | "battery"
+  | "power_pole"
+  | "auto_miner"
+  | "conveyor"
+  | "conveyor_corner"
+  | "conveyor_merger"
+  | "conveyor_splitter"
+  | "conveyor_underground_in"
+  | "conveyor_underground_out"
+  | "manual_assembler"
+  | "auto_smelter"
+  | "auto_assembler"
+  | "service_hub";
 
 /** Floor tiles that can be placed on the ground layer */
 export type FloorTileType = "stone_floor" | "grass_block";

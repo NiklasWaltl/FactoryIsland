@@ -1,4 +1,7 @@
-import { finalizeHubTier2Upgrade, createEmptyHubInventory } from "../../../buildings/service-hub/hub-upgrade-workflow";
+import {
+  finalizeHubTier2Upgrade,
+  createEmptyHubInventory,
+} from "../../../buildings/service-hub/hub-upgrade-workflow";
 import { createDefaultProtoHubTargetStock } from "../../../store/constants/hub/hub-target-stock";
 import { isHubUpgradeDeliverySatisfied } from "../../../buildings/service-hub/hub-upgrade-status";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
@@ -32,7 +35,8 @@ export function handleDepositingStatus(
   const { makeId, addNotification, debugLog } = deps;
 
   const rem = drone.ticksRemaining - 1;
-  if (rem > 0) return applyDroneUpdate(state, droneId, { ...drone, ticksRemaining: rem });
+  if (rem > 0)
+    return applyDroneUpdate(state, droneId, { ...drone, ticksRemaining: rem });
 
   const idleDrone: StarterDroneState = {
     ...drone,
@@ -60,7 +64,12 @@ export function handleDepositingStatus(
     );
   }
   if (depositingTaskRoute.kind === "workbench_output") {
-    return finalizeWorkbenchDelivery(state, droneId, drone.craftingJobId, idleDrone);
+    return finalizeWorkbenchDelivery(
+      state,
+      droneId,
+      drone.craftingJobId,
+      idleDrone,
+    );
   }
   if (depositingTaskRoute.kind === "no_cargo") {
     return applyDroneUpdate(state, droneId, {
@@ -80,15 +89,30 @@ export function handleDepositingStatus(
     const deliveryId = depositingTaskRoute.targetId;
     const targetAsset = state.assets[deliveryId];
     const cfg = targetAsset ? getBuildingInputConfig(targetAsset.type) : null;
-    if (targetAsset && cfg && cfg.resource === itemType && targetAsset.type === "generator") {
+    if (
+      targetAsset &&
+      cfg &&
+      cfg.resource === itemType &&
+      targetAsset.type === "generator"
+    ) {
       const gen = state.generators[deliveryId];
       if (gen) {
         const space = Math.max(0, cfg.capacity - gen.fuel);
         const applied = Math.min(amount, space);
         const leftover = amount - applied;
         const nextRequested = Math.max(0, (gen.requestedRefill ?? 0) - applied);
-        const newGenerators = { ...state.generators, [deliveryId]: { ...gen, fuel: gen.fuel + applied, requestedRefill: nextRequested } };
-        const newInv = leftover > 0 ? addResources(state.inventory, { [itemType]: leftover }) : state.inventory;
+        const newGenerators = {
+          ...state.generators,
+          [deliveryId]: {
+            ...gen,
+            fuel: gen.fuel + applied,
+            requestedRefill: nextRequested,
+          },
+        };
+        const newInv =
+          leftover > 0
+            ? addResources(state.inventory, { [itemType]: leftover })
+            : state.inventory;
         debugLog.inventory(
           `Drone deposited ${applied}× ${itemType} into generator ${deliveryId} (fuel ${gen.fuel} → ${gen.fuel + applied}/${cfg.capacity})` +
             (leftover > 0 ? ` (${leftover} overflow → global)` : ""),
@@ -101,9 +125,14 @@ export function handleDepositingStatus(
       }
     }
     // Building gone or no input slot - fall back to global pool
-    debugLog.inventory(`[Drone] building_supply target ${deliveryId} gone or invalid; depositing ${amount}× ${itemType} → global`);
+    debugLog.inventory(
+      `[Drone] building_supply target ${deliveryId} gone or invalid; depositing ${amount}× ${itemType} → global`,
+    );
     return applyDroneUpdate(
-      { ...state, inventory: addResources(state.inventory, { [itemType]: amount }) },
+      {
+        ...state,
+        inventory: addResources(state.inventory, { [itemType]: amount }),
+      },
       droneId,
       idleDrone,
     );
@@ -124,7 +153,9 @@ export function handleDepositingStatus(
         newRemaining[itemType] = newNeeded;
       }
       // Check if construction is complete
-      const isComplete = Object.values(newRemaining).every((value) => (value ?? 0) <= 0);
+      const isComplete = Object.values(newRemaining).every(
+        (value) => (value ?? 0) <= 0,
+      );
       const isHubUpgradeSite =
         site.buildingType === "service_hub" &&
         !!state.serviceHubs[deliveryId]?.pendingUpgrade;
@@ -134,11 +165,20 @@ export function handleDepositingStatus(
         newSites = rest;
         debugLog.building(`[Drone] Construction site ${deliveryId} completed`);
       } else {
-        newSites = { ...state.constructionSites, [deliveryId]: { ...site, remaining: newRemaining } };
+        newSites = {
+          ...state.constructionSites,
+          [deliveryId]: { ...site, remaining: newRemaining },
+        };
       }
       // Any leftover goes to global inventory
-      const newInv = leftover > 0 ? addResources(state.inventory, { [itemType]: leftover }) : state.inventory;
-      debugLog.inventory(`Drone deposited ${applied}× ${itemType} into construction site ${deliveryId}` + (leftover > 0 ? ` (${leftover} overflow → global)` : ""));
+      const newInv =
+        leftover > 0
+          ? addResources(state.inventory, { [itemType]: leftover })
+          : state.inventory;
+      debugLog.inventory(
+        `Drone deposited ${applied}× ${itemType} into construction site ${deliveryId}` +
+          (leftover > 0 ? ` (${leftover} overflow → global)` : ""),
+      );
       if (import.meta.env.DEV && isHubUpgradeSite) {
         const remainingAfter = newRemaining[itemType] ?? 0;
         debugLog.building(
@@ -152,7 +192,10 @@ export function handleDepositingStatus(
       );
       // Recompute energy grid when a construction finishes (cables/poles/generators may now conduct)
       if (isComplete) {
-        completionState = { ...completionState, connectedAssetIds: computeConnectedAssetIds(completionState) };
+        completionState = {
+          ...completionState,
+          connectedAssetIds: computeConnectedAssetIds(completionState),
+        };
         const completedAsset = completionState.assets[deliveryId];
         if (completedAsset?.type === "service_hub") {
           const hubEntry = completionState.serviceHubs[deliveryId];
@@ -175,7 +218,10 @@ export function handleDepositingStatus(
                 deductPendingFromHubInventory: false,
               },
             );
-          } else if (hubEntry && hubEntry.droneIds.length < getMaxDrones(hubEntry.tier)) {
+          } else if (
+            hubEntry &&
+            hubEntry.droneIds.length < getMaxDrones(hubEntry.tier)
+          ) {
             // New Proto-Hub construction: spawn its first drone after completion.
             const newDroneId = `drone-${makeId()}`;
             const dockSlot = hubEntry.droneIds.length;
@@ -198,30 +244,46 @@ export function handleDepositingStatus(
               drones: { ...completionState.drones, [newDroneId]: spawnedDrone },
               serviceHubs: {
                 ...completionState.serviceHubs,
-                [deliveryId]: { ...hubEntry, droneIds: [...hubEntry.droneIds, newDroneId] },
+                [deliveryId]: {
+                  ...hubEntry,
+                  droneIds: [...hubEntry.droneIds, newDroneId],
+                },
               },
             };
-            debugLog.building(`[Drone] Drohne ${newDroneId} für neuen Hub ${deliveryId} gespawnt nach Bauabschluss.`);
+            debugLog.building(
+              `[Drone] Drohne ${newDroneId} für neuen Hub ${deliveryId} gespawnt nach Bauabschluss.`,
+            );
           }
         }
       }
       return completionState;
     }
     // Site gone - deposit to global
-    debugLog.inventory(`Drone construction target gone, depositing ${amount}× ${itemType} into global inventory`);
+    debugLog.inventory(
+      `Drone construction target gone, depositing ${amount}× ${itemType} into global inventory`,
+    );
     return applyDroneUpdate(
-      { ...state, inventory: addResources(state.inventory, { [itemType]: amount }) },
+      {
+        ...state,
+        inventory: addResources(state.inventory, { [itemType]: amount }),
+      },
       droneId,
       idleDrone,
     );
   }
 
   // hub_restock: deposit into hub inventory when assigned
-  let hubEntry = drone.hubId ? state.serviceHubs[drone.hubId] ?? null : null;
+  let hubEntry = drone.hubId ? (state.serviceHubs[drone.hubId] ?? null) : null;
   let depositState = state;
   // Self-heal: hub asset exists but serviceHubs entry is missing
-  if (!hubEntry && drone.hubId && state.assets[drone.hubId]?.type === "service_hub") {
-    debugLog.inventory(`[Drone] Hub entry missing for ${drone.hubId} during deposit — self-healing`);
+  if (
+    !hubEntry &&
+    drone.hubId &&
+    state.assets[drone.hubId]?.type === "service_hub"
+  ) {
+    debugLog.inventory(
+      `[Drone] Hub entry missing for ${drone.hubId} during deposit — self-healing`,
+    );
     hubEntry = {
       inventory: createEmptyHubInventory(),
       targetStock: createDefaultProtoHubTargetStock(),
@@ -241,7 +303,9 @@ export function handleDepositingStatus(
       ...hubEntry.inventory,
       [itemType]: (hubEntry.inventory[itemType] ?? 0) + amount,
     };
-    debugLog.inventory(`Drone deposited ${amount}× ${itemType} into Service-Hub`);
+    debugLog.inventory(
+      `Drone deposited ${amount}× ${itemType} into Service-Hub`,
+    );
     const afterDeposit: GameState = {
       ...depositState,
       serviceHubs: {
@@ -278,7 +342,10 @@ export function handleDepositingStatus(
     }
   }
   return applyDroneUpdate(
-    { ...state, inventory: addResources(state.inventory, { [itemType]: amount }) },
+    {
+      ...state,
+      inventory: addResources(state.inventory, { [itemType]: amount }),
+    },
     droneId,
     idleDrone,
   );

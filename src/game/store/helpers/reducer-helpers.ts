@@ -30,7 +30,10 @@ export function getWarehouseCapacity(mode: GameMode): number {
   return mode === "debug" ? Infinity : WAREHOUSE_CAPACITY;
 }
 
-export function getCapacityPerResource(state: { mode: string; warehousesPlaced: number }): number {
+export function getCapacityPerResource(state: {
+  mode: string;
+  warehousesPlaced: number;
+}): number {
   if (state.mode === "debug") return Infinity;
   return (state.warehousesPlaced + 1) * WAREHOUSE_CAPACITY;
 }
@@ -39,12 +42,17 @@ export function getCapacityPerResource(state: { mode: string; warehousesPlaced: 
  * Return a new Inventory with `costs` deducted.
  * DEV: warns if any resulting value becomes negative (indicates a missing hasResources check).
  */
-export function consumeResources(inv: Inventory, costs: Partial<Record<keyof Inventory, number>>): Inventory {
+export function consumeResources(
+  inv: Inventory,
+  costs: Partial<Record<keyof Inventory, number>>,
+): Inventory {
   const result = { ...inv } as Record<string, number>;
   for (const [key, amt] of Object.entries(costs)) {
     result[key] = (result[key] ?? 0) - (amt ?? 0);
     if (import.meta.env.DEV && result[key] < 0) {
-      console.warn(`[consumeResources] Negative value for "${key}": ${result[key]}. Missing hasResources() guard?`);
+      console.warn(
+        `[consumeResources] Negative value for "${key}": ${result[key]}. Missing hasResources() guard?`,
+      );
     }
   }
   return result as unknown as Inventory;
@@ -56,7 +64,10 @@ function getFirstCraftingAssetOfType(
   state: Pick<GameState, "assets">,
   assetType: CraftingBuildingAssetType,
 ): PlacedAsset | null {
-  return Object.values(state.assets).find((asset) => asset.type === assetType) ?? null;
+  return (
+    Object.values(state.assets).find((asset) => asset.type === assetType) ??
+    null
+  );
 }
 
 export function logCraftingSelectionComparison(
@@ -69,7 +80,9 @@ export function logCraftingSelectionComparison(
   const resolvedSelectedId = selectedId ?? "none";
   if (resolvedSelectedId === firstId) return;
   const logger = assetType === "smithy" ? debugLog.smithy : debugLog.general;
-  logger(`Selected: ${assetType}[${resolvedSelectedId}], first would have been [${firstId}]`);
+  logger(
+    `Selected: ${assetType}[${resolvedSelectedId}], first would have been [${firstId}]`,
+  );
 }
 
 /**
@@ -86,14 +99,27 @@ export function addToCollectionNodeAt(
 ): Record<string, CollectionNode> {
   if (amount <= 0) return nodes;
   for (const node of Object.values(nodes)) {
-    if (node.tileX === tileX && node.tileY === tileY && node.itemType === itemType) {
+    if (
+      node.tileX === tileX &&
+      node.tileY === tileY &&
+      node.itemType === itemType
+    ) {
       return { ...nodes, [node.id]: { ...node, amount: node.amount + amount } };
     }
   }
   const id = makeId("cn");
   return {
     ...nodes,
-    [id]: { id, itemType, amount, tileX, tileY, collectable: true, createdAt: Date.now(), reservedByDroneId: null },
+    [id]: {
+      id,
+      itemType,
+      amount,
+      tileX,
+      tileY,
+      collectable: true,
+      createdAt: Date.now(),
+      reservedByDroneId: null,
+    },
   };
 }
 
@@ -153,7 +179,9 @@ export function tickOneDrone(state: GameState, droneId: string): GameState {
   return tickOneDroneExecution(state, droneId, TICK_ONE_DRONE_IO_DEPS);
 }
 
-export function getKeepStockByWorkbench(state: Pick<GameState, "keepStockByWorkbench">): KeepStockByWorkbench {
+export function getKeepStockByWorkbench(
+  state: Pick<GameState, "keepStockByWorkbench">,
+): KeepStockByWorkbench {
   return state.keepStockByWorkbench ?? {};
 }
 

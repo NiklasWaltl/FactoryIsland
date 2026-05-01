@@ -1,10 +1,7 @@
 // Save/load orchestrator facade.
 // Keep public imports stable while implementation lives in split modules.
 
-export {
-  CURRENT_SAVE_VERSION,
-  migrateSave,
-} from "./save-migrations";
+export { CURRENT_SAVE_VERSION, migrateSave } from "./save-migrations";
 
 export type {
   SaveGameV1,
@@ -26,12 +23,6 @@ export type {
   SaveGameLatest,
 } from "./save-migrations";
 
-export {
-  serializeState,
-  deserializeState,
-  loadAndHydrate,
-} from "./save-codec";
+export { serializeState, deserializeState, loadAndHydrate } from "./save-codec";
 
-export {
-  rebuildGlobalInventoryFromStorage,
-} from "./save-normalizer";
+export { rebuildGlobalInventoryFromStorage } from "./save-normalizer";

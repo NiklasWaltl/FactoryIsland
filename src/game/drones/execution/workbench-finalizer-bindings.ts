@@ -29,7 +29,13 @@ export function finalizeWorkbenchDelivery(
   jobId: string | null,
   idleDrone: StarterDroneState,
 ): GameState {
-  return finalizeWorkbenchDeliveryInner(state, droneId, jobId, idleDrone, FINALIZER_DEPS);
+  return finalizeWorkbenchDeliveryInner(
+    state,
+    droneId,
+    jobId,
+    idleDrone,
+    FINALIZER_DEPS,
+  );
 }
 
 export function finalizeWorkbenchInputDelivery(
@@ -38,5 +44,11 @@ export function finalizeWorkbenchInputDelivery(
   task: WorkbenchInputTask,
   idleDrone: StarterDroneState,
 ): GameState {
-  return finalizeWorkbenchInputDeliveryInner(state, droneId, task, idleDrone, FINALIZER_DEPS);
+  return finalizeWorkbenchInputDeliveryInner(
+    state,
+    droneId,
+    task,
+    idleDrone,
+    FINALIZER_DEPS,
+  );
 }

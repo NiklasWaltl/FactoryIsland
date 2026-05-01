@@ -1,4 +1,11 @@
-import type { AssetType, BuildingType, ConveyorItem, Direction, GameState, PlacedAsset } from "../../types";
+import type {
+  AssetType,
+  BuildingType,
+  ConveyorItem,
+  Direction,
+  GameState,
+  PlacedAsset,
+} from "../../types";
 import { BUILDING_LABELS } from "../../constants/buildings/index";
 import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";
@@ -15,7 +22,10 @@ export interface ConveyorPlacementContext {
   state: GameState;
   bType: BuildingType;
   useConstructionSite: boolean;
-  applyCostOrConstructionSite: (partial: GameState, assetId: string) => GameState;
+  applyCostOrConstructionSite: (
+    partial: GameState,
+    assetId: string,
+  ) => GameState;
   addErrorNotification: BuildingPlacementIoDeps["addErrorNotification"];
   debugLog: BuildingPlacementIoDeps["debugLog"];
 }
@@ -26,9 +36,22 @@ export function placeConveyorBranch(
   y: number,
   direction: Direction,
 ): GameState {
-  const { state, bType, useConstructionSite, applyCostOrConstructionSite, addErrorNotification, debugLog } = ctx;
+  const {
+    state,
+    bType,
+    useConstructionSite,
+    applyCostOrConstructionSite,
+    addErrorNotification,
+    debugLog,
+  } = ctx;
   if (state.cellMap[cellKey(x, y)]) {
-    return { ...state, notifications: addErrorNotification(state.notifications, "Das Feld ist belegt.") };
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Das Feld ist belegt.",
+      ),
+    };
   }
   const placeType: AssetType =
     bType === "conveyor_corner"
@@ -38,14 +61,31 @@ export function placeConveyorBranch(
         : bType === "conveyor_splitter"
           ? "conveyor_splitter"
           : "conveyor";
-  const convPlaced = placeAsset(state.assets, state.cellMap, placeType, x, y, 1);
+  const convPlaced = placeAsset(
+    state.assets,
+    state.cellMap,
+    placeType,
+    x,
+    y,
+    1,
+  );
   if (!convPlaced) return state;
   const assetWithDir = { ...convPlaced.assets[convPlaced.id], direction };
   const newAssetsC = { ...convPlaced.assets, [convPlaced.id]: assetWithDir };
-  const newConveyors = { ...state.conveyors, [convPlaced.id]: { queue: [] as ConveyorItem[] } };
-  debugLog.building(`[BuildMode] Placed ${BUILDING_LABELS[bType]} at (${x},${y}) facing ${direction}${useConstructionSite ? " as construction site" : ""}`);
+  const newConveyors = {
+    ...state.conveyors,
+    [convPlaced.id]: { queue: [] as ConveyorItem[] },
+  };
+  debugLog.building(
+    `[BuildMode] Placed ${BUILDING_LABELS[bType]} at (${x},${y}) facing ${direction}${useConstructionSite ? " as construction site" : ""}`,
+  );
   const partialC = applyCostOrConstructionSite(
-    { ...state, assets: newAssetsC, cellMap: convPlaced.cellMap, conveyors: newConveyors },
+    {
+      ...state,
+      assets: newAssetsC,
+      cellMap: convPlaced.cellMap,
+      conveyors: newConveyors,
+    },
     convPlaced.id,
   );
   return finalizePlacement(partialC, "BUILD_PLACE_BUILDING", debugLog);
@@ -57,20 +97,48 @@ export function placeUndergroundInBranch(
   y: number,
   direction: Direction,
 ): GameState {
-  const { state, bType, useConstructionSite, applyCostOrConstructionSite, addErrorNotification, debugLog } = ctx;
+  const {
+    state,
+    bType,
+    useConstructionSite,
+    applyCostOrConstructionSite,
+    addErrorNotification,
+    debugLog,
+  } = ctx;
   if (state.cellMap[cellKey(x, y)]) {
-    return { ...state, notifications: addErrorNotification(state.notifications, "Das Feld ist belegt.") };
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Das Feld ist belegt.",
+      ),
+    };
   }
-  const convPlaced = placeAsset(state.assets, state.cellMap, "conveyor_underground_in", x, y, 1);
+  const convPlaced = placeAsset(
+    state.assets,
+    state.cellMap,
+    "conveyor_underground_in",
+    x,
+    y,
+    1,
+  );
   if (!convPlaced) return state;
   const assetWithDir = { ...convPlaced.assets[convPlaced.id], direction };
   const newAssetsC = { ...convPlaced.assets, [convPlaced.id]: assetWithDir };
-  const newConveyors = { ...state.conveyors, [convPlaced.id]: { queue: [] as ConveyorItem[] } };
+  const newConveyors = {
+    ...state.conveyors,
+    [convPlaced.id]: { queue: [] as ConveyorItem[] },
+  };
   debugLog.building(
     `[BuildMode] Placed ${BUILDING_LABELS[bType]} at (${x},${y}) facing ${direction}${useConstructionSite ? " as construction site" : ""}`,
   );
   const partialC = applyCostOrConstructionSite(
-    { ...state, assets: newAssetsC, cellMap: convPlaced.cellMap, conveyors: newConveyors },
+    {
+      ...state,
+      assets: newAssetsC,
+      cellMap: convPlaced.cellMap,
+      conveyors: newConveyors,
+    },
     convPlaced.id,
   );
   return finalizePlacement(partialC, "BUILD_PLACE_BUILDING", debugLog);
@@ -82,9 +150,22 @@ export function placeUndergroundOutBranch(
   y: number,
   direction: Direction,
 ): GameState {
-  const { state, bType, useConstructionSite, applyCostOrConstructionSite, addErrorNotification, debugLog } = ctx;
+  const {
+    state,
+    bType,
+    useConstructionSite,
+    applyCostOrConstructionSite,
+    addErrorNotification,
+    debugLog,
+  } = ctx;
   if (state.cellMap[cellKey(x, y)]) {
-    return { ...state, notifications: addErrorNotification(state.notifications, "Das Feld ist belegt.") };
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Das Feld ist belegt.",
+      ),
+    };
   }
   if (!hasUndergroundOutSpanWindowInBounds(x, y, direction)) {
     return {
@@ -107,7 +188,14 @@ export function placeUndergroundOutBranch(
   }
   const entrance = state.assets[entranceId];
   if (!entrance || entrance.type !== "conveyor_underground_in") return state;
-  const tempOut: PlacedAsset = { id: "temp", type: "conveyor_underground_out", x, y, size: 1, direction };
+  const tempOut: PlacedAsset = {
+    id: "temp",
+    type: "conveyor_underground_out",
+    x,
+    y,
+    size: 1,
+    direction,
+  };
   if (!undergroundSpanCellsInBounds(entrance, tempOut)) {
     return {
       ...state,
@@ -118,12 +206,22 @@ export function placeUndergroundOutBranch(
     };
   }
   const inZone = state.buildingZoneIds[entranceId] ?? null;
-  const convPlaced = placeAsset(state.assets, state.cellMap, "conveyor_underground_out", x, y, 1);
+  const convPlaced = placeAsset(
+    state.assets,
+    state.cellMap,
+    "conveyor_underground_out",
+    x,
+    y,
+    1,
+  );
   if (!convPlaced) return state;
   const outId = convPlaced.id;
   const assetWithDir = { ...convPlaced.assets[outId], direction };
   const newAssetsC = { ...convPlaced.assets, [outId]: assetWithDir };
-  const newConveyors = { ...state.conveyors, [outId]: { queue: [] as ConveyorItem[] } };
+  const newConveyors = {
+    ...state.conveyors,
+    [outId]: { queue: [] as ConveyorItem[] },
+  };
   const newPeers: Record<string, string> = {
     ...state.conveyorUndergroundPeers,
     [entranceId]: outId,

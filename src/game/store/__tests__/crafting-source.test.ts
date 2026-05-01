@@ -25,18 +25,50 @@ function baseState(): GameState {
   const base = createInitialState("release");
 
   const sm: PlacedAsset = { id: "sm-1", type: "smithy", x: 1, y: 1, size: 2 };
-  const ma: PlacedAsset = { id: "ma-1", type: "manual_assembler", x: 4, y: 1, size: 1 };
-  const whA: PlacedAsset = { id: "wh-A", type: "warehouse", x: 6, y: 1, size: 2, direction: "south" };
-  const whB: PlacedAsset = { id: "wh-B", type: "warehouse", x: 10, y: 1, size: 2, direction: "south" };
+  const ma: PlacedAsset = {
+    id: "ma-1",
+    type: "manual_assembler",
+    x: 4,
+    y: 1,
+    size: 1,
+  };
+  const whA: PlacedAsset = {
+    id: "wh-A",
+    type: "warehouse",
+    x: 6,
+    y: 1,
+    size: 2,
+    direction: "south",
+  };
+  const whB: PlacedAsset = {
+    id: "wh-B",
+    type: "warehouse",
+    x: 10,
+    y: 1,
+    size: 2,
+    direction: "south",
+  };
 
   const assets: Record<string, PlacedAsset> = {
-    "sm-1": sm, "ma-1": ma, "wh-A": whA, "wh-B": whB,
+    "sm-1": sm,
+    "ma-1": ma,
+    "wh-A": whA,
+    "wh-B": whB,
   };
   const cellMap: Record<string, string> = {
-    [cellKey(1, 1)]: "sm-1", [cellKey(2, 1)]: "sm-1", [cellKey(1, 2)]: "sm-1", [cellKey(2, 2)]: "sm-1",
+    [cellKey(1, 1)]: "sm-1",
+    [cellKey(2, 1)]: "sm-1",
+    [cellKey(1, 2)]: "sm-1",
+    [cellKey(2, 2)]: "sm-1",
     [cellKey(4, 1)]: "ma-1",
-    [cellKey(6, 1)]: "wh-A", [cellKey(7, 1)]: "wh-A", [cellKey(6, 2)]: "wh-A", [cellKey(7, 2)]: "wh-A",
-    [cellKey(10, 1)]: "wh-B", [cellKey(11, 1)]: "wh-B", [cellKey(10, 2)]: "wh-B", [cellKey(11, 2)]: "wh-B",
+    [cellKey(6, 1)]: "wh-A",
+    [cellKey(7, 1)]: "wh-A",
+    [cellKey(6, 2)]: "wh-A",
+    [cellKey(7, 2)]: "wh-A",
+    [cellKey(10, 1)]: "wh-B",
+    [cellKey(11, 1)]: "wh-B",
+    [cellKey(10, 2)]: "wh-B",
+    [cellKey(11, 2)]: "wh-B",
   };
 
   return {
@@ -66,15 +98,22 @@ function baseState(): GameState {
 
 describe("resolveCraftingSource", () => {
   it("returns global when warehouseId is null", () => {
-    expect(resolveCraftingSource(baseState(), null)).toEqual({ kind: "global" });
+    expect(resolveCraftingSource(baseState(), null)).toEqual({
+      kind: "global",
+    });
   });
 
   it("returns warehouse for a valid warehouse", () => {
-    expect(resolveCraftingSource(baseState(), "wh-A")).toEqual({ kind: "warehouse", warehouseId: "wh-A" });
+    expect(resolveCraftingSource(baseState(), "wh-A")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-A",
+    });
   });
 
   it("falls back to global for non-existent id", () => {
-    expect(resolveCraftingSource(baseState(), "nonexistent")).toEqual({ kind: "global" });
+    expect(resolveCraftingSource(baseState(), "nonexistent")).toEqual({
+      kind: "global",
+    });
   });
 
   it("falls back to global when warehouse has no inventory", () => {
@@ -90,32 +129,58 @@ describe("resolveCraftingSource", () => {
 
 describe("SET_BUILDING_SOURCE (smithy)", () => {
   it("sets a valid warehouse", () => {
-    const after = gameReducer(baseState(), { type: "SET_BUILDING_SOURCE", buildingId: "sm-1", warehouseId: "wh-A" });
+    const after = gameReducer(baseState(), {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "sm-1",
+      warehouseId: "wh-A",
+    });
     expect(after.buildingSourceWarehouseIds["sm-1"]).toBe("wh-A");
   });
 
   it("resets to global (removes mapping)", () => {
-    const s = { ...baseState(), buildingSourceWarehouseIds: { "sm-1": "wh-A" } };
-    const after = gameReducer(s, { type: "SET_BUILDING_SOURCE", buildingId: "sm-1", warehouseId: null });
+    const s = {
+      ...baseState(),
+      buildingSourceWarehouseIds: { "sm-1": "wh-A" },
+    };
+    const after = gameReducer(s, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "sm-1",
+      warehouseId: null,
+    });
     expect(after.buildingSourceWarehouseIds["sm-1"]).toBeUndefined();
   });
 
   it("ignores unknown warehouse", () => {
     const before = baseState();
-    const after = gameReducer(before, { type: "SET_BUILDING_SOURCE", buildingId: "sm-1", warehouseId: "bogus" });
+    const after = gameReducer(before, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "sm-1",
+      warehouseId: "bogus",
+    });
     expect(after).toBe(before);
   });
 });
 
 describe("SET_BUILDING_SOURCE (assembler)", () => {
   it("sets a valid warehouse", () => {
-    const after = gameReducer(baseState(), { type: "SET_BUILDING_SOURCE", buildingId: "ma-1", warehouseId: "wh-B" });
+    const after = gameReducer(baseState(), {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "ma-1",
+      warehouseId: "wh-B",
+    });
     expect(after.buildingSourceWarehouseIds["ma-1"]).toBe("wh-B");
   });
 
   it("resets to global (removes mapping)", () => {
-    const s = { ...baseState(), buildingSourceWarehouseIds: { "ma-1": "wh-B" } };
-    const after = gameReducer(s, { type: "SET_BUILDING_SOURCE", buildingId: "ma-1", warehouseId: null });
+    const s = {
+      ...baseState(),
+      buildingSourceWarehouseIds: { "ma-1": "wh-B" },
+    };
+    const after = gameReducer(s, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "ma-1",
+      warehouseId: null,
+    });
     expect(after.buildingSourceWarehouseIds["ma-1"]).toBeUndefined();
   });
 });
@@ -126,21 +191,30 @@ describe("SET_BUILDING_SOURCE (assembler)", () => {
 
 describe("Smithy with global source", () => {
   it("SMITHY_ADD_FUEL consumes from global inventory", () => {
-    const s = { ...baseState(), inventory: addResources(emptyInv(), { wood: 10 }) };
+    const s = {
+      ...baseState(),
+      inventory: addResources(emptyInv(), { wood: 10 }),
+    };
     const after = gameReducer(s, { type: "SMITHY_ADD_FUEL", amount: 3 });
     expect(after.inventory.wood).toBe(7);
     expect(after.smithy.fuel).toBe(3);
   });
 
   it("SMITHY_ADD_IRON consumes from global inventory", () => {
-    const s = { ...baseState(), inventory: addResources(emptyInv(), { iron: 10 }) };
+    const s = {
+      ...baseState(),
+      inventory: addResources(emptyInv(), { iron: 10 }),
+    };
     const after = gameReducer(s, { type: "SMITHY_ADD_IRON", amount: 5 });
     expect(after.inventory.iron).toBe(5);
     expect(after.smithy.iron).toBe(5);
   });
 
   it("SMITHY_ADD_COPPER consumes from global inventory", () => {
-    const s = { ...baseState(), inventory: addResources(emptyInv(), { copper: 8 }) };
+    const s = {
+      ...baseState(),
+      inventory: addResources(emptyInv(), { copper: 8 }),
+    };
     const after = gameReducer(s, { type: "SMITHY_ADD_COPPER", amount: 5 });
     expect(after.inventory.copper).toBe(3);
     expect(after.smithy.copper).toBe(5);
@@ -168,26 +242,39 @@ describe("Smithy with warehouse source", () => {
     const s = baseState();
     s.buildingSourceWarehouseIds = { "sm-1": "wh-A" };
     s.selectedCraftingBuildingId = "sm-1";
-    s.warehouseInventories["wh-A"] = addResources(emptyInv(), { wood: 10, iron: 10, copper: 10 });
+    s.warehouseInventories["wh-A"] = addResources(emptyInv(), {
+      wood: 10,
+      iron: 10,
+      copper: 10,
+    });
     return s;
   }
 
   it("ADD_FUEL consumes from warehouse", () => {
-    const after = gameReducer(smithyWarehouse(), { type: "SMITHY_ADD_FUEL", amount: 3 });
+    const after = gameReducer(smithyWarehouse(), {
+      type: "SMITHY_ADD_FUEL",
+      amount: 3,
+    });
     expect(after.warehouseInventories["wh-A"].wood).toBe(7);
     expect(after.inventory.wood).toBe(0);
     expect(after.smithy.fuel).toBe(3);
   });
 
   it("ADD_IRON consumes from warehouse", () => {
-    const after = gameReducer(smithyWarehouse(), { type: "SMITHY_ADD_IRON", amount: 5 });
+    const after = gameReducer(smithyWarehouse(), {
+      type: "SMITHY_ADD_IRON",
+      amount: 5,
+    });
     expect(after.warehouseInventories["wh-A"].iron).toBe(5);
     expect(after.inventory.iron).toBe(0);
     expect(after.smithy.iron).toBe(5);
   });
 
   it("ADD_COPPER consumes from warehouse", () => {
-    const after = gameReducer(smithyWarehouse(), { type: "SMITHY_ADD_COPPER", amount: 5 });
+    const after = gameReducer(smithyWarehouse(), {
+      type: "SMITHY_ADD_COPPER",
+      amount: 5,
+    });
     expect(after.warehouseInventories["wh-A"].copper).toBe(5);
     expect(after.inventory.copper).toBe(0);
     expect(after.smithy.copper).toBe(5);
@@ -220,18 +307,30 @@ describe("Smithy with warehouse source", () => {
 
 describe("Manual Assembler with global source", () => {
   it("START consumes from global inventory", () => {
-    const s = { ...baseState(), selectedCraftingBuildingId: "ma-1" as string | null };
+    const s = {
+      ...baseState(),
+      selectedCraftingBuildingId: "ma-1" as string | null,
+    };
     s.inventory = addResources(emptyInv(), { ironIngot: 5 });
-    const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_START", recipe: "metal_plate" });
+    const after = gameReducer(s, {
+      type: "MANUAL_ASSEMBLER_START",
+      recipe: "metal_plate",
+    });
     expect(after.inventory.ironIngot).toBe(4);
     expect(after.manualAssembler.processing).toBe(true);
     expect(after.manualAssembler.buildingId).toBe("ma-1");
   });
 
   it("START fails when not enough resources", () => {
-    const s = { ...baseState(), selectedCraftingBuildingId: "ma-1" as string | null };
+    const s = {
+      ...baseState(),
+      selectedCraftingBuildingId: "ma-1" as string | null,
+    };
     s.inventory = addResources(emptyInv(), { ironIngot: 0 });
-    const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_START", recipe: "metal_plate" });
+    const after = gameReducer(s, {
+      type: "MANUAL_ASSEMBLER_START",
+      recipe: "metal_plate",
+    });
     expect(after.manualAssembler.processing).toBe(false);
   });
 });
@@ -245,12 +344,18 @@ describe("Manual Assembler with warehouse source", () => {
     const s = baseState();
     s.buildingSourceWarehouseIds = { "ma-1": "wh-B" };
     s.selectedCraftingBuildingId = "ma-1";
-    s.warehouseInventories["wh-B"] = addResources(emptyInv(), { ironIngot: 5, metalPlate: 5 });
+    s.warehouseInventories["wh-B"] = addResources(emptyInv(), {
+      ironIngot: 5,
+      metalPlate: 5,
+    });
     return s;
   }
 
   it("START consumes from warehouse", () => {
-    const after = gameReducer(assemblerWarehouse(), { type: "MANUAL_ASSEMBLER_START", recipe: "metal_plate" });
+    const after = gameReducer(assemblerWarehouse(), {
+      type: "MANUAL_ASSEMBLER_START",
+      recipe: "metal_plate",
+    });
     expect(after.warehouseInventories["wh-B"].ironIngot).toBe(4);
     expect(after.inventory.ironIngot).toBe(0);
     expect(after.manualAssembler.processing).toBe(true);
@@ -260,13 +365,21 @@ describe("Manual Assembler with warehouse source", () => {
   it("START fails when warehouse has insufficient resources", () => {
     const s = assemblerWarehouse();
     s.warehouseInventories["wh-B"] = addResources(emptyInv(), { ironIngot: 0 });
-    const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_START", recipe: "metal_plate" });
+    const after = gameReducer(s, {
+      type: "MANUAL_ASSEMBLER_START",
+      recipe: "metal_plate",
+    });
     expect(after.manualAssembler.processing).toBe(false);
   });
 
   it("TICK produces into warehouse (via stored buildingId)", () => {
     const s = assemblerWarehouse();
-    s.manualAssembler = { processing: true, recipe: "metal_plate", progress: 0.99, buildingId: "ma-1" };
+    s.manualAssembler = {
+      processing: true,
+      recipe: "metal_plate",
+      progress: 0.99,
+      buildingId: "ma-1",
+    };
     const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_TICK" });
     expect(after.warehouseInventories["wh-B"].metalPlate).toBe(6); // 5 + 1
     expect(after.inventory.metalPlate).toBe(0);
@@ -276,7 +389,12 @@ describe("Manual Assembler with warehouse source", () => {
 
   it("TICK uses buildingId from manualAssembler state, not selectedCraftingBuildingId", () => {
     const s = assemblerWarehouse();
-    s.manualAssembler = { processing: true, recipe: "metal_plate", progress: 0.99, buildingId: "ma-1" };
+    s.manualAssembler = {
+      processing: true,
+      recipe: "metal_plate",
+      progress: 0.99,
+      buildingId: "ma-1",
+    };
     // Simulate user having opened a different panel while assembler was running
     s.selectedCraftingBuildingId = "sm-1";
     const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_TICK" });
@@ -295,13 +413,26 @@ describe("Per-building isolation (cross-type)", () => {
     s.buildingSourceWarehouseIds = { "sm-1": "wh-A", "ma-1": "wh-B" };
 
     // Verify resolver resolves independently
-    expect(resolveBuildingSource(s, "sm-1")).toEqual({ kind: "warehouse", warehouseId: "wh-A" });
-    expect(resolveBuildingSource(s, "ma-1")).toEqual({ kind: "warehouse", warehouseId: "wh-B" });
+    expect(resolveBuildingSource(s, "sm-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-A",
+    });
+    expect(resolveBuildingSource(s, "ma-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-B",
+    });
   });
 
   it("changing smithy source does not affect assembler source", () => {
-    const s = { ...baseState(), buildingSourceWarehouseIds: { "sm-1": "wh-A", "ma-1": "wh-B" } };
-    const after = gameReducer(s, { type: "SET_BUILDING_SOURCE", buildingId: "sm-1", warehouseId: null });
+    const s = {
+      ...baseState(),
+      buildingSourceWarehouseIds: { "sm-1": "wh-A", "ma-1": "wh-B" },
+    };
+    const after = gameReducer(s, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "sm-1",
+      warehouseId: null,
+    });
     expect(after.buildingSourceWarehouseIds["sm-1"]).toBeUndefined();
     expect(after.buildingSourceWarehouseIds["ma-1"]).toBe("wh-B");
   });
@@ -313,7 +444,10 @@ describe("Per-building isolation (cross-type)", () => {
 
 describe("CraftingSource edge cases", () => {
   it("Smithy ADD with zero amount is no-op", () => {
-    const s = { ...baseState(), inventory: addResources(emptyInv(), { wood: 10 }) };
+    const s = {
+      ...baseState(),
+      inventory: addResources(emptyInv(), { wood: 10 }),
+    };
     const after = gameReducer(s, { type: "SMITHY_ADD_FUEL", amount: 0 });
     expect(after).toBe(s);
   });
@@ -331,14 +465,22 @@ describe("CraftingSource edge cases", () => {
     delete s.assets["wh-A"];
     delete s.warehouseInventories["wh-A"];
     s.inventory = addResources(emptyInv(), { ironIngot: 5 });
-    const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_START", recipe: "metal_plate" });
+    const after = gameReducer(s, {
+      type: "MANUAL_ASSEMBLER_START",
+      recipe: "metal_plate",
+    });
     expect(after.inventory.ironIngot).toBe(4);
     expect(after.manualAssembler.processing).toBe(true);
   });
 
   it("ManualAssembler buildingId resets to null on completion", () => {
     const s = baseState();
-    s.manualAssembler = { processing: true, recipe: "metal_plate", progress: 0.99, buildingId: "ma-1" };
+    s.manualAssembler = {
+      processing: true,
+      recipe: "metal_plate",
+      progress: 0.99,
+      buildingId: "ma-1",
+    };
     const after = gameReducer(s, { type: "MANUAL_ASSEMBLER_TICK" });
     expect(after.manualAssembler.buildingId).toBeNull();
   });

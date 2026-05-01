@@ -23,11 +23,29 @@ import { MAX_ZONES, WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 
 function emptyInv() {
   return {
-    coins: 0, wood: 0, stone: 0, iron: 0, copper: 0, sapling: 0,
-    ironIngot: 0, copperIngot: 0, metalPlate: 0, gear: 0,
-    axe: 0, wood_pickaxe: 0, stone_pickaxe: 0,
-    workbench: 0, warehouse: 0, smithy: 0, generator: 0,
-    cable: 0, battery: 0, power_pole: 0, manual_assembler: 0, auto_smelter: 0, auto_assembler: 0,
+    coins: 0,
+    wood: 0,
+    stone: 0,
+    iron: 0,
+    copper: 0,
+    sapling: 0,
+    ironIngot: 0,
+    copperIngot: 0,
+    metalPlate: 0,
+    gear: 0,
+    axe: 0,
+    wood_pickaxe: 0,
+    stone_pickaxe: 0,
+    workbench: 0,
+    warehouse: 0,
+    smithy: 0,
+    generator: 0,
+    cable: 0,
+    battery: 0,
+    power_pole: 0,
+    manual_assembler: 0,
+    auto_smelter: 0,
+    auto_assembler: 0,
   };
 }
 
@@ -46,9 +64,23 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
     cablesPlaced: 0,
     powerPolesPlaced: 0,
     selectedPowerPoleId: null,
-    hotbarSlots: Array.from({ length: 9 }, () => ({ toolKind: "empty" as const, amount: 0, label: "", emoji: "" })),
+    hotbarSlots: Array.from({ length: 9 }, () => ({
+      toolKind: "empty" as const,
+      amount: 0,
+      label: "",
+      emoji: "",
+    })),
     activeSlot: 0,
-    smithy: { fuel: 0, iron: 0, copper: 0, selectedRecipe: "iron", processing: false, progress: 0, outputIngots: 0, outputCopperIngots: 0 },
+    smithy: {
+      fuel: 0,
+      iron: 0,
+      copper: 0,
+      selectedRecipe: "iron",
+      processing: false,
+      progress: 0,
+      outputIngots: 0,
+      outputCopperIngots: 0,
+    },
     generator: { fuel: 0, progress: 0, running: false },
     battery: { stored: 0, capacity: 100 },
     connectedAssetIds: [],
@@ -65,7 +97,12 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
     selectedAutoMinerId: null,
     autoSmelters: {},
     selectedAutoSmelterId: null,
-    manualAssembler: { processing: false, recipe: null, progress: 0, buildingId: null },
+    manualAssembler: {
+      processing: false,
+      recipe: null,
+      progress: 0,
+      buildingId: null,
+    },
     machinePowerRatio: {},
     energyDebugOverlay: false,
     autoDeliveryLog: [],
@@ -94,7 +131,10 @@ describe("Production Zones — CRUD", () => {
   });
 
   test("CREATE_ZONE with custom name", () => {
-    const s = dispatch(makeTestState(), { type: "CREATE_ZONE", name: "Eisen-Zone" });
+    const s = dispatch(makeTestState(), {
+      type: "CREATE_ZONE",
+      name: "Eisen-Zone",
+    });
     expect(Object.values(s.productionZones)[0].name).toBe("Eisen-Zone");
   });
 
@@ -104,7 +144,9 @@ describe("Production Zones — CRUD", () => {
       const id = `z${i}`;
       zones[id] = { id, name: `Zone ${i}` };
     }
-    const s = dispatch(makeTestState({ productionZones: zones }), { type: "CREATE_ZONE" });
+    const s = dispatch(makeTestState({ productionZones: zones }), {
+      type: "CREATE_ZONE",
+    });
     expect(Object.keys(s.productionZones)).toHaveLength(MAX_ZONES);
   });
 
@@ -120,7 +162,10 @@ describe("Production Zones — CRUD", () => {
 
   test("DELETE_ZONE only affects the deleted zone", () => {
     const state = makeTestState({
-      productionZones: { z1: { id: "z1", name: "Z1" }, z2: { id: "z2", name: "Z2" } },
+      productionZones: {
+        z1: { id: "z1", name: "Z1" },
+        z2: { id: "z2", name: "Z2" },
+      },
       buildingZoneIds: { wb1: "z1", wb2: "z2", wh1: "z1" },
     });
     const s = dispatch(state, { type: "DELETE_ZONE", zoneId: "z1" });
@@ -139,7 +184,11 @@ describe("Production Zones — CRUD", () => {
       assets: { wb1: { id: "wb1", type: "workbench", x: 0, y: 0, size: 2 } },
       productionZones: { z1: { id: "z1", name: "Zone 1" } },
     });
-    const s = dispatch(state, { type: "SET_BUILDING_ZONE", buildingId: "wb1", zoneId: "z1" });
+    const s = dispatch(state, {
+      type: "SET_BUILDING_ZONE",
+      buildingId: "wb1",
+      zoneId: "z1",
+    });
     expect(s.buildingZoneIds.wb1).toBe("z1");
   });
 
@@ -149,7 +198,11 @@ describe("Production Zones — CRUD", () => {
       productionZones: { z1: { id: "z1", name: "Zone 1" } },
       buildingZoneIds: { wb1: "z1" },
     });
-    const s = dispatch(state, { type: "SET_BUILDING_ZONE", buildingId: "wb1", zoneId: null });
+    const s = dispatch(state, {
+      type: "SET_BUILDING_ZONE",
+      buildingId: "wb1",
+      zoneId: null,
+    });
     expect(s.buildingZoneIds.wb1).toBeUndefined();
   });
 
@@ -157,7 +210,11 @@ describe("Production Zones — CRUD", () => {
     const state = makeTestState({
       assets: { wb1: { id: "wb1", type: "workbench", x: 0, y: 0, size: 2 } },
     });
-    const s = dispatch(state, { type: "SET_BUILDING_ZONE", buildingId: "wb1", zoneId: "nope" });
+    const s = dispatch(state, {
+      type: "SET_BUILDING_ZONE",
+      buildingId: "wb1",
+      zoneId: "nope",
+    });
     expect(s).toBe(state);
   });
 
@@ -165,7 +222,11 @@ describe("Production Zones — CRUD", () => {
     const state = makeTestState({
       productionZones: { z1: { id: "z1", name: "Zone 1" } },
     });
-    const s = dispatch(state, { type: "SET_BUILDING_ZONE", buildingId: "nope", zoneId: "z1" });
+    const s = dispatch(state, {
+      type: "SET_BUILDING_ZONE",
+      buildingId: "nope",
+      zoneId: "z1",
+    });
     expect(s).toBe(state);
   });
 });
@@ -320,7 +381,10 @@ describe("Production Zones — Consumption", () => {
     expect(sourceInv.iron).toBe(8);
 
     // Simulate consuming 10 wood and 5 iron
-    const { consumeResources, applyCraftingSourceInventory } = require("../reducer");
+    const {
+      consumeResources,
+      applyCraftingSourceInventory,
+    } = require("../reducer");
     const newInv = consumeResources(sourceInv, { wood: 10, iron: 5 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
@@ -355,8 +419,12 @@ describe("Production Zones — Consumption", () => {
     const { hasResources } = require("../reducer");
     expect(hasResources(agg, { ironIngot: 5 })).toBe(true);
     // Neither warehouse alone has 5
-    expect(hasResources(state.warehouseInventories.wh1, { ironIngot: 5 })).toBe(false);
-    expect(hasResources(state.warehouseInventories.wh2, { ironIngot: 5 })).toBe(false);
+    expect(hasResources(state.warehouseInventories.wh1, { ironIngot: 5 })).toBe(
+      false,
+    );
+    expect(hasResources(state.warehouseInventories.wh2, { ironIngot: 5 })).toBe(
+      false,
+    );
   });
 });
 
@@ -385,12 +453,17 @@ describe("Production Zones — Output", () => {
     const source = resolveBuildingSource(state, "wb1");
     const sourceInv = getCraftingSourceInventory(state, source);
 
-    const { addResources, applyCraftingSourceInventory } = require("../reducer");
+    const {
+      addResources,
+      applyCraftingSourceInventory,
+    } = require("../reducer");
     const newInv = addResources(sourceInv, { ironIngot: 2 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
     // wh1 is full → output goes to wh2
-    expect(partial.warehouseInventories!.wh1.ironIngot).toBe(WAREHOUSE_CAPACITY);
+    expect(partial.warehouseInventories!.wh1.ironIngot).toBe(
+      WAREHOUSE_CAPACITY,
+    );
     expect(partial.warehouseInventories!.wh2.ironIngot).toBe(7);
   });
 
@@ -412,12 +485,17 @@ describe("Production Zones — Output", () => {
     const source = resolveBuildingSource(state, "wb1");
     const sourceInv = getCraftingSourceInventory(state, source);
 
-    const { addResources, applyCraftingSourceInventory } = require("../reducer");
+    const {
+      addResources,
+      applyCraftingSourceInventory,
+    } = require("../reducer");
     const newInv = addResources(sourceInv, { ironIngot: 3 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
     // Overflow goes to first warehouse
-    expect(partial.warehouseInventories!.wh1.ironIngot).toBe(WAREHOUSE_CAPACITY + 3);
+    expect(partial.warehouseInventories!.wh1.ironIngot).toBe(
+      WAREHOUSE_CAPACITY + 3,
+    );
   });
 
   test("No negative inventories after zone consumption", () => {
@@ -436,7 +514,10 @@ describe("Production Zones — Output", () => {
     const source = resolveBuildingSource(state, "wb1");
     const sourceInv = getCraftingSourceInventory(state, source);
 
-    const { consumeResources, applyCraftingSourceInventory } = require("../reducer");
+    const {
+      consumeResources,
+      applyCraftingSourceInventory,
+    } = require("../reducer");
     const newInv = consumeResources(sourceInv, { wood: 5 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
@@ -457,14 +538,30 @@ describe("Production Zones — Delete & Fallback", () => {
         wh1: { id: "wh1", type: "warehouse", x: 0, y: 0, size: 2 },
         wb1: { id: "wb1", type: "workbench", x: 4, y: 0, size: 2 },
       },
-      cellMap: { "0,0": "wh1", "1,0": "wh1", "0,1": "wh1", "1,1": "wh1",
-                 "4,0": "wb1", "5,0": "wb1", "4,1": "wb1", "5,1": "wb1" },
+      cellMap: {
+        "0,0": "wh1",
+        "1,0": "wh1",
+        "0,1": "wh1",
+        "1,1": "wh1",
+        "4,0": "wb1",
+        "5,0": "wb1",
+        "4,1": "wb1",
+        "5,1": "wb1",
+      },
       warehouseInventories: { wh1: emptyInv() },
       warehousesPlaced: 1,
       warehousesPurchased: 1,
       productionZones: { z1: { id: "z1", name: "Zone 1" } },
       buildingZoneIds: { wh1: "z1", wb1: "z1" },
-      hotbarSlots: [{ toolKind: "building" as const, amount: 1, label: "", emoji: "" }, ...Array.from({ length: 8 }, () => ({ toolKind: "empty" as const, amount: 0, label: "", emoji: "" }))],
+      hotbarSlots: [
+        { toolKind: "building" as const, amount: 1, label: "", emoji: "" },
+        ...Array.from({ length: 8 }, () => ({
+          toolKind: "empty" as const,
+          amount: 0,
+          label: "",
+          emoji: "",
+        })),
+      ],
     });
 
     const s = dispatch(state, { type: "BUILD_REMOVE_ASSET", assetId: "wh1" });

@@ -26,18 +26,29 @@ export interface SelectDroneTaskDeps {
   getBuildingInputTargets: (
     state: Pick<GameState, "assets">,
   ) => { assetId: string; resource: CollectableItemType; capacity: number }[];
-  isUnderConstruction: (state: Pick<GameState, "constructionSites">, assetId: string) => boolean;
+  isUnderConstruction: (
+    state: Pick<GameState, "constructionSites">,
+    assetId: string,
+  ) => boolean;
   hasCompleteWorkbenchInput: (job: CraftingJob) => boolean;
   isCollectableCraftingItem: (
     itemId: CraftingJob["ingredients"][number]["itemId"],
   ) => itemId is CollectableItemType;
   resolveWorkbenchInputPickup: (
-    state: Pick<GameState, "assets" | "warehouseInventories" | "serviceHubs" | "network">,
+    state: Pick<
+      GameState,
+      "assets" | "warehouseInventories" | "serviceHubs" | "network"
+    >,
     job: CraftingJob,
     reservation: {
       id: string;
       itemId: CraftingJob["ingredients"][number]["itemId"];
       amount: number;
     },
-  ) => { x: number; y: number; sourceKind: "warehouse" | "hub"; sourceId: string } | null;
+  ) => {
+    x: number;
+    y: number;
+    sourceKind: "warehouse" | "hub";
+    sourceId: string;
+  } | null;
 }

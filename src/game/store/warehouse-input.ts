@@ -12,10 +12,14 @@ export function getWarehouseInputCell(warehouse: {
   const w = warehouse.width ?? warehouse.size;
   const h = warehouse.height ?? warehouse.size;
   switch (dir) {
-    case "south": return { x: warehouse.x,     y: warehouse.y + h, requiredDir: "north" };
-    case "north": return { x: warehouse.x,     y: warehouse.y - 1, requiredDir: "south" };
-    case "east":  return { x: warehouse.x + w, y: warehouse.y,     requiredDir: "west"  };
-    case "west":  return { x: warehouse.x - 1, y: warehouse.y,     requiredDir: "east"  };
+    case "south":
+      return { x: warehouse.x, y: warehouse.y + h, requiredDir: "north" };
+    case "north":
+      return { x: warehouse.x, y: warehouse.y - 1, requiredDir: "south" };
+    case "east":
+      return { x: warehouse.x + w, y: warehouse.y, requiredDir: "west" };
+    case "west":
+      return { x: warehouse.x - 1, y: warehouse.y, requiredDir: "east" };
   }
 }
 

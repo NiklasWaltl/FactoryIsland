@@ -16,12 +16,18 @@ export function getSelectedCraftingAsset(
   state: Pick<GameState, "assets" | "selectedCraftingBuildingId">,
   assetType: CraftingBuildingAssetType,
 ): PlacedAsset | null {
-  return getCraftingAssetById(state, state.selectedCraftingBuildingId, assetType);
+  return getCraftingAssetById(
+    state,
+    state.selectedCraftingBuildingId,
+    assetType,
+  );
 }
 
 export function getActiveSmithyAsset(
   state: Pick<GameState, "assets" | "selectedCraftingBuildingId" | "smithy">,
 ): PlacedAsset | null {
-  return getCraftingAssetById(state, state.smithy.buildingId, "smithy")
-    ?? getSelectedCraftingAsset(state, "smithy");
+  return (
+    getCraftingAssetById(state, state.smithy.buildingId, "smithy") ??
+    getSelectedCraftingAsset(state, "smithy")
+  );
 }

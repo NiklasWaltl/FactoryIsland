@@ -51,7 +51,9 @@ describe("DRONE_TICK – hub assignment", () => {
       selectedBuildingType: "service_hub" as GameState["selectedBuildingType"],
     };
     const existingIds = new Set(
-      Object.keys(state.assets).filter((id) => state.assets[id].type === "service_hub"),
+      Object.keys(state.assets).filter(
+        (id) => state.assets[id].type === "service_hub",
+      ),
     );
     s = gameReducer(s, { type: "BUILD_PLACE_BUILDING", x, y });
     const hubId = Object.keys(s.assets).find(
@@ -77,7 +79,11 @@ describe("DRONE_TICK – hub assignment", () => {
   it("ASSIGN_DRONE_TO_HUB: assigns drone to hub and updates droneIds", () => {
     const { state: hubState, hubId } = placeHubOnly(base, 5, 5);
     const droneId = hubState.starterDrone.droneId;
-    const state = gameReducer(hubState, { type: "ASSIGN_DRONE_TO_HUB", droneId, hubId });
+    const state = gameReducer(hubState, {
+      type: "ASSIGN_DRONE_TO_HUB",
+      droneId,
+      hubId,
+    });
     expect(state.starterDrone.hubId).toBe(hubId);
     expect(state.serviceHubs[hubId].droneIds).toContain(droneId);
   });
@@ -87,14 +93,22 @@ describe("DRONE_TICK – hub assignment", () => {
     const droneId = hubState.starterDrone.droneId;
     const oldHubId = hubState.starterDrone.hubId!;
     expect(hubState.serviceHubs[oldHubId].droneIds).toContain(droneId);
-    const state = gameReducer(hubState, { type: "ASSIGN_DRONE_TO_HUB", droneId, hubId });
+    const state = gameReducer(hubState, {
+      type: "ASSIGN_DRONE_TO_HUB",
+      droneId,
+      hubId,
+    });
     expect(state.serviceHubs[oldHubId].droneIds).not.toContain(droneId);
   });
 
   it("ASSIGN_DRONE_TO_HUB: snaps drone to hub dock position", () => {
     const { state: hubState, hubId } = placeHubOnly(base, 5, 5);
     const droneId = hubState.starterDrone.droneId;
-    const state = gameReducer(hubState, { type: "ASSIGN_DRONE_TO_HUB", droneId, hubId });
+    const state = gameReducer(hubState, {
+      type: "ASSIGN_DRONE_TO_HUB",
+      droneId,
+      hubId,
+    });
     const hubAsset = state.assets[hubId];
     expect(state.starterDrone.tileX).toBe(hubAsset.x);
     expect(state.starterDrone.tileY).toBe(hubAsset.y);
@@ -120,7 +134,11 @@ describe("DRONE_TICK – hub assignment", () => {
       },
       { status: "moving_to_collect", targetNodeId: nodeId, ticksRemaining: 5 },
     );
-    const state = gameReducer(midFlight, { type: "ASSIGN_DRONE_TO_HUB", droneId, hubId });
+    const state = gameReducer(midFlight, {
+      type: "ASSIGN_DRONE_TO_HUB",
+      droneId,
+      hubId,
+    });
     expect(state.starterDrone.status).toBe("idle");
     expect(state.starterDrone.targetNodeId).toBeNull();
     // Node reservation must be released
@@ -210,7 +228,9 @@ describe("DRONE_TICK – hub assignment", () => {
 
     const parked = getParkedDrones(state, hubId);
     expect(parked).toHaveLength(4);
-    expect(new Set(parked.map((drone) => `${drone.tileX},${drone.tileY}`)).size).toBe(4);
+    expect(
+      new Set(parked.map((drone) => `${drone.tileX},${drone.tileY}`)).size,
+    ).toBe(4);
   });
 });
 
@@ -227,7 +247,9 @@ describe("DRONE_TICK – hub demand filtering", () => {
 
   it("creates serviceHubs entry when hub is placed", () => {
     expect(base.serviceHubs[hubId]).toBeDefined();
-    expect(base.serviceHubs[hubId].inventory).toEqual(createEmptyHubInventory());
+    expect(base.serviceHubs[hubId].inventory).toEqual(
+      createEmptyHubInventory(),
+    );
   });
 
   it("collects resources the hub still needs", () => {
@@ -398,7 +420,9 @@ describe("SET_HUB_TARGET_STOCK", () => {
     });
     expect(next.serviceHubs[hubId].targetStock.wood).toBe(25);
     // Others unchanged
-    expect(next.serviceHubs[hubId].targetStock.stone).toBe(PROTO_HUB_TARGET_STOCK.stone);
+    expect(next.serviceHubs[hubId].targetStock.stone).toBe(
+      PROTO_HUB_TARGET_STOCK.stone,
+    );
   });
 
   it("clamps to 0 at minimum", () => {
@@ -493,12 +517,17 @@ describe("Drone reacts to changed target stock", () => {
       amount: SERVICE_HUB_TARGET_STOCK.wood + 10,
     });
     next = droneTick(state);
-    expect(["moving_to_collect", "moving_to_dropoff"]).toContain(next.starterDrone.status);
+    expect(["moving_to_collect", "moving_to_dropoff"]).toContain(
+      next.starterDrone.status,
+    );
 
     // Ensure it eventually starts collecting once anchored/ready.
     let progressed = next;
     guard = 0;
-    while (progressed.starterDrone.status !== "moving_to_collect" && guard < 20) {
+    while (
+      progressed.starterDrone.status !== "moving_to_collect" &&
+      guard < 20
+    ) {
       progressed = droneTick(progressed);
       guard++;
     }
@@ -510,7 +539,10 @@ describe("Hub parking derivation", () => {
   it("counts only idle drones at their real hub dock as parked", () => {
     let state = createInitialState("release");
     const hubId = state.starterDrone.hubId!;
-    state = { ...state, inventory: { ...state.inventory, wood: 100, stone: 100, iron: 100 } };
+    state = {
+      ...state,
+      inventory: { ...state.inventory, wood: 100, stone: 100, iron: 100 },
+    };
     state = withTier2HubAndDockedDrones(state, hubId);
 
     expect(getParkedDrones(state, hubId)).toHaveLength(4);
@@ -534,7 +566,9 @@ describe("Hub parking derivation", () => {
       },
     };
 
-    expect(getParkedDrones(state, hubId).map((drone) => drone.droneId)).not.toContain(activeDroneId);
+    expect(
+      getParkedDrones(state, hubId).map((drone) => drone.droneId),
+    ).not.toContain(activeDroneId);
     expect(getParkedDrones(state, hubId)).toHaveLength(3);
   });
 });

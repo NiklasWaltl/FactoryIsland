@@ -10,165 +10,205 @@ interface SmithyPanelProps {
   dispatch: React.Dispatch<GameAction>;
 }
 
-export const SmithyPanel: React.FC<SmithyPanelProps> = React.memo(({ state, dispatch }) => {
-  const s = state.smithy;
-  const isIron = s.selectedRecipe === "iron";
-  const rawInQueue = isIron ? s.iron : s.copper;
-  const canStart = s.fuel > 0 && rawInQueue >= 5;
+export const SmithyPanel: React.FC<SmithyPanelProps> = React.memo(
+  ({ state, dispatch }) => {
+    const s = state.smithy;
+    const isIron = s.selectedRecipe === "iron";
+    const rawInQueue = isIron ? s.iron : s.copper;
+    const canStart = s.fuel > 0 && rawInQueue >= 5;
 
-  const buildingId = state.selectedCraftingBuildingId;
-  const info = getSourceStatusInfo(state, buildingId);
-  const sourceInv = getCraftingSourceInventory(state, info.source);
+    const buildingId = state.selectedCraftingBuildingId;
+    const info = getSourceStatusInfo(state, buildingId);
+    const sourceInv = getCraftingSourceInventory(state, info.source);
 
-  return (
-    <div className="fi-panel fi-smithy" onClick={(e) => e.stopPropagation()}>
-      <h2>🔥 Schmiede</h2>
+    return (
+      <div className="fi-panel fi-smithy" onClick={(e) => e.stopPropagation()}>
+        <h2>🔥 Schmiede</h2>
 
-      {/* ---- Source / Zone selector ---- */}
-      <ZoneSourceSelector state={state} buildingId={buildingId} dispatch={dispatch} />
+        {/* ---- Source / Zone selector ---- */}
+        <ZoneSourceSelector
+          state={state}
+          buildingId={buildingId}
+          dispatch={dispatch}
+        />
 
-      {/* Recipe selector */}
-      <div className="fi-smithy-recipe-tabs">
-        <button
-          className={`fi-btn fi-btn-sm${isIron ? " fi-btn-active" : ""}`}
-          disabled={s.processing}
-          onClick={() => dispatch({ type: "SMITHY_SET_RECIPE", recipe: "iron" })}
-        >
-          ⚙️ Eisenbarren
-        </button>
-        <button
-          className={`fi-btn fi-btn-sm${!isIron ? " fi-btn-active" : ""}`}
-          disabled={s.processing}
-          onClick={() => dispatch({ type: "SMITHY_SET_RECIPE", recipe: "copper" })}
-        >
-          🟫 Kupferbarren
-        </button>
-      </div>
-
-      <p className="fi-smithy-recipe">
-        {isIron
-          ? "Rezept: 5 Eisen + 1 Holz → 1 Eisenbarren (5s)"
-          : "Rezept: 5 Kupfer + 1 Holz → 1 Kupferbarren (5s)"}
-      </p>
-
-      <div className="fi-smithy-row">
-        <div className="fi-smithy-slot">
-          <span>🪵 Brennstoff</span>
-          <strong>{s.fuel}</strong>
-          <span style={{ fontSize: 11, color: "#888" }}>(Vorrat: {sourceInv.wood})</span>
+        {/* Recipe selector */}
+        <div className="fi-smithy-recipe-tabs">
           <button
-            className="fi-btn fi-btn-sm"
-            disabled={sourceInv.wood <= 0}
-            onClick={() => dispatch({ type: "SMITHY_ADD_FUEL", amount: 1 })}
-          >+1</button>
+            className={`fi-btn fi-btn-sm${isIron ? " fi-btn-active" : ""}`}
+            disabled={s.processing}
+            onClick={() =>
+              dispatch({ type: "SMITHY_SET_RECIPE", recipe: "iron" })
+            }
+          >
+            ⚙️ Eisenbarren
+          </button>
           <button
-            className="fi-btn fi-btn-sm"
-            disabled={sourceInv.wood < 5}
-            onClick={() => dispatch({ type: "SMITHY_ADD_FUEL", amount: 5 })}
-          >+5</button>
+            className={`fi-btn fi-btn-sm${!isIron ? " fi-btn-active" : ""}`}
+            disabled={s.processing}
+            onClick={() =>
+              dispatch({ type: "SMITHY_SET_RECIPE", recipe: "copper" })
+            }
+          >
+            🟫 Kupferbarren
+          </button>
         </div>
 
-        {isIron ? (
-          <div className="fi-smithy-slot">
-            <span>⚙️ Eisen (braucht 5)</span>
-            <strong>{s.iron}</strong>
-            <span style={{ fontSize: 11, color: "#888" }}>(Vorrat: {sourceInv.iron})</span>
-            <button
-              className="fi-btn fi-btn-sm"
-              disabled={sourceInv.iron <= 0}
-              onClick={() => dispatch({ type: "SMITHY_ADD_IRON", amount: 1 })}
-            >+1</button>
-            <button
-              className="fi-btn fi-btn-sm"
-              disabled={sourceInv.iron < 5}
-              onClick={() => dispatch({ type: "SMITHY_ADD_IRON", amount: 5 })}
-            >+5</button>
-          </div>
-        ) : (
-          <div className="fi-smithy-slot">
-            <span>🟫 Kupfer (braucht 5)</span>
-            <strong>{s.copper}</strong>
-            <span style={{ fontSize: 11, color: "#888" }}>(Vorrat: {sourceInv.copper})</span>
-            <button
-              className="fi-btn fi-btn-sm"
-              disabled={sourceInv.copper <= 0}
-              onClick={() => dispatch({ type: "SMITHY_ADD_COPPER", amount: 1 })}
-            >+1</button>
-            <button
-              className="fi-btn fi-btn-sm"
-              disabled={sourceInv.copper < 5}
-              onClick={() => dispatch({ type: "SMITHY_ADD_COPPER", amount: 5 })}
-            >+5</button>
-          </div>
-        )}
-      </div>
+        <p className="fi-smithy-recipe">
+          {isIron
+            ? "Rezept: 5 Eisen + 1 Holz → 1 Eisenbarren (5s)"
+            : "Rezept: 5 Kupfer + 1 Holz → 1 Kupferbarren (5s)"}
+        </p>
 
-      {/* Progress */}
-      <div className="fi-smithy-progress-wrap">
-        <div className="fi-smithy-progress-bar">
-          <div
-            className="fi-smithy-progress-fill"
-            style={{ width: `${Math.min(s.progress * 100, 100)}%` }}
-          />
+        <div className="fi-smithy-row">
+          <div className="fi-smithy-slot">
+            <span>🪵 Brennstoff</span>
+            <strong>{s.fuel}</strong>
+            <span style={{ fontSize: 11, color: "#888" }}>
+              (Vorrat: {sourceInv.wood})
+            </span>
+            <button
+              className="fi-btn fi-btn-sm"
+              disabled={sourceInv.wood <= 0}
+              onClick={() => dispatch({ type: "SMITHY_ADD_FUEL", amount: 1 })}
+            >
+              +1
+            </button>
+            <button
+              className="fi-btn fi-btn-sm"
+              disabled={sourceInv.wood < 5}
+              onClick={() => dispatch({ type: "SMITHY_ADD_FUEL", amount: 5 })}
+            >
+              +5
+            </button>
+          </div>
+
+          {isIron ? (
+            <div className="fi-smithy-slot">
+              <span>⚙️ Eisen (braucht 5)</span>
+              <strong>{s.iron}</strong>
+              <span style={{ fontSize: 11, color: "#888" }}>
+                (Vorrat: {sourceInv.iron})
+              </span>
+              <button
+                className="fi-btn fi-btn-sm"
+                disabled={sourceInv.iron <= 0}
+                onClick={() => dispatch({ type: "SMITHY_ADD_IRON", amount: 1 })}
+              >
+                +1
+              </button>
+              <button
+                className="fi-btn fi-btn-sm"
+                disabled={sourceInv.iron < 5}
+                onClick={() => dispatch({ type: "SMITHY_ADD_IRON", amount: 5 })}
+              >
+                +5
+              </button>
+            </div>
+          ) : (
+            <div className="fi-smithy-slot">
+              <span>🟫 Kupfer (braucht 5)</span>
+              <strong>{s.copper}</strong>
+              <span style={{ fontSize: 11, color: "#888" }}>
+                (Vorrat: {sourceInv.copper})
+              </span>
+              <button
+                className="fi-btn fi-btn-sm"
+                disabled={sourceInv.copper <= 0}
+                onClick={() =>
+                  dispatch({ type: "SMITHY_ADD_COPPER", amount: 1 })
+                }
+              >
+                +1
+              </button>
+              <button
+                className="fi-btn fi-btn-sm"
+                disabled={sourceInv.copper < 5}
+                onClick={() =>
+                  dispatch({ type: "SMITHY_ADD_COPPER", amount: 5 })
+                }
+              >
+                +5
+              </button>
+            </div>
+          )}
         </div>
-        <span className="fi-smithy-progress-text">
-          {s.processing ? `${Math.floor(s.progress * 100)}%` : "Gestoppt"}
-        </span>
-      </div>
 
-      <div className="fi-smithy-controls">
-        {!s.processing ? (
-          <button
-            className="fi-btn"
-            disabled={!canStart}
-            onClick={() => dispatch({ type: "SMITHY_START" })}
-          >
-            ▶ Starten
-          </button>
-        ) : (
-          <button
-            className="fi-btn fi-btn-danger"
-            onClick={() => dispatch({ type: "SMITHY_STOP" })}
-          >
-            ⏹ Stoppen
-          </button>
-        )}
-        {!s.processing && !canStart && (
-          <div style={{ fontSize: 10, color: "#e8a946", marginTop: 2 }}>
-            {info.fallbackReason === "zone_no_warehouses"
-              ? "Zone hat keine Lagerh\u00e4user"
-              : s.fuel <= 0 && rawInQueue < 5
-                ? "Brennstoff und Erz fehlen"
-                : s.fuel <= 0
-                  ? "Brennstoff fehlen"
-                  : "Zu wenig Erz eingelegt (mind. 5)"}
+        {/* Progress */}
+        <div className="fi-smithy-progress-wrap">
+          <div className="fi-smithy-progress-bar">
+            <div
+              className="fi-smithy-progress-fill"
+              style={{ width: `${Math.min(s.progress * 100, 100)}%` }}
+            />
           </div>
-        )}
-      </div>
+          <span className="fi-smithy-progress-text">
+            {s.processing ? `${Math.floor(s.progress * 100)}%` : "Gestoppt"}
+          </span>
+        </div>
 
-      <div className="fi-smithy-output">
-        {s.outputIngots > 0 && (
-          <span>🧱 Eisenbarren fertig: <strong>{s.outputIngots}</strong></span>
-        )}
-        {s.outputCopperIngots > 0 && (
-          <span>🟫 Kupferbarren fertig: <strong>{s.outputCopperIngots}</strong></span>
-        )}
-        {(s.outputIngots > 0 || s.outputCopperIngots > 0) ? (
-          <button
-            className="fi-btn"
-            onClick={() => dispatch({ type: "SMITHY_WITHDRAW" })}
-          >
-            Ins Lager übertragen
-          </button>
-        ) : (
-          <span style={{ color: "#888", fontSize: 13 }}>Keine fertigen Items</span>
-        )}
-      </div>
+        <div className="fi-smithy-controls">
+          {!s.processing ? (
+            <button
+              className="fi-btn"
+              disabled={!canStart}
+              onClick={() => dispatch({ type: "SMITHY_START" })}
+            >
+              ▶ Starten
+            </button>
+          ) : (
+            <button
+              className="fi-btn fi-btn-danger"
+              onClick={() => dispatch({ type: "SMITHY_STOP" })}
+            >
+              ⏹ Stoppen
+            </button>
+          )}
+          {!s.processing && !canStart && (
+            <div style={{ fontSize: 10, color: "#e8a946", marginTop: 2 }}>
+              {info.fallbackReason === "zone_no_warehouses"
+                ? "Zone hat keine Lagerh\u00e4user"
+                : s.fuel <= 0 && rawInQueue < 5
+                  ? "Brennstoff und Erz fehlen"
+                  : s.fuel <= 0
+                    ? "Brennstoff fehlen"
+                    : "Zu wenig Erz eingelegt (mind. 5)"}
+            </div>
+          )}
+        </div>
 
-      <hr style={{ borderColor: "rgba(255,255,255,0.1)", margin: "12px 0" }} />
-      <p style={{ color: "#777", fontSize: 11 }}>
-        Entfernen nur im Bau-Modus (Rechtsklick).
-      </p>
-    </div>
-  );
-});
+        <div className="fi-smithy-output">
+          {s.outputIngots > 0 && (
+            <span>
+              🧱 Eisenbarren fertig: <strong>{s.outputIngots}</strong>
+            </span>
+          )}
+          {s.outputCopperIngots > 0 && (
+            <span>
+              🟫 Kupferbarren fertig: <strong>{s.outputCopperIngots}</strong>
+            </span>
+          )}
+          {s.outputIngots > 0 || s.outputCopperIngots > 0 ? (
+            <button
+              className="fi-btn"
+              onClick={() => dispatch({ type: "SMITHY_WITHDRAW" })}
+            >
+              Ins Lager übertragen
+            </button>
+          ) : (
+            <span style={{ color: "#888", fontSize: 13 }}>
+              Keine fertigen Items
+            </span>
+          )}
+        </div>
+
+        <hr
+          style={{ borderColor: "rgba(255,255,255,0.1)", margin: "12px 0" }}
+        />
+        <p style={{ color: "#777", fontSize: 11 }}>
+          Entfernen nur im Bau-Modus (Rechtsklick).
+        </p>
+      </div>
+    );
+  },
+);

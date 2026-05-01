@@ -22,7 +22,12 @@ interface PhaserHostProps {
  * React wrapper that mounts a Phaser canvas into the DOM.
  * Handles clean mount/unmount and prevents double-init in React Strict Mode.
  */
-export const PhaserHost: React.FC<PhaserHostProps> = ({ floorMap, staticAssets, drones, collectionNodes }) => {
+export const PhaserHost: React.FC<PhaserHostProps> = ({
+  floorMap,
+  staticAssets,
+  drones,
+  collectionNodes,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
 

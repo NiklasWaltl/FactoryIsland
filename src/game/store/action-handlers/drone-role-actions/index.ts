@@ -22,10 +22,7 @@
 import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import type { DroneRoleActionDeps } from "./deps";
-import {
-  HANDLED_ACTION_TYPES,
-  type DroneRoleHandledAction,
-} from "./types";
+import { HANDLED_ACTION_TYPES, type DroneRoleHandledAction } from "./types";
 import { runDroneSetRolePhase } from "./phases/drone-set-role-phase";
 
 export type { DroneRoleActionDeps } from "./deps";

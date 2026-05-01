@@ -6,8 +6,14 @@ import { createInitialState } from "../../store/initial-state";
 import type { GameState } from "../../store/types";
 
 let phaserHostProps: { staticAssets: StaticAssetSnapshot[] } | null = null;
-const clientWidthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientWidth");
-const clientHeightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight");
+const clientWidthDescriptor = Object.getOwnPropertyDescriptor(
+  HTMLElement.prototype,
+  "clientWidth",
+);
+const clientHeightDescriptor = Object.getOwnPropertyDescriptor(
+  HTMLElement.prototype,
+  "clientHeight",
+);
 
 jest.mock("../../world/PhaserHost", () => ({
   PhaserHost: (props: { staticAssets: StaticAssetSnapshot[] }) => {
@@ -16,7 +22,9 @@ jest.mock("../../world/PhaserHost", () => ({
   },
 }));
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+(
+  globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 function createGridState(): GameState {
   const base = createInitialState("release");
@@ -71,10 +79,18 @@ describe("Grid construction rendering", () => {
 
   afterAll(() => {
     if (clientWidthDescriptor) {
-      Object.defineProperty(HTMLElement.prototype, "clientWidth", clientWidthDescriptor);
+      Object.defineProperty(
+        HTMLElement.prototype,
+        "clientWidth",
+        clientWidthDescriptor,
+      );
     }
     if (clientHeightDescriptor) {
-      Object.defineProperty(HTMLElement.prototype, "clientHeight", clientHeightDescriptor);
+      Object.defineProperty(
+        HTMLElement.prototype,
+        "clientHeight",
+        clientHeightDescriptor,
+      );
     }
   });
 
@@ -121,17 +137,25 @@ describe("Grid construction rendering", () => {
     });
 
     expect(
-      phaserHostProps!.staticAssets.find((asset) => asset.id === "grid-site")?.isUnderConstruction,
+      phaserHostProps!.staticAssets.find((asset) => asset.id === "grid-site")
+        ?.isUnderConstruction,
     ).toBe(true);
 
-    const { ["grid-site"]: _completed, ...remainingSites } = state.constructionSites;
+    const { ["grid-site"]: _completed, ...remainingSites } =
+      state.constructionSites;
 
     act(() => {
-      root.render(<Grid state={{ ...state, constructionSites: remainingSites }} dispatch={jest.fn()} />);
+      root.render(
+        <Grid
+          state={{ ...state, constructionSites: remainingSites }}
+          dispatch={jest.fn()}
+        />,
+      );
     });
 
     expect(
-      phaserHostProps!.staticAssets.find((asset) => asset.id === "grid-site")?.isUnderConstruction,
+      phaserHostProps!.staticAssets.find((asset) => asset.id === "grid-site")
+        ?.isUnderConstruction,
     ).toBe(false);
   });
 });

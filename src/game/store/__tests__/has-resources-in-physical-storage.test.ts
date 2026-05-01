@@ -12,9 +12,7 @@
 //      consumeFromPhysicalStorage), so has...() == ok of consume...() in all
 //      tested combinations.
 
-import {
-  createInitialState,
-} from "../reducer";
+import { createInitialState } from "../reducer";
 import { addResources } from "../inventory-ops";
 import {
   hasResourcesInPhysicalStorage,
@@ -30,7 +28,11 @@ function emptyInv(): Inventory {
   return inv;
 }
 
-function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): GameState {
+function withWarehouse(
+  state: GameState,
+  id: string,
+  inv: Partial<Inventory>,
+): GameState {
   return {
     ...state,
     warehousesPlaced: state.warehousesPlaced + 1,
@@ -57,7 +59,12 @@ function withHub(
 
 function bareState(): GameState {
   const s = createInitialState("release");
-  return { ...s, inventory: emptyInv(), warehouseInventories: {}, serviceHubs: {} };
+  return {
+    ...s,
+    inventory: emptyInv(),
+    warehouseInventories: {},
+    serviceHubs: {},
+  };
 }
 
 describe("hasResourcesInPhysicalStorage", () => {
@@ -84,13 +91,18 @@ describe("hasResourcesInPhysicalStorage", () => {
   });
 
   it("is consistent with consumeFromPhysicalStorage: true => consume ok, false => consume not ok", () => {
-    const cases: Array<{ s: GameState; costs: Partial<Record<keyof Inventory, number>> }> = [
+    const cases: Array<{
+      s: GameState;
+      costs: Partial<Record<keyof Inventory, number>>;
+    }> = [
       { s: withWarehouse(bareState(), "wh", { wood: 10 }), costs: { wood: 5 } },
       { s: withWarehouse(bareState(), "wh", { wood: 1 }), costs: { wood: 5 } },
       { s: withHub(bareState(), "h", { stone: 3 }), costs: { stone: 3 } },
       { s: withHub(bareState(), "h", { stone: 2 }), costs: { stone: 3 } },
       {
-        s: withHub(withWarehouse(bareState(), "wh", { wood: 2 }), "h", { wood: 3 }),
+        s: withHub(withWarehouse(bareState(), "wh", { wood: 2 }), "h", {
+          wood: 3,
+        }),
         costs: { wood: 4 },
       },
     ];

@@ -28,6 +28,10 @@ export const MANUAL_ASSEMBLER_RECIPES: ManualAssemblerRecipe[] = [
   },
 ];
 
-export function getManualAssemblerRecipe(recipeKey: ManualAssemblerRecipeKey): ManualAssemblerRecipe | null {
-  return MANUAL_ASSEMBLER_RECIPES.find((recipe) => recipe.key === recipeKey) ?? null;
+export function getManualAssemblerRecipe(
+  recipeKey: ManualAssemblerRecipeKey,
+): ManualAssemblerRecipe | null {
+  return (
+    MANUAL_ASSEMBLER_RECIPES.find((recipe) => recipe.key === recipeKey) ?? null
+  );
 }

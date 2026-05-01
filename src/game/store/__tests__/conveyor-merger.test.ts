@@ -76,7 +76,9 @@ describe("conveyor_merger V1", () => {
   });
 
   test("blocks cleanly when merger queue is full", () => {
-    const fullQueue = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ConveyorItem[];
+    const fullQueue = Array(CONVEYOR_TILE_CAPACITY).fill(
+      "stone",
+    ) as ConveyorItem[];
     const state = makeState({
       assets: {
         input: makeConveyorAsset("input", 2, 1, "south"),

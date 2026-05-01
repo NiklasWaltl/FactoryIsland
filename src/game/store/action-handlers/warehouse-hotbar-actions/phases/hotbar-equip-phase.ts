@@ -1,6 +1,11 @@
 import { debugLog } from "../../../../debug/debugLogger";
 import { RESOURCE_LABELS } from "../../../constants/resources";
-import type { GameState, HotbarSlot, Inventory, ToolKind } from "../../../types";
+import type {
+  GameState,
+  HotbarSlot,
+  Inventory,
+  ToolKind,
+} from "../../../types";
 import type { WarehouseHotbarActionDeps } from "../deps";
 import type { HotbarEquipAction } from "../types";
 
@@ -49,9 +54,7 @@ export interface HotbarEquipContext {
   deps: WarehouseHotbarActionDeps;
 }
 
-export function runHotbarEquipPhase(
-  ctx: HotbarEquipContext,
-): GameState {
+export function runHotbarEquipPhase(ctx: HotbarEquipContext): GameState {
   const { state, action, deps } = ctx;
 
   switch (action.type) {

@@ -23,7 +23,9 @@ function emptyInv(): Inventory {
   return createInitialState("release").inventory;
 }
 
-function makeSmelterEntry(recipe: "iron" | "copper" = "iron"): AutoSmelterEntry {
+function makeSmelterEntry(
+  recipe: "iron" | "copper" = "iron",
+): AutoSmelterEntry {
   return {
     inputBuffer: [],
     processing: null,
@@ -51,9 +53,23 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     cablesPlaced: 0,
     powerPolesPlaced: 0,
     selectedPowerPoleId: null,
-    hotbarSlots: Array.from({ length: 9 }, () => ({ toolKind: "empty" as const, amount: 0, label: "", emoji: "" })),
+    hotbarSlots: Array.from({ length: 9 }, () => ({
+      toolKind: "empty" as const,
+      amount: 0,
+      label: "",
+      emoji: "",
+    })),
     activeSlot: 0,
-    smithy: { fuel: 0, iron: 0, copper: 0, selectedRecipe: "iron", processing: false, progress: 0, outputIngots: 0, outputCopperIngots: 0 },
+    smithy: {
+      fuel: 0,
+      iron: 0,
+      copper: 0,
+      selectedRecipe: "iron",
+      processing: false,
+      progress: 0,
+      outputIngots: 0,
+      outputCopperIngots: 0,
+    },
     generator: { fuel: 0, progress: 0, running: false },
     battery: { stored: 0, capacity: 100 },
     connectedAssetIds: [],
@@ -70,7 +86,12 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     selectedAutoMinerId: null,
     autoSmelters: {},
     selectedAutoSmelterId: null,
-    manualAssembler: { processing: false, recipe: null, progress: 0, buildingId: null },
+    manualAssembler: {
+      processing: false,
+      recipe: null,
+      progress: 0,
+      buildingId: null,
+    },
     machinePowerRatio: {},
     energyDebugOverlay: false,
     autoDeliveryLog: [],
@@ -92,7 +113,16 @@ function runTicks(state: GameState, ticks: number): GameState {
 
 // 2x1 smelter at (6,6) facing east → input cell = (5,6), output cell = (8,6).
 function makeSmelterAsset(id: string, x = 6, y = 6): PlacedAsset {
-  return { id, type: "auto_smelter", x, y, size: 2, width: 2, height: 1, direction: "east" };
+  return {
+    id,
+    type: "auto_smelter",
+    x,
+    y,
+    size: 2,
+    width: 2,
+    height: 1,
+    direction: "east",
+  };
 }
 
 function makeEastConveyor(id: string, x: number, y: number): PlacedAsset {
@@ -124,7 +154,14 @@ describe("Auto-Smelter conveyor input", () => {
     const state = makeBaseState({
       assets: {
         sm1: makeSmelterAsset("sm1"),
-        whA: { id: "whA", type: "warehouse", x: 1, y: 1, size: 2, direction: "south" } as PlacedAsset,
+        whA: {
+          id: "whA",
+          type: "warehouse",
+          x: 1,
+          y: 1,
+          size: 2,
+          direction: "south",
+        } as PlacedAsset,
       },
       cellMap: {
         [cellKey(6, 6)]: "sm1",
@@ -184,7 +221,10 @@ describe("Auto-Smelter conveyor input", () => {
         [cellKey(7, 6)]: "sm1",
       },
       autoSmelters: {
-        sm1: { ...makeSmelterEntry("iron"), inputBuffer: ["iron", "iron", "iron", "iron", "iron"] },
+        sm1: {
+          ...makeSmelterEntry("iron"),
+          inputBuffer: ["iron", "iron", "iron", "iron", "iron"],
+        },
       },
       machinePowerRatio: { sm1: 1 },
       poweredMachineIds: ["sm1"],
@@ -228,7 +268,14 @@ describe("Auto-Smelter conveyor input", () => {
       assets: {
         sm1: makeSmelterAsset("sm1"),
         // Conveyor at (6,7) facing north → next cell (6,6) belongs to smelter.
-        cv1: { id: "cv1", type: "conveyor", x: 6, y: 7, size: 1, direction: "north" } as PlacedAsset,
+        cv1: {
+          id: "cv1",
+          type: "conveyor",
+          x: 6,
+          y: 7,
+          size: 1,
+          direction: "north",
+        } as PlacedAsset,
       },
       cellMap: {
         [cellKey(6, 6)]: "sm1",
@@ -249,7 +296,10 @@ describe("Auto-Smelter conveyor input", () => {
   });
 
   test("buffer caps at AUTO_SMELTER_BUFFER_CAPACITY", () => {
-    const fullBuffer = Array(AUTO_SMELTER_BUFFER_CAPACITY).fill("iron") as ("iron" | "copper")[];
+    const fullBuffer = Array(AUTO_SMELTER_BUFFER_CAPACITY).fill("iron") as (
+      | "iron"
+      | "copper"
+    )[];
     const state = makeBaseState({
       assets: {
         sm1: makeSmelterAsset("sm1"),

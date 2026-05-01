@@ -12,7 +12,10 @@
 import type { GameState, PlacedAsset } from "../types";
 
 export interface UiCellPreludeDeps {
-  tryTogglePanelFromAsset(state: GameState, asset: PlacedAsset | null): GameState | null;
+  tryTogglePanelFromAsset(
+    state: GameState,
+    asset: PlacedAsset | null,
+  ): GameState | null;
 }
 
 /**
@@ -26,7 +29,10 @@ export function handleUiCellPrelude(
 ): GameState | null {
   // Click on map shop => open shop panel (always works)
   if (asset && asset.type === "map_shop") {
-    return { ...state, openPanel: state.openPanel === "map_shop" ? null : "map_shop" };
+    return {
+      ...state,
+      openPanel: state.openPanel === "map_shop" ? null : "map_shop",
+    };
   }
 
   // ----- BUILD MODE ACTIVE -----

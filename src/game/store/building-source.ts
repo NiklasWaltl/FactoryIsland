@@ -3,7 +3,10 @@ import type { GameState } from "./types";
 import { resolveCraftingSource } from "../crafting/crafting-sources";
 import { getZoneWarehouseIds } from "../zones/production-zone-aggregation";
 
-export function resolveBuildingSource(state: GameState, buildingId: string | null): CraftingSource {
+export function resolveBuildingSource(
+  state: GameState,
+  buildingId: string | null,
+): CraftingSource {
   if (!buildingId) return { kind: "global" };
   const zoneId = state.buildingZoneIds[buildingId];
   if (zoneId && state.productionZones[zoneId]) {

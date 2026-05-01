@@ -61,7 +61,14 @@ describe("selectors", () => {
   it("getFreeAmount throws when invariant violated (manual corruption)", () => {
     const corrupted: NetworkSlice = {
       reservations: [
-        { id: "x", itemId: "wood", amount: 999, ownerKind: "system_request", ownerId: "o", createdAt: 0 },
+        {
+          id: "x",
+          itemId: "wood",
+          amount: 999,
+          ownerKind: "system_request",
+          ownerId: "o",
+          createdAt: 0,
+        },
       ],
       nextReservationId: 2,
       lastError: null,
@@ -395,7 +402,14 @@ describe("normalizeNetworkSlice", () => {
   it("drops persisted reservations but preserves nextReservationId", () => {
     const stale: NetworkSlice = {
       reservations: [
-        { id: "res-99", itemId: "wood", amount: 1, ownerKind: "crafting_job", ownerId: "ghost", createdAt: 0 },
+        {
+          id: "res-99",
+          itemId: "wood",
+          amount: 1,
+          ownerKind: "crafting_job",
+          ownerId: "ghost",
+          createdAt: 0,
+        },
       ],
       nextReservationId: 100,
       lastError: null,

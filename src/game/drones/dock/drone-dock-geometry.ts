@@ -8,7 +8,10 @@ const DRONE_DOCK_COLUMNS = 2;
  * We derive parking positions from that live state instead of maintaining a
  * separate parked-drone count for the render layer.
  */
-export function getDroneDockOffset(slotIndex: number): { dx: number; dy: number } {
+export function getDroneDockOffset(slotIndex: number): {
+  dx: number;
+  dy: number;
+} {
   const safeSlot = Math.max(0, Math.floor(slotIndex));
   return {
     dx: safeSlot % DRONE_DOCK_COLUMNS,

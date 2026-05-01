@@ -16,10 +16,7 @@ import {
   handleClickCellToolAction,
   type ClickCellToolActionDeps,
 } from "./click-cell-tools";
-import {
-  handleUiCellPrelude,
-  type UiCellPreludeDeps,
-} from "./ui-cell-prelude";
+import { handleUiCellPrelude, type UiCellPreludeDeps } from "./ui-cell-prelude";
 
 export interface ClickCellActionDeps {
   uiCellPreludeDeps: UiCellPreludeDeps;
@@ -62,7 +59,11 @@ export function handleClickCellAction(
 
       const { assetId, asset } = resolved;
 
-      const uiPreludeState = handleUiCellPrelude(state, asset, deps.uiCellPreludeDeps);
+      const uiPreludeState = handleUiCellPrelude(
+        state,
+        asset,
+        deps.uiCellPreludeDeps,
+      );
       if (uiPreludeState !== null) return uiPreludeState;
 
       return handleClickCellToolAction(

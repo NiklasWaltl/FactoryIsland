@@ -7,7 +7,10 @@
 
 import { isKnownItemId } from "../../items/registry";
 import type { ItemStack } from "../../items/types";
-import { getWorkbenchRecipe, type WorkbenchRecipe } from "../../simulation/recipes";
+import {
+  getWorkbenchRecipe,
+  type WorkbenchRecipe,
+} from "../../simulation/recipes";
 import type { PlacedAsset } from "../../store/types";
 import {
   asItemId,
@@ -64,8 +67,16 @@ export interface EnqueueInput {
 }
 
 export type EnqueueResult =
-  | { readonly ok: true; readonly queue: CraftingQueueState; readonly job: CraftingJob }
-  | { readonly ok: false; readonly queue: CraftingQueueState; readonly error: CraftingError };
+  | {
+      readonly ok: true;
+      readonly queue: CraftingQueueState;
+      readonly job: CraftingJob;
+    }
+  | {
+      readonly ok: false;
+      readonly queue: CraftingQueueState;
+      readonly error: CraftingError;
+    };
 
 /**
  * Validate inputs and append a new `queued` job to the queue.
@@ -155,7 +166,11 @@ export type CancelResult =
       readonly previousStatus: JobStatus;
       readonly job: CraftingJob;
     }
-  | { readonly ok: false; readonly queue: CraftingQueueState; readonly error: CraftingError };
+  | {
+      readonly ok: false;
+      readonly queue: CraftingQueueState;
+      readonly error: CraftingError;
+    };
 
 /**
  * Mark a job as cancelled. Already-terminal jobs (`done`, `cancelled`) are
@@ -175,7 +190,11 @@ export function cancelJob(
     return { ok: false, queue: { ...queue, lastError: err }, error: err };
   }
   const job = queue.jobs[idx];
-  if (job.status === "done" || job.status === "cancelled" || job.status === "delivering") {
+  if (
+    job.status === "done" ||
+    job.status === "cancelled" ||
+    job.status === "delivering"
+  ) {
     const err: CraftingError = {
       kind: "INVALID_TRANSITION",
       message: `Job "${jobId}" is terminal (${job.status}); cannot cancel.`,
@@ -209,13 +228,20 @@ export function cancelJob(
  * Active (`crafting`/`delivering`) and terminal (`done`/`cancelled`) jobs are
  * never moved.
  */
-const REORDERABLE: ReadonlySet<JobStatus> = new Set<JobStatus>(["queued", "reserved"]);
+const REORDERABLE: ReadonlySet<JobStatus> = new Set<JobStatus>([
+  "queued",
+  "reserved",
+]);
 
 export type MoveDirection = "up" | "down" | "top";
 
 export type MoveResult =
   | { readonly ok: true; readonly queue: CraftingQueueState }
-  | { readonly ok: false; readonly queue: CraftingQueueState; readonly error: CraftingError };
+  | {
+      readonly ok: false;
+      readonly queue: CraftingQueueState;
+      readonly error: CraftingError;
+    };
 
 export type SetPriorityResult = MoveResult;
 
@@ -250,7 +276,11 @@ export function moveJob(
 ): MoveResult {
   const idx = queue.jobs.findIndex((j) => j.id === jobId);
   if (idx < 0) {
-    const err: CraftingError = { kind: "UNKNOWN_JOB", message: `Job "${jobId}" does not exist.`, jobId };
+    const err: CraftingError = {
+      kind: "UNKNOWN_JOB",
+      message: `Job "${jobId}" does not exist.`,
+      jobId,
+    };
     return { ok: false, queue: { ...queue, lastError: err }, error: err };
   }
   const job = queue.jobs[idx];
@@ -261,8 +291,15 @@ export function moveJob(
 
   if (direction === "top") {
     const waiting = queue.jobs.filter((j) => REORDERABLE.has(j.status));
-    const minSeq = waiting.reduce((m, j) => Math.min(m, j.enqueuedAt), job.enqueuedAt);
-    const promoted: CraftingJob = { ...job, priority: "high", enqueuedAt: minSeq - 1 };
+    const minSeq = waiting.reduce(
+      (m, j) => Math.min(m, j.enqueuedAt),
+      job.enqueuedAt,
+    );
+    const promoted: CraftingJob = {
+      ...job,
+      priority: "high",
+      enqueuedAt: minSeq - 1,
+    };
     return {
       ok: true,
       queue: {
@@ -275,19 +312,32 @@ export function moveJob(
 
   // Find the adjacent waiting neighbour for this workbench in sorted order.
   const sortedWaitingForWb = sortByPriorityFifo(
-    queue.jobs.filter((j) => j.workbenchId === job.workbenchId && REORDERABLE.has(j.status)),
+    queue.jobs.filter(
+      (j) => j.workbenchId === job.workbenchId && REORDERABLE.has(j.status),
+    ),
   );
   const sortedIdx = sortedWaitingForWb.findIndex((j) => j.id === jobId);
   const neighbourSortedIdx = direction === "up" ? sortedIdx - 1 : sortedIdx + 1;
-  if (neighbourSortedIdx < 0 || neighbourSortedIdx >= sortedWaitingForWb.length) {
+  if (
+    neighbourSortedIdx < 0 ||
+    neighbourSortedIdx >= sortedWaitingForWb.length
+  ) {
     // Already at the requested edge; treat as no-op success (clear lastError).
     return { ok: true, queue: { ...queue, lastError: null } };
   }
   const neighbour = sortedWaitingForWb[neighbourSortedIdx];
   const neighbourIdx = queue.jobs.findIndex((j) => j.id === neighbour.id);
 
-  const swappedJob: CraftingJob = { ...job, priority: neighbour.priority, enqueuedAt: neighbour.enqueuedAt };
-  const swappedNeighbour: CraftingJob = { ...neighbour, priority: job.priority, enqueuedAt: job.enqueuedAt };
+  const swappedJob: CraftingJob = {
+    ...job,
+    priority: neighbour.priority,
+    enqueuedAt: neighbour.enqueuedAt,
+  };
+  const swappedNeighbour: CraftingJob = {
+    ...neighbour,
+    priority: job.priority,
+    enqueuedAt: job.enqueuedAt,
+  };
 
   return {
     ok: true,
@@ -314,7 +364,11 @@ export function setJobPriority(
 ): SetPriorityResult {
   const idx = queue.jobs.findIndex((j) => j.id === jobId);
   if (idx < 0) {
-    const err: CraftingError = { kind: "UNKNOWN_JOB", message: `Job "${jobId}" does not exist.`, jobId };
+    const err: CraftingError = {
+      kind: "UNKNOWN_JOB",
+      message: `Job "${jobId}" does not exist.`,
+      jobId,
+    };
     return { ok: false, queue: { ...queue, lastError: err }, error: err };
   }
   const job = queue.jobs[idx];
@@ -351,9 +405,7 @@ const ALLOWED: Readonly<Record<JobStatus, ReadonlySet<JobStatus>>> = {
  */
 export function assertTransition(from: JobStatus, to: JobStatus): void {
   if (!ALLOWED[from].has(to)) {
-    throw new Error(
-      `[crafting] Invalid status transition: ${from} → ${to}`,
-    );
+    throw new Error(`[crafting] Invalid status transition: ${from} → ${to}`);
   }
 }
 
@@ -385,7 +437,9 @@ export function getActiveCraftingJob(
 ): CraftingJob | null {
   return (
     queue.jobs.find(
-      (j) => j.workbenchId === workbenchId && (j.status === "crafting" || j.status === "delivering"),
+      (j) =>
+        j.workbenchId === workbenchId &&
+        (j.status === "crafting" || j.status === "delivering"),
     ) ?? null
   );
 }

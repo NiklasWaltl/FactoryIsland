@@ -147,7 +147,9 @@ function makeSmithyDecisionInput(params?: {
   };
 
   const noCallResolveSource = () => {
-    throw new Error("resolveBuildingSource should not be called in smithy tests");
+    throw new Error(
+      "resolveBuildingSource should not be called in smithy tests",
+    );
   };
 
   return {
@@ -163,7 +165,10 @@ function makeSmithyDecisionInput(params?: {
       smithy,
       movedThisTick: new Set<string>(),
       isValidWarehouseInput: () => false,
-      resolveBuildingSource: noCallResolveSource as (state: GameState, buildingId: string | null) => CraftingSource,
+      resolveBuildingSource: noCallResolveSource as (
+        state: GameState,
+        buildingId: string | null,
+      ) => CraftingSource,
       getCraftingSourceInventory: () => ({ ...state.inventory }),
       getSourceCapacity: () => 0,
       getWarehouseCapacity: () => 20,
@@ -245,7 +250,7 @@ describe("decideConveyorTargetSelection workbench contract", () => {
       smithy: state.smithy,
       movedThisTick: new Set<string>(),
       isValidWarehouseInput: () => false,
-      resolveBuildingSource: () => ({ kind: "global" } as CraftingSource),
+      resolveBuildingSource: () => ({ kind: "global" }) as CraftingSource,
       getCraftingSourceInventory: () => ({ ...state.inventory }),
       getSourceCapacity: () => 999,
       getWarehouseCapacity: () => 20,
@@ -305,7 +310,9 @@ describe("decideConveyorTargetSelection next_conveyor contract", () => {
     };
 
     const noCallResolveSource = () => {
-      throw new Error("resolveBuildingSource should not be called in next_conveyor tests");
+      throw new Error(
+        "resolveBuildingSource should not be called in next_conveyor tests",
+      );
     };
 
     const decision = decideConveyorTargetSelection({
@@ -322,7 +329,10 @@ describe("decideConveyorTargetSelection next_conveyor contract", () => {
       smithy: state.smithy,
       movedThisTick: new Set<string>(),
       isValidWarehouseInput: () => false,
-      resolveBuildingSource: noCallResolveSource as (state: GameState, buildingId: string | null) => CraftingSource,
+      resolveBuildingSource: noCallResolveSource as (
+        state: GameState,
+        buildingId: string | null,
+      ) => CraftingSource,
       getCraftingSourceInventory: () => ({ ...state.inventory }),
       getSourceCapacity: () => 0,
       getWarehouseCapacity: () => 20,

@@ -8,10 +8,7 @@ import {
   type ServiceHubEntry,
 } from "../../../store/reducer";
 import { BUILDING_COSTS } from "../../../store/constants/buildings/index";
-import {
-  addResources,
-  hasResources,
-} from "../../../store/inventory-ops";
+import { addResources, hasResources } from "../../../store/inventory-ops";
 import { selectBuildMenuInventoryView } from "../../../store/helpers/inventory-queries";
 import { BuildMenu } from "../BuildMenu";
 
@@ -30,7 +27,9 @@ jest.mock("../../../assets/sprites/sprites", () => {
   };
 });
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+(
+  globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 function emptyInv(): Inventory {
   const inv = createInitialState("release").inventory;
@@ -52,7 +51,11 @@ function bareState(): GameState {
   };
 }
 
-function withWarehouse(state: GameState, id: string, inv: Partial<Inventory>): GameState {
+function withWarehouse(
+  state: GameState,
+  id: string,
+  inv: Partial<Inventory>,
+): GameState {
   return {
     ...state,
     warehouseInventories: {
@@ -118,8 +121,8 @@ describe("BuildMenu", () => {
   });
 
   function findBuildItem(name: string): HTMLDivElement {
-    const item = Array.from(container.querySelectorAll(".fi-build-item")).find((element) =>
-      element.textContent?.includes(name),
+    const item = Array.from(container.querySelectorAll(".fi-build-item")).find(
+      (element) => element.textContent?.includes(name),
     );
     if (!(item instanceof HTMLDivElement)) {
       throw new Error(`Could not find build item for ${name}`);
@@ -138,7 +141,9 @@ describe("BuildMenu", () => {
     const workbenchItem = findBuildItem("Werkbank");
     expect(workbenchItem.className).toContain("fi-build-item--disabled");
     expect(workbenchItem.textContent).toContain("Nicht genug Ressourcen");
-    expect(workbenchItem.querySelector(".fi-build-cost--lacking")).not.toBeNull();
+    expect(
+      workbenchItem.querySelector(".fi-build-cost--lacking"),
+    ).not.toBeNull();
 
     act(() => {
       workbenchItem.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -218,7 +223,12 @@ describe("BuildMenu", () => {
 
   it("keeps disabled-state and click affordance aligned with the build-menu source helper", () => {
     const dispatch = jest.fn<void, [GameAction]>();
-    const state = withDrop(withHub(bareState(), "hub-1", { wood: 2 }), "drop-1", "wood", 3);
+    const state = withDrop(
+      withHub(bareState(), "hub-1", { wood: 2 }),
+      "drop-1",
+      "wood",
+      3,
+    );
     const expectedAffordable = hasResources(
       selectBuildMenuInventoryView(state),
       BUILDING_COSTS.workbench as Partial<Record<keyof Inventory, number>>,
@@ -229,7 +239,9 @@ describe("BuildMenu", () => {
     });
 
     const workbenchItem = findBuildItem("Werkbank");
-    expect(workbenchItem.classList.contains("fi-build-item--disabled")).toBe(!expectedAffordable);
+    expect(workbenchItem.classList.contains("fi-build-item--disabled")).toBe(
+      !expectedAffordable,
+    );
 
     act(() => {
       workbenchItem.dispatchEvent(new MouseEvent("click", { bubbles: true }));

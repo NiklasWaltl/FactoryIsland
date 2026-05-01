@@ -19,7 +19,11 @@ import {
   decideAutoSmelterStartProcessingEligibility,
 } from "../../../decisions/smelter-decisions";
 import { areAutoAssemblerEntriesEqual } from "../../../helpers/assembler-equality";
-import type { AutoAssemblerEntry, ConveyorItem, PlacedAsset } from "../../../types";
+import type {
+  AutoAssemblerEntry,
+  ConveyorItem,
+  PlacedAsset,
+} from "../../../types";
 import { getAutoSmelterIoCells } from "../../../asset-geometry";
 import { GRID_H, GRID_W } from "../../../../constants/grid";
 import { cellKey } from "../../../utils/cell-key";
@@ -62,7 +66,9 @@ function consumeAssemblerPendingOutput(entry: AutoAssemblerEntry): void {
 export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
   const { state } = ctx;
 
-  for (const [assemblerId, assemblerState] of Object.entries(state.autoAssemblers ?? {})) {
+  for (const [assemblerId, assemblerState] of Object.entries(
+    state.autoAssemblers ?? {},
+  )) {
     const asset = state.assets[assemblerId];
     if (!asset || asset.type !== "auto_assembler") continue;
 
@@ -72,7 +78,10 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
         ctx.newAutoAssemblersL === state.autoAssemblers
           ? { ...state.autoAssemblers }
           : ctx.newAutoAssemblersL;
-      ctx.newAutoAssemblersL[assemblerId] = { ...assemblerState, status: "NO_POWER" };
+      ctx.newAutoAssemblersL[assemblerId] = {
+        ...assemblerState,
+        status: "NO_POWER",
+      };
       ctx.changed = true;
       continue;
     }
@@ -83,7 +92,10 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
         ctx.newAutoAssemblersL === state.autoAssemblers
           ? { ...state.autoAssemblers }
           : ctx.newAutoAssemblersL;
-      ctx.newAutoAssemblersL[assemblerId] = { ...assemblerState, status: "MISCONFIGURED" as const };
+      ctx.newAutoAssemblersL[assemblerId] = {
+        ...assemblerState,
+        status: "MISCONFIGURED" as const,
+      };
       ctx.changed = true;
       continue;
     }
@@ -96,7 +108,9 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
       const inputDecision = decideAutoSmelterInputBeltEligibility({
         state,
         conveyors:
-          ctx.newConveyorsL === state.conveyors ? state.conveyors : ctx.newConveyorsL,
+          ctx.newConveyorsL === state.conveyors
+            ? state.conveyors
+            : ctx.newConveyorsL,
         inputX: io.input.x,
         inputY: io.input.y,
         expectedInputItem: "ironIngot",
@@ -131,7 +145,9 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
         outputX: io.output.x,
         outputY: io.output.y,
         conveyors:
-          ctx.newConveyorsL === state.conveyors ? state.conveyors : ctx.newConveyorsL,
+          ctx.newConveyorsL === state.conveyors
+            ? state.conveyors
+            : ctx.newConveyorsL,
       });
 
       if (outDec.kind === "misconfigured") {
@@ -180,7 +196,10 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
         ...nextAssembler.processing,
         progressMs: nextAssembler.processing.progressMs + LOGISTICS_TICK_MS,
       };
-      if (nextAssembler.processing.progressMs >= nextAssembler.processing.durationMs) {
+      if (
+        nextAssembler.processing.progressMs >=
+        nextAssembler.processing.durationMs
+      ) {
         nextAssembler.pendingOutput = [
           ...nextAssembler.pendingOutput,
           nextAssembler.processing.outputItem,
@@ -196,7 +215,9 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
         outputX: io.output.x,
         outputY: io.output.y,
         conveyors:
-          ctx.newConveyorsL === state.conveyors ? state.conveyors : ctx.newConveyorsL,
+          ctx.newConveyorsL === state.conveyors
+            ? state.conveyors
+            : ctx.newConveyorsL,
       });
       if (outForStatus.kind === "misconfigured") {
         nextAssembler.status = "MISCONFIGURED";

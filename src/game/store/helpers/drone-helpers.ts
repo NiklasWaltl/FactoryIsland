@@ -5,9 +5,7 @@ import {
   getInboundBuildingSupplyAmount as getInboundBuildingSupplyAmountResolver,
   getRemainingBuildingInputDemand as getRemainingBuildingInputDemandResolver,
 } from "../../drones/selection/helpers/need-slot-resolvers";
-import {
-  selectDroneTask as selectDroneTaskBinding,
-} from "../../drones/selection/select-drone-task-bindings";
+import { selectDroneTask as selectDroneTaskBinding } from "../../drones/selection/select-drone-task-bindings";
 import {
   getDroneDockSlotIndex,
   getDroneHomeDock,
@@ -30,14 +28,20 @@ export {
 };
 
 /** Get all drones assigned to a specific hub. */
-export function getHubDrones(state: GameState, hubId: string): StarterDroneState[] {
+export function getHubDrones(
+  state: GameState,
+  hubId: string,
+): StarterDroneState[] {
   const hub = state.serviceHubs[hubId];
   if (!hub) return [];
   return hub.droneIds.map((id) => state.drones[id]).filter(Boolean);
 }
 
 /** Produce a human-readable status detail for a drone (for UI display). */
-export function getDroneStatusDetail(state: GameState, drone: StarterDroneState): { label: string; taskGoal?: string } {
+export function getDroneStatusDetail(
+  state: GameState,
+  drone: StarterDroneState,
+): { label: string; taskGoal?: string } {
   return getDroneStatusDetailClassifier(state, drone);
 }
 
@@ -59,21 +63,37 @@ export function getInboundBuildingSupplyAmount(
   itemType: CollectableItemType,
   excludeDroneId?: string,
 ): number {
-  return getInboundBuildingSupplyAmountResolver(state, assetId, itemType, excludeDroneId);
+  return getInboundBuildingSupplyAmountResolver(
+    state,
+    assetId,
+    itemType,
+    excludeDroneId,
+  );
 }
 
 /** Open delivery demand for a building's input buffer (capacity - current - inbound). */
 export function getRemainingBuildingInputDemand(
-  state: Pick<GameState, "assets" | "generators" | "drones" | "collectionNodes">,
+  state: Pick<
+    GameState,
+    "assets" | "generators" | "drones" | "collectionNodes"
+  >,
   assetId: string,
   itemType: CollectableItemType,
   excludeDroneId?: string,
 ): number {
-  return getRemainingBuildingInputDemandResolver(state, assetId, itemType, excludeDroneId);
+  return getRemainingBuildingInputDemandResolver(
+    state,
+    assetId,
+    itemType,
+    excludeDroneId,
+  );
 }
 
 /** Selects the highest-scoring drone task from all valid candidates. */
-export function selectDroneTask(state: GameState, droneOverride?: StarterDroneState): {
+export function selectDroneTask(
+  state: GameState,
+  droneOverride?: StarterDroneState,
+): {
   taskType: DroneTaskType;
   nodeId: string;
   deliveryTargetId: string;

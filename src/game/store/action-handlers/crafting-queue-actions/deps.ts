@@ -22,7 +22,10 @@ export interface CraftingQueueActionDeps {
   readonly planningTriggerDeps: PlanningTriggerDeps;
   readonly executionTickDeps: ExecutionTickDeps;
   isUnderConstruction(state: GameState, assetId: string): boolean;
-  resolveBuildingSource(state: GameState, buildingId: string | null): CraftingSource;
+  resolveBuildingSource(
+    state: GameState,
+    buildingId: string | null,
+  ): CraftingSource;
   toCraftingJobInventorySource(
     state: GameState,
     source: CraftingSource,

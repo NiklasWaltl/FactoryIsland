@@ -26,7 +26,11 @@ function buildState(opts: {
 
   const wh: PlacedAsset = { id: WH, type: "warehouse", x: 5, y: 5, size: 2 };
   newAssets[WH] = wh;
-  const wInv: Inventory = { ...base.inventory, wood: woodAmount, stone: stoneAmount };
+  const wInv: Inventory = {
+    ...base.inventory,
+    wood: woodAmount,
+    stone: stoneAmount,
+  };
 
   return {
     ...base,
@@ -66,9 +70,7 @@ function providePhysicalInput(state: GameState, jobId: string): GameState {
     crafting: {
       ...state.crafting,
       jobs: state.crafting.jobs.map((job) =>
-        job.id === jobId
-          ? { ...job, inputBuffer: [...job.ingredients] }
-          : job,
+        job.id === jobId ? { ...job, inputBuffer: [...job.ingredients] } : job,
       ),
     },
   };
@@ -144,7 +146,9 @@ describe("scheduling rules", () => {
 
     s = tick(s);
 
-    const active = s.crafting.jobs.filter((job) => job.status === "crafting" || job.status === "delivering");
+    const active = s.crafting.jobs.filter(
+      (job) => job.status === "crafting" || job.status === "delivering",
+    );
     expect(active).toHaveLength(1);
   });
 

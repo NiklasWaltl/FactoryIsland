@@ -14,7 +14,10 @@ export const consumeAutoSmelterPendingOutput = (
 ): ConsumeAutoSmelterPendingOutputResult => {
   input.smelter.pendingOutput = input.smelter.pendingOutput.slice(1);
   if (input.recordThroughputEvent) {
-    input.smelter.throughputEvents = [...input.smelter.throughputEvents, Date.now()];
+    input.smelter.throughputEvents = [
+      ...input.smelter.throughputEvents,
+      Date.now(),
+    ];
   }
   return { changed: true };
 };

@@ -17,7 +17,11 @@ export function getInboundConstructionAmount(
     if (drone.droneId === excludeDroneId) continue;
     if (drone.deliveryTargetId !== siteId) continue;
 
-    if (drone.currentTaskType === "hub_dispatch" && (drone.targetNodeId?.startsWith("hub:") || drone.targetNodeId?.startsWith("wh:"))) {
+    if (
+      drone.currentTaskType === "hub_dispatch" &&
+      (drone.targetNodeId?.startsWith("hub:") ||
+        drone.targetNodeId?.startsWith("wh:"))
+    ) {
       const [, , resource] = drone.targetNodeId.split(":");
       if (resource === itemType) total += DRONE_CAPACITY;
       continue;
@@ -30,9 +34,15 @@ export function getInboundConstructionAmount(
       continue;
     }
 
-    if ((drone.status === "moving_to_collect" || drone.status === "collecting") && drone.targetNodeId) {
+    if (
+      (drone.status === "moving_to_collect" || drone.status === "collecting") &&
+      drone.targetNodeId
+    ) {
       const node = state.collectionNodes[drone.targetNodeId];
-      if (node?.itemType === itemType && node.reservedByDroneId === drone.droneId) {
+      if (
+        node?.itemType === itemType &&
+        node.reservedByDroneId === drone.droneId
+      ) {
         total += Math.min(DRONE_CAPACITY, node.amount);
       }
     }
@@ -49,7 +59,10 @@ export function getAssignedConstructionDroneCount(
   for (const drone of Object.values(state.drones)) {
     if (drone.droneId === excludeDroneId) continue;
     if (drone.deliveryTargetId !== siteId) continue;
-    if (drone.currentTaskType === "construction_supply" || drone.currentTaskType === "hub_dispatch") {
+    if (
+      drone.currentTaskType === "construction_supply" ||
+      drone.currentTaskType === "hub_dispatch"
+    ) {
       total++;
     }
   }
@@ -74,7 +87,12 @@ export function getRemainingConstructionNeed(
   const site = state.constructionSites[siteId];
   if (!site) return 0;
   const remaining = site.remaining[itemType] ?? 0;
-  const inbound = getInboundConstructionAmount(state, siteId, itemType, excludeDroneId);
+  const inbound = getInboundConstructionAmount(
+    state,
+    siteId,
+    itemType,
+    excludeDroneId,
+  );
   return Math.max(0, remaining - inbound);
 }
 
@@ -86,6 +104,10 @@ export function getOpenConstructionDroneSlots(
   const site = state.constructionSites[siteId];
   if (!site) return 0;
   const desired = getDesiredConstructionDroneCount(site);
-  const assigned = getAssignedConstructionDroneCount(state, siteId, excludeDroneId);
+  const assigned = getAssignedConstructionDroneCount(
+    state,
+    siteId,
+    excludeDroneId,
+  );
   return Math.max(0, desired - assigned);
 }

@@ -5,10 +5,16 @@ import type {
   StarterDroneState,
 } from "../../store/types";
 import type { DroneSelectionCandidate } from "../candidates/types";
-import { buildCandidateInputs, collectDroneTaskCandidates } from "./select-drone-task-candidates";
+import {
+  buildCandidateInputs,
+  collectDroneTaskCandidates,
+} from "./select-drone-task-candidates";
 import type { SelectDroneTaskDeps } from "./select-drone-task-types";
 
-export type { NearbyWarehouseDispatchCandidate, SelectDroneTaskDeps } from "./select-drone-task-types";
+export type {
+  NearbyWarehouseDispatchCandidate,
+  SelectDroneTaskDeps,
+} from "./select-drone-task-types";
 
 export type SelectedDroneTask = {
   taskType: DroneTaskType;
@@ -40,23 +46,32 @@ export function selectDroneTask(
     }
 
     const rankedCandidates = [...candidates].sort(
-      (left, right) => right.score - left.score || left.nodeId.localeCompare(right.nodeId),
+      (left, right) =>
+        right.score - left.score || left.nodeId.localeCompare(right.nodeId),
     );
 
     return {
       selected: rankedCandidates[0] ?? null,
       bestConstruction: rankedCandidates.find(
-        (candidate) => candidate.taskType === "construction_supply" || candidate.taskType === "hub_dispatch",
+        (candidate) =>
+          candidate.taskType === "construction_supply" ||
+          candidate.taskType === "hub_dispatch",
       ),
-      bestHubRestock: rankedCandidates.find((candidate) => candidate.taskType === "hub_restock"),
+      bestHubRestock: rankedCandidates.find(
+        (candidate) => candidate.taskType === "hub_restock",
+      ),
     };
   };
 
   const drone = droneOverride ?? state.starterDrone;
   const role: DroneRole = drone.role ?? "auto";
 
-  const { availableNodes, availableTypes, constructionRoleBonus, restockRoleBonus } =
-    buildCandidateInputs(state, drone);
+  const {
+    availableNodes,
+    availableTypes,
+    constructionRoleBonus,
+    restockRoleBonus,
+  } = buildCandidateInputs(state, drone);
 
   const candidates = collectDroneTaskCandidates({
     state,
@@ -88,7 +103,8 @@ export function selectDroneTask(
 
     if (
       bestHubRestockCandidate &&
-      (chosen.taskType === "construction_supply" || chosen.taskType === "hub_dispatch")
+      (chosen.taskType === "construction_supply" ||
+        chosen.taskType === "hub_dispatch")
     ) {
       console.debug(
         `[DroneTaskPriority] drone=${drone.droneId} construction wins over hub_restock` +
@@ -98,7 +114,10 @@ export function selectDroneTask(
           ` hubScore=${bestHubRestockCandidate.score}` +
           ` diff=${chosen.score - bestHubRestockCandidate.score}`,
       );
-    } else if (chosen.taskType === "hub_restock" && !bestConstructionCandidate) {
+    } else if (
+      chosen.taskType === "hub_restock" &&
+      !bestConstructionCandidate
+    ) {
       console.debug(
         `[DroneTaskPriority] drone=${drone.droneId} hub_restock fallback` +
           ` node=${chosen.nodeId}` +
@@ -109,5 +128,9 @@ export function selectDroneTask(
     }
   }
 
-  return { taskType: chosen.taskType, nodeId: chosen.nodeId, deliveryTargetId: chosen.deliveryTargetId };
+  return {
+    taskType: chosen.taskType,
+    nodeId: chosen.nodeId,
+    deliveryTargetId: chosen.deliveryTargetId,
+  };
 }

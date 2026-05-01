@@ -5,4 +5,9 @@ import type { HotbarSlot } from "../../types";
 
 export const HOTBAR_SIZE = 9;
 export const HOTBAR_STACK_MAX = 5;
-export const EMPTY_HOTBAR_SLOT: HotbarSlot = { toolKind: "empty", amount: 0, label: "", emoji: "" };
+export const EMPTY_HOTBAR_SLOT: HotbarSlot = {
+  toolKind: "empty",
+  amount: 0,
+  label: "",
+  emoji: "",
+};

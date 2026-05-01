@@ -19,10 +19,7 @@
 import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import type { DroneTickActionDeps } from "./deps";
-import {
-  HANDLED_ACTION_TYPES,
-  type DroneTickHandledAction,
-} from "./types";
+import { HANDLED_ACTION_TYPES, type DroneTickHandledAction } from "./types";
 import { runDroneTickPhase } from "./phases/drone-tick-phase";
 
 export type { DroneTickActionDeps } from "./deps";

@@ -4,11 +4,17 @@ import { cellKey } from "../../utils/cell-key";
 import { getAutoSmelterIoCells } from "../../asset-geometry";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import type { BuildPlacementEligibilityDecision } from "../../decisions/build-placement-eligibility";
-import { type BuildingPlacementIoDeps, logPlacementInvariantWarnings } from "./shared";
+import {
+  type BuildingPlacementIoDeps,
+  logPlacementInvariantWarnings,
+} from "./shared";
 
 // ---- Notification mapping ----
 
-type BlockReason = Extract<BuildPlacementEligibilityDecision, { kind: "blocked" }>["blockReason"];
+type BlockReason = Extract<
+  BuildPlacementEligibilityDecision,
+  { kind: "blocked" }
+>["blockReason"];
 
 const STATIC_BLOCK_NOTIFICATIONS: Partial<Record<BlockReason, string>> = {
   not_enough_resources: "Nicht genug Ressourcen!",
@@ -35,9 +41,10 @@ export function getBuildPlacementNotificationForDecision(
 
 // ---- Auto-Smelter / Auto-Assembler shared helpers ----
 
-export function getAutoSmelterFootprintDimensions(
-  dir: Direction,
-): { width: 1 | 2; height: 1 | 2 } {
+export function getAutoSmelterFootprintDimensions(dir: Direction): {
+  width: 1 | 2;
+  height: 1 | 2;
+} {
   return dir === "east" || dir === "west"
     ? { width: 2, height: 1 }
     : { width: 1, height: 2 };
@@ -94,7 +101,16 @@ export function computeAutoSmelterConnectorPreflight(input: {
   assets: Record<string, PlacedAsset>;
 }): AutoSmelterConnectorPreflight {
   const { x, y, width, height, dir, cellMap, assets } = input;
-  const tempAsset: PlacedAsset = { id: "temp", type: "auto_smelter", x, y, size: 2, width, height, direction: dir };
+  const tempAsset: PlacedAsset = {
+    id: "temp",
+    type: "auto_smelter",
+    x,
+    y,
+    size: 2,
+    width,
+    height,
+    direction: dir,
+  };
   const io = getAutoSmelterIoCells(tempAsset);
   const inputNeighborId = cellMap[cellKey(io.input.x, io.input.y)];
   const outputNeighborId = cellMap[cellKey(io.output.x, io.output.y)];
@@ -115,8 +131,14 @@ export function computeAutoSmelterConnectorPreflight(input: {
     neighborTypes: { inputType, outputType, inputIsConveyor, outputIsConveyor },
     beltFound: inputIsConveyor && outputIsConveyor,
     ioOutOfBounds:
-      io.input.x < 0 || io.input.x >= GRID_W || io.input.y < 0 || io.input.y >= GRID_H ||
-      io.output.x < 0 || io.output.x >= GRID_W || io.output.y < 0 || io.output.y >= GRID_H,
+      io.input.x < 0 ||
+      io.input.x >= GRID_W ||
+      io.input.y < 0 ||
+      io.input.y >= GRID_H ||
+      io.output.x < 0 ||
+      io.output.x >= GRID_W ||
+      io.output.y < 0 ||
+      io.output.y >= GRID_H,
   };
 }
 
@@ -127,7 +149,10 @@ export function finalizePlacement(
   actionType: "BUILD_PLACE_BUILDING",
   debugLog: BuildingPlacementIoDeps["debugLog"],
 ): GameState {
-  const nextState = { ...partial, connectedAssetIds: computeConnectedAssetIds(partial) };
+  const nextState = {
+    ...partial,
+    connectedAssetIds: computeConnectedAssetIds(partial),
+  };
   logPlacementInvariantWarnings(nextState, actionType, debugLog);
   return nextState;
 }

@@ -42,7 +42,10 @@ export function isBuildingSiteAction(
 }
 
 export interface BuildingSiteActionDeps {
-  isUnderConstruction(state: Pick<GameState, "constructionSites">, assetId: string): boolean;
+  isUnderConstruction(
+    state: Pick<GameState, "constructionSites">,
+    assetId: string,
+  ): boolean;
   addErrorNotification(
     notifications: GameNotification[],
     message: string,
@@ -66,27 +69,42 @@ export function handleBuildingSiteAction(
       if (!hasAsset(state, buildingId)) return state;
       if (!warehouseId) {
         // Reset to global: remove the mapping entry
-        const { [buildingId]: _removed, ...rest } = state.buildingSourceWarehouseIds;
+        const { [buildingId]: _removed, ...rest } =
+          state.buildingSourceWarehouseIds;
         const nextState = { ...state, buildingSourceWarehouseIds: rest };
-        if (import.meta.env.DEV && !isBuildingSourceStateConsistent(nextState)) {
-          deps.debugLog.building(`[Invariant] buildingSourceWarehouseIds inkonsistent nach Reset für ${buildingId}`);
+        if (
+          import.meta.env.DEV &&
+          !isBuildingSourceStateConsistent(nextState)
+        ) {
+          deps.debugLog.building(
+            `[Invariant] buildingSourceWarehouseIds inkonsistent nach Reset für ${buildingId}`,
+          );
         }
         return nextState;
       }
       if (!hasWarehouseAssetWithInventory(state, warehouseId)) return state;
       const nextState = {
         ...state,
-        buildingSourceWarehouseIds: { ...state.buildingSourceWarehouseIds, [buildingId]: warehouseId },
+        buildingSourceWarehouseIds: {
+          ...state.buildingSourceWarehouseIds,
+          [buildingId]: warehouseId,
+        },
       };
       if (import.meta.env.DEV && !isBuildingSourceStateConsistent(nextState)) {
-        deps.debugLog.building(`[Invariant] buildingSourceWarehouseIds inkonsistent nach Setzen für ${buildingId}`);
+        deps.debugLog.building(
+          `[Invariant] buildingSourceWarehouseIds inkonsistent nach Setzen für ${buildingId}`,
+        );
       }
       return nextState;
     }
 
     case "UPGRADE_HUB": {
       if (deps.isUnderConstruction(state, action.hubId)) {
-        return withErrorNotification(state, deps.addErrorNotification, "Hub ist noch im Bau.");
+        return withErrorNotification(
+          state,
+          deps.addErrorNotification,
+          "Hub ist noch im Bau.",
+        );
       }
       const hub = state.serviceHubs[action.hubId];
       if (!hub || hub.tier !== 1) return state;
@@ -96,8 +114,17 @@ export function handleBuildingSiteAction(
       }
       // Affordance check: cost must exist somewhere in physical storage.
       // We do NOT deduct here — drones deliver the resources to the hub first.
-      if (!hasResourcesInPhysicalStorage(state, HUB_UPGRADE_COST as Partial<Record<keyof Inventory, number>>)) {
-        return withErrorNotification(state, deps.addErrorNotification, "Nicht genug Ressourcen für das Upgrade!");
+      if (
+        !hasResourcesInPhysicalStorage(
+          state,
+          HUB_UPGRADE_COST as Partial<Record<keyof Inventory, number>>,
+        )
+      ) {
+        return withErrorNotification(
+          state,
+          deps.addErrorNotification,
+          "Nicht genug Ressourcen für das Upgrade!",
+        );
       }
       const pending: Partial<Record<CollectableItemType, number>> = {};
       for (const [k, v] of Object.entries(HUB_UPGRADE_COST)) {
@@ -116,7 +143,10 @@ export function handleBuildingSiteAction(
         },
         constructionSites: {
           ...state.constructionSites,
-          [action.hubId]: { buildingType: "service_hub", remaining: upgradeDemand },
+          [action.hubId]: {
+            buildingType: "service_hub",
+            remaining: upgradeDemand,
+          },
         },
       };
 
@@ -125,13 +155,19 @@ export function handleBuildingSiteAction(
           `[HubUpgrade] Started for ${action.hubId}: construction demand created, no immediate stock deduction`,
         );
         if (!isConstructionSiteStateConsistent(withPending)) {
-          deps.debugLog.building(`[Invariant] constructionSites inkonsistent nach Hub-Upgrade für ${action.hubId}`);
+          deps.debugLog.building(
+            `[Invariant] constructionSites inkonsistent nach Hub-Upgrade für ${action.hubId}`,
+          );
         }
         if (!isBuildingZoneStateConsistent(withPending)) {
-          deps.debugLog.building(`[Invariant] buildingZoneIds inkonsistent nach Hub-Upgrade für ${action.hubId}`);
+          deps.debugLog.building(
+            `[Invariant] buildingZoneIds inkonsistent nach Hub-Upgrade für ${action.hubId}`,
+          );
         }
         if (!isBuildingSourceStateConsistent(withPending)) {
-          deps.debugLog.building(`[Invariant] buildingSourceWarehouseIds inkonsistent nach Hub-Upgrade für ${action.hubId}`);
+          deps.debugLog.building(
+            `[Invariant] buildingSourceWarehouseIds inkonsistent nach Hub-Upgrade für ${action.hubId}`,
+          );
         }
       }
 

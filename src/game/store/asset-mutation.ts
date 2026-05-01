@@ -10,7 +10,12 @@ export function removeAsset(
   assetId: string,
 ): Pick<GameState, "assets" | "cellMap" | "saplingGrowAt"> {
   const asset = state.assets[assetId];
-  if (asset.fixed) return { assets: state.assets, cellMap: state.cellMap, saplingGrowAt: state.saplingGrowAt };
+  if (asset.fixed)
+    return {
+      assets: state.assets,
+      cellMap: state.cellMap,
+      saplingGrowAt: state.saplingGrowAt,
+    };
   const newAssets = { ...state.assets };
   delete newAssets[assetId];
   const newCellMap = { ...state.cellMap };

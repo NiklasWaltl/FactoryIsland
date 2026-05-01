@@ -49,9 +49,11 @@ jest.mock("../../store/reducer", () => {
 
   return {
     ...actual,
-    createInitialState: jest.fn((mode) => (
-      mode === "release" ? buildQueuedWorkbenchState() : actual.createInitialState(mode)
-    )),
+    createInitialState: jest.fn((mode) =>
+      mode === "release"
+        ? buildQueuedWorkbenchState()
+        : actual.createInitialState(mode),
+    ),
   };
 });
 
@@ -72,12 +74,20 @@ jest.mock("../../ui/hud/AutoDeliveryFeed", () => ({
 }));
 
 jest.mock("../../ui/hud/ResourceBar", () => ({
-  ResourceBar: ({ state }: { state: { crafting: { jobs: Array<{ status: string }> } } }) => (
-    <div data-testid="job-status">{state.crafting.jobs[0]?.status ?? "none"}</div>
+  ResourceBar: ({
+    state,
+  }: {
+    state: { crafting: { jobs: Array<{ status: string }> } };
+  }) => (
+    <div data-testid="job-status">
+      {state.crafting.jobs[0]?.status ?? "none"}
+    </div>
   ),
 }));
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+(
+  globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 describe("FactoryGame crafting scheduler", () => {
   let container: HTMLDivElement;

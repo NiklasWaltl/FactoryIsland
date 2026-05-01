@@ -3,11 +3,11 @@ import { resolveBuildingSource } from "../building-source";
 import { getZoneWarehouseIds } from "../../zones/production-zone-aggregation";
 
 export type FallbackReason =
-  | "none"                  // source is primary (zone or explicitly set)
-  | "zone_no_warehouses"    // building has a zone, but zone has no warehouses
-  | "no_zone"               // building has no zone assignment
-  | "stale_warehouse"       // legacy warehouse mapping points to deleted warehouse
-  | "no_assignment";        // no zone and no legacy mapping
+  | "none" // source is primary (zone or explicitly set)
+  | "zone_no_warehouses" // building has a zone, but zone has no warehouses
+  | "no_zone" // building has no zone assignment
+  | "stale_warehouse" // legacy warehouse mapping points to deleted warehouse
+  | "no_assignment"; // no zone and no legacy mapping
 
 export interface SourceStatusInfo {
   /** The resolved source used for crafting. */
@@ -47,7 +47,10 @@ function getZoneBuildingIds(state: GameState, zoneId: string): string[] {
  * Returns true if a building has a warehouse mapping that no longer resolves
  * to a valid warehouse (stale reference). Used by panels to show a hint.
  */
-export function hasStaleWarehouseAssignment(state: GameState, buildingId: string | null): boolean {
+export function hasStaleWarehouseAssignment(
+  state: GameState,
+  buildingId: string | null,
+): boolean {
   if (!buildingId) return false;
   const whId = state.buildingSourceWarehouseIds[buildingId];
   if (!whId) return false;
@@ -58,11 +61,20 @@ export function hasStaleWarehouseAssignment(state: GameState, buildingId: string
  * Compute full source status diagnosis for a building.
  * Pure function — used by UI panels for transparency and debug info.
  */
-export function getSourceStatusInfo(state: GameState, buildingId: string | null): SourceStatusInfo {
+export function getSourceStatusInfo(
+  state: GameState,
+  buildingId: string | null,
+): SourceStatusInfo {
   const source = resolveBuildingSource(state, buildingId);
-  const assignedZoneId = buildingId ? (state.buildingZoneIds[buildingId] ?? null) : null;
-  const assignedZoneName = assignedZoneId ? (state.productionZones[assignedZoneId]?.name ?? null) : null;
-  const legacyWhId = buildingId ? (state.buildingSourceWarehouseIds[buildingId] ?? null) : null;
+  const assignedZoneId = buildingId
+    ? (state.buildingZoneIds[buildingId] ?? null)
+    : null;
+  const assignedZoneName = assignedZoneId
+    ? (state.productionZones[assignedZoneId]?.name ?? null)
+    : null;
+  const legacyWhId = buildingId
+    ? (state.buildingSourceWarehouseIds[buildingId] ?? null)
+    : null;
   const isStale = hasStaleWarehouseAssignment(state, buildingId);
 
   let fallbackReason: FallbackReason = "none";
@@ -74,11 +86,13 @@ export function getSourceStatusInfo(state: GameState, buildingId: string | null)
   if (source.kind === "zone") {
     zoneWarehouseIds = getZoneWarehouseIds(state, source.zoneId);
     zoneBuildingIds = getZoneBuildingIds(state, source.zoneId);
-    const zoneName = state.productionZones[source.zoneId]?.name ?? source.zoneId;
+    const zoneName =
+      state.productionZones[source.zoneId]?.name ?? source.zoneId;
     sourceLabel = `${zoneName} (${zoneWarehouseIds.length} Lagerhaus${zoneWarehouseIds.length !== 1 ? "äuser" : ""})`;
     reasonLabel = "Zone aktiv";
   } else if (source.kind === "warehouse") {
-    const whIdx = Object.keys(state.warehouseInventories).indexOf(source.warehouseId) + 1;
+    const whIdx =
+      Object.keys(state.warehouseInventories).indexOf(source.warehouseId) + 1;
     sourceLabel = `Lagerhaus ${whIdx || "?"}`;
     if (assignedZoneId && state.productionZones[assignedZoneId]) {
       fallbackReason = "zone_no_warehouses";
@@ -101,7 +115,8 @@ export function getSourceStatusInfo(state: GameState, buildingId: string | null)
       }
     } else if (isStale) {
       fallbackReason = "stale_warehouse";
-      reasonLabel = "Zugewiesenes Lagerhaus entfernt — Fallback: Globaler Puffer";
+      reasonLabel =
+        "Zugewiesenes Lagerhaus entfernt — Fallback: Globaler Puffer";
     } else if (legacyWhId) {
       fallbackReason = "stale_warehouse";
       reasonLabel = "Ungültige Lagerhauszuweisung — Fallback: Globaler Puffer";

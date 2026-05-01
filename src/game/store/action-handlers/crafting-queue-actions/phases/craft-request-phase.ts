@@ -21,9 +21,7 @@ export interface CraftRequestContext {
   deps: CraftingQueueActionDeps;
 }
 
-export function runCraftRequestPhase(
-  ctx: CraftRequestContext,
-): GameState {
+export function runCraftRequestPhase(ctx: CraftRequestContext): GameState {
   const { state, action, deps } = ctx;
 
   const workbenchAsset = getAssetOfType(state, action.workbenchId, "workbench");
@@ -37,7 +35,9 @@ export function runCraftRequestPhase(
 
   deps.logCraftingSelectionComparison(state, "workbench", action.workbenchId);
   if (deps.isUnderConstruction(state, workbenchAsset.id)) {
-    debugLog.general(`Crafting workbench [${workbenchAsset.id}] - under construction`);
+    debugLog.general(
+      `Crafting workbench [${workbenchAsset.id}] - under construction`,
+    );
     return withErrorNotification(
       state,
       deps.addErrorNotification,
@@ -52,7 +52,11 @@ export function runCraftRequestPhase(
     "craftRequest",
   );
   if (!autoCraftDecision.allowed) {
-    return withErrorNotification(state, deps.addErrorNotification, autoCraftDecision.reason!);
+    return withErrorNotification(
+      state,
+      deps.addErrorNotification,
+      autoCraftDecision.reason!,
+    );
   }
 
   const resolvedSource = deps.resolveBuildingSource(state, action.workbenchId);
@@ -64,7 +68,10 @@ export function runCraftRequestPhase(
     );
   }
 
-  const inventorySource = deps.toCraftingJobInventorySource(state, resolvedSource);
+  const inventorySource = deps.toCraftingJobInventorySource(
+    state,
+    resolvedSource,
+  );
   if (inventorySource.kind === "global") {
     return withErrorNotification(
       state,
@@ -93,11 +100,18 @@ export function runCraftRequestPhase(
         `Auto-craft planning failed for ${action.recipeId}: ${plan.error.message}`,
       );
     }
-    return withErrorNotification(state, deps.addErrorNotification, plan.error.message);
+    return withErrorNotification(
+      state,
+      deps.addErrorNotification,
+      plan.error.message,
+    );
   }
 
   let nextQueue = state.crafting;
-  const plannedTotalCount = plan.steps.reduce((sum, step) => sum + step.count, 0);
+  const plannedTotalCount = plan.steps.reduce(
+    (sum, step) => sum + step.count,
+    0,
+  );
   let divergenceNotice: string | null = null;
   if (
     typeof action.expectedStepCount === "number" &&

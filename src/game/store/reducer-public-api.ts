@@ -71,8 +71,14 @@ export {
 // ---- Selectors / view-models ----
 export type { ConveyorZoneStatus } from "./selectors/conveyor-zone-status";
 export { getConveyorZoneStatus } from "./selectors/conveyor-zone-status";
-export type { FallbackReason, SourceStatusInfo } from "./selectors/source-status";
-export { hasStaleWarehouseAssignment, getSourceStatusInfo } from "./selectors/source-status";
+export type {
+  FallbackReason,
+  SourceStatusInfo,
+} from "./selectors/source-status";
+export {
+  hasStaleWarehouseAssignment,
+  getSourceStatusInfo,
+} from "./selectors/source-status";
 
 // ---- Selectors (hub tier) ----
 export {

@@ -65,7 +65,9 @@ export function handleMachineConfigAction(
         return state;
       }
 
-      return patchMachineAsset(state, action.assetId, { priority: nextPriority });
+      return patchMachineAsset(state, action.assetId, {
+        priority: nextPriority,
+      });
     }
 
     case "SET_MACHINE_BOOST": {
@@ -84,8 +86,11 @@ export function handleMachineConfigAction(
       const asset = resolveMachineConfigTargetAsset(state, action.splitterId);
       if (!asset || asset.type !== "conveyor_splitter") return state;
       if (
-        getSplitterFilter(state.splitterFilterState, action.splitterId, action.side) ===
-        action.itemType
+        getSplitterFilter(
+          state.splitterFilterState,
+          action.splitterId,
+          action.side,
+        ) === action.itemType
       ) {
         return state;
       }

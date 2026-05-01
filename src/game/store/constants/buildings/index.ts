@@ -14,11 +14,7 @@
 // Type-only imports are fine (erased at runtime).
 // ============================================================
 
-import type {
-  AssetType,
-  BuildingType,
-  Inventory,
-} from "../../types";
+import type { AssetType, BuildingType, Inventory } from "../../types";
 
 import {
   BUILDING_REGISTRY,
@@ -45,7 +41,9 @@ export const GENERATOR_MAX_FUEL = REGISTRY_GENERATOR_MAX_FUEL;
 
 const REGISTRY_VALUES: BuildingDef[] = Object.values(BUILDING_REGISTRY);
 
-function buildRecord<T>(project: (def: BuildingDef) => T): Record<BuildingType, T> {
+function buildRecord<T>(
+  project: (def: BuildingDef) => T,
+): Record<BuildingType, T> {
   const out = {} as Record<BuildingType, T>;
   for (const def of REGISTRY_VALUES) {
     out[def.type] = project(def);
@@ -111,14 +109,15 @@ export const CONSTRUCTION_SITE_BUILDINGS: Set<BuildingType> = buildSet(
 // in `BUILDING_REGISTRY` (field `inputBuffer`) — this map is derived.
 
 /** Registry of building types that own a local input buffer. */
-export const BUILDING_INPUT_BUFFERS: Partial<Record<BuildingType, BuildingInputBufferConfig>> =
-  (() => {
-    const out: Partial<Record<BuildingType, BuildingInputBufferConfig>> = {};
-    for (const def of REGISTRY_VALUES) {
-      if (def.inputBuffer) out[def.type] = def.inputBuffer;
-    }
-    return out;
-  })();
+export const BUILDING_INPUT_BUFFERS: Partial<
+  Record<BuildingType, BuildingInputBufferConfig>
+> = (() => {
+  const out: Partial<Record<BuildingType, BuildingInputBufferConfig>> = {};
+  for (const def of REGISTRY_VALUES) {
+    if (def.inputBuffer) out[def.type] = def.inputBuffer;
+  }
+  return out;
+})();
 
 /** Returns the input buffer config for a building type, or null if it has none. */
 export function getBuildingInputConfig(

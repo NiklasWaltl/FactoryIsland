@@ -8,7 +8,15 @@
 import type { CollectableItemType } from "../../types";
 
 /** Active collectable resource types for Tier 1. */
-export const TIER1_ACTIVE_RESOURCES: readonly CollectableItemType[] = ["wood", "stone"];
+export const TIER1_ACTIVE_RESOURCES: readonly CollectableItemType[] = [
+  "wood",
+  "stone",
+];
 
 /** Active collectable resource types for Tier 2. */
-export const TIER2_ACTIVE_RESOURCES: readonly CollectableItemType[] = ["wood", "stone", "iron", "copper"];
+export const TIER2_ACTIVE_RESOURCES: readonly CollectableItemType[] = [
+  "wood",
+  "stone",
+  "iron",
+  "copper",
+];

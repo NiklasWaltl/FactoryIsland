@@ -8,7 +8,9 @@
 import type { CollectableItemType } from "../../types";
 
 /** Default target stock per resource for a Tier 2 Service-Hub. */
-export const SERVICE_HUB_TARGET_STOCK: Readonly<Record<CollectableItemType, number>> = {
+export const SERVICE_HUB_TARGET_STOCK: Readonly<
+  Record<CollectableItemType, number>
+> = {
   wood: 20,
   stone: 10,
   iron: 5,
@@ -16,17 +18,25 @@ export const SERVICE_HUB_TARGET_STOCK: Readonly<Record<CollectableItemType, numb
 };
 
 /** Default target stock per resource for a Tier 1 (Proto-Hub). */
-export const PROTO_HUB_TARGET_STOCK: Readonly<Record<CollectableItemType, number>> = {
+export const PROTO_HUB_TARGET_STOCK: Readonly<
+  Record<CollectableItemType, number>
+> = {
   wood: 10,
   stone: 5,
   iron: 0,
   copper: 0,
 };
 
-export function createDefaultHubTargetStock(): Record<CollectableItemType, number> {
+export function createDefaultHubTargetStock(): Record<
+  CollectableItemType,
+  number
+> {
   return { ...SERVICE_HUB_TARGET_STOCK };
 }
 
-export function createDefaultProtoHubTargetStock(): Record<CollectableItemType, number> {
+export function createDefaultProtoHubTargetStock(): Record<
+  CollectableItemType,
+  number
+> {
   return { ...PROTO_HUB_TARGET_STOCK };
 }

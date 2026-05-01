@@ -9,7 +9,9 @@ import {
 } from "../../../store/reducer";
 import { WorkbenchPanel } from "../WorkbenchPanel";
 
-(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+(
+  globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
 function buildState(): GameState {
   const base = createInitialState("release");
@@ -76,12 +78,16 @@ describe("WorkbenchPanel", () => {
 
   /** Find the "Craft" button inside the detail panel (n=1). */
   function findCraftButton(): HTMLButtonElement | null {
-    const buttons = Array.from(container.querySelectorAll("button")) as HTMLButtonElement[];
+    const buttons = Array.from(
+      container.querySelectorAll("button"),
+    ) as HTMLButtonElement[];
     return buttons.find((b) => b.textContent?.trim() === "Craft") ?? null;
   }
 
   function findButtonByText(label: string): HTMLButtonElement | null {
-    const buttons = Array.from(container.querySelectorAll("button")) as HTMLButtonElement[];
+    const buttons = Array.from(
+      container.querySelectorAll("button"),
+    ) as HTMLButtonElement[];
     return buttons.find((b) => b.textContent?.trim() === label) ?? null;
   }
 
@@ -201,7 +207,9 @@ describe("WorkbenchPanel", () => {
     const craftButton = findCraftButton();
     expect(craftButton).not.toBeNull();
     expect(craftButton!.disabled).toBe(true);
-    expect(container.textContent).toContain("Werkbank braucht physisches Lager");
+    expect(container.textContent).toContain(
+      "Werkbank braucht physisches Lager",
+    );
   });
 
   it("renders recipe cost display for the active source", () => {
@@ -221,7 +229,9 @@ describe("WorkbenchPanel", () => {
 
     // Recipe cost line ("5 Holz") must be visible and grounded in the resolved source.
     expect(container.textContent).toContain("Holz");
-    expect(container.textContent).not.toContain("im Lagerhaus (Player Gear) verfÃ¼gbar");
+    expect(container.textContent).not.toContain(
+      "im Lagerhaus (Player Gear) verfÃ¼gbar",
+    );
   });
 
   it("renders craft buttons without a stale queue dump for this workbench", () => {
@@ -264,5 +274,4 @@ describe("WorkbenchPanel", () => {
     expect(container.textContent).not.toContain("job-1");
     expect(container.textContent).not.toContain("done");
   });
-
 });

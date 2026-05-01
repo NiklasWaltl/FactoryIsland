@@ -190,7 +190,10 @@ export interface SaveGameV20 extends Omit<SaveGameV19, "version"> {
    */
   splitterFilterState: Record<
     string,
-    { left: import("../store/types/conveyor-types").ConveyorItem | null; right: import("../store/types/conveyor-types").ConveyorItem | null }
+    {
+      left: import("../store/types/conveyor-types").ConveyorItem | null;
+      right: import("../store/types/conveyor-types").ConveyorItem | null;
+    }
   >;
 }
 
@@ -205,7 +208,8 @@ export function clampGeneratorFuel(
 ): Record<string, GeneratorState> {
   const out: Record<string, GeneratorState> = {};
   for (const [id, g] of Object.entries(generators)) {
-    out[id] = g.fuel > GENERATOR_MAX_FUEL ? { ...g, fuel: GENERATOR_MAX_FUEL } : g;
+    out[id] =
+      g.fuel > GENERATOR_MAX_FUEL ? { ...g, fuel: GENERATOR_MAX_FUEL } : g;
   }
   return out;
 }
@@ -217,12 +221,18 @@ type MigrationStep = {
 };
 
 function migrateV1ToV2(save: SaveGameV1): SaveGameV2 {
-  const oldGen: GeneratorState = save.generator ?? { fuel: 0, progress: 0, running: false };
+  const oldGen: GeneratorState = save.generator ?? {
+    fuel: 0,
+    progress: 0,
+    running: false,
+  };
   const generators: Record<string, GeneratorState> = {};
   let first = true;
   for (const [id, asset] of Object.entries(save.assets ?? {})) {
     if ((asset as PlacedAsset).type === "generator") {
-      generators[id] = first ? { ...oldGen } : { fuel: 0, progress: 0, running: false };
+      generators[id] = first
+        ? { ...oldGen }
+        : { fuel: 0, progress: 0, running: false };
       first = false;
     }
   }
@@ -343,7 +353,8 @@ function migrateV10ToV11(save: SaveGameV10): SaveGameV11 {
   for (const [id, entry] of Object.entries(save.serviceHubs ?? {})) {
     migratedHubs[id] = {
       ...entry,
-      droneIds: (entry as any).droneIds ?? (droneHubId === id ? ["starter"] : []),
+      droneIds:
+        (entry as any).droneIds ?? (droneHubId === id ? ["starter"] : []),
     };
   }
   return {
@@ -390,10 +401,10 @@ function migrateV12ToV13(save: SaveGameV12): SaveGameV13 {
     } as StarterDroneState;
   }
   const starterDrone = save.starterDrone
-    ? {
+    ? ({
         ...save.starterDrone,
         craftingJobId: (save.starterDrone as any).craftingJobId ?? null,
-      } as StarterDroneState
+      } as StarterDroneState)
     : save.starterDrone;
   return { ...save, version: 13, drones, starterDrone };
 }

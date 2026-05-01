@@ -113,7 +113,11 @@ export function deserializeState(save: SaveGameLatest): GameState {
     powerPolesPlaced: save.powerPolesPlaced,
     hotbarSlots: save.hotbarSlots,
     activeSlot: save.activeSlot,
-    smithy: { ...base.smithy, ...save.smithy, buildingId: save.smithy?.buildingId ?? null },
+    smithy: {
+      ...base.smithy,
+      ...save.smithy,
+      buildingId: save.smithy?.buildingId ?? null,
+    },
     generators: clampGeneratorFuel(save.generators ?? {}),
     battery: save.battery,
     floorMap: save.floorMap,
@@ -125,7 +129,10 @@ export function deserializeState(save: SaveGameLatest): GameState {
     ),
     autoSmelters: save.autoSmelters,
     autoAssemblers: save.autoAssemblers ?? {},
-    manualAssembler: { ...save.manualAssembler, buildingId: save.manualAssembler?.buildingId ?? null },
+    manualAssembler: {
+      ...save.manualAssembler,
+      buildingId: save.manualAssembler?.buildingId ?? null,
+    },
     machinePowerRatio: save.machinePowerRatio,
     saplingGrowAt: save.saplingGrowAt,
 
@@ -154,14 +161,20 @@ export function deserializeState(save: SaveGameLatest): GameState {
       }
       if (!d.hubId) {
         const existingHubId =
-          Object.keys(save.assets).find((id) => save.assets[id]?.type === "service_hub") ?? null;
+          Object.keys(save.assets).find(
+            (id) => save.assets[id]?.type === "service_hub",
+          ) ?? null;
         if (existingHubId) {
           d = { ...d, hubId: existingHubId };
         }
       }
       if (d.status === "idle") {
         if (d.hubId && save.assets[d.hubId]) {
-          d = { ...d, tileX: save.assets[d.hubId].x, tileY: save.assets[d.hubId].y };
+          d = {
+            ...d,
+            tileX: save.assets[d.hubId].x,
+            tileY: save.assets[d.hubId].y,
+          };
         } else if (!d.hubId) {
           d = { ...d, tileX: MAP_SHOP_POS.x, tileY: MAP_SHOP_POS.y };
         }
@@ -180,11 +193,17 @@ export function deserializeState(save: SaveGameLatest): GameState {
         }
         if (!d.hubId) {
           const existingHubId =
-            Object.keys(save.assets).find((aid) => save.assets[aid]?.type === "service_hub") ?? null;
+            Object.keys(save.assets).find(
+              (aid) => save.assets[aid]?.type === "service_hub",
+            ) ?? null;
           if (existingHubId) d = { ...d, hubId: existingHubId };
         }
         if (d.status === "idle" && d.hubId && save.assets[d.hubId]) {
-          d = { ...d, tileX: save.assets[d.hubId].x, tileY: save.assets[d.hubId].y };
+          d = {
+            ...d,
+            tileX: save.assets[d.hubId].x,
+            tileY: save.assets[d.hubId].y,
+          };
         }
         cleaned[id] = d;
       }
@@ -206,9 +225,13 @@ export function deserializeState(save: SaveGameLatest): GameState {
             inventory: { ...createEmptyHubInventory(), ...entry.inventory },
             targetStock:
               entry.targetStock ??
-              (tier === 1 ? createDefaultProtoHubTargetStock() : createDefaultHubTargetStock()),
+              (tier === 1
+                ? createDefaultProtoHubTargetStock()
+                : createDefaultHubTargetStock()),
             tier,
-            droneIds: Array.isArray((entry as any).droneIds) ? (entry as any).droneIds : [],
+            droneIds: Array.isArray((entry as any).droneIds)
+              ? (entry as any).droneIds
+              : [],
             ...(pendingUpgrade ? { pendingUpgrade } : {}),
           };
         }
@@ -233,8 +256,13 @@ export function deserializeState(save: SaveGameLatest): GameState {
       new Set(Object.keys(save.assets)),
       new Set(Object.keys(save.productionZones ?? {})),
     ),
-    keepStockByWorkbench: sanitizeKeepStockByWorkbench(save.keepStockByWorkbench, save.assets),
-    recipeAutomationPolicies: sanitizeRecipeAutomationPolicies(save.recipeAutomationPolicies),
+    keepStockByWorkbench: sanitizeKeepStockByWorkbench(
+      save.keepStockByWorkbench,
+      save.assets,
+    ),
+    recipeAutomationPolicies: sanitizeRecipeAutomationPolicies(
+      save.recipeAutomationPolicies,
+    ),
     splitterRouteState: save.splitterRouteState ?? {},
     splitterFilterState: save.splitterFilterState ?? {},
 
@@ -258,7 +286,9 @@ export function deserializeState(save: SaveGameLatest): GameState {
     selectedCraftingBuildingId: null,
   };
 
-  const hasAnyHub = Object.values(partial.assets).some((a) => a.type === "service_hub");
+  const hasAnyHub = Object.values(partial.assets).some(
+    (a) => a.type === "service_hub",
+  );
   if (!hasAnyHub) {
     const candidates: { x: number; y: number; dist: number }[] = [];
     for (let dy = -8; dy <= 8; dy++) {
@@ -275,7 +305,12 @@ export function deserializeState(save: SaveGameLatest): GameState {
       const k10 = cellKey(x + 1, y);
       const k01 = cellKey(x, y + 1);
       const k11 = cellKey(x + 1, y + 1);
-      if (!partial.cellMap[k00] && !partial.cellMap[k10] && !partial.cellMap[k01] && !partial.cellMap[k11]) {
+      if (
+        !partial.cellMap[k00] &&
+        !partial.cellMap[k10] &&
+        !partial.cellMap[k01] &&
+        !partial.cellMap[k11]
+      ) {
         const hubId = `proto-hub-${Date.now()}`;
         const hubAsset: PlacedAsset = {
           id: hubId,
@@ -302,7 +337,12 @@ export function deserializeState(save: SaveGameLatest): GameState {
             droneIds: [partial.starterDrone.droneId],
           },
         };
-        partial.starterDrone = { ...partial.starterDrone, hubId, tileX: x, tileY: y };
+        partial.starterDrone = {
+          ...partial.starterDrone,
+          hubId,
+          tileX: x,
+          tileY: y,
+        };
         break;
       }
     }
@@ -335,14 +375,20 @@ export function deserializeState(save: SaveGameLatest): GameState {
 
   partial.starterDrone = snapIdleDroneToDock(partial.starterDrone);
   partial.drones = Object.fromEntries(
-    Object.entries(partial.drones).map(([id, drone]) => [id, snapIdleDroneToDock(drone)]),
+    Object.entries(partial.drones).map(([id, drone]) => [
+      id,
+      snapIdleDroneToDock(drone),
+    ]),
   );
 
   partial.inventory = rebuildGlobalInventoryFromStorage(partial);
   partial.connectedAssetIds = computeConnectedAssetIds(partial);
 
   const liveAssetIds = new Set(Object.keys(partial.assets));
-  const craftingResult = sanitizeCraftingQueue((save as any).crafting, liveAssetIds);
+  const craftingResult = sanitizeCraftingQueue(
+    (save as any).crafting,
+    liveAssetIds,
+  );
   partial.crafting = craftingResult.queue;
   const liveJobIds = new Set(craftingResult.queue.jobs.map((j) => j.id));
   partial.network = sanitizeNetworkSlice((save as any).network, liveJobIds);

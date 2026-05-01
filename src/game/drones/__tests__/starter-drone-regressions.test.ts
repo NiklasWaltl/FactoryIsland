@@ -39,19 +39,26 @@ describe("Construction Sites – placement", () => {
     // Give partial resources: half of each cost
     const partialInv = { ...hubState.inventory };
     for (const [res, amt] of Object.entries(wbCost)) {
-      (partialInv as unknown as Record<string, number>)[res] = Math.floor((amt ?? 0) / 2);
+      (partialInv as unknown as Record<string, number>)[res] = Math.floor(
+        (amt ?? 0) / 2,
+      );
     }
     let state = { ...hubState, inventory: partialInv };
     state = placeBuilding(state, "workbench", 10, 10);
     // Workbench should be placed
-    const wbId = Object.keys(state.assets).find((id) => state.assets[id].type === "workbench");
+    const wbId = Object.keys(state.assets).find(
+      (id) => state.assets[id].type === "workbench",
+    );
     expect(wbId).toBeTruthy();
     // Construction site should exist
     expect(state.constructionSites[wbId!]).toBeDefined();
     expect(state.constructionSites[wbId!].buildingType).toBe("workbench");
     // Remaining should have positive values
     const remaining = state.constructionSites[wbId!].remaining;
-    const totalRemaining = Object.values(remaining).reduce((sum, value) => sum + (value ?? 0), 0);
+    const totalRemaining = Object.values(remaining).reduce(
+      (sum, value) => sum + (value ?? 0),
+      0,
+    );
     expect(totalRemaining).toBeGreaterThan(0);
   });
 
@@ -67,7 +74,9 @@ describe("Construction Sites – placement", () => {
     let state = { ...hubState, inventory: fullInv };
     const invBefore = { ...state.inventory };
     state = placeBuilding(state, "workbench", 10, 10);
-    const wbId = Object.keys(state.assets).find((id) => state.assets[id].type === "workbench");
+    const wbId = Object.keys(state.assets).find(
+      (id) => state.assets[id].type === "workbench",
+    );
     expect(wbId).toBeTruthy();
     // Construction site ALWAYS created when hub exists — drone delivers resources
     expect(state.constructionSites[wbId!]).toBeDefined();
@@ -83,7 +92,9 @@ describe("Construction Sites – placement", () => {
   it("does NOT create construction site without a hub", () => {
     // Remove all hubs from both serviceHubs and assets
     const assetsWithoutHubs = Object.fromEntries(
-      Object.entries(base.assets).filter(([, asset]) => asset.type !== "service_hub"),
+      Object.entries(base.assets).filter(
+        ([, asset]) => asset.type !== "service_hub",
+      ),
     );
     const noHubBase: GameState = {
       ...base,
@@ -92,7 +103,9 @@ describe("Construction Sites – placement", () => {
       starterDrone: { ...base.starterDrone, hubId: null },
     };
     const state = placeBuilding(noHubBase, "workbench", 10, 10);
-    const wbId = Object.keys(state.assets).find((id) => state.assets[id].type === "workbench");
+    const wbId = Object.keys(state.assets).find(
+      (id) => state.assets[id].type === "workbench",
+    );
     expect(wbId).toBeUndefined(); // placement should fail
     expect(Object.keys(state.constructionSites).length).toBe(0);
   });
@@ -385,7 +398,13 @@ describe("Task Scoring – scoreDroneTask()", () => {
   it("construction_supply score always > hub_restock score at max grid distance", () => {
     // Worst construction score: base - max(79,49) = 1000 - 79 = 921
     // Best hub score: base - 0 = 100
-    const worstConstruction = scoreDroneTask("construction_supply", 0, 0, 79, 0);
+    const worstConstruction = scoreDroneTask(
+      "construction_supply",
+      0,
+      0,
+      79,
+      0,
+    );
     const bestHub = scoreDroneTask("hub_restock", 5, 5, 5, 5);
     expect(worstConstruction).toBeGreaterThan(bestHub);
   });
@@ -393,7 +412,11 @@ describe("Task Scoring – scoreDroneTask()", () => {
 
 describe("Task Scoring – selectDroneTask() picks nearest node of same type", () => {
   it("prefers nearer hub_restock node over farther one", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     // Drone starts near MAP_SHOP_POS (~39,24). Add near node and far node.
     // Near node at (35,24), far at (10,5) — both supply wood the hub needs.
     let state = addNode(hubState, "wood", 35, 24, 5); // near
@@ -421,7 +444,11 @@ describe("Task Scoring – selectDroneTask() picks nearest node of same type", (
 
   it("construction_supply beats hub_restock even when construction node is at max distance", () => {
     const siteId = "far-site";
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     // Put the wood node far from the drone (opposite corner of grid)
     let state: GameState = {
       ...hubState,
@@ -450,7 +477,11 @@ describe("Task Scoring – selectDroneTask() picks nearest node of same type", (
 
   it("selectDroneTask is deterministic when equal-score construction candidates compete with hub_restock", () => {
     const siteId = "deterministic-site";
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     let state: GameState = {
       ...hubState,
       assets: {
@@ -486,7 +517,11 @@ describe("Task Scoring – selectDroneTask() picks nearest node of same type", (
 
   it("invalid/removed site asset is not selected", () => {
     const siteId = "removed-site";
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     // Construction site exists but asset was removed
     let state: GameState = {
       ...hubState,
@@ -517,7 +552,11 @@ describe("Task Scoring – DroneRole influence", () => {
   });
 
   it("DRONE_SET_ROLE sets role on starterDrone and drones record", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     let state = hubState;
     const droneId = state.starterDrone.droneId;
     expect(state.starterDrone.role ?? "auto").toBe("auto");
@@ -532,7 +571,11 @@ describe("Task Scoring – DroneRole influence", () => {
   });
 
   it("DRONE_SET_ROLE updates non-starter drone without mutating starter role", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const extraDroneId = "drone-role-non-starter";
     const stateWithExtra: GameState = {
       ...hubState,
@@ -561,13 +604,19 @@ describe("Task Scoring – DroneRole influence", () => {
       droneId: extraDroneId,
       role: "supply",
     });
-    expect(next.starterDrone.role ?? "auto").toBe(stateWithExtra.starterDrone.role ?? "auto");
+    expect(next.starterDrone.role ?? "auto").toBe(
+      stateWithExtra.starterDrone.role ?? "auto",
+    );
     expect(next.drones[extraDroneId]?.role).toBe("supply");
     expect(next.drones.starter).toBe(next.starterDrone);
   });
 
   it("DRONE_SET_ROLE is strict no-op for unknown non-starter droneId", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const next = gameReducer(hubState, {
       type: "DRONE_SET_ROLE",
       droneId: "missing-drone-id",
@@ -577,7 +626,11 @@ describe("Task Scoring – DroneRole influence", () => {
   });
 
   it("supply-role drone prefers hub_restock over no-construction-site", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const droneId = hubState.starterDrone.droneId;
     let state = gameReducer(hubState, {
       type: "DRONE_SET_ROLE",
@@ -592,7 +645,11 @@ describe("Task Scoring – DroneRole influence", () => {
 
   it("construction-role drone still chooses construction_supply when site exists", () => {
     const siteId = "cs-role-test";
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const droneId = hubState.starterDrone.droneId;
     let state: GameState = {
       ...hubState,
@@ -626,7 +683,11 @@ describe("Task Scoring – DroneRole influence", () => {
   it("supply-role drone still falls back to construction_supply when no hub task exists", () => {
     // Hub fully stocked — no hub_restock candidates. Only construction site.
     const siteId = "cs-fallback-test";
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const droneId = hubState.starterDrone.droneId;
     // Fully stock the hub so no hub_restock candidates
     const hubId = hubState.starterDrone.hubId!;
@@ -672,7 +733,11 @@ describe("Task Scoring – DroneRole influence", () => {
     // Even a "construction"-role drone on the far corner of the grid still picks construction
     // over a nearby hub_restock (invariant: construction always wins).
     const siteId = "cs-far-test";
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const droneId = hubState.starterDrone.droneId;
     let state: GameState = {
       ...hubState,
@@ -719,7 +784,11 @@ describe("Task Scoring – sticky selection (reserved node bonus)", () => {
   });
 
   it("reserved node is preferred over equally-scored unreserved node", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const droneId = hubState.starterDrone.droneId;
     // Add two equidistant wood nodes
     let state = addNode(hubState, "wood", 30, 24, 5); // node A
@@ -745,7 +814,9 @@ describe("Task Scoring – sticky selection (reserved node bonus)", () => {
 
   it("urgency bonus increases hub_restock score proportionally to deficit", () => {
     // deficit=5 → urgency=5, deficit=25 → urgency=DRONE_URGENCY_BONUS_MAX
-    const lowDeficit = scoreDroneTask("hub_restock", 0, 0, 0, 0, { urgency: 5 });
+    const lowDeficit = scoreDroneTask("hub_restock", 0, 0, 0, 0, {
+      urgency: 5,
+    });
     const highDeficit = scoreDroneTask("hub_restock", 0, 0, 0, 0, {
       urgency: DRONE_URGENCY_BONUS_MAX,
     });
@@ -871,7 +942,9 @@ describe("Construction Sites – removal", () => {
     }
     let state = { ...hubState, inventory: zeroInv };
     state = placeBuilding(state, "workbench", 10, 10);
-    const wbId = Object.keys(state.assets).find((id) => state.assets[id].type === "workbench");
+    const wbId = Object.keys(state.assets).find(
+      (id) => state.assets[id].type === "workbench",
+    );
     expect(wbId).toBeTruthy();
     expect(state.constructionSites[wbId!]).toBeDefined();
     // Simulate some resources delivered: reduce remaining
@@ -993,7 +1066,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("prefers the larger-need construction site when distances are equal (demand bonus)", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     const siteSmallId = "site-small";
     const siteLargeId = "site-large";
@@ -1035,7 +1112,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("spreads a fresh drone toward an unloaded site when an equally-good site already has assignments", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     const siteAId = "site-A-loaded";
     const siteBId = "site-B-empty";
@@ -1100,7 +1181,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("does not over-assign drones beyond MAX_DRONES_PER_CONSTRUCTION_TARGET", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     const siteId = "site-huge";
     let state: GameState = {
@@ -1138,7 +1223,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("a small construction site never receives more than one drone", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     const siteId = "site-tiny";
     let state: GameState = {
@@ -1174,7 +1263,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("hub_restock receives extra drones only when no construction need is open", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     // Tiny construction site (desired = 1) so additional drones are NOT eligible for it.
     const siteId = "site-tiny-cap";
@@ -1216,7 +1309,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("a drone with a reserved node sticks to its target instead of switching to a closer one", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     const siteAId = "site-sticky-A";
     const siteBId = "site-sticky-B";
@@ -1271,7 +1368,11 @@ describe("Task Scoring – demand and spread tuning", () => {
   });
 
   it("selection between two competing demand sites is deterministic across calls", () => {
-    const { state: hubState } = placeServiceHub(createInitialState("release"), 6, 6);
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      6,
+      6,
+    );
     const drone = hubState.starterDrone;
     const siteAId = "det-site-A";
     const siteBId = "det-site-B";

@@ -31,11 +31,20 @@ function emptyInv(): Inventory {
 function stateWithOneWarehouse(): GameState {
   const base = createInitialState("release");
 
-  const whA: PlacedAsset = { id: "wh-A", type: "warehouse", x: 5, y: 5, size: 2, direction: "south" };
+  const whA: PlacedAsset = {
+    id: "wh-A",
+    type: "warehouse",
+    x: 5,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
   const assets: Record<string, PlacedAsset> = { "wh-A": whA };
   const cellMap: Record<string, string> = {
-    [cellKey(5, 5)]: "wh-A", [cellKey(6, 5)]: "wh-A",
-    [cellKey(5, 6)]: "wh-A", [cellKey(6, 6)]: "wh-A",
+    [cellKey(5, 5)]: "wh-A",
+    [cellKey(6, 5)]: "wh-A",
+    [cellKey(5, 6)]: "wh-A",
+    [cellKey(6, 6)]: "wh-A",
   };
 
   return {
@@ -48,8 +57,12 @@ function stateWithOneWarehouse(): GameState {
     placedBuildings: [],
     purchasedBuildings: [],
     inventory: addResources(emptyInv(), {
-      wood: 200, stone: 200, iron: 200, copper: 200,
-      ironIngot: 200, copperIngot: 200,
+      wood: 200,
+      stone: 200,
+      iron: 200,
+      copper: 200,
+      ironIngot: 200,
+      copperIngot: 200,
     }),
     buildingSourceWarehouseIds: {},
   };
@@ -58,14 +71,23 @@ function stateWithOneWarehouse(): GameState {
 /** State with two warehouses. */
 function stateWithTwoWarehouses(): GameState {
   const s = stateWithOneWarehouse();
-  const whB: PlacedAsset = { id: "wh-B", type: "warehouse", x: 10, y: 5, size: 2, direction: "south" };
+  const whB: PlacedAsset = {
+    id: "wh-B",
+    type: "warehouse",
+    x: 10,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
   return {
     ...s,
     assets: { ...s.assets, "wh-B": whB },
     cellMap: {
       ...s.cellMap,
-      [cellKey(10, 5)]: "wh-B", [cellKey(11, 5)]: "wh-B",
-      [cellKey(10, 6)]: "wh-B", [cellKey(11, 6)]: "wh-B",
+      [cellKey(10, 5)]: "wh-B",
+      [cellKey(11, 5)]: "wh-B",
+      [cellKey(10, 6)]: "wh-B",
+      [cellKey(11, 6)]: "wh-B",
     },
     warehousesPlaced: 2,
     warehousesPurchased: 2,
@@ -89,15 +111,24 @@ function stateWithNoWarehouse(): GameState {
     purchasedBuildings: [],
     connectedAssetIds: [],
     inventory: addResources(emptyInv(), {
-      wood: 200, stone: 200, iron: 200, copper: 200,
-      ironIngot: 200, copperIngot: 200,
+      wood: 200,
+      stone: 200,
+      iron: 200,
+      copper: 200,
+      ironIngot: 200,
+      copperIngot: 200,
     }),
     buildingSourceWarehouseIds: {},
   };
 }
 
 /** Place a building via the reducer and return the new state. */
-function placeBuildingAt(state: GameState, buildingType: string, x: number, y: number): GameState {
+function placeBuildingAt(
+  state: GameState,
+  buildingType: string,
+  x: number,
+  y: number,
+): GameState {
   return gameReducer(
     { ...state, selectedBuildingType: buildingType, buildMode: true },
     { type: "BUILD_PLACE_BUILDING", x, y },
@@ -105,9 +136,15 @@ function placeBuildingAt(state: GameState, buildingType: string, x: number, y: n
 }
 
 /** Find the asset ID of the newly placed building by type (excluding pre-existing ones). */
-function findNewAssetId(before: GameState, after: GameState, type: string): string | undefined {
+function findNewAssetId(
+  before: GameState,
+  after: GameState,
+  type: string,
+): string | undefined {
   const oldIds = new Set(Object.keys(before.assets));
-  return Object.keys(after.assets).find((id) => !oldIds.has(id) && after.assets[id].type === type);
+  return Object.keys(after.assets).find(
+    (id) => !oldIds.has(id) && after.assets[id].type === type,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -348,7 +385,11 @@ describe("Manual override after auto-assign", () => {
     expect(after.buildingSourceWarehouseIds[wbId]).toBe("wh-A");
 
     // Manually switch to wh-B
-    const changed = gameReducer(after, { type: "SET_BUILDING_SOURCE", buildingId: wbId, warehouseId: "wh-B" });
+    const changed = gameReducer(after, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: wbId,
+      warehouseId: "wh-B",
+    });
     expect(changed.buildingSourceWarehouseIds[wbId]).toBe("wh-B");
   });
 
@@ -359,7 +400,11 @@ describe("Manual override after auto-assign", () => {
     const smId = findNewAssetId(before, after, "smithy")!;
     expect(after.buildingSourceWarehouseIds[smId]).toBe("wh-A");
 
-    const reset = gameReducer(after, { type: "SET_BUILDING_SOURCE", buildingId: smId, warehouseId: null });
+    const reset = gameReducer(after, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: smId,
+      warehouseId: null,
+    });
     expect(reset.buildingSourceWarehouseIds[smId]).toBeUndefined();
   });
 });

@@ -13,8 +13,20 @@ const WH = "wh-ui";
 
 function buildState(overrides?: Partial<Inventory>): GameState {
   const base = createInitialState("release");
-  const workbench: PlacedAsset = { id: WB, type: "workbench", x: 4, y: 4, size: 1 };
-  const warehouse: PlacedAsset = { id: WH, type: "warehouse", x: 8, y: 8, size: 2 };
+  const workbench: PlacedAsset = {
+    id: WB,
+    type: "workbench",
+    x: 4,
+    y: 4,
+    size: 1,
+  };
+  const warehouse: PlacedAsset = {
+    id: WH,
+    type: "warehouse",
+    x: 8,
+    y: 8,
+    size: 2,
+  };
 
   return {
     ...base,
@@ -113,7 +125,9 @@ describe("productionTransparency", () => {
     });
 
     const snapshot = buildProductionTransparency(state);
-    const row = snapshot.keepStock.find((entry) => entry.recipeId === "wood_pickaxe");
+    const row = snapshot.keepStock.find(
+      (entry) => entry.recipeId === "wood_pickaxe",
+    );
 
     expect(row).toBeDefined();
     expect(row?.targetAmount).toBe(2);
@@ -130,7 +144,9 @@ describe("productionTransparency", () => {
     });
 
     const snapshot = buildProductionTransparency(state);
-    const row = snapshot.jobs.find((entry) => entry.type === "player-craft" && entry.status === "queued");
+    const row = snapshot.jobs.find(
+      (entry) => entry.type === "player-craft" && entry.status === "queued",
+    );
 
     expect(row).toBeDefined();
     expect(row?.reason).toContain("wartet");
@@ -154,7 +170,9 @@ describe("productionTransparency", () => {
     });
 
     const snapshot = buildProductionTransparency(state);
-    const row = snapshot.keepStock.find((entry) => entry.recipeId === "wood_pickaxe");
+    const row = snapshot.keepStock.find(
+      (entry) => entry.recipeId === "wood_pickaxe",
+    );
 
     expect(row).toBeDefined();
     expect(row?.decision).toBe("skip");
@@ -177,7 +195,9 @@ describe("productionTransparency", () => {
     });
 
     const snapshot = buildProductionTransparency(state);
-    const row = snapshot.keepStock.find((entry) => entry.recipeId === "wood_pickaxe");
+    const row = snapshot.keepStock.find(
+      (entry) => entry.recipeId === "wood_pickaxe",
+    );
 
     expect(row).toBeDefined();
     expect(row?.decision).toBe("skip");

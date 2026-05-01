@@ -21,9 +21,7 @@ export interface GeneratorFuelContext {
   deps: MachineActionDeps;
 }
 
-export function runGeneratorFuelPhase(
-  ctx: GeneratorFuelContext,
-): GameState {
+export function runGeneratorFuelPhase(ctx: GeneratorFuelContext): GameState {
   const { state, action, deps } = ctx;
 
   switch (action.type) {
@@ -35,7 +33,11 @@ export function runGeneratorFuelPhase(
       const sourceInv = getCraftingSourceInventory(state, source);
       const gen = state.generators[genId];
       const space = Math.max(0, GENERATOR_MAX_FUEL - gen.fuel);
-      const amt = Math.min(action.amount, (sourceInv.wood as number) ?? 0, space);
+      const amt = Math.min(
+        action.amount,
+        (sourceInv.wood as number) ?? 0,
+        space,
+      );
       if (amt <= 0) return state;
       debugLog.building(
         `Generator ${genId}: added ${amt} wood as fuel (${gen.fuel} → ${gen.fuel + amt}/${GENERATOR_MAX_FUEL})`,

@@ -100,7 +100,10 @@ export type MockAction =
   | { type: "DEBUG_MOCK_ALL" }
   | { type: "DEBUG_RESET_STATE" };
 
-export function applyMockToState(state: GameState, mock: MockAction["type"]): GameState {
+export function applyMockToState(
+  state: GameState,
+  mock: MockAction["type"],
+): GameState {
   // Note: caller (DebugPanel) is already gated behind IS_DEV + state.mode === "debug".
   // We intentionally don't re-check import.meta.env.DEV here so unit tests can
   // exercise the deposit logic directly.
@@ -114,7 +117,8 @@ export function applyMockToState(state: GameState, mock: MockAction["type"]): Ga
       }
 
       const nextHubs = hubIds.reduce(
-        (serviceHubs, hubId) => addManyToHubInventory(serviceHubs, hubId, MOCK_DRONE_HUB_INVENTORY),
+        (serviceHubs, hubId) =>
+          addManyToHubInventory(serviceHubs, hubId, MOCK_DRONE_HUB_INVENTORY),
         state.serviceHubs,
       );
 
@@ -143,7 +147,8 @@ export function applyMockToState(state: GameState, mock: MockAction["type"]): Ga
         }
       }
 
-      const firstWarehouseId = Object.keys(state.warehouseInventories)[0] ?? null;
+      const firstWarehouseId =
+        Object.keys(state.warehouseInventories)[0] ?? null;
       const firstHubId = Object.keys(state.serviceHubs)[0] ?? null;
 
       let nextWarehouses = state.warehouseInventories;
@@ -154,10 +159,16 @@ export function applyMockToState(state: GameState, mock: MockAction["type"]): Ga
 
       for (const [key, amt] of Object.entries(physicalDeposit)) {
         if (firstWarehouseId) {
-          const wh = nextWarehouses[firstWarehouseId] as unknown as Record<string, number>;
+          const wh = nextWarehouses[firstWarehouseId] as unknown as Record<
+            string,
+            number
+          >;
           nextWarehouses = {
             ...nextWarehouses,
-            [firstWarehouseId]: { ...wh, [key]: (wh[key] ?? 0) + (amt as number) } as unknown as Inventory,
+            [firstWarehouseId]: {
+              ...wh,
+              [key]: (wh[key] ?? 0) + (amt as number),
+            } as unknown as Inventory,
           };
           deposited.push(`${key}→wh:${firstWarehouseId}`);
           continue;
@@ -185,7 +196,9 @@ export function applyMockToState(state: GameState, mock: MockAction["type"]): Ga
       if (deposited.length > 0) {
         debugLog.mock(`Mock fill deposited: ${deposited.join(", ")}`);
       } else if (skipped.length > 0) {
-        debugLog.mock("Mock fill: no physical storage exists — only non-physical keys applied.");
+        debugLog.mock(
+          "Mock fill: no physical storage exists — only non-physical keys applied.",
+        );
       }
 
       return {
@@ -200,10 +213,30 @@ export function applyMockToState(state: GameState, mock: MockAction["type"]): Ga
       debugLog.mock("Applied mock tools (99 each + hotbar)");
       const inv = { ...state.inventory, ...MOCK_TOOLS, sapling: 999 };
       const hotbar = createInitialHotbar();
-      hotbar[0] = { toolKind: "axe", amount: HOTBAR_STACK_MAX, label: `Axt (${HOTBAR_STACK_MAX})`, emoji: "\u{1FA93}" };
-      hotbar[1] = { toolKind: "wood_pickaxe", amount: HOTBAR_STACK_MAX, label: `Holzspitzhacke (${HOTBAR_STACK_MAX})`, emoji: "\u26CF\uFE0F" };
-      hotbar[2] = { toolKind: "stone_pickaxe", amount: HOTBAR_STACK_MAX, label: `Steinspitzhacke (${HOTBAR_STACK_MAX})`, emoji: "\u26CF\uFE0F" };
-      hotbar[3] = { toolKind: "sapling", amount: HOTBAR_STACK_MAX, label: `Setzling (${HOTBAR_STACK_MAX})`, emoji: "\u{1F331}" };
+      hotbar[0] = {
+        toolKind: "axe",
+        amount: HOTBAR_STACK_MAX,
+        label: `Axt (${HOTBAR_STACK_MAX})`,
+        emoji: "\u{1FA93}",
+      };
+      hotbar[1] = {
+        toolKind: "wood_pickaxe",
+        amount: HOTBAR_STACK_MAX,
+        label: `Holzspitzhacke (${HOTBAR_STACK_MAX})`,
+        emoji: "\u26CF\uFE0F",
+      };
+      hotbar[2] = {
+        toolKind: "stone_pickaxe",
+        amount: HOTBAR_STACK_MAX,
+        label: `Steinspitzhacke (${HOTBAR_STACK_MAX})`,
+        emoji: "\u26CF\uFE0F",
+      };
+      hotbar[3] = {
+        toolKind: "sapling",
+        amount: HOTBAR_STACK_MAX,
+        label: `Setzling (${HOTBAR_STACK_MAX})`,
+        emoji: "\u{1F331}",
+      };
       return { ...state, inventory: inv, hotbarSlots: hotbar };
     }
 

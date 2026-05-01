@@ -1,4 +1,8 @@
-import { HOTBAR_SIZE, HOTBAR_STACK_MAX, EMPTY_HOTBAR_SLOT } from "../constants/ui/hotbar";
+import {
+  HOTBAR_SIZE,
+  HOTBAR_STACK_MAX,
+  EMPTY_HOTBAR_SLOT,
+} from "../constants/ui/hotbar";
 import { BUILDING_LABELS } from "../constants/buildings/index";
 import { ASSET_EMOJIS } from "../constants/ui/assets";
 import { RESOURCE_EMOJIS, RESOURCE_LABELS } from "../constants/resources";
@@ -10,7 +14,11 @@ export function createInitialHotbar(): HotbarSlot[] {
   return Array.from({ length: HOTBAR_SIZE }, () => ({ ...EMPTY_HOTBAR_SLOT }));
 }
 
-function makeHotbarLabel(toolKind: ToolKind, amount: number, buildingType?: BuildingType): string {
+function makeHotbarLabel(
+  toolKind: ToolKind,
+  amount: number,
+  buildingType?: BuildingType,
+): string {
   if (toolKind === "empty") return "";
   if (toolKind === "building" && buildingType) {
     return BUILDING_LABELS[buildingType] + (amount > 1 ? ` ×${amount}` : "");
@@ -19,9 +27,13 @@ function makeHotbarLabel(toolKind: ToolKind, amount: number, buildingType?: Buil
   return amount > 1 ? `${base} (${amount})` : base;
 }
 
-function makeHotbarEmoji(toolKind: ToolKind, buildingType?: BuildingType): string {
+function makeHotbarEmoji(
+  toolKind: ToolKind,
+  buildingType?: BuildingType,
+): string {
   if (toolKind === "empty") return "";
-  if (toolKind === "building" && buildingType) return ASSET_EMOJIS[buildingType];
+  if (toolKind === "building" && buildingType)
+    return ASSET_EMOJIS[buildingType];
   return RESOURCE_EMOJIS[toolKind] ?? "";
 }
 
@@ -65,7 +77,10 @@ export function hotbarAdd(
   });
 }
 
-export function hotbarDecrement(slots: HotbarSlot[], idx: number): HotbarSlot[] {
+export function hotbarDecrement(
+  slots: HotbarSlot[],
+  idx: number,
+): HotbarSlot[] {
   return slots.map((slot, index) => {
     if (index !== idx) return slot;
     if (slot.amount <= 1) return { ...EMPTY_HOTBAR_SLOT };

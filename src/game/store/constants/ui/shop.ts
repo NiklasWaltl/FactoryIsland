@@ -19,5 +19,11 @@ export interface MapShopItem {
 }
 
 export const MAP_SHOP_ITEMS: MapShopItem[] = [
-  { key: "axe", label: "Axt", emoji: "\u{1FA93}", costCoins: 10, inventoryKey: "axe" },
+  {
+    key: "axe",
+    label: "Axt",
+    emoji: "\u{1FA93}",
+    costCoins: 10,
+    inventoryKey: "axe",
+  },
 ];

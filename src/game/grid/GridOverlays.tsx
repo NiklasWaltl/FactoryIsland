@@ -83,10 +83,13 @@ export function buildWorldOverlayData({
       asset.type === "conveyor_underground_in" ||
       asset.type === "conveyor_underground_out";
     const isAutoMiner = asset.type === "auto_miner";
-    const isTwoTileBeltMachine = asset.type === "auto_smelter" || asset.type === "auto_assembler";
+    const isTwoTileBeltMachine =
+      asset.type === "auto_smelter" || asset.type === "auto_assembler";
     const underConstruction = isUnderConstruction(state, asset.id);
 
-    const convQueue = isConveyor ? state.conveyors[asset.id]?.queue ?? [] : [];
+    const convQueue = isConveyor
+      ? (state.conveyors[asset.id]?.queue ?? [])
+      : [];
     const minerEntry = isAutoMiner ? state.autoMiners[asset.id] : null;
 
     if (
@@ -167,8 +170,8 @@ export function buildWorldOverlayData({
             {convQueue.slice(0, 4).map((item, idx) => {
               const slotSize = 10;
               const gap = 2;
-              const startX = w / 2 - ((slotSize * 2 + gap) / 2);
-              const startY = h / 2 - ((slotSize * 2 + gap) / 2);
+              const startX = w / 2 - (slotSize * 2 + gap) / 2;
+              const startY = h / 2 - (slotSize * 2 + gap) / 2;
               const col = idx % 2;
               const row = Math.floor(idx / 2);
               return (
@@ -248,7 +251,9 @@ export function buildWorldOverlayData({
         const statusColor =
           status === "PROCESSING"
             ? "#22c55e"
-            : status === "OUTPUT_BLOCKED" || status === "NO_POWER" || status === "MISCONFIGURED"
+            : status === "OUTPUT_BLOCKED" ||
+                status === "NO_POWER" ||
+                status === "MISCONFIGURED"
               ? "#ef4444"
               : "#9ca3af";
         const dir = asset.direction ?? "east";
@@ -368,7 +373,10 @@ export function buildWorldOverlayData({
       continue;
     }
 
-    if (import.meta.env.DEV && !warnedUnmigratedTypesRef.current.has(asset.type)) {
+    if (
+      import.meta.env.DEV &&
+      !warnedUnmigratedTypesRef.current.has(asset.type)
+    ) {
       warnedUnmigratedTypesRef.current.add(asset.type);
       console.warn(
         `[Grid] Unmigrated world asset type rendered via React exception fallback: ${asset.type}. ` +

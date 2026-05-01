@@ -1,28 +1,14 @@
 import React from "react";
 import { CELL_PX } from "../constants/grid";
-import {
-  BUILDING_LABELS,
-} from "../store/constants/buildings/index";
-import {
-  FLOOR_TILE_EMOJIS,
-} from "../store/constants/map/floor";
-import {
-  RESOURCE_EMOJIS,
-} from "../store/constants/resources";
-import {
-  directionOffset,
-} from "../store/utils/direction";
-import {
-  cellKey,
-} from "../store/utils/cell-key";
-import {
-  getWarehouseInputCell,
-} from "../store/warehouse-input";
+import { BUILDING_LABELS } from "../store/constants/buildings/index";
+import { FLOOR_TILE_EMOJIS } from "../store/constants/map/floor";
+import { RESOURCE_EMOJIS } from "../store/constants/resources";
+import { directionOffset } from "../store/utils/direction";
+import { cellKey } from "../store/utils/cell-key";
+import { getWarehouseInputCell } from "../store/warehouse-input";
 import type { Direction, GameState, PlacedAsset } from "../store/types";
 import { POWER_POLE_RANGE } from "../store/constants/energy/power-pole";
-import {
-  isConveyorPreviewBuildingType,
-} from "../store/building-placement-preview";
+import { isConveyorPreviewBuildingType } from "../store/building-placement-preview";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import {
   collectPowerPoleRangeHighlightElements as collectPowerPoleRangeHighlightElementsHelper,
@@ -123,7 +109,8 @@ export function buildSelectionOverlays({
     poleY: number,
     colors: { background: string; border: string },
     key?: string,
-  ): React.ReactNode => renderPowerPoleRangeAreaHelper(poleX, poleY, colors, key);
+  ): React.ReactNode =>
+    renderPowerPoleRangeAreaHelper(poleX, poleY, colors, key);
 
   let placementOverlayElement: React.ReactNode = null;
   let inspectionOverlayElement: React.ReactNode = null;

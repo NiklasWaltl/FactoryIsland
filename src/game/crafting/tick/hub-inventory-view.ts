@@ -13,12 +13,20 @@
 import type { Inventory, ServiceHubEntry } from "../../store/types";
 import type { WarehouseId } from "../../items/types";
 import type { CraftingInventorySource, CraftingJob } from "../types";
-import { GLOBAL_SOURCE_SCOPE_KEY, getLegacyScopeKeyForSource } from "../scope-keys";
+import {
+  GLOBAL_SOURCE_SCOPE_KEY,
+  getLegacyScopeKeyForSource,
+} from "../scope-keys";
 
 export { GLOBAL_SOURCE_SCOPE_KEY };
 export const GLOBAL_SOURCE_WAREHOUSE_ID = "__crafting_global__" as WarehouseId;
 export const GLOBAL_SOURCE_HUB_PREFIX = "__crafting_hub__:";
-export const HUB_COLLECTABLE_ITEM_IDS = ["wood", "stone", "iron", "copper"] as const;
+export const HUB_COLLECTABLE_ITEM_IDS = [
+  "wood",
+  "stone",
+  "iron",
+  "copper",
+] as const;
 
 export interface SourceView {
   scopeKey: string;
@@ -29,7 +37,9 @@ export function getGlobalHubWarehouseId(hubId: string): WarehouseId {
   return `${GLOBAL_SOURCE_HUB_PREFIX}${hubId}` as WarehouseId;
 }
 
-export function hubInventoryToInventoryView(hubInventory: ServiceHubEntry["inventory"]): Inventory {
+export function hubInventoryToInventoryView(
+  hubInventory: ServiceHubEntry["inventory"],
+): Inventory {
   return {
     wood: hubInventory.wood ?? 0,
     stone: hubInventory.stone ?? 0,
@@ -55,11 +65,17 @@ export function hubInventoriesEqual(
   left: ServiceHubEntry["inventory"],
   right: ServiceHubEntry["inventory"],
 ): boolean {
-  return HUB_COLLECTABLE_ITEM_IDS.every((itemId) => (left[itemId] ?? 0) === (right[itemId] ?? 0));
+  return HUB_COLLECTABLE_ITEM_IDS.every(
+    (itemId) => (left[itemId] ?? 0) === (right[itemId] ?? 0),
+  );
 }
 
-export function getJobInventorySource(job: CraftingJob): CraftingInventorySource {
-  const source = (job as CraftingJob & { inventorySource?: CraftingInventorySource }).inventorySource;
+export function getJobInventorySource(
+  job: CraftingJob,
+): CraftingInventorySource {
+  const source = (
+    job as CraftingJob & { inventorySource?: CraftingInventorySource }
+  ).inventorySource;
   return source ?? { kind: "global" };
 }
 
@@ -74,7 +90,8 @@ export function getSourceView(
       [GLOBAL_SOURCE_WAREHOUSE_ID]: globalInventory,
     };
     for (const [hubId, hub] of Object.entries(serviceHubs)) {
-      scopedWarehouses[getGlobalHubWarehouseId(hubId)] = hubInventoryToInventoryView(hub.inventory);
+      scopedWarehouses[getGlobalHubWarehouseId(hubId)] =
+        hubInventoryToInventoryView(hub.inventory);
     }
     return {
       scopeKey: GLOBAL_SOURCE_SCOPE_KEY,
@@ -86,7 +103,9 @@ export function getSourceView(
     const warehouse = warehouseInventories[source.warehouseId];
     return {
       scopeKey: getLegacyScopeKeyForSource(source),
-      warehouseInventories: warehouse ? { [source.warehouseId]: warehouse } : {},
+      warehouseInventories: warehouse
+        ? { [source.warehouseId]: warehouse }
+        : {},
     };
   }
 
@@ -119,7 +138,10 @@ export function mergeSourceView(
     for (const [hubId, hub] of Object.entries(serviceHubs)) {
       const scopedInventory = scopedWarehouses[getGlobalHubWarehouseId(hubId)];
       if (!scopedInventory) continue;
-      const nextHubInventory = inventoryViewToHubInventory(hub.inventory, scopedInventory);
+      const nextHubInventory = inventoryViewToHubInventory(
+        hub.inventory,
+        scopedInventory,
+      );
       if (hubInventoriesEqual(hub.inventory, nextHubInventory)) continue;
       if (!nextServiceHubs) {
         nextServiceHubs = { ...serviceHubs };
@@ -128,7 +150,8 @@ export function mergeSourceView(
     }
     return {
       warehouseInventories,
-      globalInventory: scopedWarehouses[GLOBAL_SOURCE_WAREHOUSE_ID] ?? globalInventory,
+      globalInventory:
+        scopedWarehouses[GLOBAL_SOURCE_WAREHOUSE_ID] ?? globalInventory,
       serviceHubs: nextServiceHubs ?? serviceHubs,
     };
   }

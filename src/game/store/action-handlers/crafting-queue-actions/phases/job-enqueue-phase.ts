@@ -20,9 +20,7 @@ export interface JobEnqueueContext {
   deps: CraftingQueueActionDeps;
 }
 
-export function runJobEnqueuePhase(
-  ctx: JobEnqueueContext,
-): GameState {
+export function runJobEnqueuePhase(ctx: JobEnqueueContext): GameState {
   const { state, action, deps } = ctx;
 
   const workbenchAsset = getAssetOfType(state, action.workbenchId, "workbench");
@@ -40,12 +38,17 @@ export function runJobEnqueuePhase(
       : {
           ...state,
           crafting: failed.queue,
-          notifications: deps.addErrorNotification(state.notifications, failed.error.message),
+          notifications: deps.addErrorNotification(
+            state.notifications,
+            failed.error.message,
+          ),
         };
   }
   deps.logCraftingSelectionComparison(state, "workbench", action.workbenchId);
   if (deps.isUnderConstruction(state, workbenchAsset.id)) {
-    debugLog.general(`Crafting workbench [${workbenchAsset.id}] - under construction`);
+    debugLog.general(
+      `Crafting workbench [${workbenchAsset.id}] - under construction`,
+    );
     return withErrorNotification(
       state,
       deps.addErrorNotification,
@@ -65,7 +68,11 @@ export function runJobEnqueuePhase(
           `Enqueue rejected by policy: ${decision.rawReason} (recipe ${action.recipeId}, workbench ${action.workbenchId})`,
         );
       }
-      return withErrorNotification(state, deps.addErrorNotification, decision.reason!);
+      return withErrorNotification(
+        state,
+        deps.addErrorNotification,
+        decision.reason!,
+      );
     }
   }
 
@@ -108,6 +115,8 @@ export function runJobEnqueuePhase(
   if (import.meta.env.DEV) {
     debugLog.general(`Craft availability check for recipe ${action.recipeId}`);
   }
-  debugLog.general(`Job ${r.job.id} created for workbench ${action.workbenchId}`);
+  debugLog.general(
+    `Job ${r.job.id} created for workbench ${action.workbenchId}`,
+  );
   return { ...state, crafting: r.queue };
 }

@@ -4,10 +4,7 @@ import {
   isBuildingZoneStateConsistent,
   isConstructionSiteStateConsistent,
 } from "../../utils/asset-guards";
-import type {
-  GameNotification,
-  GameState,
-} from "../../types";
+import type { GameNotification, GameState } from "../../types";
 
 export type HandledActionType = "BUILD_PLACE_BUILDING" | "BUILD_REMOVE_ASSET";
 
@@ -24,7 +21,10 @@ export function isBuildingPlacementAction(
 
 export interface BuildingPlacementIoDeps {
   makeId(): string;
-  addErrorNotification(notifications: GameNotification[], message: string): GameNotification[];
+  addErrorNotification(
+    notifications: GameNotification[],
+    message: string,
+  ): GameNotification[];
   debugLog: {
     building(message: string): void;
   };
@@ -37,12 +37,16 @@ export function logPlacementInvariantWarnings(
 ): void {
   if (!import.meta.env.DEV) return;
   if (!isConstructionSiteStateConsistent(state)) {
-    debugLog.building(`[Invariant:${actionType}] constructionSites inkonsistent`);
+    debugLog.building(
+      `[Invariant:${actionType}] constructionSites inkonsistent`,
+    );
   }
   if (!isBuildingZoneStateConsistent(state)) {
     debugLog.building(`[Invariant:${actionType}] buildingZoneIds inkonsistent`);
   }
   if (!isBuildingSourceStateConsistent(state)) {
-    debugLog.building(`[Invariant:${actionType}] buildingSourceWarehouseIds inkonsistent`);
+    debugLog.building(
+      `[Invariant:${actionType}] buildingSourceWarehouseIds inkonsistent`,
+    );
   }
 }

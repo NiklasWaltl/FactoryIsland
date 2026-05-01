@@ -5,13 +5,19 @@ import {
   KEEP_STOCK_OPEN_JOB_CAP,
 } from "../reducer";
 import type { GameState, Inventory, PlacedAsset } from "../types";
-import { WORKBENCH_RECIPES, type WorkbenchRecipe } from "../../simulation/recipes";
+import {
+  WORKBENCH_RECIPES,
+  type WorkbenchRecipe,
+} from "../../simulation/recipes";
 import { deserializeState, serializeState } from "../../simulation/save";
 
 const WB = "wb-auto";
 const WH = "wh-auto";
 
-function withWorkbenchRecipes(recipes: WorkbenchRecipe[], run: () => void): void {
+function withWorkbenchRecipes(
+  recipes: WorkbenchRecipe[],
+  run: () => void,
+): void {
   const snapshot = [...WORKBENCH_RECIPES];
   WORKBENCH_RECIPES.splice(WORKBENCH_RECIPES.length, 0, ...recipes);
   try {
@@ -23,8 +29,20 @@ function withWorkbenchRecipes(recipes: WorkbenchRecipe[], run: () => void): void
 
 function buildState(overrides?: Partial<Inventory>): GameState {
   const base = createInitialState("release");
-  const workbench: PlacedAsset = { id: WB, type: "workbench", x: 2, y: 2, size: 1 };
-  const warehouse: PlacedAsset = { id: WH, type: "warehouse", x: 6, y: 6, size: 2 };
+  const workbench: PlacedAsset = {
+    id: WB,
+    type: "workbench",
+    x: 2,
+    y: 2,
+    size: 1,
+  };
+  const warehouse: PlacedAsset = {
+    id: WH,
+    type: "warehouse",
+    x: 6,
+    y: 6,
+    size: 2,
+  };
   return {
     ...base,
     assets: {
@@ -194,7 +212,9 @@ describe("CRAFT_REQUEST_WITH_PREREQUISITES", () => {
         ]);
         const last = next.notifications.at(-1);
         expect(last?.kind).toBe("error");
-        expect(last?.displayName).toContain("Auto-Craft-Plan an aktuellen Bestand angepasst");
+        expect(last?.displayName).toContain(
+          "Auto-Craft-Plan an aktuellen Bestand angepasst",
+        );
       },
     );
   });
@@ -256,7 +276,9 @@ describe("CRAFT_REQUEST_WITH_PREREQUISITES", () => {
     });
 
     expect(next.crafting.jobs).toHaveLength(0);
-    expect(next.notifications.at(-1)?.displayName).toContain("auto-craft disabled");
+    expect(next.notifications.at(-1)?.displayName).toContain(
+      "auto-craft disabled",
+    );
   });
 
   it("manual-only recipe still allows direct manual JOB_ENQUEUE", () => {
@@ -275,7 +297,9 @@ describe("CRAFT_REQUEST_WITH_PREREQUISITES", () => {
       priority: "high",
     });
     expect(blockedAutoPlan.crafting.jobs).toHaveLength(0);
-    expect(blockedAutoPlan.notifications.at(-1)?.displayName).toContain("manual only");
+    expect(blockedAutoPlan.notifications.at(-1)?.displayName).toContain(
+      "manual only",
+    );
 
     const manualEnqueue = gameReducer(state, {
       type: "JOB_ENQUEUE",
@@ -355,8 +379,12 @@ describe("Schritt 8 Fixes - reducer", () => {
         });
 
         // Assertion: reducer enqueues adjusted plan (axe only) + emits divergence notice.
-        const gearJobs = next.crafting.jobs.filter((j) => j.recipeId === "auto_fix_g1_gear");
-        const axeJobs = next.crafting.jobs.filter((j) => j.recipeId === "auto_fix_g1_axe");
+        const gearJobs = next.crafting.jobs.filter(
+          (j) => j.recipeId === "auto_fix_g1_gear",
+        );
+        const axeJobs = next.crafting.jobs.filter(
+          (j) => j.recipeId === "auto_fix_g1_axe",
+        );
         expect(gearJobs).toHaveLength(1);
         expect(axeJobs).toHaveLength(1);
         expect(next.notifications.at(-1)?.displayName).toContain(
@@ -504,8 +532,12 @@ describe("Keep-in-Stock", () => {
 
         const next = gameReducer(state, { type: "JOB_TICK" });
 
-        expect(next.crafting.jobs.map((job) => job.recipeId)).toEqual(["keep_stock_gear"]);
-        expect(next.crafting.jobs.every((job) => job.source === "automation")).toBe(true);
+        expect(next.crafting.jobs.map((job) => job.recipeId)).toEqual([
+          "keep_stock_gear",
+        ]);
+        expect(
+          next.crafting.jobs.every((job) => job.source === "automation"),
+        ).toBe(true);
       },
     );
   });
@@ -584,7 +616,9 @@ describe("Keep-in-Stock", () => {
         });
 
         const afterFirstTick = gameReducer(state, { type: "JOB_TICK" });
-        const afterSecondTick = gameReducer(afterFirstTick, { type: "JOB_TICK" });
+        const afterSecondTick = gameReducer(afterFirstTick, {
+          type: "JOB_TICK",
+        });
 
         expect(afterFirstTick.crafting.jobs).toHaveLength(1);
         expect(afterSecondTick.crafting.jobs).toHaveLength(1);
@@ -624,10 +658,16 @@ describe("Keep-in-Stock", () => {
         });
 
         const next = gameReducer(state, { type: "JOB_TICK" });
-        const recipeJobs = next.crafting.jobs.filter((job) => job.recipeId === "keep_stock_blocked");
+        const recipeJobs = next.crafting.jobs.filter(
+          (job) => job.recipeId === "keep_stock_blocked",
+        );
 
-        expect(recipeJobs.filter((job) => job.source === "automation")).toHaveLength(0);
-        expect(recipeJobs.filter((job) => job.source === "player")).toHaveLength(1);
+        expect(
+          recipeJobs.filter((job) => job.source === "automation"),
+        ).toHaveLength(0);
+        expect(
+          recipeJobs.filter((job) => job.source === "player"),
+        ).toHaveLength(1);
       },
     );
   });
@@ -692,7 +732,9 @@ describe("Keep-in-Stock", () => {
           );
 
           expect(recipeJobs).toHaveLength(1);
-          expect(recipeJobs.filter((job) => job.source === "automation")).toHaveLength(1);
+          expect(
+            recipeJobs.filter((job) => job.source === "automation"),
+          ).toHaveLength(1);
         }
       },
     );
@@ -730,9 +772,13 @@ describe("Keep-in-Stock", () => {
         });
 
         const next = gameReducer(state, { type: "JOB_TICK" });
-        const recipeJobs = next.crafting.jobs.filter((job) => job.recipeId === "keep_stock_same_item");
+        const recipeJobs = next.crafting.jobs.filter(
+          (job) => job.recipeId === "keep_stock_same_item",
+        );
 
-        expect(recipeJobs.filter((job) => job.source === "automation")).toHaveLength(1);
+        expect(
+          recipeJobs.filter((job) => job.source === "automation"),
+        ).toHaveLength(1);
       },
     );
   });
@@ -894,7 +940,10 @@ describe("Keep-in-Stock", () => {
 
         const next = gameReducer(state, { type: "JOB_TICK" });
         const openKeepStockJobs = next.crafting.jobs.filter(
-          (job) => job.source === "automation" && job.status !== "done" && job.status !== "cancelled",
+          (job) =>
+            job.source === "automation" &&
+            job.status !== "done" &&
+            job.status !== "cancelled",
         );
 
         expect(openKeepStockJobs).toHaveLength(KEEP_STOCK_OPEN_JOB_CAP);

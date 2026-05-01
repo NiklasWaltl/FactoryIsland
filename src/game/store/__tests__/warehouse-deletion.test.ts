@@ -16,10 +16,7 @@ import {
 } from "../reducer";
 import type { GameState, PlacedAsset, Inventory } from "../types";
 
-import {
-  serializeState,
-  deserializeState,
-} from "../../simulation/save";
+import { serializeState, deserializeState } from "../../simulation/save";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -36,21 +33,66 @@ function emptyInv(): Inventory {
 function fullState(): GameState {
   const base = createInitialState("release");
 
-  const wb: PlacedAsset = { id: "wb-1", type: "workbench", x: 0, y: 0, size: 2 };
+  const wb: PlacedAsset = {
+    id: "wb-1",
+    type: "workbench",
+    x: 0,
+    y: 0,
+    size: 2,
+  };
   const sm: PlacedAsset = { id: "sm-1", type: "smithy", x: 3, y: 0, size: 2 };
-  const ma: PlacedAsset = { id: "ma-1", type: "manual_assembler", x: 6, y: 0, size: 2 };
-  const whA: PlacedAsset = { id: "wh-A", type: "warehouse", x: 0, y: 5, size: 2, direction: "south" };
-  const whB: PlacedAsset = { id: "wh-B", type: "warehouse", x: 5, y: 5, size: 2, direction: "south" };
+  const ma: PlacedAsset = {
+    id: "ma-1",
+    type: "manual_assembler",
+    x: 6,
+    y: 0,
+    size: 2,
+  };
+  const whA: PlacedAsset = {
+    id: "wh-A",
+    type: "warehouse",
+    x: 0,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
+  const whB: PlacedAsset = {
+    id: "wh-B",
+    type: "warehouse",
+    x: 5,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
 
   const assets: Record<string, PlacedAsset> = {
-    "wb-1": wb, "sm-1": sm, "ma-1": ma, "wh-A": whA, "wh-B": whB,
+    "wb-1": wb,
+    "sm-1": sm,
+    "ma-1": ma,
+    "wh-A": whA,
+    "wh-B": whB,
   };
   const cellMap: Record<string, string> = {
-    [cellKey(0, 0)]: "wb-1", [cellKey(1, 0)]: "wb-1", [cellKey(0, 1)]: "wb-1", [cellKey(1, 1)]: "wb-1",
-    [cellKey(3, 0)]: "sm-1", [cellKey(4, 0)]: "sm-1", [cellKey(3, 1)]: "sm-1", [cellKey(4, 1)]: "sm-1",
-    [cellKey(6, 0)]: "ma-1", [cellKey(7, 0)]: "ma-1", [cellKey(6, 1)]: "ma-1", [cellKey(7, 1)]: "ma-1",
-    [cellKey(0, 5)]: "wh-A", [cellKey(1, 5)]: "wh-A", [cellKey(0, 6)]: "wh-A", [cellKey(1, 6)]: "wh-A",
-    [cellKey(5, 5)]: "wh-B", [cellKey(6, 5)]: "wh-B", [cellKey(5, 6)]: "wh-B", [cellKey(6, 6)]: "wh-B",
+    [cellKey(0, 0)]: "wb-1",
+    [cellKey(1, 0)]: "wb-1",
+    [cellKey(0, 1)]: "wb-1",
+    [cellKey(1, 1)]: "wb-1",
+    [cellKey(3, 0)]: "sm-1",
+    [cellKey(4, 0)]: "sm-1",
+    [cellKey(3, 1)]: "sm-1",
+    [cellKey(4, 1)]: "sm-1",
+    [cellKey(6, 0)]: "ma-1",
+    [cellKey(7, 0)]: "ma-1",
+    [cellKey(6, 1)]: "ma-1",
+    [cellKey(7, 1)]: "ma-1",
+    [cellKey(0, 5)]: "wh-A",
+    [cellKey(1, 5)]: "wh-A",
+    [cellKey(0, 6)]: "wh-A",
+    [cellKey(1, 6)]: "wh-A",
+    [cellKey(5, 5)]: "wh-B",
+    [cellKey(6, 5)]: "wh-B",
+    [cellKey(5, 6)]: "wh-B",
+    [cellKey(6, 6)]: "wh-B",
   };
 
   return {
@@ -62,8 +104,18 @@ function fullState(): GameState {
     warehousesPlaced: 2,
     warehousesPurchased: 2,
     warehouseInventories: {
-      "wh-A": addResources(emptyInv(), { wood: 50, iron: 50, copper: 50, ironIngot: 50 }),
-      "wh-B": addResources(emptyInv(), { wood: 30, iron: 30, copper: 30, ironIngot: 30 }),
+      "wh-A": addResources(emptyInv(), {
+        wood: 50,
+        iron: 50,
+        copper: 50,
+        ironIngot: 50,
+      }),
+      "wh-B": addResources(emptyInv(), {
+        wood: 30,
+        iron: 30,
+        copper: 30,
+        ironIngot: 30,
+      }),
     },
     connectedAssetIds: ["wb-1", "sm-1", "ma-1", "wh-A", "wh-B"],
     poweredMachineIds: ["wb-1", "sm-1", "ma-1"],
@@ -86,14 +138,23 @@ function fullState(): GameState {
 /** State with THREE warehouses for multi-replacement tests */
 function tripleWarehouseState(): GameState {
   const s = fullState();
-  const whC: PlacedAsset = { id: "wh-C", type: "warehouse", x: 10, y: 5, size: 2, direction: "south" };
+  const whC: PlacedAsset = {
+    id: "wh-C",
+    type: "warehouse",
+    x: 10,
+    y: 5,
+    size: 2,
+    direction: "south",
+  };
   return {
     ...s,
     assets: { ...s.assets, "wh-C": whC },
     cellMap: {
       ...s.cellMap,
-      [cellKey(10, 5)]: "wh-C", [cellKey(11, 5)]: "wh-C",
-      [cellKey(10, 6)]: "wh-C", [cellKey(11, 6)]: "wh-C",
+      [cellKey(10, 5)]: "wh-C",
+      [cellKey(11, 5)]: "wh-C",
+      [cellKey(10, 6)]: "wh-C",
+      [cellKey(11, 6)]: "wh-C",
     },
     warehousesPlaced: 3,
     warehousesPurchased: 3,
@@ -106,7 +167,10 @@ function tripleWarehouseState(): GameState {
 }
 
 function removeWarehouse(state: GameState, warehouseId: string): GameState {
-  return gameReducer(state, { type: "BUILD_REMOVE_ASSET", assetId: warehouseId });
+  return gameReducer(state, {
+    type: "BUILD_REMOVE_ASSET",
+    assetId: warehouseId,
+  });
 }
 
 // ===========================================================================
@@ -130,7 +194,10 @@ describe("getNearestWarehouseId", () => {
   it("returns null when no warehouses remain after exclusion", () => {
     const s = fullState();
     // Remove wh-B inventory so only wh-A is valid
-    const s2 = { ...s, warehouseInventories: { "wh-A": s.warehouseInventories["wh-A"] } };
+    const s2 = {
+      ...s,
+      warehouseInventories: { "wh-A": s.warehouseInventories["wh-A"] },
+    };
     expect(getNearestWarehouseId(s2, 0, 0, "wh-A")).toBeNull();
   });
 
@@ -290,9 +357,18 @@ describe("Warehouse deletion reassign", () => {
     const before = fullState();
     const after = removeWarehouse(before, "wh-A");
 
-    expect(resolveBuildingSource(after, "wb-1")).toEqual({ kind: "warehouse", warehouseId: "wh-B" });
-    expect(resolveBuildingSource(after, "sm-1")).toEqual({ kind: "warehouse", warehouseId: "wh-B" });
-    expect(resolveBuildingSource(after, "ma-1")).toEqual({ kind: "warehouse", warehouseId: "wh-B" });
+    expect(resolveBuildingSource(after, "wb-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-B",
+    });
+    expect(resolveBuildingSource(after, "sm-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-B",
+    });
+    expect(resolveBuildingSource(after, "ma-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-B",
+    });
   });
 
   it("warehouseInventories entry is removed", () => {
@@ -344,7 +420,9 @@ describe("Multiple remaining warehouses", () => {
     const s = tripleWarehouseState();
     const after1 = removeWarehouse(s, "wh-A");
     const after2 = removeWarehouse(s, "wh-A");
-    expect(after1.buildingSourceWarehouseIds).toEqual(after2.buildingSourceWarehouseIds);
+    expect(after1.buildingSourceWarehouseIds).toEqual(
+      after2.buildingSourceWarehouseIds,
+    );
   });
 
   it("picks nearest warehouse per building (different buildings may get different replacements)", () => {
@@ -410,7 +488,9 @@ describe("Resolver fallback for stale references", () => {
 
   it("resolveCraftingSource returns global for missing asset", () => {
     const s = fullState();
-    expect(resolveCraftingSource(s, "wh-NONEXISTENT")).toEqual({ kind: "global" });
+    expect(resolveCraftingSource(s, "wh-NONEXISTENT")).toEqual({
+      kind: "global",
+    });
   });
 
   it("resolveCraftingSource returns global when inventory entry missing", () => {
@@ -428,7 +508,10 @@ describe("Resolver fallback for stale references", () => {
     // Resolver must expose the stale ref as global fallback.
     expect(resolveBuildingSource(s, "wb-1")).toEqual({ kind: "global" });
     // CRAFT_WORKBENCH is deprecated (queue-based crafting owns this flow now) - no-op.
-    const after = gameReducer(s, { type: "CRAFT_WORKBENCH", recipeKey: "wood_pickaxe" });
+    const after = gameReducer(s, {
+      type: "CRAFT_WORKBENCH",
+      recipeKey: "wood_pickaxe",
+    });
     expect(after).toBe(s);
   });
 });
@@ -467,7 +550,9 @@ describe("Save/Load with stale references (no reassign)", () => {
     const s = fullState();
     const save = serializeState(s);
     const loaded = deserializeState(save);
-    expect(loaded.buildingSourceWarehouseIds).toEqual(s.buildingSourceWarehouseIds);
+    expect(loaded.buildingSourceWarehouseIds).toEqual(
+      s.buildingSourceWarehouseIds,
+    );
   });
 
   it("loaded state with stale refs still allows crafting", () => {
@@ -491,20 +576,30 @@ describe("Regression: valid assignments unaffected", () => {
     s.buildingSourceWarehouseIds = {};
     expect(resolveBuildingSource(s, "wb-1")).toEqual({ kind: "global" });
     // CRAFT_WORKBENCH remains a deprecated no-op - state identity preserved.
-    const after = gameReducer({ ...s, selectedCraftingBuildingId: "wb-1" }, { type: "CRAFT_WORKBENCH", recipeKey: "wood_pickaxe" });
+    const after = gameReducer(
+      { ...s, selectedCraftingBuildingId: "wb-1" },
+      { type: "CRAFT_WORKBENCH", recipeKey: "wood_pickaxe" },
+    );
     expect(after.inventory.wood).toBe(s.inventory.wood);
   });
 
   it("resolveBuildingSource returns warehouse when mapping is valid", () => {
     const s = fullState();
-    expect(resolveBuildingSource(s, "wb-1")).toEqual({ kind: "warehouse", warehouseId: "wh-A" });
+    expect(resolveBuildingSource(s, "wb-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-A",
+    });
   });
 
   it("manual SET_BUILDING_SOURCE still works after reassign", () => {
     const s = fullState();
     const after1 = removeWarehouse(s, "wh-A");
     // wb-1 is now on wh-B (reassigned), manually override to global
-    const after2 = gameReducer(after1, { type: "SET_BUILDING_SOURCE", buildingId: "wb-1", warehouseId: null });
+    const after2 = gameReducer(after1, {
+      type: "SET_BUILDING_SOURCE",
+      buildingId: "wb-1",
+      warehouseId: null,
+    });
     expect(after2.buildingSourceWarehouseIds["wb-1"]).toBeUndefined();
     expect(resolveBuildingSource(after2, "wb-1")).toEqual({ kind: "global" });
   });
@@ -513,6 +608,9 @@ describe("Regression: valid assignments unaffected", () => {
     const s = fullState();
     const after = removeWarehouse(s, "wh-A");
     // wb-1 was on wh-A; after deletion it should be reassigned to wh-B.
-    expect(resolveBuildingSource(after, "wb-1")).toEqual({ kind: "warehouse", warehouseId: "wh-B" });
+    expect(resolveBuildingSource(after, "wb-1")).toEqual({
+      kind: "warehouse",
+      warehouseId: "wh-B",
+    });
   });
 });

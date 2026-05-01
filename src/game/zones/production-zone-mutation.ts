@@ -1,8 +1,5 @@
 import { WAREHOUSE_CAPACITY } from "../store/constants/buildings/index";
-import type {
-  GameState,
-  Inventory,
-} from "../store/types";
+import type { GameState, Inventory } from "../store/types";
 import {
   getZoneAggregateInventory,
   getZoneWarehouseIds,

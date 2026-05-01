@@ -37,7 +37,9 @@ export interface DroneDropoffDecision {
   fallbackEvents?: DroneDropoffFallbackEvent[];
 }
 
-function parseWorkbenchTaskNodeId(nodeId: string | null | undefined): WorkbenchTaskNodeId | null {
+function parseWorkbenchTaskNodeId(
+  nodeId: string | null | undefined,
+): WorkbenchTaskNodeId | null {
   if (!nodeId) return null;
 
   if (nodeId.startsWith("workbench_input:")) {
@@ -113,13 +115,19 @@ export function resolveDroneDropoffDecision(
   const fallbackEvents: DroneDropoffFallbackEvent[] = [];
 
   // Construction supply: target is the construction site asset + per-drone offset.
-  if (drone.currentTaskType === "construction_supply" && drone.deliveryTargetId) {
+  if (
+    drone.currentTaskType === "construction_supply" &&
+    drone.deliveryTargetId
+  ) {
     const siteAsset = assets[drone.deliveryTargetId];
     if (siteAsset) {
       const off = getDeliveryOffset(drone.droneId);
       return { x: siteAsset.x + off.dx, y: siteAsset.y + off.dy };
     }
-    fallbackEvents.push({ kind: "construction_site_missing", targetId: drone.deliveryTargetId });
+    fallbackEvents.push({
+      kind: "construction_site_missing",
+      targetId: drone.deliveryTargetId,
+    });
   }
 
   // Building supply: target is the building asset hosting the input buffer.
@@ -129,7 +137,10 @@ export function resolveDroneDropoffDecision(
       const off = getDeliveryOffset(drone.droneId);
       return { x: targetAsset.x + off.dx, y: targetAsset.y + off.dy };
     }
-    fallbackEvents.push({ kind: "building_target_missing", targetId: drone.deliveryTargetId });
+    fallbackEvents.push({
+      kind: "building_target_missing",
+      targetId: drone.deliveryTargetId,
+    });
   }
 
   if (drone.currentTaskType === "workbench_delivery" && crafting) {
@@ -140,7 +151,10 @@ export function resolveDroneDropoffDecision(
         return { x: workbenchAsset.x, y: workbenchAsset.y };
       }
     }
-    const job = getCraftingJobById(crafting, drone.craftingJobId ?? task?.jobId ?? null);
+    const job = getCraftingJobById(
+      crafting,
+      drone.craftingJobId ?? task?.jobId ?? null,
+    );
     if (job) {
       return resolveWorkbenchDeliveryDropoffDecision(
         job,
@@ -160,7 +174,8 @@ export function resolveDroneDropoffDecision(
         return {
           x: dock.x,
           y: dock.y,
-          fallbackEvents: fallbackEvents.length > 0 ? fallbackEvents : undefined,
+          fallbackEvents:
+            fallbackEvents.length > 0 ? fallbackEvents : undefined,
         };
       }
     }

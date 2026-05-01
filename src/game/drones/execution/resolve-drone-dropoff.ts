@@ -28,16 +28,22 @@ function droneDeliverySlot(droneId: string): number {
 
 function logDroneDropoffFallbackEvent(event: DroneDropoffFallbackEvent): void {
   if (event.kind === "construction_site_missing") {
-    debugLog.inventory(`[Drone] Construction site asset ${event.targetId} gone — falling back`);
+    debugLog.inventory(
+      `[Drone] Construction site asset ${event.targetId} gone — falling back`,
+    );
     return;
   }
 
   if (event.kind === "building_target_missing") {
-    debugLog.inventory(`[Drone] Building input target ${event.targetId} gone — falling back`);
+    debugLog.inventory(
+      `[Drone] Building input target ${event.targetId} gone — falling back`,
+    );
     return;
   }
 
-  debugLog.inventory(`[Drone] Hub asset ${event.targetId} gone — falling back to start module`);
+  debugLog.inventory(
+    `[Drone] Hub asset ${event.targetId} gone — falling back to start module`,
+  );
 }
 
 /**
@@ -65,7 +71,8 @@ export function resolveDroneDropoff(
     warehouseInventories,
     crafting,
     mapShopPos: MAP_SHOP_POS,
-    getDeliveryOffset: (droneId) => DELIVERY_OFFSETS[droneDeliverySlot(droneId)],
+    getDeliveryOffset: (droneId) =>
+      DELIVERY_OFFSETS[droneDeliverySlot(droneId)],
     getDroneHomeDock,
   });
 

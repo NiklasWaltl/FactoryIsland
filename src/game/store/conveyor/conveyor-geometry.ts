@@ -8,9 +8,7 @@ export function getConveyorMergerInputCell(
   side: ConveyorMergerInputSide,
 ): { x: number; y: number } {
   const [dx, dy] = directionOffset(mergerAsset.direction ?? "east");
-  const sideOffset = side === "left"
-    ? { x: dy, y: -dx }
-    : { x: -dy, y: dx };
+  const sideOffset = side === "left" ? { x: dy, y: -dx } : { x: -dy, y: dx };
   return {
     x: mergerAsset.x + sideOffset.x,
     y: mergerAsset.y + sideOffset.y,
@@ -45,10 +43,8 @@ export function getConveyorSplitterOutputCell(
  * conveyor_splitter V1: items leave via the lateral arms only, in this order.
  * Must not depend on `Object.entries` iteration over conveyors.
  */
-export const SPLITTER_OUTPUT_SIDE_PRIORITY: readonly ConveyorMergerInputSide[] = [
-  "left",
-  "right",
-];
+export const SPLITTER_OUTPUT_SIDE_PRIORITY: readonly ConveyorMergerInputSide[] =
+  ["left", "right"];
 
 export function getConveyorSplitterBackCell(
   splitter: Pick<PlacedAsset, "x" | "y" | "direction">,
@@ -90,7 +86,10 @@ export function canAssetReceiveFromConveyorSplitterOutput(
     return false;
   }
   if (neighbor.type === "conveyor_merger") {
-    return getConveyorMergerInputSide({ x: splitter.x, y: splitter.y }, neighbor) !== null;
+    return (
+      getConveyorMergerInputSide({ x: splitter.x, y: splitter.y }, neighbor) !==
+      null
+    );
   }
   const nd = neighbor.direction ?? "east";
   const [nox, noy] = directionOffset(nd);

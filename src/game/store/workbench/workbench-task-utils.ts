@@ -14,7 +14,11 @@ export function getCraftingReservationById(
   network: Pick<GameState, "network">["network"],
   reservationId: string,
 ) {
-  return network.reservations.find((reservation) => reservation.id === reservationId) ?? null;
+  return (
+    network.reservations.find(
+      (reservation) => reservation.id === reservationId,
+    ) ?? null
+  );
 }
 
 export function parseWorkbenchTaskNodeId(

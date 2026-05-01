@@ -2,9 +2,7 @@ import type { GameAction } from "../../game-actions";
 
 export type DroneRoleHandledActionType = "DRONE_SET_ROLE";
 
-export const HANDLED_ACTION_TYPES = new Set<string>([
-  "DRONE_SET_ROLE",
-]);
+export const HANDLED_ACTION_TYPES = new Set<string>(["DRONE_SET_ROLE"]);
 
 export type DroneRoleHandledAction = Extract<
   GameAction,

@@ -5,7 +5,9 @@ type WorkbenchTaskNodeId =
   | { kind: "input"; workbenchId: string; jobId: string; reservationId: string }
   | { kind: "output"; workbenchId: string; jobId: string };
 
-function parseWorkbenchTaskNodeId(nodeId: string | null | undefined): WorkbenchTaskNodeId | null {
+function parseWorkbenchTaskNodeId(
+  nodeId: string | null | undefined,
+): WorkbenchTaskNodeId | null {
   if (!nodeId) return null;
 
   if (nodeId.startsWith("workbench_input:")) {

@@ -16,11 +16,19 @@ export function getBuildingInputCurrent(
 export function getBuildingInputTargets(
   state: Pick<GameState, "assets">,
 ): { assetId: string; resource: CollectableItemType; capacity: number }[] {
-  const out: { assetId: string; resource: CollectableItemType; capacity: number }[] = [];
+  const out: {
+    assetId: string;
+    resource: CollectableItemType;
+    capacity: number;
+  }[] = [];
   for (const asset of Object.values(state.assets)) {
     const cfg = getBuildingInputConfig(asset.type);
     if (!cfg) continue;
-    out.push({ assetId: asset.id, resource: cfg.resource, capacity: cfg.capacity });
+    out.push({
+      assetId: asset.id,
+      resource: cfg.resource,
+      capacity: cfg.capacity,
+    });
   }
   return out;
 }

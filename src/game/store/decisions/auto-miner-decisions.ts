@@ -1,6 +1,12 @@
 import { GRID_H, GRID_W } from "../../constants/grid";
 import { CONVEYOR_TILE_CAPACITY } from "../conveyor/constants";
-import type { AutoMinerEntry, ConveyorState, GameState, Inventory, PlacedAsset } from "../types";
+import type {
+  AutoMinerEntry,
+  ConveyorState,
+  GameState,
+  Inventory,
+  PlacedAsset,
+} from "../types";
 
 export type AutoMinerTickEligibilityDecision =
   | { kind: "blocked" }
@@ -12,12 +18,7 @@ export const decideAutoMinerTickEligibility = (input: {
   connectedAssetIds: readonly string[];
   getMachinePowerRatio: (assetId: string) => number;
 }): AutoMinerTickEligibilityDecision => {
-  const {
-    minerId,
-    assets,
-    connectedAssetIds,
-    getMachinePowerRatio,
-  } = input;
+  const { minerId, assets, connectedAssetIds, getMachinePowerRatio } = input;
 
   const minerAsset = assets[minerId];
   if (!minerAsset) return { kind: "blocked" };
@@ -89,7 +90,8 @@ export const decideAutoMinerOutputTarget = (
     input.outputY >= 0 &&
     input.outputY < GRID_H
   ) {
-    const outAssetId = input.state.cellMap[cellKey(input.outputX, input.outputY)] ?? null;
+    const outAssetId =
+      input.state.cellMap[cellKey(input.outputX, input.outputY)] ?? null;
     const outAsset = outAssetId ? input.state.assets[outAssetId] : null;
     if (
       outAsset?.type === "conveyor" ||

@@ -8,7 +8,11 @@ import {
   getWorkbenchRecipe,
   type WorkbenchRecipe,
 } from "../../simulation/recipes";
-import type { Inventory, PlacedAsset, ServiceHubEntry } from "../../store/types";
+import type {
+  Inventory,
+  PlacedAsset,
+  ServiceHubEntry,
+} from "../../store/types";
 import { pickCraftingPhysicalSourceForIngredient } from "../tick";
 import { pickOutputWarehouseId } from "../output";
 import type { CraftingInventorySource, CraftingJob, RecipeId } from "../types";
@@ -95,7 +99,8 @@ function getWarehouseLaneAvailability(
   warehouseId: WarehouseId,
 ): { stored: number; reserved: number; free: number } {
   const inv = planner.warehouseInventories[warehouseId];
-  const stored = ((inv ?? {}) as unknown as Record<string, number>)[itemId] ?? 0;
+  const stored =
+    ((inv ?? {}) as unknown as Record<string, number>)[itemId] ?? 0;
   const legacyScope = getLegacyScopeKeyForSource(planner.source);
   const laneScope = getWarehouseLaneScopeKey(planner.source, warehouseId);
   const reserved =
@@ -117,17 +122,27 @@ function classifyMissingItem(itemId: ItemId): MissingKind {
 }
 
 function isItemCraftableByAnyRecipe(itemId: ItemId): boolean {
-  for (const recipe of WORKBENCH_RECIPES) if (recipe.outputItem === itemId) return true;
-  for (const recipe of SMELTING_RECIPES) if (recipe.outputItem === itemId) return true;
-  for (const recipe of MANUAL_ASSEMBLER_RECIPES) if (recipe.outputItem === itemId) return true;
+  for (const recipe of WORKBENCH_RECIPES)
+    if (recipe.outputItem === itemId) return true;
+  for (const recipe of SMELTING_RECIPES)
+    if (recipe.outputItem === itemId) return true;
+  for (const recipe of MANUAL_ASSEMBLER_RECIPES)
+    if (recipe.outputItem === itemId) return true;
   return false;
 }
 
-function findWorkbenchRecipeByOutputItem(itemId: ItemId): WorkbenchRecipe | null {
-  return WORKBENCH_RECIPES.find((recipe) => recipe.outputItem === itemId) ?? null;
+function findWorkbenchRecipeByOutputItem(
+  itemId: ItemId,
+): WorkbenchRecipe | null {
+  return (
+    WORKBENCH_RECIPES.find((recipe) => recipe.outputItem === itemId) ?? null
+  );
 }
 
-function isSameSource(left: CraftingInventorySource, right: NonGlobalSource): boolean {
+function isSameSource(
+  left: CraftingInventorySource,
+  right: NonGlobalSource,
+): boolean {
   if (left.kind !== right.kind) return false;
   if (left.kind === "warehouse" && right.kind === "warehouse") {
     return left.warehouseId === right.warehouseId;
@@ -158,7 +173,12 @@ export function seedExistingJobOutputs(
   for (const job of jobs) {
     if (!activeStatuses.has(job.status as ActiveJobStatus)) continue;
     if (!isSameSource(job.inventorySource, planner.source)) continue;
-    addWarehouseStock(planner, planner.outputWarehouseId, job.output.itemId, job.output.count);
+    addWarehouseStock(
+      planner,
+      planner.outputWarehouseId,
+      job.output.itemId,
+      job.output.count,
+    );
   }
 }
 
@@ -169,7 +189,8 @@ function addWarehouseStock(
   amount: number,
 ): void {
   if (amount <= 0) return;
-  const current = planner.warehouseInventories[warehouseId] ?? ({} as Inventory);
+  const current =
+    planner.warehouseInventories[warehouseId] ?? ({} as Inventory);
   const rec = current as unknown as Record<string, number>;
   planner.warehouseInventories[warehouseId] = {
     ...current,
@@ -216,7 +237,12 @@ function consumeIngredientIfAvailable(
   planner: PlannerState,
   itemId: ItemId,
   required: number,
-): { ok: true } | { ok: false; decision: ReturnType<typeof pickCraftingPhysicalSourceForIngredient> } {
+):
+  | { ok: true }
+  | {
+      ok: false;
+      decision: ReturnType<typeof pickCraftingPhysicalSourceForIngredient>;
+    } {
   const decision = pickCraftingPhysicalSourceForIngredient({
     source: planner.source,
     itemId,
@@ -233,7 +259,12 @@ function consumeIngredientIfAvailable(
   }
 
   if (decision.source.kind === "warehouse") {
-    consumeFromWarehouse(planner, decision.source.warehouseId, itemId, required);
+    consumeFromWarehouse(
+      planner,
+      decision.source.warehouseId,
+      itemId,
+      required,
+    );
   } else {
     consumeFromHub(planner, decision.source.hubId, itemId, required);
   }
@@ -241,18 +272,34 @@ function consumeIngredientIfAvailable(
   return { ok: true };
 }
 
-function pushStep(planner: PlannerState, recipeId: RecipeId, count: number): void {
+function pushStep(
+  planner: PlannerState,
+  recipeId: RecipeId,
+  count: number,
+): void {
   if (count <= 0) return;
   if (!planner.stepCounts.has(recipeId)) {
     planner.stepsInOrder.push(recipeId);
   }
-  planner.stepCounts.set(recipeId, (planner.stepCounts.get(recipeId) ?? 0) + count);
+  planner.stepCounts.set(
+    recipeId,
+    (planner.stepCounts.get(recipeId) ?? 0) + count,
+  );
 }
 
-function addRecipeOutput(planner: PlannerState, recipe: WorkbenchRecipe, count: number): void {
+function addRecipeOutput(
+  planner: PlannerState,
+  recipe: WorkbenchRecipe,
+  count: number,
+): void {
   const amount = recipe.outputAmount * count;
   if (!isKnownItemId(recipe.outputItem)) return;
-  addWarehouseStock(planner, planner.outputWarehouseId, recipe.outputItem, amount);
+  addWarehouseStock(
+    planner,
+    planner.outputWarehouseId,
+    recipe.outputItem,
+    amount,
+  );
 }
 
 export function createError(
@@ -299,16 +346,21 @@ export function planRecipeRecursive(
 
   const recipe = getWorkbenchRecipe(recipeId);
   if (!recipe) {
-    return createError("UNKNOWN_RECIPE", `Rezept ${recipeId} wurde nicht gefunden.`, {
-      recipeId,
-    });
+    return createError(
+      "UNKNOWN_RECIPE",
+      `Rezept ${recipeId} wurde nicht gefunden.`,
+      {
+        recipeId,
+      },
+    );
   }
 
   const policyDecision = planner.canUseRecipe?.(recipe.key);
   if (policyDecision && !policyDecision.allowed) {
     return createError(
       "POLICY_BLOCKED",
-      policyDecision.reason ?? `Rezept ${recipe.label} ist per Policy fuer Automation gesperrt.`,
+      policyDecision.reason ??
+        `Rezept ${recipe.label} ist per Policy fuer Automation gesperrt.`,
       {
         recipeId,
       },
@@ -322,21 +374,33 @@ export function planRecipeRecursive(
     if (unitCost <= 0) continue;
     if (!isKnownItemId(ingredientKey)) {
       planner.recursionPath.pop();
-      return createError("MISSING_UNKNOWN", `Unbekannte Zutat ${ingredientKey} in ${recipe.label}.`, {
-        recipeId,
-      });
+      return createError(
+        "MISSING_UNKNOWN",
+        `Unbekannte Zutat ${ingredientKey} in ${recipe.label}.`,
+        {
+          recipeId,
+        },
+      );
     }
 
     const ingredientId = ingredientKey as ItemId;
     const required = unitCost * crafts;
     if (required <= 0) continue;
 
-    const immediate = consumeIngredientIfAvailable(planner, ingredientId, required);
+    const immediate = consumeIngredientIfAvailable(
+      planner,
+      ingredientId,
+      required,
+    );
     if (immediate.ok) {
       continue;
     }
 
-    const lane = getWarehouseLaneAvailability(planner, ingredientId, planner.outputWarehouseId);
+    const lane = getWarehouseLaneAvailability(
+      planner,
+      ingredientId,
+      planner.outputWarehouseId,
+    );
     const shortfall = Math.max(0, required - lane.free);
     const missingAmount = shortfall > 0 ? shortfall : required;
     const missingKind = classifyMissingItem(ingredientId);
@@ -381,8 +445,15 @@ export function planRecipeRecursive(
       );
     }
 
-    const subCrafts = Math.ceil(missingAmount / Math.max(1, subRecipe.outputAmount));
-    const subError = planRecipeRecursive(planner, subRecipe.key, subCrafts, depth + 1);
+    const subCrafts = Math.ceil(
+      missingAmount / Math.max(1, subRecipe.outputAmount),
+    );
+    const subError = planRecipeRecursive(
+      planner,
+      subRecipe.key,
+      subCrafts,
+      depth + 1,
+    );
     if (subError) {
       planner.recursionPath.pop();
       return subError;
@@ -420,9 +491,13 @@ export function buildAutoCraftPlanCore(input: BuildAutoCraftPlanInput): {
     return {
       stepsInOrder: [],
       stepCounts: new Map(),
-      error: createError("UNKNOWN_RECIPE", `Rezept ${input.recipeId} wurde nicht gefunden.`, {
-        recipeId: input.recipeId,
-      }),
+      error: createError(
+        "UNKNOWN_RECIPE",
+        `Rezept ${input.recipeId} wurde nicht gefunden.`,
+        {
+          recipeId: input.recipeId,
+        },
+      ),
     };
   }
 
@@ -438,7 +513,9 @@ export function buildAutoCraftPlanCore(input: BuildAutoCraftPlanInput): {
     };
   }
 
-  const clonedWarehouses = cloneWarehouseInventories(input.warehouseInventories);
+  const clonedWarehouses = cloneWarehouseInventories(
+    input.warehouseInventories,
+  );
   const outputWarehouseId = getOutputWarehouseId(
     input.source,
     clonedWarehouses,
@@ -476,5 +553,9 @@ export function buildAutoCraftPlanCore(input: BuildAutoCraftPlanInput): {
   seedExistingJobOutputs(planner, input.existingJobs);
 
   const error = planRecipeRecursive(planner, recipe.key, targetAmount, 0);
-  return { stepsInOrder: planner.stepsInOrder, stepCounts: planner.stepCounts, error };
+  return {
+    stepsInOrder: planner.stepsInOrder,
+    stepCounts: planner.stepCounts,
+    error,
+  };
 }

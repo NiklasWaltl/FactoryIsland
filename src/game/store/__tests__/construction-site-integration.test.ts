@@ -19,7 +19,11 @@ import type { GameState, BuildingType, PlacedAsset } from "../types";
 
 // ---- helpers ---------------------------------------------------------------
 
-function placeServiceHub(state: GameState, x: number, y: number): { state: GameState; hubId: string } {
+function placeServiceHub(
+  state: GameState,
+  x: number,
+  y: number,
+): { state: GameState; hubId: string } {
   const clearedCellMap = { ...state.cellMap };
   const clearedAssets = { ...state.assets };
   for (let dy = 0; dy < 2; dy++) {
@@ -39,7 +43,11 @@ function placeServiceHub(state: GameState, x: number, y: number): { state: GameS
     buildMode: true,
     selectedBuildingType: "service_hub" as GameState["selectedBuildingType"],
   };
-  const existingHubIds = new Set(Object.keys(state.assets).filter(id => state.assets[id].type === "service_hub"));
+  const existingHubIds = new Set(
+    Object.keys(state.assets).filter(
+      (id) => state.assets[id].type === "service_hub",
+    ),
+  );
   s = gameReducer(s, { type: "BUILD_PLACE_BUILDING", x, y });
   const hubId = Object.keys(s.assets).find(
     (id) => s.assets[id].type === "service_hub" && !existingHubIds.has(id),
@@ -51,7 +59,12 @@ function placeServiceHub(state: GameState, x: number, y: number): { state: GameS
   return { state: s, hubId };
 }
 
-function clearArea(state: GameState, x: number, y: number, size: number): GameState {
+function clearArea(
+  state: GameState,
+  x: number,
+  y: number,
+  size: number,
+): GameState {
   const clearedCellMap = { ...state.cellMap };
   const clearedAssets = { ...state.assets };
   for (let dy = 0; dy < size; dy++) {
@@ -67,25 +80,46 @@ function clearArea(state: GameState, x: number, y: number, size: number): GameSt
   return { ...state, assets: clearedAssets, cellMap: clearedCellMap };
 }
 
-function placeBuilding(state: GameState, bType: string, x: number, y: number, direction?: string): GameState {
+function placeBuilding(
+  state: GameState,
+  bType: string,
+  x: number,
+  y: number,
+  direction?: string,
+): GameState {
   let s: GameState = {
     ...clearArea(state, x, y, 3),
     buildMode: true,
     selectedBuildingType: bType as GameState["selectedBuildingType"],
   };
-  return gameReducer(s, { type: "BUILD_PLACE_BUILDING", x, y, direction } as any);
+  return gameReducer(s, {
+    type: "BUILD_PLACE_BUILDING",
+    x,
+    y,
+    direction,
+  } as any);
 }
 
 /**
  * Place an auto_miner on a deposit. Requires a deposit asset at (x,y).
  */
-function placeAutoMiner(state: GameState, depositX: number, depositY: number, direction = "east"): GameState {
+function placeAutoMiner(
+  state: GameState,
+  depositX: number,
+  depositY: number,
+  direction = "east",
+): GameState {
   let s: GameState = {
     ...state,
     buildMode: true,
     selectedBuildingType: "auto_miner" as GameState["selectedBuildingType"],
   };
-  return gameReducer(s, { type: "BUILD_PLACE_BUILDING", x: depositX, y: depositY, direction } as any);
+  return gameReducer(s, {
+    type: "BUILD_PLACE_BUILDING",
+    x: depositX,
+    y: depositY,
+    direction,
+  } as any);
 }
 
 // ---- test suite ------------------------------------------------------------
@@ -101,12 +135,19 @@ describe("Construction Site Integration — generic path buildings", () => {
 
   // Generic path buildings that use the default placeAsset flow:
   // cable, power_pole, battery, manual_assembler
-  const genericBuildings: BuildingType[] = ["cable", "power_pole", "battery", "manual_assembler"];
+  const genericBuildings: BuildingType[] = [
+    "cable",
+    "power_pole",
+    "battery",
+    "manual_assembler",
+  ];
 
   for (const bType of genericBuildings) {
     it(`places ${bType} as construction site`, () => {
       const state = placeBuilding(base, bType, 15, 15);
-      const placed = Object.values(state.assets).find(a => a.type === bType && a.x === 15 && a.y === 15);
+      const placed = Object.values(state.assets).find(
+        (a) => a.type === bType && a.x === 15 && a.y === 15,
+      );
       expect(placed).toBeDefined();
       expect(state.constructionSites[placed!.id]).toBeDefined();
       expect(state.constructionSites[placed!.id].buildingType).toBe(bType);
@@ -123,7 +164,9 @@ describe("Construction Site Integration — generic path buildings", () => {
 
     it(`${bType} — full cost goes to remaining`, () => {
       const state = placeBuilding(base, bType, 15, 15);
-      const placed = Object.values(state.assets).find(a => a.type === bType && a.x === 15 && a.y === 15);
+      const placed = Object.values(state.assets).find(
+        (a) => a.type === bType && a.x === 15 && a.y === 15,
+      );
       expect(placed).toBeDefined();
       const site = state.constructionSites[placed!.id];
       const costs = BUILDING_COSTS[bType];
@@ -145,7 +188,9 @@ describe("Construction Site Integration — special-case buildings", () => {
 
   it("conveyor placed as construction site with direction", () => {
     const state = placeBuilding(base, "conveyor", 15, 15, "south");
-    const placed = Object.values(state.assets).find(a => a.type === "conveyor" && a.x === 15 && a.y === 15);
+    const placed = Object.values(state.assets).find(
+      (a) => a.type === "conveyor" && a.x === 15 && a.y === 15,
+    );
     expect(placed).toBeDefined();
     expect(placed!.direction).toBe("south");
     expect(state.constructionSites[placed!.id]).toBeDefined();
@@ -156,21 +201,30 @@ describe("Construction Site Integration — special-case buildings", () => {
 
   it("conveyor_corner placed as construction site with direction", () => {
     const state = placeBuilding(base, "conveyor_corner", 15, 15, "north");
-    const placed = Object.values(state.assets).find(a => a.type === "conveyor_corner" && a.x === 15 && a.y === 15);
+    const placed = Object.values(state.assets).find(
+      (a) => a.type === "conveyor_corner" && a.x === 15 && a.y === 15,
+    );
     expect(placed).toBeDefined();
     expect(placed!.direction).toBe("north");
     expect(state.constructionSites[placed!.id]).toBeDefined();
-    expect(state.constructionSites[placed!.id].buildingType).toBe("conveyor_corner");
+    expect(state.constructionSites[placed!.id].buildingType).toBe(
+      "conveyor_corner",
+    );
   });
 
   it("auto_miner placed as construction site on deposit", () => {
     // Find a deposit in the map
     const deposit = Object.values(base.assets).find(
-      a => a.type === "stone_deposit" || a.type === "iron_deposit" || a.type === "copper_deposit"
+      (a) =>
+        a.type === "stone_deposit" ||
+        a.type === "iron_deposit" ||
+        a.type === "copper_deposit",
     );
     if (!deposit) return; // skip if no deposit in initial state
     const state = placeAutoMiner(base, deposit.x, deposit.y);
-    const miner = Object.values(state.assets).find(a => a.type === "auto_miner");
+    const miner = Object.values(state.assets).find(
+      (a) => a.type === "auto_miner",
+    );
     expect(miner).toBeDefined();
     expect(state.constructionSites[miner!.id]).toBeDefined();
     expect(state.constructionSites[miner!.id].buildingType).toBe("auto_miner");
@@ -179,7 +233,10 @@ describe("Construction Site Integration — special-case buildings", () => {
 
   it("auto_miner — inventory not deducted when construction site", () => {
     const deposit = Object.values(base.assets).find(
-      a => a.type === "stone_deposit" || a.type === "iron_deposit" || a.type === "copper_deposit"
+      (a) =>
+        a.type === "stone_deposit" ||
+        a.type === "iron_deposit" ||
+        a.type === "copper_deposit",
     );
     if (!deposit) return;
     const invBefore = { ...base.inventory };
@@ -200,8 +257,8 @@ describe("Construction Site Integration — special-case buildings", () => {
     // Find an auto_smelter that was pre-placed, or place a new one at valid location.
     // For simplicity, verify the cost is now collectable:
     const costs = BUILDING_COSTS.auto_smelter;
-    const allCollectable = Object.keys(costs).every(k =>
-      ["wood", "stone", "iron", "copper"].includes(k)
+    const allCollectable = Object.keys(costs).every((k) =>
+      ["wood", "stone", "iron", "copper"].includes(k),
     );
     expect(allCollectable).toBe(true);
   });
@@ -241,7 +298,9 @@ describe("Construction Site Integration — energy grid exclusion", () => {
 
   it("under-construction cable is NOT in connectedAssetIds", () => {
     const state = placeBuilding(base, "cable", 15, 15);
-    const cable = Object.values(state.assets).find(a => a.type === "cable" && a.x === 15 && a.y === 15);
+    const cable = Object.values(state.assets).find(
+      (a) => a.type === "cable" && a.x === 15 && a.y === 15,
+    );
     expect(cable).toBeDefined();
     expect(isUnderConstruction(state, cable!.id)).toBe(true);
     expect(state.connectedAssetIds).not.toContain(cable!.id);
@@ -249,7 +308,9 @@ describe("Construction Site Integration — energy grid exclusion", () => {
 
   it("under-construction power_pole is NOT in connectedAssetIds", () => {
     const state = placeBuilding(base, "power_pole", 15, 15);
-    const pole = Object.values(state.assets).find(a => a.type === "power_pole" && a.x === 15 && a.y === 15);
+    const pole = Object.values(state.assets).find(
+      (a) => a.type === "power_pole" && a.x === 15 && a.y === 15,
+    );
     expect(pole).toBeDefined();
     expect(isUnderConstruction(state, pole!.id)).toBe(true);
     expect(state.connectedAssetIds).not.toContain(pole!.id);
@@ -257,7 +318,9 @@ describe("Construction Site Integration — energy grid exclusion", () => {
 
   it("completed cable IS included in connectedAssetIds after completion", () => {
     let state = placeBuilding(base, "cable", 15, 15);
-    const cable = Object.values(state.assets).find(a => a.type === "cable" && a.x === 15 && a.y === 15);
+    const cable = Object.values(state.assets).find(
+      (a) => a.type === "cable" && a.x === 15 && a.y === 15,
+    );
     expect(cable).toBeDefined();
     // Manually complete the construction site
     const { [cable!.id]: _, ...rest } = state.constructionSites;
@@ -281,12 +344,17 @@ describe("Construction Site Integration — guards", () => {
 
   it("MANUAL_ASSEMBLER_START is blocked for under-construction assembler", () => {
     const state = placeBuilding(base, "manual_assembler", 15, 15);
-    const assembler = Object.values(state.assets).find(a => a.type === "manual_assembler");
+    const assembler = Object.values(state.assets).find(
+      (a) => a.type === "manual_assembler",
+    );
     expect(assembler).toBeDefined();
     expect(isUnderConstruction(state, assembler!.id)).toBe(true);
 
     // Try to start assembling
-    const next = gameReducer(state, { type: "MANUAL_ASSEMBLER_START", recipe: "metal_plate" } as any);
+    const next = gameReducer(state, {
+      type: "MANUAL_ASSEMBLER_START",
+      recipe: "metal_plate",
+    } as any);
     expect(next.manualAssembler.processing).toBe(false);
   });
 
@@ -313,7 +381,11 @@ describe("Construction Site Integration — guards", () => {
         [smelterId]: { buildingType: "auto_smelter", remaining: { iron: 5 } },
       },
     };
-    const next = gameReducer(state, { type: "AUTO_SMELTER_SET_RECIPE", assetId: smelterId, recipe: "copper" } as any);
+    const next = gameReducer(state, {
+      type: "AUTO_SMELTER_SET_RECIPE",
+      assetId: smelterId,
+      recipe: "copper",
+    } as any);
     expect(next.autoSmelters[smelterId].selectedRecipe).toBe("iron"); // unchanged
   });
 });

@@ -62,12 +62,18 @@ export function assertCraftingNetworkCrossInvariants(
     }
 
     const key = ownerItemKey(reservation.ownerId, reservation.itemId);
-    ownerItemReserved.set(key, (ownerItemReserved.get(key) ?? 0) + reservation.amount);
+    ownerItemReserved.set(
+      key,
+      (ownerItemReserved.get(key) ?? 0) + reservation.amount,
+    );
   }
 
   for (const job of jobs) {
     for (const ingredient of job.ingredients) {
-      const reserved = ownerItemReserved.get(ownerItemKey(job.reservationOwnerId, ingredient.itemId)) ?? 0;
+      const reserved =
+        ownerItemReserved.get(
+          ownerItemKey(job.reservationOwnerId, ingredient.itemId),
+        ) ?? 0;
       if (!Number.isFinite(reserved) || reserved < 0) {
         throw new Error(
           `[crafting] Invariant violated: negative/invalid reservation sum for owner "${job.reservationOwnerId}" item "${ingredient.itemId}".`,
@@ -134,7 +140,8 @@ export function getBufferedAmount(
 
 export function hasBufferedIngredients(job: CraftingJob): boolean {
   return job.ingredients.every(
-    (ingredient) => getBufferedAmount(job, ingredient.itemId) >= ingredient.count,
+    (ingredient) =>
+      getBufferedAmount(job, ingredient.itemId) >= ingredient.count,
   );
 }
 

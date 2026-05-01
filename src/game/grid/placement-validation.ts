@@ -3,12 +3,8 @@ import {
   BUILDING_SIZES,
   REQUIRES_STONE_FLOOR,
 } from "../store/constants/buildings/index";
-import {
-  DEPOSIT_TYPES,
-} from "../store/constants/map/deposit-positions";
-import {
-  cellKey,
-} from "../store/utils/cell-key";
+import { DEPOSIT_TYPES } from "../store/constants/map/deposit-positions";
+import { cellKey } from "../store/utils/cell-key";
 import {
   isConveyorPreviewBuildingType,
   previewBuildingPlacementAtCell,
@@ -33,7 +29,8 @@ export function getBuildingPreviewDimensions(
   buildDirection: Direction,
 ): BuildingPlacementDimensions {
   const isDirectedTwoByOneMachine =
-    activeBuildingType === "auto_smelter" || activeBuildingType === "auto_assembler";
+    activeBuildingType === "auto_smelter" ||
+    activeBuildingType === "auto_assembler";
   const bWidth: 1 | 2 = isDirectedTwoByOneMachine
     ? buildDirection === "east" || buildDirection === "west"
       ? 2
@@ -57,10 +54,10 @@ export function validateBuildingPlacementPreview(input: {
   bWidth: 1 | 2;
   bHeight: 1 | 2;
 }): BuildingPlacementValidationResult {
-  const { state, x, y, activeBuildingType, buildDirection, bWidth, bHeight } = input;
+  const { state, x, y, activeBuildingType, buildDirection, bWidth, bHeight } =
+    input;
 
-  let valid =
-    x >= 0 && y >= 0 && x + bWidth <= GRID_W && y + bHeight <= GRID_H;
+  let valid = x >= 0 && y >= 0 && x + bWidth <= GRID_W && y + bHeight <= GRID_H;
 
   const conveyorPreview =
     activeBuildingType && isConveyorPreviewBuildingType(activeBuildingType)

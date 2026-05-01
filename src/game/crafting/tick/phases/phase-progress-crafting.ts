@@ -3,7 +3,10 @@ import { finishCraftingJob } from "../job-lifecycle";
 import type { TickInput } from "../../tick";
 import type { CraftingTickState } from "./types";
 
-export function progressCraftingPhase(state: CraftingTickState, input: TickInput): void {
+export function progressCraftingPhase(
+  state: CraftingTickState,
+  input: TickInput,
+): void {
   const phase1 = [];
   for (const job of state.jobs) {
     if (job.status !== "crafting") {

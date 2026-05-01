@@ -46,10 +46,19 @@ function withHub(state: GameState, id: string): GameState {
 
 function bareState(): GameState {
   const s = createInitialState("release");
-  return { ...s, inventory: emptyInv(), warehouseInventories: {}, serviceHubs: {} };
+  return {
+    ...s,
+    inventory: emptyInv(),
+    warehouseInventories: {},
+    serviceHubs: {},
+  };
 }
 
-function placeServiceHub(state: GameState, x: number, y: number): { state: GameState; hubId: string } {
+function placeServiceHub(
+  state: GameState,
+  x: number,
+  y: number,
+): { state: GameState; hubId: string } {
   const clearedCellMap = { ...state.cellMap };
   const clearedAssets = { ...state.assets };
   for (let dy = 0; dy < 2; dy++) {
@@ -69,7 +78,11 @@ function placeServiceHub(state: GameState, x: number, y: number): { state: GameS
     buildMode: true,
     selectedBuildingType: "service_hub" as GameState["selectedBuildingType"],
   };
-  const existingHubIds = new Set(Object.keys(state.assets).filter(id => state.assets[id].type === "service_hub"));
+  const existingHubIds = new Set(
+    Object.keys(state.assets).filter(
+      (id) => state.assets[id].type === "service_hub",
+    ),
+  );
   s = gameReducer(s, { type: "BUILD_PLACE_BUILDING", x, y });
   const hubId = Object.keys(s.assets).find(
     (id) => s.assets[id].type === "service_hub" && !existingHubIds.has(id),
@@ -84,7 +97,10 @@ describe("applyMockToState / DEBUG_MOCK_RESOURCES", () => {
   it("routes physical keys into the first warehouse", () => {
     const s0 = withWarehouse(bareState(), "wh-1");
     const s1 = applyMockToState(s0, "DEBUG_MOCK_RESOURCES");
-    const wh = s1.warehouseInventories["wh-1"] as unknown as Record<string, number>;
+    const wh = s1.warehouseInventories["wh-1"] as unknown as Record<
+      string,
+      number
+    >;
     expect(wh.wood).toBe(MOCK_RESOURCES.wood);
     expect(wh.stone).toBe(MOCK_RESOURCES.stone);
     expect(wh.iron).toBe(MOCK_RESOURCES.iron);
@@ -147,7 +163,9 @@ describe("applyMockToState / DEBUG_MOCK_DRONE_HUB_INVENTORY", () => {
     const { state, hubId } = placeServiceHub(base, 6, 6);
     const s1 = applyMockToState(state, "DEBUG_MOCK_DRONE_HUB_INVENTORY");
 
-    expect(s1.serviceHubs[starterHubId!].inventory).toEqual(MOCK_DRONE_HUB_INVENTORY);
+    expect(s1.serviceHubs[starterHubId!].inventory).toEqual(
+      MOCK_DRONE_HUB_INVENTORY,
+    );
     expect(s1.serviceHubs[hubId].inventory).toEqual(MOCK_DRONE_HUB_INVENTORY);
   });
 

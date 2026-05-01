@@ -76,4 +76,9 @@ export interface StarterDroneState {
  * then delivers them directly to a construction site.
  * nodeId format: "hub:{hubId}:{resourceType}"
  */
-export type DroneTaskType = "construction_supply" | "hub_restock" | "hub_dispatch" | "workbench_delivery" | "building_supply";
+export type DroneTaskType =
+  | "construction_supply"
+  | "hub_restock"
+  | "hub_dispatch"
+  | "workbench_delivery"
+  | "building_supply";

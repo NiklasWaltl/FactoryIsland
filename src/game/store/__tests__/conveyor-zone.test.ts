@@ -37,9 +37,23 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     cablesPlaced: 0,
     powerPolesPlaced: 0,
     selectedPowerPoleId: null,
-    hotbarSlots: Array.from({ length: 9 }, () => ({ toolKind: "empty" as const, amount: 0, label: "", emoji: "" })),
+    hotbarSlots: Array.from({ length: 9 }, () => ({
+      toolKind: "empty" as const,
+      amount: 0,
+      label: "",
+      emoji: "",
+    })),
     activeSlot: 0,
-    smithy: { fuel: 0, iron: 0, copper: 0, selectedRecipe: "iron", processing: false, progress: 0, outputIngots: 0, outputCopperIngots: 0 },
+    smithy: {
+      fuel: 0,
+      iron: 0,
+      copper: 0,
+      selectedRecipe: "iron",
+      processing: false,
+      progress: 0,
+      outputIngots: 0,
+      outputCopperIngots: 0,
+    },
     generator: { fuel: 0, progress: 0, running: false },
     battery: { stored: 0, capacity: 100 },
     connectedAssetIds: [],
@@ -56,7 +70,12 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     selectedAutoMinerId: null,
     autoSmelters: {},
     selectedAutoSmelterId: null,
-    manualAssembler: { processing: false, recipe: null, progress: 0, buildingId: null },
+    manualAssembler: {
+      processing: false,
+      recipe: null,
+      progress: 0,
+      buildingId: null,
+    },
     machinePowerRatio: {},
     energyDebugOverlay: false,
     autoDeliveryLog: [],
@@ -68,7 +87,12 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
   };
 }
 
-function makeConveyorAsset(id: string, x: number, y: number, dir: "east" | "west" | "north" | "south" = "east"): PlacedAsset {
+function makeConveyorAsset(
+  id: string,
+  x: number,
+  y: number,
+  dir: "east" | "west" | "north" | "south" = "east",
+): PlacedAsset {
   return { id, type: "conveyor", x, y, size: 1, direction: dir };
 }
 
@@ -147,7 +171,10 @@ describe("getConveyorZoneStatus", () => {
       },
       cellMap: { [cellKey(0, 0)]: "cv1", [cellKey(1, 0)]: "cv2" },
       conveyors: { cv1: { queue: [] }, cv2: { queue: [] } },
-      productionZones: { zA: { id: "zA", name: "Zone A" }, zB: { id: "zB", name: "Zone B" } },
+      productionZones: {
+        zA: { id: "zA", name: "Zone A" },
+        zB: { id: "zB", name: "Zone B" },
+      },
       buildingZoneIds: { cv1: "zA", cv2: "zB" },
     });
     const status = getConveyorZoneStatus(state, "cv1");
@@ -273,7 +300,14 @@ describe("Belt-to-warehouse delivery (adjacent target)", () => {
   // Belt cv1 at (4,0) facing west → next tile (3,0) = inside warehouse → Case 2 fires.
   // Case 1 check: convAsset.y === wAsset.y + assetHeight(wAsset) = 0 === 0+2=2 → FALSE → Case 1 does NOT fire.
   function makeAdjacentDeliveryState(sameZone: boolean): GameState {
-    const whA: PlacedAsset = { id: "whA", type: "warehouse", x: 2, y: 0, size: 2, direction: "east" };
+    const whA: PlacedAsset = {
+      id: "whA",
+      type: "warehouse",
+      x: 2,
+      y: 0,
+      size: 2,
+      direction: "east",
+    };
     return makeBaseState({
       assets: {
         cv1: makeConveyorAsset("cv1", 4, 0, "west"),
@@ -304,14 +338,14 @@ describe("Belt-to-warehouse delivery (adjacent target)", () => {
   it("same zone: item delivered to warehouse", () => {
     const state = makeAdjacentDeliveryState(true);
     const after = runTick(state);
-    expect((after.warehouseInventories.whA.iron as number)).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(1);
     expect(after.conveyors.cv1.queue).toHaveLength(0);
   });
 
   it("different zones: item blocked, warehouse unchanged", () => {
     const state = makeAdjacentDeliveryState(false);
     const after = runTick(state);
-    expect((after.warehouseInventories.whA.iron as number)).toBe(0);
+    expect(after.warehouseInventories.whA.iron as number).toBe(0);
     expect(after.conveyors.cv1.queue).toContain("iron");
   });
 
@@ -322,7 +356,7 @@ describe("Belt-to-warehouse delivery (adjacent target)", () => {
       buildingZoneIds: { whA: "zA" }, // belt cv1 has NO zone → compatible with any target
     };
     const after = runTick(noZoneBelt);
-    expect((after.warehouseInventories.whA.iron as number)).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(1);
   });
 });
 
@@ -331,7 +365,14 @@ describe("Belt-to-warehouse delivery (adjacent target)", () => {
 describe("Belt-to-warehouse delivery (belt sitting on input tile)", () => {
   // cv1 at (1,4) = warehouse input tile (warehouse at (1,2), height=2, input at y=4)
   function makeDirectDeliveryState(sameZone: boolean): GameState {
-    const whA: PlacedAsset = { id: "whA", type: "warehouse", x: 1, y: 2, size: 2, direction: "south" };
+    const whA: PlacedAsset = {
+      id: "whA",
+      type: "warehouse",
+      x: 1,
+      y: 2,
+      size: 2,
+      direction: "south",
+    };
     return makeBaseState({
       assets: {
         cv1: makeConveyorAsset("cv1", 1, 4, "east"), // sits on the warehouse input tile
@@ -362,14 +403,14 @@ describe("Belt-to-warehouse delivery (belt sitting on input tile)", () => {
   it("same zone: item delivered directly to warehouse", () => {
     const state = makeDirectDeliveryState(true);
     const after = runTick(state);
-    expect((after.warehouseInventories.whA.iron as number)).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(1);
     expect(after.conveyors.cv1.queue).toHaveLength(0);
   });
 
   it("different zones: item blocked on belt, warehouse unchanged", () => {
     const state = makeDirectDeliveryState(false);
     const after = runTick(state);
-    expect((after.warehouseInventories.whA.iron as number)).toBe(0);
+    expect(after.warehouseInventories.whA.iron as number).toBe(0);
     expect(after.conveyors.cv1.queue).toContain("iron");
   });
 
@@ -377,7 +418,7 @@ describe("Belt-to-warehouse delivery (belt sitting on input tile)", () => {
     const state = makeDirectDeliveryState(false);
     const after = runTicks(state, 5);
     expect(after.conveyors.cv1.queue).toContain("iron");
-    expect((after.warehouseInventories.whA.iron as number)).toBe(0);
+    expect(after.warehouseInventories.whA.iron as number).toBe(0);
   });
 
   // Characterization test: documents that the warehouse-input-tile delivery
@@ -400,7 +441,7 @@ describe("Belt-to-warehouse delivery (belt sitting on input tile)", () => {
 
 describe("Belt capacity block (existing behavior)", () => {
   it("item stays when next belt is at full capacity", () => {
-    const fullQueue = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as ("stone")[];
+    const fullQueue = Array(CONVEYOR_TILE_CAPACITY).fill("stone") as "stone"[];
     const state = makeBaseState({
       assets: {
         cv1: makeConveyorAsset("cv1", 0, 0, "east"),
@@ -432,7 +473,14 @@ describe("End-to-end chain: Belt → Belt → Warehouse (same zone)", () => {
     // cv2 at (4,2) facing east → cv3.
     // cv1 at (3,2) facing east → cv2.
     // All belts and warehouse in Zone A.
-    const whA: PlacedAsset = { id: "whA", type: "warehouse", x: 5, y: 0, size: 2, direction: "south" };
+    const whA: PlacedAsset = {
+      id: "whA",
+      type: "warehouse",
+      x: 5,
+      y: 0,
+      size: 2,
+      direction: "south",
+    };
     const state = makeBaseState({
       assets: {
         cv1: makeConveyorAsset("cv1", 3, 2, "east"),
@@ -475,7 +523,7 @@ describe("End-to-end chain: Belt → Belt → Warehouse (same zone)", () => {
     // Tick 3: cv3 on input tile → delivers to warehouse
     const s3 = runTick(s2);
     expect(s3.conveyors.cv3.queue).toHaveLength(0);
-    expect((s3.warehouseInventories.whA.iron as number)).toBe(1);
+    expect(s3.warehouseInventories.whA.iron as number).toBe(1);
   });
 });
 
@@ -483,7 +531,14 @@ describe("End-to-end chain: Belt → Belt → Warehouse (same zone)", () => {
 
 describe("Inter-zone chain: cross-zone belt blocks propagate correctly", () => {
   it("item stops at zone boundary, does not reach other-zone warehouse", () => {
-    const whB: PlacedAsset = { id: "whB", type: "warehouse", x: 3, y: 0, size: 2, direction: "south" };
+    const whB: PlacedAsset = {
+      id: "whB",
+      type: "warehouse",
+      x: 3,
+      y: 0,
+      size: 2,
+      direction: "south",
+    };
     const state = makeBaseState({
       assets: {
         cv1: makeConveyorAsset("cv1", 0, 0, "east"), // Zone A
@@ -514,15 +569,17 @@ describe("Inter-zone chain: cross-zone belt blocks propagate correctly", () => {
         zB: { id: "zB", name: "Zone B" },
       },
       buildingZoneIds: {
-        cv1: "zA",          // Zone A
-        cv2: "zB", cv3: "zB", whB: "zB", // Zone B
+        cv1: "zA", // Zone A
+        cv2: "zB",
+        cv3: "zB",
+        whB: "zB", // Zone B
       },
     });
 
     const after = runTicks(state, 5);
 
     // Item must NOT reach Zone B warehouse
-    expect((after.warehouseInventories.whB.copper as number)).toBe(0);
+    expect(after.warehouseInventories.whB.copper as number).toBe(0);
     // Item must be stuck on cv1 (blocked at zone boundary cv1→cv2)
     expect(after.conveyors.cv1.queue).toContain("copper");
     // cv2 and cv3 must be empty

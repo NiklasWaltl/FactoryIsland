@@ -1,5 +1,9 @@
 import { debugLog } from "../../../debug/debugLogger";
-import type { Inventory, PlacedAsset, ServiceHubEntry } from "../../../store/types";
+import type {
+  Inventory,
+  PlacedAsset,
+  ServiceHubEntry,
+} from "../../../store/types";
 import type { WarehouseId } from "../../../items/types";
 import { applyNetworkAction } from "../../../inventory/reservations";
 import type { NetworkSlice } from "../../../inventory/reservationTypes";
@@ -16,7 +20,10 @@ import { getReservedAmountForCraftingOwnerItem } from "../job-lifecycle";
 import type { TickInput } from "../../tick";
 import type { CraftingTickState } from "./types";
 
-export function reserveQueuedPhase(state: CraftingTickState, input: TickInput): void {
+export function reserveQueuedPhase(
+  state: CraftingTickState,
+  input: TickInput,
+): void {
   const queuedSorted = sortByPriorityFifo(
     state.jobs.filter((j) => j.status === "queued"),
   );
@@ -60,18 +67,29 @@ function reserveQueuedJobIngredients(
 ): { ok: true; network: NetworkSlice } | { ok: false } {
   const source = getJobInventorySource(job);
   if (import.meta.env.DEV) {
-    debugLog.general(`Craft availability check for recipe ${job.recipeId} (job ${job.id})`);
+    debugLog.general(
+      `Craft availability check for recipe ${job.recipeId} (job ${job.id})`,
+    );
   }
 
   if (source.kind === "global") {
-    const sourceView = getSourceView(source, warehouseInventories, globalInventory, serviceHubs);
-    const result = applyNetworkAction(sourceView.warehouseInventories, network, {
-      type: "NETWORK_RESERVE_BATCH",
-      items: job.ingredients,
-      ownerKind: "crafting_job",
-      ownerId: job.reservationOwnerId,
-      scopeKey: sourceView.scopeKey,
-    });
+    const sourceView = getSourceView(
+      source,
+      warehouseInventories,
+      globalInventory,
+      serviceHubs,
+    );
+    const result = applyNetworkAction(
+      sourceView.warehouseInventories,
+      network,
+      {
+        type: "NETWORK_RESERVE_BATCH",
+        items: job.ingredients,
+        ownerKind: "crafting_job",
+        ownerId: job.reservationOwnerId,
+        scopeKey: sourceView.scopeKey,
+      },
+    );
     if (result.network.lastError) {
       if (import.meta.env.DEV) {
         debugLog.general(
@@ -114,14 +132,18 @@ function reserveQueuedJobIngredients(
     if (import.meta.env.DEV) {
       const usedFallbackHub = decision.source.kind === "hub";
       if (usedFallbackHub) {
-        debugLog.general(`Ingredient ${ingredient.itemId}: nearby warehouses insufficient`);
+        debugLog.general(
+          `Ingredient ${ingredient.itemId}: nearby warehouses insufficient`,
+        );
         debugLog.general(
           `Ingredient ${ingredient.itemId}: fallback hub ${decision.source.hubId} available with ${decision.source.free}`,
         );
       }
       debugLog.general(
         `Reservation source chosen: ${decision.source.kind} ${
-          decision.source.kind === "warehouse" ? decision.source.warehouseId : decision.source.hubId
+          decision.source.kind === "warehouse"
+            ? decision.source.warehouseId
+            : decision.source.hubId
         }`,
       );
     }
@@ -154,7 +176,8 @@ function reserveQueuedJobIngredients(
         }
         return { ok: false };
       }
-      scopedInventories[getGlobalHubWarehouseId(decision.source.hubId)] = hubInventoryToInventoryView(hub.inventory);
+      scopedInventories[getGlobalHubWarehouseId(decision.source.hubId)] =
+        hubInventoryToInventoryView(hub.inventory);
     }
 
     const reserveResult = applyNetworkAction(scopedInventories, nextNetwork, {
@@ -192,7 +215,9 @@ function reserveQueuedJobIngredients(
   }
 
   if (import.meta.env.DEV) {
-    debugLog.general(`Recipe ${job.recipeId} craftable via fallback source evaluation`);
+    debugLog.general(
+      `Recipe ${job.recipeId} craftable via fallback source evaluation`,
+    );
   }
   return { ok: true, network: nextNetwork };
 }
