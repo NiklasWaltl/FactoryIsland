@@ -385,6 +385,7 @@ export function createInitialState(mode: GameMode): GameState {
     crafting: createEmptyCraftingQueue(),
     keepStockByWorkbench: {},
     recipeAutomationPolicies: {},
+    splitterRouteState: {},
   };
   // Ensure drones record is pre-populated with the starter drone
   initial.drones = { starter: initial.starterDrone };

@@ -432,4 +432,9 @@ export interface GameState {
    * Missing entry means default behavior (auto-craft + keep-in-stock allowed).
    */
   recipeAutomationPolicies?: RecipeAutomationPolicyMap;
+  /**
+   * Per-splitter Round-Robin routing state (keyed by splitter asset ID). Persisted.
+   * Tracks which output side (left/right) was last used for Round-Robin routing.
+   */
+  splitterRouteState: Record<string, { lastSide: "left" | "right" }>;
 }

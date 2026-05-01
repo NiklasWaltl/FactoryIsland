@@ -86,6 +86,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     crafting: state.crafting,
     keepStockByWorkbench: state.keepStockByWorkbench ?? {},
     recipeAutomationPolicies: state.recipeAutomationPolicies ?? {},
+    splitterRouteState: state.splitterRouteState ?? {},
   };
 }
 
@@ -233,6 +234,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     ),
     keepStockByWorkbench: sanitizeKeepStockByWorkbench(save.keepStockByWorkbench, save.assets),
     recipeAutomationPolicies: sanitizeRecipeAutomationPolicies(save.recipeAutomationPolicies),
+    splitterRouteState: save.splitterRouteState ?? {},
 
     connectedAssetIds: [],
     poweredMachineIds: [],
