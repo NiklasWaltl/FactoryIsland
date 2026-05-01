@@ -13,7 +13,7 @@ Factory Island ist ein eigenständiges 2D-Fabrik-Aufbauspiel.
 ## Wichtige Regeln
 
 - Keine neuen npm-Abhängigkeiten ohne Rückfrage.
-- Keine großen Refactors ohne vorherigen Plan.
+- Keine großen Refactors ohne vorherigen Plan; keine neuen Re-Export-Hubs ohne klaren Grund.
 - Keine Spiellogik in UI-Komponenten.
 - Keine Magic Numbers; nutze vorhandene Konstanten.
 - Behalte den Build funktionsfähig (`yarn build`).
@@ -34,6 +34,14 @@ Factory Island ist ein eigenständiges 2D-Fabrik-Aufbauspiel.
 - Wenn eine Änderung mehrere Dateien betrifft, arbeite in kleinen, überprüfbaren Schritten.
 - Zeige vor größeren Änderungen kurz Plan, betroffene Dateien und Risiko.
 - Nach Codeänderungen immer die passenden Tests oder Builds ausführen.
+
+### Verbindlicher Ablauf vor Codeänderungen
+
+- Lies zuerst `.continue/prompts/project-context.md`, dann `SYSTEM_REGISTRY.md`.
+- Ziehe `src/game/ARCHITECTURE.md` nur für Runtime-/Datenflussfragen hinzu; `src/game/TYPES.md` nur für Typfragen.
+- Bestimme zuerst das owning system und lies danach nur die direkt betroffenen Codepfade.
+- Prüfe vor jedem Edit Action-/Tick-/Selector-/Typ-Pfad sowie Save-/Compat-Risiko.
+- Wenn Doku und Code widersprechen, gilt der Code; markiere die Doku zur Nachpflege.
 
 ## Prüfbefehle
 
