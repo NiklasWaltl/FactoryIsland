@@ -4,6 +4,8 @@ import {
   type GameState,
   type PlacedAsset,
 } from "../../../store/reducer";
+import { buildSceneState } from "../../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../../dev/scenes/debug-scene.layout";
 import type { Reservation } from "../../../inventory/reservationTypes";
 import {
   computeIngredientLines,
@@ -14,7 +16,10 @@ import {
 import { getWorkbenchRecipe } from "../../../simulation/recipes";
 
 function baseState(): GameState {
-  const base = createInitialState("release");
+  const base = {
+    ...buildSceneState(debugSceneLayout, createInitialState("debug")),
+    mode: "release" as const,
+  };
   const wb: PlacedAsset = {
     id: "wb-1",
     type: "workbench",

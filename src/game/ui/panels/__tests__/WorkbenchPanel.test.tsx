@@ -7,6 +7,8 @@ import {
   type GameState,
   type PlacedAsset,
 } from "../../../store/reducer";
+import { buildSceneState } from "../../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../../dev/scenes/debug-scene.layout";
 import { WorkbenchPanel } from "../WorkbenchPanel";
 
 (
@@ -14,7 +16,10 @@ import { WorkbenchPanel } from "../WorkbenchPanel";
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
 function buildState(): GameState {
-  const base = createInitialState("release");
+  const base = {
+    ...buildSceneState(debugSceneLayout, createInitialState("debug")),
+    mode: "release" as const,
+  };
   const workbench: PlacedAsset = {
     id: "wb-1",
     type: "workbench",

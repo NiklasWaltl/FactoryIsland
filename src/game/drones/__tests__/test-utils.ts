@@ -1,11 +1,13 @@
 import {
   addToCollectionNodeAt,
-  createInitialState,
+  createInitialState as createBaseInitialState,
   gameReducer,
   getDroneDockOffset,
   getMaxDrones,
   MAP_SHOP_POS,
 } from "../../store/reducer";
+import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 import type {
   CollectionNode,
   CollectableItemType,
@@ -44,7 +46,14 @@ export {
   SERVICE_HUB_TARGET_STOCK,
 } from "../../store/constants/hub/hub-target-stock";
 
-export { addToCollectionNodeAt, createInitialState, gameReducer, MAP_SHOP_POS };
+export { addToCollectionNodeAt, gameReducer, MAP_SHOP_POS };
+
+export function createInitialState(
+  mode: GameState["mode"] = "release",
+): GameState {
+  const state = buildSceneState(debugSceneLayout, createBaseInitialState("debug"));
+  return { ...state, mode };
+}
 
 export type {
   CollectionNode,

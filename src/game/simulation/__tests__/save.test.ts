@@ -18,6 +18,8 @@ import {
   type Inventory,
   type PlacedAsset,
 } from "../../store/reducer";
+import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -125,7 +127,7 @@ describe("deserializeState", () => {
   });
 
   it("recomputes connectedAssetIds from assets", () => {
-    const debugState = createInitialState("debug");
+    const debugState = buildSceneState(debugSceneLayout, createInitialState("debug"));
     const save = serializeState(debugState);
     const loaded = deserializeState(save);
     // Debug state has generators + cables → should have connectivity
@@ -404,12 +406,15 @@ describe("loadAndHydrate", () => {
   });
 
   it("preserves a starter proto-hub as tier 1 when hydrating a raw runtime snapshot", () => {
-    const runtimeState = createInitialState("release");
+    const runtimeState = buildSceneState(
+      debugSceneLayout,
+      createInitialState("debug"),
+    );
     const hubId = runtimeState.starterDrone.hubId;
 
     expect(hubId).not.toBeNull();
 
-    const hydrated = loadAndHydrate(runtimeState, "release");
+    const hydrated = loadAndHydrate(runtimeState, "debug");
 
     expect(hydrated.serviceHubs[hubId!]?.tier).toBe(1);
   });
@@ -437,10 +442,10 @@ describe("round-trip", () => {
     const parsed = JSON.parse(json);
     const loaded = loadAndHydrate(parsed, "release");
 
-    // Phase 1: release auto-creates a starter warehouse which is a physical
-    // home for every physical key (including ingots) → global is zeroed on load.
+    // Minimal release state has no default warehouse, so non-collectable
+    // intermediate products remain in the global inventory across hydration.
     expect(loaded.inventory.wood).toBe(0);
-    expect(loaded.inventory.ironIngot).toBe(0);
+    expect(loaded.inventory.ironIngot).toBe(7);
     expect(loaded.generators["rt-gen-1"].fuel).toBe(5);
     expect(loaded.mode).toBe("release");
   });
@@ -525,7 +530,7 @@ describe("round-trip", () => {
   });
 
   it("debug state survives full save/load cycle", () => {
-    const original = createInitialState("debug");
+    const original = buildSceneState(debugSceneLayout, createInitialState("debug"));
 
     const json = JSON.stringify(serializeState(original));
     const parsed = JSON.parse(json);

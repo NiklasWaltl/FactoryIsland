@@ -33,6 +33,19 @@ function stateWithoutServiceHubs(base: GameState): GameState {
   return { ...base, assets, cellMap };
 }
 
+function withPlacementResources(state: GameState): GameState {
+  return {
+    ...state,
+    inventory: {
+      ...state.inventory,
+      wood: 999,
+      stone: 999,
+      iron: 999,
+      copper: 999,
+    },
+  };
+}
+
 describe("isConveyorPreviewBuildingType", () => {
   test("true for conveyor-like types", () => {
     expect(isConveyorPreviewBuildingType("conveyor")).toBe(true);
@@ -92,11 +105,19 @@ describe("previewBuildingPlacementAtCell", () => {
   });
 
   test("conveyor blocked when target cell occupied", () => {
-    const base = createInitialState("release");
-    const occupiedKey = Object.keys(base.cellMap)[0];
-    expect(occupiedKey).toBeDefined();
-    const [ox, oy] = occupiedKey.split(",").map(Number) as [number, number];
-    const r = previewBuildingPlacementAtCell(base, "conveyor", ox, oy, "east");
+    const occupiedAsset: PlacedAsset = {
+      id: "occupied",
+      type: "tree",
+      x: 4,
+      y: 4,
+      size: 1,
+    };
+    const base: GameState = {
+      ...withPlacementResources(createInitialState("release")),
+      assets: { occupied: occupiedAsset },
+      cellMap: { [cellKey(4, 4)]: "occupied" },
+    };
+    const r = previewBuildingPlacementAtCell(base, "conveyor", 4, 4, "east");
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.reason).toBe("cell_occupied");
@@ -122,11 +143,12 @@ describe("previewBuildingPlacementAtCell", () => {
 
   test("underground out ok when entrance in range and span in bounds", () => {
     const tin = ugIn("tin", 10, 10, "east");
+    const base = withPlacementResources(createInitialState("release"));
     const state: GameState = {
-      ...createInitialState("release"),
-      assets: { ...createInitialState("release").assets, tin },
+      ...base,
+      assets: { ...base.assets, tin },
       cellMap: {
-        ...createInitialState("release").cellMap,
+        ...base.cellMap,
         [cellKey(10, 10)]: "tin",
       },
       conveyorUndergroundPeers: {},
@@ -142,7 +164,7 @@ describe("previewBuildingPlacementAtCell", () => {
   });
 
   test("underground out pairing message when no entrance", () => {
-    const base = createInitialState("release");
+    const base = withPlacementResources(createInitialState("release"));
     const r = previewBuildingPlacementAtCell(
       base,
       "conveyor_underground_out",

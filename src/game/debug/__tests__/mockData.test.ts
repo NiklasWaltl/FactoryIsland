@@ -17,6 +17,8 @@ import {
   type Inventory,
   type ServiceHubEntry,
 } from "../../store/reducer";
+import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 
 function emptyInv(): Inventory {
   const inv = createInitialState("release").inventory;
@@ -155,7 +157,10 @@ describe("applyMockToState / DEBUG_MOCK_DRONE_HUB_INVENTORY", () => {
   });
 
   it("also fills a hub that was placed later through the build flow", () => {
-    const base = createInitialState("release");
+    const base = {
+      ...buildSceneState(debugSceneLayout, createInitialState("debug")),
+      mode: "release" as const,
+    };
     const starterHubId = base.starterDrone.hubId;
 
     expect(starterHubId).not.toBeNull();

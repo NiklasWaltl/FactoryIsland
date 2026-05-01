@@ -21,6 +21,8 @@ import {
 import { HUB_UPGRADE_COST } from "../constants/hub/hub-upgrade-cost";
 import { serializeState, deserializeState } from "../../simulation/save";
 import { applyMockToState } from "../../debug/mockData";
+import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 
 function emptyInv(): Inventory {
   // createInitialState seeds non-zero starter coins; zero everything for predictable assertions.
@@ -139,7 +141,10 @@ describe("DEBUG_MOCK_RESOURCES – fills physical storage", () => {
 describe("UPGRADE_HUB – drone-delivery flow (no instant warehouse drain)", () => {
   it("passes the physical-storage affordance check without deducting from the warehouse", () => {
     const cost = HUB_UPGRADE_COST as Partial<Record<keyof Inventory, number>>;
-    let s = createInitialState("release");
+    let s = {
+      ...buildSceneState(debugSceneLayout, createInitialState("debug")),
+      mode: "release" as const,
+    };
     // Stash the entire upgrade cost into a warehouse; keep global empty.
     s = { ...s, inventory: emptyInv() };
     s = withWarehouse(s, "wh-A", cost);
@@ -228,8 +233,12 @@ describe("UPGRADE_HUB – drone-delivery flow (no instant warehouse drain)", () 
 
   it("completes Tier-2 upgrade only after drone deliveries satisfy construction demand", () => {
     const cost = HUB_UPGRADE_COST as Partial<Record<keyof Inventory, number>>;
-    let s = createInitialState("release");
-    const hubId = s.starterDrone.hubId!;
+    let s = {
+      ...buildSceneState(debugSceneLayout, createInitialState("debug")),
+      mode: "release" as const,
+    };
+    const hubId = Object.keys(s.serviceHubs)[0];
+    expect(hubId).toBeDefined();
 
     s = {
       ...s,

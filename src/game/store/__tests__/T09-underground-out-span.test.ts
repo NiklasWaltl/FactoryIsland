@@ -4,6 +4,19 @@ import { previewBuildingPlacementAtCell } from "../building-placement-preview";
 import { cellKey, createInitialState, gameReducer } from "../reducer";
 import type { GameState } from "../types";
 
+function withPlacementResources(state: GameState): GameState {
+  return {
+    ...state,
+    inventory: {
+      ...state.inventory,
+      wood: 999,
+      stone: 999,
+      iron: 999,
+      copper: 999,
+    },
+  };
+}
+
 function clearCellForPlacement(
   state: GameState,
   x: number,
@@ -30,7 +43,11 @@ function clearCellForPlacement(
 
 describe("T09 underground-out map-edge span", () => {
   test("preview reports ug_tunnel_span at map edge", () => {
-    const base = clearCellForPlacement(createInitialState("release"), 0, 10);
+    const base = clearCellForPlacement(
+      withPlacementResources(createInitialState("release")),
+      0,
+      10,
+    );
     const result = previewBuildingPlacementAtCell(
       base,
       "conveyor_underground_out",
@@ -47,7 +64,11 @@ describe("T09 underground-out map-edge span", () => {
   });
 
   test("placement emits tunnel-span error notification at map edge", () => {
-    const base = clearCellForPlacement(createInitialState("release"), 0, 10);
+    const base = clearCellForPlacement(
+      withPlacementResources(createInitialState("release")),
+      0,
+      10,
+    );
     const beforeCount = base.notifications.length;
 
     const after = gameReducer(

@@ -16,6 +16,8 @@ import {
   CONSTRUCTION_SITE_BUILDINGS,
 } from "../constants/buildings/index";
 import type { GameState, BuildingType, PlacedAsset } from "../types";
+import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 
 // ---- helpers ---------------------------------------------------------------
 
@@ -122,15 +124,28 @@ function placeAutoMiner(
   } as any);
 }
 
+function createConstructionBase(): GameState {
+  const debugState = buildSceneState(debugSceneLayout, createInitialState("debug"));
+  return placeServiceHub(debugState, 6, 6).state;
+}
+
+function findAvailableDeposit(state: GameState): PlacedAsset | undefined {
+  return Object.values(state.assets).find(
+    (asset) =>
+      (asset.type === "stone_deposit" ||
+        asset.type === "iron_deposit" ||
+        asset.type === "copper_deposit") &&
+      state.cellMap[`${asset.x},${asset.y}`] === asset.id,
+  );
+}
+
 // ---- test suite ------------------------------------------------------------
 
 describe("Construction Site Integration — generic path buildings", () => {
   let base: GameState;
 
   beforeEach(() => {
-    base = createInitialState("release");
-    const placed = placeServiceHub(base, 6, 6);
-    base = placed.state;
+    base = createConstructionBase();
   });
 
   // Generic path buildings that use the default placeAsset flow:
@@ -181,9 +196,7 @@ describe("Construction Site Integration — special-case buildings", () => {
   let base: GameState;
 
   beforeEach(() => {
-    base = createInitialState("release");
-    const placed = placeServiceHub(base, 6, 6);
-    base = placed.state;
+    base = createConstructionBase();
   });
 
   it("conveyor placed as construction site with direction", () => {
@@ -223,7 +236,7 @@ describe("Construction Site Integration — special-case buildings", () => {
     if (!deposit) return; // skip if no deposit in initial state
     const state = placeAutoMiner(base, deposit.x, deposit.y);
     const miner = Object.values(state.assets).find(
-      (a) => a.type === "auto_miner",
+      (a) => a.type === "auto_miner" && a.x === deposit.x && a.y === deposit.y,
     );
     expect(miner).toBeDefined();
     expect(state.constructionSites[miner!.id]).toBeDefined();
@@ -250,10 +263,6 @@ describe("Construction Site Integration — special-case buildings", () => {
   it("auto_smelter placed as construction site", () => {
     // auto_smelter needs adjacent conveyors for input/output, which is complex.
     // Test that placement with proper setup creates a construction site.
-    // Use the debug mode initial state which includes auto_smelter setup.
-    let debugState = createInitialState("debug");
-    const hubPlaced = placeServiceHub(debugState, 6, 6);
-    debugState = hubPlaced.state;
     // Find an auto_smelter that was pre-placed, or place a new one at valid location.
     // For simplicity, verify the cost is now collectable:
     const costs = BUILDING_COSTS.auto_smelter;
@@ -291,9 +300,7 @@ describe("Construction Site Integration — energy grid exclusion", () => {
   let base: GameState;
 
   beforeEach(() => {
-    base = createInitialState("release");
-    const placed = placeServiceHub(base, 6, 6);
-    base = placed.state;
+    base = createConstructionBase();
   });
 
   it("under-construction cable is NOT in connectedAssetIds", () => {
@@ -337,9 +344,7 @@ describe("Construction Site Integration — guards", () => {
   let base: GameState;
 
   beforeEach(() => {
-    base = createInitialState("release");
-    const placed = placeServiceHub(base, 6, 6);
-    base = placed.state;
+    base = createConstructionBase();
   });
 
   it("MANUAL_ASSEMBLER_START is blocked for under-construction assembler", () => {

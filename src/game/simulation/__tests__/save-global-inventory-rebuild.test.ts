@@ -124,8 +124,9 @@ describe("deserializeState — globalInventory rebuild", () => {
     expect(loaded.serviceHubs["hub-1"].inventory.wood).toBe(4);
   });
 
-  it("keeps legacy globalInventory intact when no physical storage exists at all", () => {
-    // Purely legacy save: no warehouses, no hubs — globalInventory is the only truth.
+  it("keeps only non-physical globalInventory keys when no physical storage exists", () => {
+    // Minimal saves have no warehouses or hubs; physical keys are still not
+    // considered authoritative global inventory after hydration.
     const s: GameState = {
       ...bareState(),
       inventory: addResources(emptyInv(), { wood: 11, stone: 7, coins: 3 }),
@@ -133,8 +134,8 @@ describe("deserializeState — globalInventory rebuild", () => {
 
     const loaded = deserializeState(serializeState(s));
 
-    expect(loaded.inventory.wood).toBe(11);
-    expect(loaded.inventory.stone).toBe(7);
+    expect(loaded.inventory.wood).toBe(0);
+    expect(loaded.inventory.stone).toBe(0);
     expect(loaded.inventory.coins).toBe(3);
   });
 

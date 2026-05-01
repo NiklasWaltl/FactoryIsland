@@ -13,7 +13,7 @@
 
 import {
   gameReducer,
-  createInitialState,
+  createInitialState as createBaseInitialState,
   addToCollectionNodeAt,
   selectDroneTask,
   getRemainingBuildingInputDemand,
@@ -21,6 +21,8 @@ import {
   MAP_SHOP_POS,
   DRONE_CAPACITY,
 } from "../reducer";
+import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
+import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 import {
   GENERATOR_MAX_FUEL,
   getBuildingInputConfig,
@@ -36,6 +38,11 @@ import type {
 } from "../types";
 
 const HUB_POS = { x: MAP_SHOP_POS.x + 3, y: MAP_SHOP_POS.y };
+
+function createInitialState(mode: GameState["mode"] = "release"): GameState {
+  const state = buildSceneState(debugSceneLayout, createBaseInitialState("debug"));
+  return { ...state, mode };
+}
 
 function makeGeneratorAsset(id: string, x: number, y: number): PlacedAsset {
   return { id, type: "generator", x, y, size: 2 };

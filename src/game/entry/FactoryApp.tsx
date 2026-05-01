@@ -12,6 +12,12 @@ import {
 } from "../store/reducer";
 import type { GameMode, GameState } from "../store/types";
 import { serializeState, loadAndHydrate } from "../simulation/save";
+import {
+  applyDevScene,
+  DevSceneSelector,
+  getDevSceneFromUrl,
+  hasDevSceneUrlParam,
+} from "../dev";
 import { useGameTicks } from "./use-game-ticks";
 import { ModeSelect } from "../ui/menus/ModeSelect";
 import { Grid } from "../grid/Grid";
@@ -58,6 +64,14 @@ const SAVE_KEY = "factory-island-save";
  */
 function normalizeLoadedState(raw: unknown, mode: GameMode): GameState {
   return loadAndHydrate(raw, mode);
+}
+
+function createFreshInitialState(mode: GameMode): GameState {
+  const baseState = createInitialState(mode);
+  if (import.meta.env.DEV && mode === "debug") {
+    return applyDevScene(baseState, getDevSceneFromUrl());
+  }
+  return baseState;
 }
 
 /* Error boundary to prevent white-screen crashes */
@@ -119,6 +133,9 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
     import.meta.env.DEV ? gameReducerWithInvariants : gameReducer,
     mode,
     (m) => {
+      if (import.meta.env.DEV && m === "debug" && hasDevSceneUrlParam()) {
+        return createFreshInitialState(m);
+      }
       if (IS_DEV) {
         const hmr = loadHmrState();
         if (hmr) return normalizeLoadedState(hmr, m);
@@ -133,7 +150,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       } catch {
         /* corrupt save, ignore */
       }
-      return createInitialState(m);
+      return createFreshInitialState(m);
     },
   );
 
@@ -188,7 +205,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       if (!IS_DEV) return;
       if (action === "DEBUG_RESET_STATE") {
         debugLog.mock("Full state reset");
-        dispatch({ type: "DEBUG_SET_STATE", state: createInitialState(mode) });
+        dispatch({ type: "DEBUG_SET_STATE", state: createFreshInitialState(mode) });
         return;
       }
       const newState = applyMockToState(stateRef.current, action);
@@ -294,6 +311,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
 
       {IS_DEV && state.mode === "debug" && (
         <>
+          <DevSceneSelector mode={mode} />
           <div className="fi-debug-badge">DEBUG MODE</div>
           <DebugPanel
             onMock={handleMock}

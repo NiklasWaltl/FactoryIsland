@@ -17,8 +17,9 @@ export default defineConfig({
       name: "factory-html-fallback",
       configureServer(server) {
         server.middlewares.use((req, _res, next) => {
-          if (req.url === "/" || req.url === "/index.html") {
-            req.url = "/index.factory.html";
+          const [pathname, search] = (req.url ?? "").split("?", 2);
+          if (pathname === "/" || pathname === "/index.html") {
+            req.url = `/index.factory.html${search ? `?${search}` : ""}`;
           }
           next();
         });
