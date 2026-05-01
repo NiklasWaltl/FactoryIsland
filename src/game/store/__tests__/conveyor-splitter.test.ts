@@ -15,6 +15,7 @@ import {
   type DecideConveyorTargetSelectionInput,
 } from "../conveyor/conveyor-routing";
 import { resetSplitterRouteState, type SplitterRouteState } from "../slices/splitter-route-state";
+import type { SplitterFilterState } from "../slices/splitter-filter-state";
 import { isValidWarehouseInput } from "../warehouse-input";
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { resolveBuildingSource } from "../building-source";
@@ -57,7 +58,12 @@ function makeRoundRobinInput(
   splitterRouteState: SplitterRouteState,
   leftQueueLength: number,
   rightQueueLength: number,
-): DecideConveyorTargetSelectionInput {
+  options: {
+    currentItem?: ConveyorItem;
+    splitterFilterState?: SplitterFilterState;
+  } = {},
+): DecideConveyorTargetSelectionInput<ReturnType<typeof resolveBuildingSource>> {
+  const currentItem = options.currentItem ?? "iron";
   const splitterAsset = makeSplitterAsset("splitter", 2, 2, "east");
   const leftOut = makeConveyorAsset("leftOut", 2, 1, "north");
   const rightOut = makeConveyorAsset("rightOut", 2, 3, "south");
@@ -77,7 +83,7 @@ function makeRoundRobinInput(
     connectedAssetIds: ["splitter", "leftOut", "rightOut"],
     poweredMachineIds: ["splitter", "leftOut", "rightOut"],
     conveyors: {
-      splitter: { queue: ["iron"] },
+      splitter: { queue: [currentItem] },
       leftOut: { queue: leftQueue },
       rightOut: { queue: rightQueue },
     },
@@ -87,7 +93,7 @@ function makeRoundRobinInput(
     liveState: state,
     convId: "splitter",
     convAsset: splitterAsset,
-    currentItem: "iron",
+    currentItem,
     conveyors: state.conveyors,
     warehouseInventories: state.warehouseInventories,
     smithy: state.smithy,
@@ -98,6 +104,7 @@ function makeRoundRobinInput(
     getSourceCapacity: (_s, source) => getWarehouseCapacity(_s.mode),
     getWarehouseCapacity,
     splitterRouteState,
+    splitterFilterState: options.splitterFilterState,
   };
 }
 
@@ -395,5 +402,79 @@ describe("conveyor_splitter V1", () => {
     const decision = decideConveyorTargetSelection(input);
     expect(decision.kind).toBe("no_target");
     expect(routeState["splitter"]?.lastSide).toBe("left");
+  });
+
+  test("Filter gesetzt — passendes Item wird zur passenden Seite geroutet", () => {
+    const routeState: SplitterRouteState = { splitter: { lastSide: "left" } };
+    const input = makeRoundRobinInput(routeState, 0, 0, {
+      splitterFilterState: {
+        splitter: { left: "iron", right: "copper" },
+      },
+    });
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("target");
+    expect((decision as any).nextAssetId).toBe("leftOut");
+    expect(routeState["splitter"]?.lastSide).toBe("left");
+  });
+
+  test("Filter gesetzt — anderes Item ueberspringt gefilterte Seite und alterniert", () => {
+    const routeState: SplitterRouteState = { splitter: { lastSide: "right" } };
+    const input = makeRoundRobinInput(routeState, 0, 0, {
+      splitterFilterState: {
+        splitter: { left: "copper", right: null },
+      },
+    });
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("target");
+    expect((decision as any).nextAssetId).toBe("rightOut");
+    expect(routeState["splitter"]?.lastSide).toBe("right");
+  });
+
+  test("Filter null — Round-Robin-Fallback bleibt aktiv", () => {
+    const routeState: SplitterRouteState = { splitter: { lastSide: "left" } };
+    const input = makeRoundRobinInput(routeState, 0, 0, {
+      splitterFilterState: {
+        splitter: { left: null, right: null },
+      },
+    });
+    const decision = decideConveyorTargetSelection(input);
+    expect(decision.kind).toBe("target");
+    expect((decision as any).nextAssetId).toBe("rightOut");
+    expect(routeState["splitter"]?.lastSide).toBe("right");
+  });
+
+  test("SET_SPLITTER_FILTER aktualisiert den Reducer-State", () => {
+    const state = makeState({
+      assets: {
+        splitter: makeSplitterAsset("splitter", 2, 2, "east"),
+      },
+      cellMap: {
+        [cellKey(2, 2)]: "splitter",
+      },
+    });
+
+    const afterSet = gameReducer(state, {
+      type: "SET_SPLITTER_FILTER",
+      splitterId: "splitter",
+      side: "left",
+      itemType: "gear",
+    });
+
+    expect(afterSet.splitterFilterState["splitter"]).toEqual({
+      left: "gear",
+      right: null,
+    });
+
+    const afterClear = gameReducer(afterSet, {
+      type: "SET_SPLITTER_FILTER",
+      splitterId: "splitter",
+      side: "left",
+      itemType: null,
+    });
+
+    expect(afterClear.splitterFilterState["splitter"]).toEqual({
+      left: null,
+      right: null,
+    });
   });
 });

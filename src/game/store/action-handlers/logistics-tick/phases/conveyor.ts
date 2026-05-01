@@ -56,6 +56,7 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
       getCraftingSourceInventory,
       getSourceCapacity: (live, source) => getSourceCapacity(ctx, live, source),
       getWarehouseCapacity,
+      splitterFilterState: state.splitterFilterState,
     });
   };
 

@@ -11,6 +11,8 @@ import type {
   GameState,
   Inventory,
 } from "./types";
+import type { ConveyorItem } from "./types/conveyor-types";
+import type { SplitterOutputSide } from "./slices/splitter-filter-state";
 import type { RecipeAutomationPolicyPatch } from "../crafting/policies";
 
 // ============================================================
@@ -75,6 +77,13 @@ export type GameAction =
   | { type: "SET_KEEP_STOCK_TARGET"; workbenchId: string; recipeId: string; amount: number; enabled: boolean }
   // Per-recipe automation policy overrides
   | { type: "SET_RECIPE_AUTOMATION_POLICY"; recipeId: string; patch: RecipeAutomationPolicyPatch }
+  // Per-splitter pro-Output-Filter
+  | {
+      type: "SET_SPLITTER_FILTER";
+      splitterId: string;
+      side: SplitterOutputSide;
+      itemType: ConveyorItem | null;
+    }
   // Production zones
   | { type: "CREATE_ZONE"; name?: string }
   | { type: "DELETE_ZONE"; zoneId: string }

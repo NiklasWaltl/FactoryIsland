@@ -14,6 +14,15 @@ export function tryTogglePanelFromAsset(
   if (!asset) return null;
   if (isUnderConstruction(state, asset.id)) return null;
 
+  if (asset.type === "conveyor_splitter") {
+    const opening = state.openPanel !== "conveyor_splitter" || state.selectedSplitterId !== asset.id;
+    return {
+      ...state,
+      openPanel: opening ? "conveyor_splitter" : null,
+      selectedSplitterId: opening ? asset.id : null,
+    };
+  }
+
   if ((["workbench", "warehouse", "smithy", "generator", "battery", "power_pole", "manual_assembler", "service_hub"] as string[]).includes(asset.type)) {
     const panel = asset.type as UIPanel;
     if (asset.type === "warehouse") {
