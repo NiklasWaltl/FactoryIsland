@@ -3,7 +3,6 @@
 
 import { resolveBuildingSource } from "../building-source";
 import type {
-  CraftingSource,
   GameState,
   Inventory,
 } from "../types";
@@ -22,11 +21,6 @@ export function devAssertInventoryNonNegative(label: string, inv: Inventory): vo
       console.error(`[Invariant] ${label}: "${key}" is negative (${val})`);
     }
   }
-}
-
-/** @deprecated Use resolveBuildingSource */
-export function resolveWorkbenchSource(state: GameState): CraftingSource {
-  return resolveBuildingSource(state, state.selectedCraftingBuildingId);
 }
 
 /**
