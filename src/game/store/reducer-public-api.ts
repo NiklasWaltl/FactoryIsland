@@ -200,7 +200,6 @@ export {
 } from "./helpers/energy-helpers";
 export {
   devAssertInventoryNonNegative,
-  resolveWorkbenchSource,
   manhattanDist,
 } from "./helpers/misc-helpers";
 export {
@@ -260,7 +259,6 @@ export type {
   RecipeAutomationPolicyEntry,
   RecipeAutomationPolicyMap,
   ProductionZone,
-  CraftingSource,
   WorkbenchSource,
   GameState,
 } from "./types";
