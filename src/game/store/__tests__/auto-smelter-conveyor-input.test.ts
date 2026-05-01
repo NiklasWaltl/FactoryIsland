@@ -211,6 +211,37 @@ describe("Auto-Smelter conveyor input", () => {
     expect(after.conveyors.cv1.queue).toEqual([]);
   });
 
+  test("phase order: conveyor runs before smelter so same-tick handoff is consumed", () => {
+    const state = makeBaseState({
+      assets: {
+        sm1: makeSmelterAsset("sm1"),
+        feed: makeEastConveyor("feed", 4, 6),
+        cv1: makeEastConveyor("cv1", 5, 6),
+      },
+      cellMap: {
+        [cellKey(4, 6)]: "feed",
+        [cellKey(5, 6)]: "cv1",
+        [cellKey(6, 6)]: "sm1",
+        [cellKey(7, 6)]: "sm1",
+      },
+      autoSmelters: { sm1: makeSmelterEntry("iron") },
+      conveyors: {
+        feed: { queue: ["iron"] },
+        cv1: { queue: [] },
+      },
+      machinePowerRatio: { sm1: 1 },
+      poweredMachineIds: ["sm1", "feed", "cv1"],
+      connectedAssetIds: ["feed", "cv1"],
+    });
+
+    const after = gameReducer(state, { type: "LOGISTICS_TICK" });
+
+    // If smelter ran before conveyor, the moved item would remain on cv1 for one extra tick.
+    expect(after.conveyors.feed.queue).toEqual([]);
+    expect(after.conveyors.cv1.queue).toEqual([]);
+    expect(after.autoSmelters.sm1.inputBuffer).toEqual(["iron"]);
+  });
+
   test("starts processing once buffer holds recipe.inputAmount matching items", () => {
     const state = makeBaseState({
       assets: {

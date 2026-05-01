@@ -2,12 +2,13 @@
 // LOGISTICS_TICK action handler
 // ------------------------------------------------------------
 // Extracted from reducer.ts. Encapsulates the LOGISTICS_TICK
-// orchestration as three internal phases:
+// orchestration as four internal phases:
 //   1. Auto-miner production + output routing.
 //   2. Conveyor movement + transport matching/handoff.
 //   3. Auto-smelter belt input, processing, output flush, status.
+//   4. Auto-assembler belt input, processing, and output.
 //
-// Phase 0 (snapshot) and Phase 5 (commit) are handled in the
+// Phase 0 (snapshot) and Phase 6 (commit) are handled in the
 // orchestrator. Phases share a mutable `LogisticsTickContext`
 // holding the lazy "newXxxL" working sets, the local helpers
 // (tryStoreInWarehouse / getLiveLogisticsState / applySourceInventory
@@ -66,6 +67,15 @@ export function handleLogisticsTickAction(
     changed: false,
   };
 
+  // TICK ORDER (canonical, do not reorder):
+  // 1. runAutoMinerPhase   -> produces items onto belts.
+  // 2. runConveyorPhase    -> moves/reroutes items (includes splitter filter lookup).
+  // 3. runAutoSmelterPhase -> pulls from belt input and processes.
+  // 4. runAutoAssemblerPhase -> pulls from belt input and processes.
+  //
+  // Why this order must stay fixed:
+  // - Miner before conveyor: freshly produced items can move in the same LOGISTICS_TICK.
+  // - Conveyor before smelter/assembler: items arriving on input belts can be consumed in the same tick.
   // Phase 2: Auto-miner production and output routing.
   runAutoMinerPhase(ctx);
   // Phase 3: Conveyor movement, transport matching, and destination handoff.
