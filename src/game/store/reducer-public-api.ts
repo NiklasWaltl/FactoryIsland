@@ -259,7 +259,6 @@ export type {
   RecipeAutomationPolicyEntry,
   RecipeAutomationPolicyMap,
   ProductionZone,
-  CraftingSource,
   WorkbenchSource,
   GameState,
 } from "./types";
