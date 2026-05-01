@@ -22,6 +22,7 @@ import { AutoSmelterPanel } from "../ui/panels/AutoSmelterPanel";
 import { AutoAssemblerPanel } from "../ui/panels/AutoAssemblerPanel";
 import { ManualAssemblerPanel } from "../ui/panels/ManualAssemblerPanel";
 import { ServiceHubPanel } from "../ui/panels/ServiceHubPanel";
+import { ConveyorSplitterPanel } from "../ui/panels/ConveyorSplitterPanel";
 import { BuildMenu } from "../ui/menus/BuildMenu";
 import { Notifications } from "../ui/hud/Notifications";
 import { AutoDeliveryFeed } from "../ui/hud/AutoDeliveryFeed";
@@ -230,6 +231,9 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       )}
       {state.openPanel === "service_hub" && (
         <ServiceHubPanel state={state} dispatch={dispatch} />
+      )}
+      {state.openPanel === "conveyor_splitter" && (
+        <ConveyorSplitterPanel state={state} dispatch={dispatch} />
       )}
 
       <Hotbar state={state} dispatch={dispatch} />

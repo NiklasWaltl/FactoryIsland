@@ -87,6 +87,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     keepStockByWorkbench: state.keepStockByWorkbench ?? {},
     recipeAutomationPolicies: state.recipeAutomationPolicies ?? {},
     splitterRouteState: state.splitterRouteState ?? {},
+    splitterFilterState: state.splitterFilterState ?? {},
   };
 }
 
@@ -235,6 +236,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     keepStockByWorkbench: sanitizeKeepStockByWorkbench(save.keepStockByWorkbench, save.assets),
     recipeAutomationPolicies: sanitizeRecipeAutomationPolicies(save.recipeAutomationPolicies),
     splitterRouteState: save.splitterRouteState ?? {},
+    splitterFilterState: save.splitterFilterState ?? {},
 
     connectedAssetIds: [],
     poweredMachineIds: [],
@@ -250,6 +252,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     selectedAutoAssemblerId: null,
     selectedGeneratorId: null,
     selectedServiceHubId: null,
+    selectedSplitterId: null,
     energyDebugOverlay: false,
     autoDeliveryLog: [],
     selectedCraftingBuildingId: null,

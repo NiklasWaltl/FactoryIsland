@@ -6,6 +6,10 @@ import {
   isBoostSupportedType,
   isEnergyConsumerType,
 } from "../helpers/machine-priority";
+import {
+  setSplitterFilter,
+  getSplitterFilter,
+} from "../slices/splitter-filter-state";
 
 type MachineConfigTargetDecision =
   | { kind: "blocked" }
@@ -74,6 +78,26 @@ export function handleMachineConfigAction(
       if ((asset.boosted ?? false) === nextBoost) return state;
 
       return patchMachineAsset(state, action.assetId, { boosted: nextBoost });
+    }
+
+    case "SET_SPLITTER_FILTER": {
+      const asset = resolveMachineConfigTargetAsset(state, action.splitterId);
+      if (!asset || asset.type !== "conveyor_splitter") return state;
+      if (
+        getSplitterFilter(state.splitterFilterState, action.splitterId, action.side) ===
+        action.itemType
+      ) {
+        return state;
+      }
+      return {
+        ...state,
+        splitterFilterState: setSplitterFilter(
+          state.splitterFilterState,
+          action.splitterId,
+          action.side,
+          action.itemType,
+        ),
+      };
     }
 
     default:

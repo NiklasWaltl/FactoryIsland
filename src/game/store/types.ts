@@ -184,6 +184,7 @@ export type UIPanel =
   | "auto_assembler"
   | "manual_assembler"
   | "service_hub"
+  | "conveyor_splitter"
   | null;
 
 // ---- Battery ----
@@ -437,4 +438,12 @@ export interface GameState {
    * Tracks which output side (left/right) was last used for Round-Robin routing.
    */
   splitterRouteState: Record<string, { lastSide: "left" | "right" }>;
+  /**
+   * Per-splitter pro-Output-Filter state (keyed by splitter asset ID). Persisted.
+   * Each output side may carry an optional ConveyorItem filter; null = no filter.
+   * When set, the routing layer skips the side if the head item does not match.
+   */
+  splitterFilterState: import("./slices/splitter-filter-state").SplitterFilterState;
+  /** ID of the conveyor_splitter whose panel is currently open. Transient. */
+  selectedSplitterId: string | null;
 }

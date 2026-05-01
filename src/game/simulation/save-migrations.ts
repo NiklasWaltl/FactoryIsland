@@ -33,7 +33,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 19;
+export const CURRENT_SAVE_VERSION = 20;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -182,7 +182,19 @@ export interface SaveGameV19 extends Omit<SaveGameV18, "version"> {
   splitterRouteState: Record<string, { lastSide: "left" | "right" }>;
 }
 
-export type SaveGameLatest = SaveGameV19;
+export interface SaveGameV20 extends Omit<SaveGameV19, "version"> {
+  version: 20;
+  /**
+   * Per-splitter pro-Output-Filter state (keyed by splitter asset ID).
+   * Each side holds an optional ConveyorItem filter; null = no filter.
+   */
+  splitterFilterState: Record<
+    string,
+    { left: import("../store/types/conveyor-types").ConveyorItem | null; right: import("../store/types/conveyor-types").ConveyorItem | null }
+  >;
+}
+
+export type SaveGameLatest = SaveGameV20;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -442,6 +454,14 @@ function migrateV18ToV19(save: SaveGameV18): SaveGameV19 {
   };
 }
 
+function migrateV19ToV20(save: SaveGameV19): SaveGameV20 {
+  return {
+    ...save,
+    version: 20,
+    splitterFilterState: {},
+  };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -462,6 +482,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 16, to: 17, migrate: migrateV16ToV17 },
   { from: 17, to: 18, migrate: migrateV17ToV18 },
   { from: 18, to: 19, migrate: migrateV18ToV19 },
+  { from: 19, to: 20, migrate: migrateV19ToV20 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

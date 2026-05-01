@@ -61,6 +61,7 @@ export function handleUiAction(
         selectedWarehouseId: null,
         selectedCraftingBuildingId: null,
         selectedServiceHubId: null,
+        selectedSplitterId: null,
       };
 
     case "TOGGLE_ENERGY_DEBUG": {

@@ -26,6 +26,10 @@ import {
   getSplitterRouteState,
   setSplitterLastSide,
 } from "../slices/splitter-route-state";
+import {
+  getSplitterFilter,
+  type SplitterFilterState,
+} from "../slices/splitter-filter-state";
 
 export type ConveyorTickEligibilityDecision =
   | { kind: "blocked" }
@@ -245,6 +249,8 @@ export interface DecideConveyorTargetSelectionInput<TSource = unknown> {
   getWarehouseCapacity: (mode: GameMode) => number;
   /** Optional override for the splitter Round-Robin state. Falls back to module singleton. */
   splitterRouteState?: SplitterRouteState;
+  /** Optional override for persisted per-splitter output filters. */
+  splitterFilterState?: SplitterFilterState;
 }
 
 export const decideConveyorTargetSelection = <TSource>(
@@ -293,11 +299,15 @@ export const decideConveyorTargetSelection = <TSource>(
   if (input.convAsset.type === "conveyor_splitter") {
     const splitterId = input.convId;
     const routeState = input.splitterRouteState ?? getSplitterRouteState();
+    const filterState = input.splitterFilterState ?? input.state.splitterFilterState;
     const lastSide = routeState[splitterId]?.lastSide ?? "right";
     const orderedSides: ["left", "right"] | ["right", "left"] =
       lastSide === "left" ? ["right", "left"] : ["left", "right"];
 
     for (const side of orderedSides) {
+      const sideFilter = getSplitterFilter(filterState, splitterId, side);
+      if (sideFilter !== null && sideFilter !== input.currentItem) continue;
+
       const arm = getConveyorSplitterOutputCell(input.convAsset, side);
       if (arm.x < 0 || arm.x >= GRID_W || arm.y < 0 || arm.y >= GRID_H) continue;
 
