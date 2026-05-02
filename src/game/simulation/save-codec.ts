@@ -20,6 +20,7 @@ import {
 } from "../store/constants/hub/hub-target-stock";
 import { cellKey } from "../store/utils/cell-key";
 import { createInitialState } from "../store/initial-state";
+import { sanitizeTileMap } from "../world/tile-map-utils";
 import type { HubTier } from "../store/types";
 import { debugLog } from "../debug/debugLogger";
 import {
@@ -52,6 +53,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     mode: state.mode,
     assets: state.assets,
     cellMap: state.cellMap,
+    tileMap: state.tileMap,
     inventory: state.inventory,
     purchasedBuildings: state.purchasedBuildings,
     placedBuildings: state.placedBuildings,
@@ -103,6 +105,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     mode: save.mode,
     assets: save.assets,
     cellMap: save.cellMap,
+    tileMap: sanitizeTileMap(save.tileMap, GRID_H, GRID_W),
     inventory: save.inventory,
     purchasedBuildings: save.purchasedBuildings,
     placedBuildings: save.placedBuildings,

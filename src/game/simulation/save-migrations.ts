@@ -20,6 +20,9 @@ import type {
   KeepStockByWorkbench,
   HubTier,
 } from "../store/types";
+import type { TileType } from "../world/tile-types";
+import { GRID_H, GRID_W } from "../constants/grid";
+import { sanitizeTileMap } from "../world/tile-map-utils";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
 import { GENERATOR_MAX_FUEL } from "../store/constants/buildings/index";
 import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
@@ -33,7 +36,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 20;
+export const CURRENT_SAVE_VERSION = 21;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -197,7 +200,13 @@ export interface SaveGameV20 extends Omit<SaveGameV19, "version"> {
   >;
 }
 
-export type SaveGameLatest = SaveGameV20;
+export interface SaveGameV21 extends Omit<SaveGameV20, "version"> {
+  version: 21;
+  /** Terrain layer, indexed as [row][col]. */
+  tileMap: TileType[][];
+}
+
+export type SaveGameLatest = SaveGameV21;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -473,6 +482,16 @@ function migrateV19ToV20(save: SaveGameV19): SaveGameV20 {
   };
 }
 
+function migrateV20ToV21(save: SaveGameV20): SaveGameV21 {
+  const existingTileMap = (save as Partial<Pick<SaveGameV21, "tileMap">>)
+    .tileMap;
+  return {
+    ...save,
+    version: 21,
+    tileMap: sanitizeTileMap(existingTileMap, GRID_H, GRID_W),
+  };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -494,6 +513,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 17, to: 18, migrate: migrateV17ToV18 },
   { from: 18, to: 19, migrate: migrateV18ToV19 },
   { from: 19, to: 20, migrate: migrateV19ToV20 },
+  { from: 20, to: 21, migrate: migrateV20ToV21 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

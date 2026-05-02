@@ -18,6 +18,9 @@ import {
   type Inventory,
   type PlacedAsset,
 } from "../../store/reducer";
+import { GRID_H, GRID_W } from "../../constants/grid";
+import { generateIslandTileMap } from "../../world/island-generator";
+import { BASE_START_IDS } from "../../world/base-start-layout";
 import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
 import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
 
@@ -124,6 +127,7 @@ describe("deserializeState", () => {
     expect(state.notifications).toEqual([]);
     expect(state.buildMode).toBe(false);
     expect(state.energyDebugOverlay).toBe(false);
+    expect(state.tileMap).toEqual(generateIslandTileMap(GRID_H, GRID_W));
   });
 
   it("recomputes connectedAssetIds from assets", () => {
@@ -343,6 +347,48 @@ describe("migrateSave – missing fields get defaults", () => {
     expect(result!.version).toBe(CURRENT_SAVE_VERSION);
     expect(result!.autoAssemblers).toEqual({});
   });
+
+  it("migrates v20 saves by seeding the default island tile map", () => {
+    const latest = serializeState(createInitialState("release"));
+    const { version: _ignoreVersion, tileMap: _dropTileMap, ...legacyShape } =
+      latest;
+    const v20 = { ...legacyShape, version: 20 };
+
+    const result = migrateSave(v20);
+
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    expect(result!.tileMap).toEqual(generateIslandTileMap(GRID_H, GRID_W));
+  });
+
+  it("migrates v20 saves by sanitizing invalid tile maps", () => {
+    const latest = serializeState(createInitialState("release"));
+    const { version: _ignoreVersion, ...legacyShape } = latest;
+    const v20 = {
+      ...legacyShape,
+      version: 20,
+      tileMap: [["grass", "lava"]],
+    };
+
+    const result = migrateSave(v20);
+
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    expect(result!.tileMap).toEqual(generateIslandTileMap(GRID_H, GRID_W));
+  });
+});
+
+describe("deserializeState tileMap sanitization", () => {
+  it("falls back to the default island tile map for corrupt latest saves", () => {
+    const save = {
+      ...serializeState(createInitialState("release")),
+      tileMap: [["grass", "lava"]],
+    } as unknown as SaveGameLatest;
+
+    const state = deserializeState(save);
+
+    expect(state.tileMap).toEqual(generateIslandTileMap(GRID_H, GRID_W));
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -435,17 +481,20 @@ describe("round-trip", () => {
   it("release state survives full save/load cycle", () => {
     const original = createInitialState("release");
     original.inventory.wood = 123;
-    original.inventory.ironIngot = 7;
+    original.warehouseInventories[BASE_START_IDS.warehouse].ironIngot = 7;
     original.generators["rt-gen-1"] = { fuel: 5, progress: 0, running: false };
 
     const json = JSON.stringify(serializeState(original));
     const parsed = JSON.parse(json);
     const loaded = loadAndHydrate(parsed, "release");
 
-    // Minimal release state has no default warehouse, so non-collectable
-    // intermediate products remain in the global inventory across hydration.
+    // Fresh release now has a starter warehouse, so physical resources are
+    // authoritative in physical storage after hydration.
     expect(loaded.inventory.wood).toBe(0);
-    expect(loaded.inventory.ironIngot).toBe(7);
+    expect(loaded.inventory.ironIngot).toBe(0);
+    expect(loaded.warehouseInventories[BASE_START_IDS.warehouse].ironIngot).toBe(
+      7,
+    );
     expect(loaded.generators["rt-gen-1"].fuel).toBe(5);
     expect(loaded.mode).toBe("release");
   });
