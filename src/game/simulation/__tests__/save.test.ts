@@ -641,11 +641,11 @@ describe("round-trip", () => {
 // ---------------------------------------------------------------------------
 
 describe("migrateSave – drone position on migration paths", () => {
-  // Standard 80×50 grid: MAP_SHOP_POS = {x:39, y:24}
+  // Standard 80×50 grid center: x:39, y:24
   const EXPECTED_X = 39;
   const EXPECTED_Y = 24;
 
-  it("V3→V4: new starterDrone is placed at MAP_SHOP_POS when no layout context is present", () => {
+  it("V3→V4: new starterDrone is placed at grid center when no layout context is present", () => {
     const v3: SaveGameV3 = {
       version: 3,
       mode: "release",
@@ -682,7 +682,7 @@ describe("migrateSave – drone position on migration paths", () => {
     expect(result!.starterDrone.tileY).toBe(EXPECTED_Y);
   });
 
-  it("V11→V12: synthetic drone is placed at MAP_SHOP_POS when starterDrone is absent", () => {
+  it("V11→V12: synthetic drone is placed at grid center when starterDrone is absent", () => {
     const latest = serializeState(createInitialState("release"));
     // Build a V11-shaped save: remove drones, remove starterDrone
     const v11: SaveGameV11 = {

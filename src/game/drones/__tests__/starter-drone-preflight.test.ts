@@ -3,7 +3,6 @@ import {
   createInitialState,
   DRONE_COLLECT_TICKS,
   droneTick,
-  MAP_SHOP_POS,
   placeServiceHub,
   TEST_SERVICE_HUB_POS,
   withDrone,
@@ -31,9 +30,9 @@ describe("DRONE_TICK – idle", () => {
   });
 
   it("picks the nearest node by Chebyshev distance", () => {
-    // Drone starts at MAP_SHOP_POS; place two nodes: one closer, one farther.
-    const close = { x: MAP_SHOP_POS.x + 2, y: MAP_SHOP_POS.y };
-    const far = { x: MAP_SHOP_POS.x + 10, y: MAP_SHOP_POS.y };
+    // Drone starts at grid center {x:39,y:24}; place two nodes: one closer, one farther.
+    const close = { x: 41, y: 24 };
+    const far = { x: 49, y: 24 };
     let state = addNode(base, "stone", close.x, close.y, 1);
     const nodeIds1 = Object.keys(state.collectionNodes);
     state = addNode(state, "iron", far.x, far.y, 1);

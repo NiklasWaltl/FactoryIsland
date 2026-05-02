@@ -5,7 +5,6 @@ import {
   createBaseStartLayout,
 } from "../../../world/base-start-layout";
 import { getStartAreaAnchor } from "../../../world/core-layout";
-import { MAP_SHOP_POS } from "../../constants/map/map-layout";
 import { createInitialState } from "../../initial-state";
 import type { GameState, PlacedAsset } from "../../types";
 import { getStartModulePosition } from "../start-module-position";
@@ -44,7 +43,7 @@ describe("getStartModulePosition", () => {
     expect(position).not.toEqual({ x: layoutMapShop!.x, y: layoutMapShop!.y });
   });
 
-  it("falls back to MAP_SHOP_POS only when neither asset nor tileMap are usable", () => {
+  it("falls back to grid-center literal {x:39,y:24} when neither asset nor tileMap are usable", () => {
     const tileMap = generateIslandTileMap(GRID_H, GRID_W);
     const tinyUnplayableMap = Array.from({ length: 4 }, () =>
       Array.from({ length: 4 }, () => "water" as const),
@@ -52,16 +51,16 @@ describe("getStartModulePosition", () => {
 
     expect(
       getStartModulePosition({ assets: {}, tileMap: tinyUnplayableMap }),
-    ).toEqual({ x: MAP_SHOP_POS.x, y: MAP_SHOP_POS.y });
+    ).toEqual({ x: 39, y: 24 });
 
     expect(
       getStartModulePosition({
         assets: {},
         tileMap: [] as unknown as GameState["tileMap"],
       }),
-    ).toEqual({ x: MAP_SHOP_POS.x, y: MAP_SHOP_POS.y });
+    ).toEqual({ x: 39, y: 24 });
 
-    // Sanity: a real tileMap on its own does NOT fall through to MAP_SHOP_POS.
+    // Sanity: a real tileMap on its own does NOT fall through to the literal.
     const anchor = getStartAreaAnchor(tileMap);
     expect(getStartModulePosition({ assets: {}, tileMap })).toEqual({
       x: anchor.col,

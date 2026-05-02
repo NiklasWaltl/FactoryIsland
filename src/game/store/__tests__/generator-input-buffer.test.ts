@@ -18,7 +18,6 @@ import {
   selectDroneTask,
   getRemainingBuildingInputDemand,
   getBuildingInputCurrent,
-  MAP_SHOP_POS,
   DRONE_CAPACITY,
 } from "../reducer";
 import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
@@ -37,7 +36,7 @@ import type {
   CollectableItemType,
 } from "../types";
 
-const HUB_POS = { x: MAP_SHOP_POS.x + 3, y: MAP_SHOP_POS.y };
+const HUB_POS = { x: 42, y: 24 }; // proto-hub is placed at grid-center x:39 + 3
 
 function createInitialState(mode: GameState["mode"] = "release"): GameState {
   const state = buildSceneState(debugSceneLayout, createBaseInitialState("debug"));

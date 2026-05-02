@@ -9,7 +9,6 @@ import type {
   KeepStockByWorkbench,
 } from "../store/types";
 import type { TileType } from "../world/tile-types";
-import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
 import { getStartModulePosition } from "../store/bootstrap/start-module-position";
 import { KEEP_STOCK_MAX_TARGET } from "../store/reducer";
 import type { NetworkSlice, Reservation } from "../inventory/reservationTypes";
@@ -339,7 +338,7 @@ export function sanitizeStarterDrone(
 ): StarterDroneState {
   const pos = tileMap !== undefined
     ? getStartModulePosition({ assets: {}, tileMap })
-    : MAP_SHOP_POS; // legacy fallback: tileMap not available at normalization time
+    : { x: 39, y: 24 }; // legacy fallback: tileMap not available at normalization time (standard 80×50 grid center)
   const fallback: StarterDroneState = {
     status: "idle",
     tileX: pos.x,

@@ -450,7 +450,7 @@ describe("Task Scoring – selectDroneTask() picks nearest node of same type", (
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    // Drone starts near MAP_SHOP_POS (~39,24). Add near node and far node.
+    // Drone starts near grid center (~39,24). Add near node and far node.
     // Near node at (35,24), far at (10,5) — both supply wood the hub needs.
     let state = addNode(hubState, "wood", 35, 24, 5); // near
     state = addNode(state, "wood", 10, 5, 5); // far

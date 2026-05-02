@@ -4,7 +4,6 @@ import {
   gameReducer,
   getDroneDockOffset,
   getMaxDrones,
-  MAP_SHOP_POS,
 } from "../../store/reducer";
 import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
 import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
@@ -50,7 +49,7 @@ export {
   SERVICE_HUB_TARGET_STOCK,
 } from "../../store/constants/hub/hub-target-stock";
 
-export { addToCollectionNodeAt, gameReducer, MAP_SHOP_POS };
+export { addToCollectionNodeAt, gameReducer };
 
 export function createInitialState(
   mode: GameState["mode"] = "release",
@@ -73,8 +72,8 @@ export type {
   StarterDroneState,
 };
 
-/** Proto-hub is placed at MAP_SHOP_POS.x + 3 in createInitialState. */
-export const HUB_POS = { x: MAP_SHOP_POS.x + 3, y: MAP_SHOP_POS.y };
+/** Proto-hub is placed at x=42,y=24 (grid center x:39 + 3) in createInitialState. */
+export const HUB_POS = { x: 42, y: 24 };
 const TEST_PLAYABLE_INSET =
   ISLAND_WATER_BORDER_TILES + ISLAND_SAND_BORDER_TILES;
 export const TEST_SERVICE_HUB_POS = {

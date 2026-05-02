@@ -6,7 +6,6 @@ import {
   droneTick,
   gameReducer,
   HUB_POS,
-  MAP_SHOP_POS,
   placeServiceHub,
   TEST_SERVICE_HUB_POS,
   withDrone,
@@ -139,7 +138,7 @@ describe("DRONE_TICK – full round trip", () => {
       resource: "copper",
       amount: 10,
     });
-    state = addNode(state, "copper", MAP_SHOP_POS.x + 2, MAP_SHOP_POS.y, 2);
+    state = addNode(state, "copper", 41, 24, 2);
     const copperBefore = state.serviceHubs[hubId].inventory.copper;
 
     // Drive state machine until idle again (max 100 ticks safeguard)
@@ -254,8 +253,8 @@ describe("DRONE_TICK – returning_to_dock", () => {
 describe("DRONE_TICK – position interpolation during flight", () => {
   it("updates drone position during moving_to_collect", () => {
     let state = createInitialState("release");
-    // Place node far away from drone start (MAP_SHOP_POS)
-    state = addNode(state, "wood", MAP_SHOP_POS.x - 10, MAP_SHOP_POS.y, 2);
+    // Place node far away from drone start (grid center {x:39,y:24})
+    state = addNode(state, "wood", 29, 24, 2);
     state = droneTick(state); // idle → moving_to_collect
     expect(state.starterDrone.status).toBe("moving_to_collect");
     const startX = state.starterDrone.tileX;
@@ -300,17 +299,17 @@ describe("DRONE_TICK – position interpolation during flight", () => {
 });
 
 describe("DRONE_TICK – dropoff target is hub, not trader", () => {
-  it("hub_restock: drone flies to hub position, not MAP_SHOP_POS", () => {
+  it("hub_restock: drone flies to hub position, not start module", () => {
     const init = createInitialState("release");
-    // Place hub away from MAP_SHOP_POS so positions differ
+    // Place hub away from grid center so positions differ
     const { state: hubState, hubId } = placeServiceHub(
       init,
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
     const hubAsset = hubState.assets[hubId];
-    // Sanity: hub position must differ from MAP_SHOP_POS
-    expect(hubAsset.x).not.toBe(MAP_SHOP_POS.x);
+    // Sanity: hub position must differ from grid center (39,24)
+    expect(hubAsset.x).not.toBe(39);
 
     // Add wood node near the hub
     let state = addNode(hubState, "wood", 14, 10, 3);
@@ -331,11 +330,11 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
       if (ticks > 100) throw new Error("Drone stuck in moving_to_dropoff");
     }
     expect(state.starterDrone.status).toBe("depositing");
-    // Drone should be at hub position, NOT at MAP_SHOP_POS
+    // Drone should be at hub position, NOT at start module
     expect(state.starterDrone.tileX).toBe(hubAsset.x);
     expect(state.starterDrone.tileY).toBe(hubAsset.y);
-    // Explicitly verify NOT at trader
-    expect(state.starterDrone.tileX).not.toBe(MAP_SHOP_POS.x);
+    // Explicitly verify NOT at grid center (39,24)
+    expect(state.starterDrone.tileX).not.toBe(39);
   });
 
   it("hub_restock with null deliveryTargetId still flies to hub via hubId", () => {
@@ -408,6 +407,6 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
     expect(state.starterDrone.tileY).toBeGreaterThanOrEqual(15);
     expect(state.starterDrone.tileY).toBeLessThanOrEqual(16);
     // NOT at trader or hub
-    expect(state.starterDrone.tileX).not.toBe(MAP_SHOP_POS.x);
+    expect(state.starterDrone.tileX).not.toBe(39);
   });
 });

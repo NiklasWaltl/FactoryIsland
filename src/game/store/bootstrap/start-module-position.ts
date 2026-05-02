@@ -1,19 +1,18 @@
 // ============================================================
 // START MODULE POSITION
 // ------------------------------------------------------------
-// Encapsulates the "where does the start module sit?" lookup so that callers
-// stop reaching for the legacy `MAP_SHOP_POS` constant directly.
+// Encapsulates the "where does the start module sit?" lookup.
 //
 // Resolution priority:
 //   1. The materialized base-start map-shop asset (BASE_START_IDS.mapShop)
 //   2. The current tileMap's start-area anchor, when a tileMap is available
-//   3. The legacy MAP_SHOP_POS as a last-resort fallback
+//   3. Grid-center literal { x:39, y:24 } as last-resort fallback
+//      (standard 80×50 grid — only reached when neither asset nor usable tileMap exist)
 // ============================================================
 
 import { BASE_START_IDS } from "../../world/base-start-layout";
 import { getStartAreaAnchor } from "../../world/core-layout";
 import type { TileType } from "../../world/tile-types";
-import { MAP_SHOP_POS } from "../constants/map/map-layout";
 import type { GameState } from "../types";
 
 export interface StartModulePosition {
@@ -34,7 +33,7 @@ export function getStartModulePosition(
     return { x: anchor.col, y: anchor.row };
   }
 
-  return { x: MAP_SHOP_POS.x, y: MAP_SHOP_POS.y };
+  return { x: 39, y: 24 }; // standard 80×50 grid center
 }
 
 function tryStartAreaAnchor(

@@ -43,9 +43,6 @@ export {
 // ---- Constants (auto-smelter) ----
 export { AUTO_SMELTER_BUFFER_CAPACITY } from "./constants/auto/auto-smelter";
 
-// ---- Constants (map) ----
-export { MAP_SHOP_POS } from "./constants/map/map-layout";
-
 // ---- Constants (grid) ----
 export { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
 

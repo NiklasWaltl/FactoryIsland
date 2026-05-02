@@ -7,7 +7,6 @@ import {
   gameReducer,
   getDroneHomeDock,
   getParkedDrones,
-  MAP_SHOP_POS,
   placeServiceHub,
   PROTO_HUB_TARGET_STOCK,
   SERVICE_HUB_TARGET_STOCK,
@@ -165,7 +164,7 @@ describe("DRONE_TICK – hub assignment", () => {
     expect(state.collectionNodes[nodeId].reservedByDroneId).toBeNull();
   });
 
-  it("delivers to hub position instead of MAP_SHOP_POS", () => {
+  it("delivers to hub position instead of start module", () => {
     const { state: hubState, hubId } = placeServiceHub(
       base,
       TEST_SERVICE_HUB_POS.x,
@@ -208,7 +207,7 @@ describe("DRONE_TICK – hub assignment", () => {
     expect(state.starterDrone.cargo).toBeNull();
   });
 
-  it("delivers to MAP_SHOP_POS when no hub is assigned", () => {
+  it("delivers to start module position when no hub is assigned", () => {
     let state = withDrone(base, {
       status: "moving_to_dropoff",
       cargo: { itemType: "stone", amount: 2 },
@@ -217,8 +216,9 @@ describe("DRONE_TICK – hub assignment", () => {
     });
     state = droneTick(state);
     expect(state.starterDrone.status).toBe("depositing");
-    expect(state.starterDrone.tileX).toBe(MAP_SHOP_POS.x);
-    expect(state.starterDrone.tileY).toBe(MAP_SHOP_POS.y);
+    // Start module resolves to grid center on standard 80×50 grid
+    expect(state.starterDrone.tileX).toBe(39);
+    expect(state.starterDrone.tileY).toBe(24);
   });
 
   it("completes full round trip delivering to hub", () => {
