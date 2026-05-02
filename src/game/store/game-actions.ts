@@ -23,6 +23,7 @@ export type GameAction =
   | { type: "CLICK_CELL"; x: number; y: number }
   | { type: "SET_ACTIVE_SLOT"; slot: number }
   | { type: "BUY_MAP_SHOP_ITEM"; itemKey: string }
+  | { type: "BUY_FRAGMENT" }
   /** @deprecated Use JOB_ENQUEUE and JOB_TICK. */
   | { type: "CRAFT_WORKBENCH"; recipeKey: string }
   | { type: "TOGGLE_PANEL"; panel: UIPanel }

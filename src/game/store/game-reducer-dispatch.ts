@@ -47,6 +47,7 @@ import { handleWarehouseHotbarAction } from "./action-handlers/warehouse-hotbar-
 import { handleManualAssemblerAction } from "./action-handlers/manual-assembler-actions";
 import { handleFloorPlacementAction } from "./action-handlers/floor-placement";
 import { handleShopAction } from "./action-handlers/shop";
+import { handleCoinAction } from "./action-handlers/coin-actions";
 import { handleMachineConfigAction } from "./action-handlers/machine-config";
 import { handleBuildModeAction } from "./action-handlers/build-mode-actions";
 import { handleMaintenanceAction } from "./action-handlers/maintenance-actions";
@@ -108,6 +109,8 @@ export function dispatchAction(
   if (floorPlacementResult !== null) return floorPlacementResult;
   const shopResult = handleShopAction(state, action, SHOP_ACTION_DEPS);
   if (shopResult !== null) return shopResult;
+  const coinResult = handleCoinAction(state, action);
+  if (coinResult !== null) return coinResult;
   const machineConfigResult = handleMachineConfigAction(state, action);
   if (machineConfigResult !== null) return machineConfigResult;
   const buildModeResult = handleBuildModeAction(state, action);
@@ -167,6 +170,9 @@ export function dispatchAction(
 
     // BUY_MAP_SHOP_ITEM is handled above by
     // handleShopAction (see action-handlers/shop.ts).
+
+    // BUY_FRAGMENT is handled above by
+    // handleCoinAction (see action-handlers/coin-actions.ts).
 
     // CRAFT_WORKBENCH, REMOVE_BUILDING, EXPIRE_NOTIFICATIONS,
     // DEBUG_SET_STATE and REMOVE_POWER_POLE are handled above by
