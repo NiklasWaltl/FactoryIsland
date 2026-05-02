@@ -16,6 +16,7 @@ import type {
 } from "../crafting/policies";
 import type { ItemId } from "../items/types";
 import type { TileType } from "../world/tile-types";
+import type { Module } from "../modules/module.types";
 import type { StarterDroneState } from "./types/drone-types";
 import type { KeepStockByWorkbench } from "./types/crafting-types";
 import type {
@@ -347,6 +348,8 @@ export interface GameState {
    *  to a building. Receives manual harvest and auto-delivery output when no more specific
    *  target is configured. Use getCapacityPerResource(state) for the per-resource cap. */
   inventory: Inventory;
+  /** Owned module instances from the fragment trader. Persisted. */
+  moduleInventory: Module[];
   purchasedBuildings: BuildingType[];
   placedBuildings: BuildingType[];
   warehousesPurchased: number;

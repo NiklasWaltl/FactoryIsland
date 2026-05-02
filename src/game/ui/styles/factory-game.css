@@ -243,6 +243,14 @@
 .fi-fragment-trader-coins strong {
   color: #ffd700;
 }
+.fi-fragment-trader-count {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+.fi-fragment-trader-count strong {
+  color: #fff;
+}
 .fi-fragment-trader-offer {
   gap: 12px;
   background: rgba(255, 215, 0, 0.08);

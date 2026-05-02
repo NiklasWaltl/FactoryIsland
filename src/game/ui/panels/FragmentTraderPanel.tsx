@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
-import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
-import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings/index";
 import { RESOURCE_EMOJIS } from "../../store/constants/resources";
+import { selectModuleCount } from "../../store/selectors/module-selectors";
 import {
   FRAGMENT_TRADER_PITY_COST,
   getFragmentTraderCostForShipsSinceLastFragment,
@@ -40,13 +39,9 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
       0,
       PITY_THRESHOLD - shipsSinceLastFragment,
     );
-    const dockInventory = state.warehouseInventories[DOCK_WAREHOUSE_ID];
-    const currentFragments = dockInventory?.[MODULE_FRAGMENT_ITEM_ID] ?? 0;
-    const fragmentCapacity =
-      state.mode === "debug" ? Infinity : WAREHOUSE_CAPACITY;
-    const hasFragmentSpace = currentFragments < fragmentCapacity;
+    const moduleCount = selectModuleCount(state);
     const canAfford = state.inventory.coins >= cost;
-    const canBuy = canAfford && hasFragmentSpace && !purchaseConfirmed;
+    const canBuy = canAfford && !purchaseConfirmed;
     const buttonLabel = discountActive
       ? `Kaufen — ${cost} ${RESOURCE_EMOJIS.coins} (Rabatt!)`
       : `Kaufen — ${cost} ${RESOURCE_EMOJIS.coins}`;
@@ -83,6 +78,10 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
           </strong>
         </div>
 
+        <div className="fi-fragment-trader-count">
+          Fragmente im Inventar: <strong>{moduleCount}</strong>
+        </div>
+
         <div className="fi-fragment-trader-offer">
           <div className="fi-fragment-trader-icon">
             {RESOURCE_EMOJIS[MODULE_FRAGMENT_ITEM_ID] ?? "⚙️"}
@@ -110,12 +109,6 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
 
         {purchaseConfirmed && (
           <div className="fi-fragment-trader-feedback">Fragment erhalten! ✓</div>
-        )}
-
-        {!hasFragmentSpace && (
-          <div className="fi-fragment-trader-feedback fi-fragment-trader-feedback--blocked">
-            Dock-Lager voll
-          </div>
         )}
       </div>
     );

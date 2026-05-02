@@ -1,12 +1,10 @@
 import type { GameState } from "../types";
 import type { GameAction } from "../game-actions";
-import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
-import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
-import { createEmptyInventory } from "../inventory-ops";
+import type { Module } from "../../modules/module.types";
 import {
   getFragmentTraderCostForShipsSinceLastFragment,
-  MODULE_FRAGMENT_ITEM_ID,
 } from "../../ship/ship-constants";
+import { makeId } from "../utils/make-id";
 
 export interface SpendCoinsResult {
   spent: boolean;
@@ -52,27 +50,26 @@ function buyFragment(state: GameState): GameState {
   const cost = getFragmentTraderCost(state);
   if (state.inventory.coins < cost) return state;
 
-  const dockInventory =
-    state.warehouseInventories[DOCK_WAREHOUSE_ID] ?? createEmptyInventory();
-  const currentFragments = dockInventory[MODULE_FRAGMENT_ITEM_ID] ?? 0;
-  const dockCapacity = state.mode === "debug" ? Infinity : WAREHOUSE_CAPACITY;
-  if (currentFragments >= dockCapacity) return state;
-
   const spendResult = spendCoins(state, cost);
   if (!spendResult.spent) return state;
 
+  const newModule: Module = {
+    id: createModuleId(),
+    type: "miner-boost",
+    tier: 1,
+    equippedTo: null,
+  };
+
   return {
     ...spendResult.state,
+    moduleInventory: [...spendResult.state.moduleInventory, newModule],
     ship: {
       ...spendResult.state.ship,
       shipsSinceLastFragment: 0,
     },
-    warehouseInventories: {
-      ...spendResult.state.warehouseInventories,
-      [DOCK_WAREHOUSE_ID]: {
-        ...dockInventory,
-        [MODULE_FRAGMENT_ITEM_ID]: currentFragments + 1,
-      },
-    },
   };
+}
+
+function createModuleId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? makeId("module");
 }

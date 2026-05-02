@@ -67,6 +67,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     cellMap: fixedResources.cellMap,
     tileMap,
     inventory,
+    moduleInventory: [],
     purchasedBuildings: [],
     placedBuildings: [],
     warehousesPurchased: 0,

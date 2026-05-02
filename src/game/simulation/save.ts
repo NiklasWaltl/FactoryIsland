@@ -25,6 +25,8 @@ export type {
   SaveGameV19,
   SaveGameV20,
   SaveGameV21,
+  SaveGameV22,
+  SaveGameV23,
   SaveGameLatest,
 } from "./save-migrations";
 

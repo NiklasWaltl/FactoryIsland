@@ -21,6 +21,7 @@ import type {
   HubTier,
 } from "../store/types";
 import type { ShipState } from "../store/types/ship-types";
+import type { Module } from "../modules/module.types";
 import type { TileType } from "../world/tile-types";
 import { GRID_H, GRID_W } from "../constants/grid";
 import { sanitizeTileMap } from "../world/tile-map-utils";
@@ -36,7 +37,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 22;
+export const CURRENT_SAVE_VERSION = 23;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -212,7 +213,13 @@ export interface SaveGameV22 extends Omit<SaveGameV21, "version"> {
   ship: ShipState;
 }
 
-export type SaveGameLatest = SaveGameV22;
+export interface SaveGameV23 extends Omit<SaveGameV22, "version"> {
+  version: 23;
+  /** Owned module instances from the fragment trader. */
+  moduleInventory: Module[];
+}
+
+export type SaveGameLatest = SaveGameV23;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -518,6 +525,13 @@ function migrateV21ToV22(save: SaveGameV21): SaveGameV22 {
   return { ...save, version: 22, ship };
 }
 
+function migrateV22ToV23(save: SaveGameV22): SaveGameV23 {
+  const moduleInventory = Array.isArray((save as unknown as Partial<SaveGameV23>).moduleInventory)
+    ? (save as unknown as Partial<SaveGameV23>).moduleInventory!
+    : [];
+  return { ...save, version: 23, moduleInventory };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -541,6 +555,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 19, to: 20, migrate: migrateV19ToV20 },
   { from: 20, to: 21, migrate: migrateV20ToV21 },
   { from: 21, to: 22, migrate: migrateV21ToV22 },
+  { from: 22, to: 23, migrate: migrateV22ToV23 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

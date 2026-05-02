@@ -85,4 +85,22 @@ describe("FragmentTraderPanel", () => {
     expect(buyButton().textContent).toContain("Kaufen — 250 🪙 (Rabatt!)");
     expect(buyButton().disabled).toBe(false);
   });
+
+  it("shows the module inventory count", () => {
+    const state = {
+      ...stateWithCoinsAndPity(500),
+      moduleInventory: [
+        {
+          id: "module-1",
+          type: "miner-boost" as const,
+          tier: 1 as const,
+          equippedTo: null,
+        },
+      ],
+    };
+
+    renderPanel(state);
+
+    expect(container.textContent).toContain("Fragmente im Inventar: 1");
+  });
 });
