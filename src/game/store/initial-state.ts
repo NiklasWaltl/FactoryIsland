@@ -69,6 +69,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     inventory,
     moduleInventory: [],
     moduleFragments: 0,
+    moduleLabJob: null,
     purchasedBuildings: [],
     placedBuildings: [],
     warehousesPurchased: 0,

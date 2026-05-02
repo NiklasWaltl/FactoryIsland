@@ -60,6 +60,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     inventory: state.inventory,
     moduleInventory: state.moduleInventory ?? [],
     moduleFragments: normalizeModuleFragmentCount(state.moduleFragments),
+    moduleLabJob: state.moduleLabJob ?? null,
     purchasedBuildings: state.purchasedBuildings,
     placedBuildings: state.placedBuildings,
     warehousesPurchased: state.warehousesPurchased,
@@ -117,6 +118,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     moduleFragments: normalizeModuleFragmentCount(
       (save as any).moduleFragments,
     ),
+    moduleLabJob: (save as any).moduleLabJob ?? null,
     purchasedBuildings: save.purchasedBuildings,
     placedBuildings: save.placedBuildings,
     warehousesPurchased: save.warehousesPurchased,

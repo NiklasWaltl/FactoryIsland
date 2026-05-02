@@ -156,4 +156,10 @@ export type GameAction =
   | { type: "SHIP_TICK" }
   | { type: "SHIP_DOCK" }
   | { type: "SHIP_DEPART" }
-  | { type: "SHIP_RETURN" };
+  | { type: "SHIP_RETURN" }
+  // Module Lab — fragment crafting
+  | { type: "START_MODULE_CRAFT"; recipeId: string }
+  | { type: "MODULE_LAB_TICK" }
+  | { type: "COLLECT_MODULE" }
+  | { type: "PLACE_MODULE"; moduleId: string; buildingId: string }
+  | { type: "REMOVE_MODULE"; moduleId: string };

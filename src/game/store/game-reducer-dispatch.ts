@@ -49,6 +49,7 @@ import { handleFloorPlacementAction } from "./action-handlers/floor-placement";
 import { handleShopAction } from "./action-handlers/shop";
 import { handleCoinAction } from "./action-handlers/coin-actions";
 import { handleModuleFragmentAction } from "./action-handlers/module-fragment-actions";
+import { handleModuleLabAction } from "./action-handlers/module-lab-actions";
 import { handleMachineConfigAction } from "./action-handlers/machine-config";
 import { handleBuildModeAction } from "./action-handlers/build-mode-actions";
 import { handleMaintenanceAction } from "./action-handlers/maintenance-actions";
@@ -114,6 +115,8 @@ export function dispatchAction(
   if (coinResult !== null) return coinResult;
   const moduleFragmentResult = handleModuleFragmentAction(state, action);
   if (moduleFragmentResult !== null) return moduleFragmentResult;
+  const moduleLabResult = handleModuleLabAction(state, action);
+  if (moduleLabResult !== null) return moduleLabResult;
   const machineConfigResult = handleMachineConfigAction(state, action);
   if (machineConfigResult !== null) return machineConfigResult;
   const buildModeResult = handleBuildModeAction(state, action);

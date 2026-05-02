@@ -799,6 +799,37 @@ function makeDockWarehouse(): string {
 }
 
 // ---------------------------------------------------------------------------
+// MODULE LAB — 2×2 (64×64 SVG) — purple/violet research palette
+// ---------------------------------------------------------------------------
+
+function makeModuleLab(): string {
+  let s = "";
+  // Dark violet background
+  s += r(2, 2, 60, 60, "#1a0a2e");
+  s += r(4, 4, 56, 56, "#2d1545");
+  // Bright purple border
+  s += r(0, 0, 64, 2, "#9333ea");
+  s += r(0, 62, 64, 2, "#9333ea");
+  s += r(0, 0, 2, 64, "#9333ea");
+  s += r(62, 0, 2, 64, "#9333ea");
+  // Lab bench / surface
+  s += r(8, 44, 48, 4, "#4a2e6a");
+  s += r(10, 42, 44, 4, "#5a3e7a");
+  // Three flasks of decreasing size = three tiers
+  s += r(14, 24, 8, 18, "#a855f7");
+  s += r(15, 22, 6, 2, "#c084fc");
+  s += r(28, 20, 8, 22, "#a855f7");
+  s += r(29, 18, 6, 2, "#c084fc");
+  s += r(42, 16, 8, 26, "#a855f7");
+  s += r(43, 14, 6, 2, "#c084fc");
+  // Sparkle accent
+  s += r(20, 10, 2, 2, "#fef3c7");
+  s += r(36, 8, 2, 2, "#fef3c7");
+  s += r(52, 12, 2, 2, "#fef3c7");
+  return svgURI(64, 64, s);
+}
+
+// ---------------------------------------------------------------------------
 // EXPORT MAPS
 // ---------------------------------------------------------------------------
 
@@ -832,6 +863,7 @@ export const ASSET_SPRITES: Record<AssetType, string> = {
   auto_assembler: makeAutoAssembler(),
   service_hub: makeServiceHub(),
   dock_warehouse: makeDockWarehouse(),
+  module_lab: makeModuleLab(),
 };
 
 /** Grass tile variants (0 / 1 for checkerboard) */

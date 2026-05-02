@@ -37,6 +37,7 @@ import { ServiceHubPanel } from "../ui/panels/ServiceHubPanel";
 import { ConveyorSplitterPanel } from "../ui/panels/ConveyorSplitterPanel";
 import { DockWarehousePanel } from "../ui/panels/DockWarehousePanel";
 import { FragmentTraderPanel } from "../ui/panels/FragmentTraderPanel";
+import { ModulLabPanel } from "../ui/panels/ModulLabPanel";
 import { ShipStatusBar } from "../ui/hud/ShipStatusBar";
 import { BuildMenu } from "../ui/menus/BuildMenu";
 import { Notifications } from "../ui/hud/Notifications";
@@ -303,6 +304,9 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       )}
       {state.openPanel === "fragment_trader" && (
         <FragmentTraderPanel state={state} dispatch={dispatch} />
+      )}
+      {state.openPanel === "module_lab" && (
+        <ModulLabPanel state={state} dispatch={dispatch} />
       )}
 
       <Hotbar state={state} dispatch={dispatch} />

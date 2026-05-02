@@ -16,7 +16,7 @@ import type {
 } from "../crafting/policies";
 import type { ItemId } from "../items/types";
 import type { TileType } from "../world/tile-types";
-import type { Module } from "../modules/module.types";
+import type { Module, ModuleType } from "../modules/module.types";
 import type { StarterDroneState } from "./types/drone-types";
 import type { KeepStockByWorkbench } from "./types/crafting-types";
 import type {
@@ -84,7 +84,8 @@ export type AssetType =
   | "auto_smelter"
   | "auto_assembler"
   | "service_hub"
-  | "dock_warehouse";
+  | "dock_warehouse"
+  | "module_lab";
 
 export type BuildingType =
   | "workbench"
@@ -105,7 +106,8 @@ export type BuildingType =
   | "auto_smelter"
   | "auto_assembler"
   | "service_hub"
-  | "dock_warehouse";
+  | "dock_warehouse"
+  | "module_lab";
 
 /** Floor tiles that can be placed on the ground layer */
 export type FloorTileType = "stone_floor" | "grass_block";
@@ -212,6 +214,7 @@ export type UIPanel =
   | "conveyor_splitter"
   | "dock_warehouse"
   | "fragment_trader"
+  | "module_lab"
   | null;
 
 // ---- Battery ----
@@ -341,6 +344,35 @@ export interface ProductionZone {
   name: string;
 }
 
+// ---- Module Lab ----
+
+/**
+ * The single in-flight module crafting job at the Module Lab.
+ * Only one job may exist at a time across all labs (the lab is non-stackable).
+ * Time is tracked in wall-clock ms (Date.now), not engine ticks, mirroring
+ * how the smithy/manual-assembler progress fields work today.
+ */
+export interface ModuleLabJob {
+  /** Recipe id from MODULE_FRAGMENT_RECIPES. */
+  recipeId: string;
+  /** Output module type. */
+  moduleType: ModuleType;
+  /** Output tier. */
+  tier: 1 | 2 | 3;
+  /** Fragments consumed up-front when the job started (3 / 5 / 8). */
+  fragmentsRequired: number;
+  /** Date.now() at job start. */
+  startedAt: number;
+  /** Total job duration in ms. */
+  durationMs: number;
+  /**
+   * Lifecycle state:
+   *  - "crafting": still ticking down
+   *  - "done":     ready to be collected via COLLECT_MODULE
+   */
+  status: "crafting" | "done";
+}
+
 export interface GameState {
   mode: GameMode;
   assets: Record<string, PlacedAsset>;
@@ -355,6 +387,8 @@ export interface GameState {
   moduleInventory: Module[];
   /** Unspent module fragments collected by the player. Persisted. */
   moduleFragments: ModuleFragmentCount;
+  /** Single in-flight Module Lab crafting job (max 1 across all labs). Persisted. */
+  moduleLabJob: ModuleLabJob | null;
   purchasedBuildings: BuildingType[];
   placedBuildings: BuildingType[];
   warehousesPurchased: number;

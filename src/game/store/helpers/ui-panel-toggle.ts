@@ -136,5 +136,13 @@ export function tryTogglePanelFromAsset(
     };
   }
 
+  if (asset.type === "module_lab") {
+    const opening = state.openPanel !== "module_lab";
+    return {
+      ...state,
+      openPanel: opening ? "module_lab" : null,
+    };
+  }
+
   return null;
 }

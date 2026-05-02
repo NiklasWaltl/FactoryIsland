@@ -342,6 +342,20 @@ export const BUILDING_REGISTRY: Readonly<Record<BuildingType, BuildingDef>> =
       eligibleAsConstructionSite: false,
       inputBuffer: null,
     },
+    module_lab: {
+      type: "module_lab",
+      label: "Modul-Labor",
+      description:
+        "Verarbeitet Modul-Fragmente zu fertigen Modulen. 2×2, max. 1 aktiver Auftrag.",
+      category: "production",
+      cost: { wood: 10, stone: 15, iron: 8 },
+      size: 2,
+      stackable: false,
+      hasDefaultSourceWarehouse: false,
+      requiresStoneFloor: false,
+      eligibleAsConstructionSite: true,
+      inputBuffer: null,
+    },
   });
 
 // ---------------------------------------------------------------------------
@@ -382,6 +396,7 @@ export const BUILD_CATEGORIES: readonly BuildCategory[] = Object.freeze([
       "manual_assembler",
       "auto_smelter",
       "auto_assembler",
+      "module_lab",
     ],
   },
   {

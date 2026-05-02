@@ -20,6 +20,7 @@ import type {
   KeepStockByWorkbench,
   HubTier,
   ModuleFragmentCount,
+  ModuleLabJob,
 } from "../store/types";
 import type { ShipState } from "../store/types/ship-types";
 import type { Module } from "../modules/module.types";
@@ -39,7 +40,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 25;
+export const CURRENT_SAVE_VERSION = 26;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -234,7 +235,13 @@ export interface SaveGameV25
   moduleFragments: ModuleFragmentCount;
 }
 
-export type SaveGameLatest = SaveGameV25;
+export interface SaveGameV26 extends Omit<SaveGameV25, "version"> {
+  version: 26;
+  /** Single in-flight Module Lab crafting job. null = idle. */
+  moduleLabJob: ModuleLabJob | null;
+}
+
+export type SaveGameLatest = SaveGameV26;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -559,6 +566,10 @@ function migrateV24ToV25(save: SaveGameV24): SaveGameV25 {
   return { ...save, version: 25, moduleFragments };
 }
 
+function migrateV25ToV26(save: SaveGameV25): SaveGameV26 {
+  return { ...save, version: 26, moduleLabJob: null };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -585,6 +596,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 22, to: 23, migrate: migrateV22ToV23 },
   { from: 23, to: 24, migrate: migrateV23ToV24 },
   { from: 24, to: 25, migrate: migrateV24ToV25 },
+  { from: 25, to: 26, migrate: migrateV25ToV26 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

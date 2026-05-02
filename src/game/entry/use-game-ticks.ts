@@ -12,6 +12,7 @@ import {
   SMITHY_TICK_MS,
   MANUAL_ASSEMBLER_TICK_MS,
 } from "../store/constants/timing/workbench-timing";
+import { MODULE_LAB_TICK_MS } from "../constants/moduleLabConstants";
 import { GENERATOR_TICK_MS } from "../store/constants/energy/generator";
 import { ENERGY_NET_TICK_MS } from "../store/constants/energy/energy-smelter";
 import type { GameState } from "../store/types";
@@ -62,6 +63,16 @@ export function useGameTicks(
     }, MANUAL_ASSEMBLER_TICK_MS);
     return () => clearInterval(id);
   }, [state.manualAssembler.processing]);
+
+  // Module Lab job-progress tick — fires only while a job is in flight.
+  const moduleLabJobActive = state.moduleLabJob !== null;
+  useEffect(() => {
+    if (!moduleLabJobActive) return;
+    const id = setInterval(() => {
+      dispatch({ type: "MODULE_LAB_TICK" });
+    }, MODULE_LAB_TICK_MS);
+    return () => clearInterval(id);
+  }, [moduleLabJobActive]);
 
   // Notification cleanup
   useEffect(() => {
