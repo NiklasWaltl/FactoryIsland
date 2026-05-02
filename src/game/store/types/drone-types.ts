@@ -31,7 +31,7 @@ export interface DroneCargoItem {
  * introduced — no separate drone system needed.
  *
  * Hub-integration path: set `hubId` to a service-hub asset ID.
- * The drone then delivers to that hub's tile position instead of MAP_SHOP_POS.
+ * The drone then delivers to that hub's tile position instead of the start module.
  * All other state-machine logic stays identical.
  */
 export interface StarterDroneState {
@@ -46,7 +46,7 @@ export interface StarterDroneState {
   /** Ticks remaining for the current movement / action phase. */
   ticksRemaining: number;
   /**
-   * When null: drone delivers to the start module (MAP_SHOP_POS).
+   * When null: drone delivers to the start module (resolved via getStartModulePosition).
    * When set to an asset ID: drone delivers to that hub asset's tile.
    * This is the only change required for hub integration.
    */
