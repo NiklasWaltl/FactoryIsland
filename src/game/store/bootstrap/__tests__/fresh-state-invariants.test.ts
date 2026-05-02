@@ -11,9 +11,12 @@ import {
   applyDockWarehouseLayout,
 } from "../apply-dock-warehouse-layout";
 import {
+  BEACH_START_ROW,
+  WATER_START_ROW,
   getDockBeachStartRow,
   getDockWarehousePos,
 } from "../../constants/map/map-layout";
+import { ISLAND_SAND_BORDER_TILES } from "../../../world/island-generator";
 import { getInitialCameraFocusTile } from "../../../world/camera-focus";
 import {
   getCorePlayableBounds,
@@ -93,9 +96,13 @@ describe("fresh state world/bootstrap invariants", () => {
 
     expect(dock).toMatchObject(dockPos);
     expect(dockPos.x).toBe(Math.floor(state.tileMap[0].length / 2));
+    expect(beachStartRow).toBe(BEACH_START_ROW);
     expect(dockPos.y).toBe(beachStartRow - 1);
     expect(state.tileMap[dockPos.y]?.[dockPos.x]).toBe("grass");
     expect(state.tileMap[beachStartRow]?.[dockPos.x]).toBe("sand");
+    expect(WATER_START_ROW).toBe(BEACH_START_ROW + ISLAND_SAND_BORDER_TILES);
+    expect(state.tileMap[WATER_START_ROW - 1]?.[dockPos.x]).toBe("sand");
+    expect(state.tileMap[WATER_START_ROW]?.[dockPos.x]).toBe("water");
 
     const dockFootprint = footprintOf(dock);
     for (const asset of collectBaseStartAssets(state)) {

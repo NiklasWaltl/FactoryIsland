@@ -7,6 +7,7 @@ import {
   STONE_FLOOR_MORTAR_COLOR,
 } from "../assets/sprites/sprites";
 import { CELL_PX, GRID_H, GRID_W } from "../constants/grid";
+import { WATER_START_ROW } from "../store/constants/map/map-layout";
 import { ASSET_LABELS } from "../store/constants/ui/assets";
 import type { Direction } from "../store/types";
 import { getInitialCameraFocusPoint } from "./camera-focus";
@@ -103,8 +104,6 @@ export interface ShipSnapshot {
   dockTileX: number;
   dockTileY: number;
 }
-
-const SHIP_DOCKED_BEACH_ROW_OFFSET_TILES = 1;
 
 const COLLECTION_NODE_COLORS: Record<string, number> = {
   wood: 0x8b4513,
@@ -630,7 +629,7 @@ class WorldScene extends Phaser.Scene {
     if (data.status === "docked") {
       container.setPosition(
         data.dockTileX * CELL_PX,
-        (data.dockTileY + SHIP_DOCKED_BEACH_ROW_OFFSET_TILES) * CELL_PX,
+        WATER_START_ROW * CELL_PX,
       );
       container.setVisible(true);
       const label = container.getByName("label") as Phaser.GameObjects.Text;

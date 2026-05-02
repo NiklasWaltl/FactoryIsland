@@ -1,6 +1,15 @@
+import { GRID_H } from "../../../constants/grid";
+import {
+  ISLAND_SAND_BORDER_TILES,
+  ISLAND_WATER_BORDER_TILES,
+} from "../../../world/island-generator";
 import type { TileType } from "../../../world/tile-types";
 
 const DOCK_WAREHOUSE_BEACH_OFFSET_TILES = 1;
+
+export const BEACH_START_ROW =
+  GRID_H - ISLAND_WATER_BORDER_TILES - ISLAND_SAND_BORDER_TILES;
+export const WATER_START_ROW = BEACH_START_ROW + ISLAND_SAND_BORDER_TILES;
 
 /**
  * Position of the dock warehouse: horizontal map center on the last grass row
