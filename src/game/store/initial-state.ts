@@ -10,7 +10,7 @@ import { createEmptyCraftingQueue } from "../crafting/queue";
 import { GRID_H, GRID_W } from "../constants/grid";
 import { generateIslandTileMap } from "../world/island-generator";
 import { createFixedResourcePlacement } from "../world/fixed-resource-layout";
-import { applyBaseStartLayout } from "../world/base-start-layout";
+import { applyBaseStartLayout } from "./bootstrap/apply-base-start-layout";
 import { createInitialHotbar } from "./helpers/hotbar";
 import type {
   GameMode,

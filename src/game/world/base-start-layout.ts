@@ -1,13 +1,4 @@
-import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
-import { createDefaultProtoHubTargetStock } from "../store/constants/hub/hub-target-stock";
-import { createEmptyInventory } from "../store/inventory-ops";
-import type {
-  AssetType,
-  GameState,
-  PlacedAsset,
-  StarterDroneState,
-} from "../store/types";
-import { cellKey } from "../store/utils/cell-key";
+import type { AssetType, GameState } from "../store/types";
 import {
   getStartAreaAnchor,
   getStartAreaBounds,
@@ -84,73 +75,6 @@ export function createBaseStartLayout(tileMap: TileType[][]): BaseStartLayout {
   return layout;
 }
 
-export function applyBaseStartLayout(state: GameState): GameState {
-  if (hasRequiredBaseStartLayout(state)) return state;
-  assertNoPartialBaseStartLayout(state);
-
-  const layout = createBaseStartLayout(state.tileMap);
-  const assets = { ...state.assets };
-  const cellMap = { ...state.cellMap };
-
-  for (const definition of layout.assets) {
-    const asset = toPlacedAsset(definition);
-    assertBaseStartCellsFree(state, cellMap, asset);
-    assets[asset.id] = asset;
-    forEachBaseStartCell(asset, (x, y) => {
-      cellMap[cellKey(x, y)] = asset.id;
-    });
-  }
-
-  const hubAsset = assets[layout.starterDroneHubId];
-  if (!hubAsset) {
-    throw new Error("Base start layout was resolved but not applied to initial runtime state.");
-  }
-
-  const starterDrone = createDockedStarterDrone(
-    state.drones.starter ?? state.starterDrone,
-    layout.starterDroneHubId,
-    hubAsset.x,
-    hubAsset.y,
-  );
-
-  const next: GameState = {
-    ...state,
-    assets,
-    cellMap,
-    warehouseInventories: {
-      ...state.warehouseInventories,
-      [BASE_START_IDS.warehouse]: createEmptyInventory(),
-    },
-    serviceHubs: {
-      ...state.serviceHubs,
-      [BASE_START_IDS.serviceHub]: {
-        tier: 1,
-        inventory: createEmptyHubInventory(),
-        droneIds: [starterDrone.droneId],
-        targetStock: createDefaultProtoHubTargetStock(),
-      },
-    },
-    starterDrone,
-    drones: {
-      ...state.drones,
-      [starterDrone.droneId]: starterDrone,
-    },
-  };
-
-  const withWarehouseCounts = {
-    ...next,
-    warehousesPurchased: Object.values(next.assets).filter(
-      (asset) => asset.type === "warehouse",
-    ).length,
-    warehousesPlaced: Object.values(next.assets).filter(
-      (asset) => asset.type === "warehouse",
-    ).length,
-  };
-
-  assertRequiredBaseStartLayout(withWarehouseCounts);
-  return withWarehouseCounts;
-}
-
 export function hasRequiredBaseStartLayout(state: GameState): boolean {
   return (
     state.assets[BASE_START_IDS.mapShop]?.type === "map_shop" &&
@@ -166,6 +90,16 @@ export function hasRequiredBaseStartLayout(state: GameState): boolean {
 export function assertRequiredBaseStartLayout(state: GameState): void {
   if (!hasRequiredBaseStartLayout(state)) {
     throw new Error("Fresh game state missing required base start layout objects.");
+  }
+}
+
+export function assertBaseStartLayoutInsideStartArea(
+  assets: readonly BaseStartObjectDefinition[],
+  tileMap: TileType[][],
+): void {
+  const startArea = getStartAreaBounds(tileMap);
+  for (const definition of assets) {
+    assertAssetFootprintInsideStartArea(definition, startArea);
   }
 }
 
@@ -186,16 +120,6 @@ function baseStartObject(
     height: BASE_START_OBJECT_SIZE_TILES,
     ...options,
   };
-}
-
-function assertBaseStartLayoutInsideStartArea(
-  assets: readonly BaseStartObjectDefinition[],
-  tileMap: TileType[][],
-): void {
-  const startArea = getStartAreaBounds(tileMap);
-  for (const definition of assets) {
-    assertAssetFootprintInsideStartArea(definition, startArea);
-  }
 }
 
 function assertAssetFootprintInsideStartArea(
@@ -223,92 +147,6 @@ function assertAssetFootprintInsideStartArea(
           `Starter layout object placed outside start area at row ${row} col ${col}`,
         );
       }
-    }
-  }
-}
-
-function assertNoPartialBaseStartLayout(state: GameState): void {
-  const existingIds = Object.values(BASE_START_IDS).filter((id) => state.assets[id]);
-  if (existingIds.length === 0) return;
-  throw new Error(
-    `Base start layout was resolved but not applied to initial runtime state: partial objects ${existingIds.join(", ")}`,
-  );
-}
-
-function toPlacedAsset(definition: BaseStartObjectDefinition): PlacedAsset {
-  return {
-    id: definition.id,
-    type: definition.type,
-    x: definition.x,
-    y: definition.y,
-    size: definition.size,
-    width: definition.width,
-    height: definition.height,
-    fixed: definition.fixed,
-  };
-}
-
-function assertBaseStartCellsFree(
-  state: GameState,
-  cellMap: GameState["cellMap"],
-  asset: PlacedAsset,
-): void {
-  forEachBaseStartCell(asset, (x, y) => {
-    const occupiedBy = cellMap[cellKey(x, y)];
-    if (!occupiedBy) return;
-    throw new Error(
-      `Base start layout object '${asset.id}' overlaps '${occupiedBy}' at row ${y} col ${x}.`,
-    );
-  });
-
-  assertBaseStartLayoutInsideStartArea(
-    [
-      {
-        id: asset.id,
-        type: asset.type,
-        x: asset.x,
-        y: asset.y,
-        size: asset.size,
-        width: asset.width ?? asset.size,
-        height: asset.height ?? asset.size,
-        fixed: asset.fixed,
-      },
-    ],
-    state.tileMap,
-  );
-}
-
-function createDockedStarterDrone(
-  starterDrone: StarterDroneState,
-  hubId: string,
-  tileX: number,
-  tileY: number,
-): StarterDroneState {
-  return {
-    ...starterDrone,
-    hubId,
-    tileX,
-    tileY,
-    status: "idle",
-    targetNodeId: null,
-    cargo: null,
-    ticksRemaining: 0,
-    currentTaskType: null,
-    deliveryTargetId: null,
-    craftingJobId: null,
-    droneId: starterDrone.droneId ?? "starter",
-  };
-}
-
-function forEachBaseStartCell(
-  asset: Pick<PlacedAsset, "x" | "y" | "size" | "width" | "height">,
-  visit: (x: number, y: number) => void,
-): void {
-  const width = asset.width ?? asset.size;
-  const height = asset.height ?? asset.size;
-  for (let dx = 0; dx < width; dx += 1) {
-    for (let dy = 0; dy < height; dy += 1) {
-      visit(asset.x + dx, asset.y + dy);
     }
   }
 }
