@@ -23,8 +23,10 @@ import type {
   AutoSmelterEntry,
   AutoAssemblerEntry,
 } from "./types/conveyor-types";
+import type { ShipState } from "./types/ship-types";
 
 export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
+export type { ShipStatus, ShipQuest, ShipReward, ShipState } from "./types/ship-types";
 export type {
   DroneRole,
   DroneStatus,
@@ -464,4 +466,6 @@ export interface GameState {
   splitterFilterState: import("./slices/splitter-filter-state").SplitterFilterState;
   /** ID of the conveyor_splitter whose panel is currently open. Transient. */
   selectedSplitterId: string | null;
+  /** Ship quest loop state. Persisted. */
+  ship: ShipState;
 }

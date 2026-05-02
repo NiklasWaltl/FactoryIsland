@@ -20,6 +20,22 @@ import type {
 } from "./types";
 import { createEmptyInventory } from "./inventory-ops";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";
+import type { ShipState } from "./types/ship-types";
+
+export function createInitialShipState(): ShipState {
+  return {
+    status: "sailing",
+    activeQuest: null,
+    nextQuest: null,
+    dockedAt: null,
+    departsAt: null,
+    returnsAt: Date.now() + 30_000,
+    rewardPending: false,
+    lastReward: null,
+    questPhase: 1,
+    shipsSinceLastFragment: 0,
+  };
+}
 
 export function createInitialState(mode: GameMode = "release"): GameState {
   const inventory: Inventory = {
@@ -117,6 +133,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     splitterRouteState: {},
     splitterFilterState: {},
     selectedSplitterId: null,
+    ship: createInitialShipState(),
   };
 
   return applyBaseStartLayout(state);
