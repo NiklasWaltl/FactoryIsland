@@ -25,8 +25,6 @@ import { GRID_H, GRID_W } from "../constants/grid";
 import { sanitizeTileMap } from "../world/tile-map-utils";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
 import { GENERATOR_MAX_FUEL } from "../store/constants/buildings/index";
-import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
-import { getStartModulePosition } from "../store/bootstrap/start-module-position";
 import { createDefaultHubTargetStock } from "../store/constants/hub/hub-target-stock";
 import type { NetworkSlice } from "../inventory/reservationTypes";
 import { createEmptyNetworkSlice } from "../inventory/reservationTypes";
@@ -255,12 +253,10 @@ function migrateV2ToV3(save: SaveGameV2): SaveGameV3 {
 }
 
 function migrateV3ToV4(save: SaveGameV3): SaveGameV4 {
-  // legacy fallback: no layout context available in this migration path
-  const pos = getStartModulePosition({ assets: save.assets ?? {}, tileMap: [] });
   const starterDrone: StarterDroneState = {
     status: "idle",
-    tileX: pos.x,
-    tileY: pos.y,
+    tileX: 39, // standard 80×50 grid center — no layout context available at this migration version
+    tileY: 24,
     targetNodeId: null,
     cargo: null,
     ticksRemaining: 0,
@@ -386,12 +382,10 @@ function migrateV11ToV12(save: SaveGameV11): SaveGameV12 {
       craftingJobId: (save.starterDrone as any).craftingJobId ?? null,
     } as StarterDroneState;
   } else {
-    // legacy fallback: no layout context available in this migration path
-    const pos = getStartModulePosition({ assets: save.assets ?? {}, tileMap: [] });
     drones["starter"] = {
       status: "idle",
-      tileX: pos.x,
-      tileY: pos.y,
+      tileX: 39, // standard 80×50 grid center — no layout context available at this migration version
+      tileY: 24,
       targetNodeId: null,
       cargo: null,
       ticksRemaining: 0,
