@@ -14,6 +14,7 @@ import { getDroneHomeDock } from "../drones/dock/drone-dock";
 import { computeConnectedAssetIds } from "../logistics/connectivity";
 import { cleanBuildingZoneIds } from "../zones/production-zone-cleanup";
 import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
+import { getStartModulePosition } from "../store/bootstrap/start-module-position";
 import {
   createDefaultHubTargetStock,
   createDefaultProtoHubTargetStock,
@@ -179,7 +180,11 @@ export function deserializeState(save: SaveGameLatest): GameState {
             tileY: save.assets[d.hubId].y,
           };
         } else if (!d.hubId) {
-          d = { ...d, tileX: MAP_SHOP_POS.x, tileY: MAP_SHOP_POS.y };
+          const fallback = getStartModulePosition({
+            assets: save.assets,
+            tileMap: save.tileMap,
+          });
+          d = { ...d, tileX: fallback.x, tileY: fallback.y };
         }
       }
       return d;
@@ -371,7 +376,11 @@ export function deserializeState(save: SaveGameLatest): GameState {
       return { ...drone, tileX: dock.x, tileY: dock.y };
     }
     if (!drone.hubId) {
-      return { ...drone, tileX: MAP_SHOP_POS.x, tileY: MAP_SHOP_POS.y };
+      const fallback = getStartModulePosition({
+        assets: partial.assets,
+        tileMap: partial.tileMap,
+      });
+      return { ...drone, tileX: fallback.x, tileY: fallback.y };
     }
     return drone;
   };

@@ -1,6 +1,6 @@
 import { debugLog } from "../../debug/debugLogger";
+import { getStartModulePosition } from "../../store/bootstrap/start-module-position";
 import { DELIVERY_OFFSETS } from "../../store/constants/drone/drone-config";
-import { MAP_SHOP_POS } from "../../store/constants/map/map-layout";
 import {
   resolveDroneDropoffDecision,
   type DroneDropoffFallbackEvent,
@@ -52,7 +52,7 @@ function logDroneDropoffFallbackEvent(event: DroneDropoffFallbackEvent): void {
  * - construction_supply → construction site asset position + per-drone delivery offset
  * - workbench_delivery → resolved storage destination for the finished job
  * - hub_restock → hub dock slot position derived from the hub's droneIds order
- * - fallback (no hub) → MAP_SHOP_POS
+ * - fallback (no hub) → start-module position (base-start map shop, else legacy)
  *
  * The `serviceHubs` parameter enables per-drone dock-slot targeting for hub restock.
  * Omitting it falls back to the hub top-left corner (safe for legacy / tests).
@@ -70,7 +70,7 @@ export function resolveDroneDropoff(
     serviceHubs,
     warehouseInventories,
     crafting,
-    mapShopPos: MAP_SHOP_POS,
+    mapShopPos: getStartModulePosition({ assets, tileMap: [] }),
     getDeliveryOffset: (droneId) =>
       DELIVERY_OFFSETS[droneDeliverySlot(droneId)],
     getDroneHomeDock,
