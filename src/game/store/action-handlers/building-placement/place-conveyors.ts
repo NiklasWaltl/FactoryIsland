@@ -8,6 +8,7 @@ import type {
 } from "../../types";
 import { BUILDING_LABELS } from "../../constants/buildings/index";
 import { cellKey } from "../../utils/cell-key";
+import { isTileFootprintPlayable } from "../../../world/tile-footprint-utils";
 import { placeAsset } from "../../asset-mutation";
 import { undergroundSpanCellsInBounds } from "../../conveyor/constants";
 import {
@@ -28,6 +29,28 @@ export interface ConveyorPlacementContext {
   ) => GameState;
   addErrorNotification: BuildingPlacementIoDeps["addErrorNotification"];
   debugLog: BuildingPlacementIoDeps["debugLog"];
+}
+
+function isBuildTilePlayable(state: GameState, x: number, y: number): boolean {
+  return isTileFootprintPlayable(state.tileMap, {
+    row: y,
+    col: x,
+    width: 1,
+    height: 1,
+  });
+}
+
+function rejectNonPlayableTile(
+  state: GameState,
+  addErrorNotification: BuildingPlacementIoDeps["addErrorNotification"],
+): GameState {
+  return {
+    ...state,
+    notifications: addErrorNotification(
+      state.notifications,
+      "Gebäude können nur auf Gras platziert werden.",
+    ),
+  };
 }
 
 export function placeConveyorBranch(
@@ -52,6 +75,9 @@ export function placeConveyorBranch(
         "Das Feld ist belegt.",
       ),
     };
+  }
+  if (!isBuildTilePlayable(state, x, y)) {
+    return rejectNonPlayableTile(state, addErrorNotification);
   }
   const placeType: AssetType =
     bType === "conveyor_corner"
@@ -114,6 +140,9 @@ export function placeUndergroundInBranch(
       ),
     };
   }
+  if (!isBuildTilePlayable(state, x, y)) {
+    return rejectNonPlayableTile(state, addErrorNotification);
+  }
   const convPlaced = placeAsset(
     state.assets,
     state.cellMap,
@@ -166,6 +195,9 @@ export function placeUndergroundOutBranch(
         "Das Feld ist belegt.",
       ),
     };
+  }
+  if (!isBuildTilePlayable(state, x, y)) {
+    return rejectNonPlayableTile(state, addErrorNotification);
   }
   if (!hasUndergroundOutSpanWindowInBounds(x, y, direction)) {
     return {

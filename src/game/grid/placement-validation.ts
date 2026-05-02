@@ -1,9 +1,10 @@
 import { GRID_H, GRID_W } from "../constants/grid";
+import { isTileFootprintPlayable } from "../world/tile-footprint-utils";
 import {
   BUILDING_SIZES,
   REQUIRES_STONE_FLOOR,
 } from "../store/constants/buildings/index";
-import { DEPOSIT_TYPES } from "../store/constants/map/deposit-positions";
+import { DEPOSIT_TYPES } from "../world/fixed-resource-layout";
 import { cellKey } from "../store/utils/cell-key";
 import {
   isConveyorPreviewBuildingType,
@@ -100,6 +101,15 @@ export function validateBuildingPlacementPreview(input: {
         if (!state.floorMap[cellKey(x + dx, y + dy)]) valid = false;
       }
     }
+  }
+
+  if (valid && activeBuildingType) {
+    valid = isTileFootprintPlayable(state.tileMap, {
+      row: y,
+      col: x,
+      width: bWidth,
+      height: bHeight,
+    });
   }
 
   const isUgOutBuild = activeBuildingType === "conveyor_underground_out";

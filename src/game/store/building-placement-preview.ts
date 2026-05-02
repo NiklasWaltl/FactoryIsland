@@ -6,6 +6,7 @@
  */
 
 import { GRID_H, GRID_W } from "../constants/grid";
+import { isTileFootprintPlayable } from "../world/tile-footprint-utils";
 import { cellKey } from "./utils/cell-key";
 import { decideBuildingPlacementEligibility } from "./decisions/build-placement-eligibility";
 import type { BuildPlacementEligibilityBlockReason } from "./decisions/build-placement-eligibility";
@@ -55,6 +56,7 @@ export function isConveyorPreviewBuildingType(
 export type BuildingPlacementPreviewBlockReason =
   | "out_of_bounds"
   | "not_enough_resources"
+  | "non_playable_tile"
   | "cell_occupied"
   | "missing_stone_floor"
   | "workbench_already_exists"
@@ -87,6 +89,9 @@ function previewMessageForEligibilityBlock(
   if (blockReason === "missing_stone_floor") {
     return `${buildingLabel} benötigt Steinboden unter allen Feldern!`;
   }
+  if (blockReason === "footprint_non_playable_tile") {
+    return "Gebäude können nur auf Gras platziert werden.";
+  }
   return null;
 }
 
@@ -101,6 +106,9 @@ function mapEligibilityReason(
   if (blockReason === "warehouse_limit_reached")
     return "warehouse_limit_reached";
   if (blockReason === "missing_stone_floor") return "missing_stone_floor";
+  if (blockReason === "footprint_non_playable_tile") {
+    return "non_playable_tile";
+  }
   return "eligibility_silent_block";
 }
 
@@ -134,6 +142,20 @@ export function previewBuildingPlacementAtCell(
       ok: false,
       reason: "out_of_bounds",
       message: "Außerhalb der Karte.",
+    };
+  }
+  if (
+    !isTileFootprintPlayable(state.tileMap, {
+      row: y,
+      col: x,
+      width: bSize,
+      height: bSize,
+    })
+  ) {
+    return {
+      ok: false,
+      reason: "non_playable_tile",
+      message: "Gebäude können nur auf Gras platziert werden.",
     };
   }
 
@@ -171,6 +193,7 @@ export function previewBuildingPlacementAtCell(
     footprintSize: bSize,
     gridWidth: GRID_W,
     gridHeight: GRID_H,
+    tileMap: state.tileMap,
     cellMap: state.cellMap,
     floorMap: state.floorMap,
   });
