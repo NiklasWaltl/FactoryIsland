@@ -5,6 +5,7 @@ import { drawQuest } from "../../ship/quest-registry";
 import { drawReward } from "../../ship/reward-table";
 import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
 import { createEmptyInventory } from "../inventory-ops";
+import { addNotification } from "../utils/notifications";
 
 const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
   "SHIP_TICK",
@@ -160,9 +161,16 @@ function handleShipReturn(state: GameState, now: number): GameState {
     shipsSinceLastFragment: isFragment ? 0 : ship.shipsSinceLastFragment,
   };
 
+  const notifications = addNotification(
+    state.notifications,
+    reward.itemId,
+    reward.amount,
+  );
+
   return {
     ...state,
     ship: updatedShip,
+    notifications,
     warehouseInventories: {
       ...state.warehouseInventories,
       [DOCK_WAREHOUSE_ID]: rewardInv,

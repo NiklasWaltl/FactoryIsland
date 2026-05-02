@@ -36,6 +36,7 @@ import { ManualAssemblerPanel } from "../ui/panels/ManualAssemblerPanel";
 import { ServiceHubPanel } from "../ui/panels/ServiceHubPanel";
 import { ConveyorSplitterPanel } from "../ui/panels/ConveyorSplitterPanel";
 import { DockWarehousePanel } from "../ui/panels/DockWarehousePanel";
+import { ShipStatusBar } from "../ui/hud/ShipStatusBar";
 import { BuildMenu } from "../ui/menus/BuildMenu";
 import { Notifications } from "../ui/hud/Notifications";
 import { AutoDeliveryFeed } from "../ui/hud/AutoDeliveryFeed";
@@ -252,6 +253,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
     <>
       <Grid state={state} dispatch={dispatch} />
       <ResourceBar state={state} />
+      <ShipStatusBar state={state} dispatch={dispatch} />
       <Notifications notifications={state.notifications} />
       <AutoDeliveryFeed log={state.autoDeliveryLog} />
       <ProductionStatusFeed state={state} />
