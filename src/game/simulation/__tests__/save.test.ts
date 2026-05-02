@@ -378,6 +378,26 @@ describe("migrateSave – missing fields get defaults", () => {
     expect(result!.version).toBe(CURRENT_SAVE_VERSION);
     expect(result!.tileMap).toEqual(generateIslandTileMap(GRID_H, GRID_W));
   });
+
+  it("migrates v23 saves by seeding default module fragments", () => {
+    const latest = serializeState(createInitialState("release"));
+    const {
+      version: _ignoreVersion,
+      moduleFragments: _dropFragments,
+      ...legacyShape
+    } = latest;
+    const v23 = { ...legacyShape, version: 23 };
+
+    const result = migrateSave(v23);
+
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    expect(result!.moduleFragments).toEqual([
+      { tier: 1, count: 0 },
+      { tier: 2, count: 0 },
+      { tier: 3, count: 0 },
+    ]);
+  });
 });
 
 describe("deserializeState tileMap sanitization", () => {

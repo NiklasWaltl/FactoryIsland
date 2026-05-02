@@ -70,4 +70,17 @@ describe("moduleInventory", () => {
 
     expect(hydrated.moduleInventory).toEqual([]);
   });
+
+  it("ADD_MODULE_FRAGMENT increments the selected tier counter", () => {
+    const next = gameReducer(freshState(), {
+      type: "ADD_MODULE_FRAGMENT",
+      payload: { tier: 2 },
+    });
+
+    expect(next.moduleFragments).toEqual([
+      { tier: 1, count: 0 },
+      { tier: 2, count: 1 },
+      { tier: 3, count: 0 },
+    ]);
+  });
 });

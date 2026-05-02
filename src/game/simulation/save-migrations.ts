@@ -19,10 +19,12 @@ import type {
   ConstructionSite,
   KeepStockByWorkbench,
   HubTier,
+  ModuleFragment,
 } from "../store/types";
 import type { ShipState } from "../store/types/ship-types";
 import type { Module } from "../modules/module.types";
 import type { TileType } from "../world/tile-types";
+import { normalizeModuleFragments } from "../store/helpers/module-fragments";
 import { GRID_H, GRID_W } from "../constants/grid";
 import { sanitizeTileMap } from "../world/tile-map-utils";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
@@ -37,7 +39,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 23;
+export const CURRENT_SAVE_VERSION = 24;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -219,7 +221,13 @@ export interface SaveGameV23 extends Omit<SaveGameV22, "version"> {
   moduleInventory: Module[];
 }
 
-export type SaveGameLatest = SaveGameV23;
+export interface SaveGameV24 extends Omit<SaveGameV23, "version"> {
+  version: 24;
+  /** Tier-bound module fragments from ship rewards. */
+  moduleFragments: ModuleFragment[];
+}
+
+export type SaveGameLatest = SaveGameV24;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -532,6 +540,13 @@ function migrateV22ToV23(save: SaveGameV22): SaveGameV23 {
   return { ...save, version: 23, moduleInventory };
 }
 
+function migrateV23ToV24(save: SaveGameV23): SaveGameV24 {
+  const moduleFragments = normalizeModuleFragments(
+    (save as unknown as Partial<SaveGameV24>).moduleFragments,
+  );
+  return { ...save, version: 24, moduleFragments };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -556,6 +571,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 20, to: 21, migrate: migrateV20ToV21 },
   { from: 21, to: 22, migrate: migrateV21ToV22 },
   { from: 22, to: 23, migrate: migrateV22ToV23 },
+  { from: 23, to: 24, migrate: migrateV23ToV24 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

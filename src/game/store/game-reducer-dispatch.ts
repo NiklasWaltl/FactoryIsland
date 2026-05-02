@@ -48,6 +48,7 @@ import { handleManualAssemblerAction } from "./action-handlers/manual-assembler-
 import { handleFloorPlacementAction } from "./action-handlers/floor-placement";
 import { handleShopAction } from "./action-handlers/shop";
 import { handleCoinAction } from "./action-handlers/coin-actions";
+import { handleModuleFragmentAction } from "./action-handlers/module-fragment-actions";
 import { handleMachineConfigAction } from "./action-handlers/machine-config";
 import { handleBuildModeAction } from "./action-handlers/build-mode-actions";
 import { handleMaintenanceAction } from "./action-handlers/maintenance-actions";
@@ -111,6 +112,8 @@ export function dispatchAction(
   if (shopResult !== null) return shopResult;
   const coinResult = handleCoinAction(state, action);
   if (coinResult !== null) return coinResult;
+  const moduleFragmentResult = handleModuleFragmentAction(state, action);
+  if (moduleFragmentResult !== null) return moduleFragmentResult;
   const machineConfigResult = handleMachineConfigAction(state, action);
   if (machineConfigResult !== null) return machineConfigResult;
   const buildModeResult = handleBuildModeAction(state, action);
@@ -173,6 +176,9 @@ export function dispatchAction(
 
     // BUY_FRAGMENT is handled above by
     // handleCoinAction (see action-handlers/coin-actions.ts).
+
+    // ADD_MODULE_FRAGMENT is handled above by
+    // handleModuleFragmentAction (see action-handlers/module-fragment-actions.ts).
 
     // CRAFT_WORKBENCH, REMOVE_BUILDING, EXPIRE_NOTIFICATIONS,
     // DEBUG_SET_STATE and REMOVE_POWER_POLE are handled above by

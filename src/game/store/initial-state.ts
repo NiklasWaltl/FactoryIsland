@@ -22,6 +22,7 @@ import type {
 import { createEmptyInventory } from "./inventory-ops";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";
 import type { ShipState } from "./types/ship-types";
+import { createDefaultModuleFragments } from "./helpers/module-fragments";
 
 export function createInitialShipState(): ShipState {
   return {
@@ -68,6 +69,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     tileMap,
     inventory,
     moduleInventory: [],
+    moduleFragments: createDefaultModuleFragments(),
     purchasedBuildings: [],
     placedBuildings: [],
     warehousesPurchased: 0,

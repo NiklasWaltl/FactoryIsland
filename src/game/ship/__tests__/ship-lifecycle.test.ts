@@ -316,6 +316,11 @@ describe("shipsSinceLastFragment counter", () => {
       state = dispatch(state, { type: "SHIP_RETURN" });
       expect(state.ship.lastReward?.kind).toBe("module_fragment");
       expect(state.ship.shipsSinceLastFragment).toBe(0);
+      expect(state.moduleFragments).toEqual([
+        { tier: 1, count: 1 },
+        { tier: 2, count: 0 },
+        { tier: 3, count: 0 },
+      ]);
     } finally {
       Math.random = origRandom;
     }

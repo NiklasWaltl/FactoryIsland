@@ -54,6 +54,13 @@ export type {
 
 export type GameMode = "release" | "debug";
 
+export type FragmentTier = 1 | 2 | 3;
+
+export interface ModuleFragment {
+  tier: FragmentTier;
+  count: number;
+}
+
 export type AssetType =
   | "tree"
   | "stone"
@@ -351,6 +358,8 @@ export interface GameState {
   inventory: Inventory;
   /** Owned module instances from the fragment trader. Persisted. */
   moduleInventory: Module[];
+  /** Tier-bound module fragments collected from ship rewards. Persisted. */
+  moduleFragments: ModuleFragment[];
   purchasedBuildings: BuildingType[];
   placedBuildings: BuildingType[];
   warehousesPurchased: number;
