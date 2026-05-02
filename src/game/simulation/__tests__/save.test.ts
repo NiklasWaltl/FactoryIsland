@@ -9,6 +9,8 @@ import {
   deserializeState,
   loadAndHydrate,
   type SaveGameV1,
+  type SaveGameV3,
+  type SaveGameV11,
   type SaveGameLatest,
 } from "../save";
 import {
@@ -631,5 +633,72 @@ describe("round-trip", () => {
     // warehouse iron stays intact.
     expect(loaded.inventory.iron).toBe(0);
     expect(loaded.warehouseInventories["wh-x"].iron).toBe(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. Migration path coverage – drone position (V3→V4 and V11→V12)
+// ---------------------------------------------------------------------------
+
+describe("migrateSave – drone position on migration paths", () => {
+  // Standard 80×50 grid: MAP_SHOP_POS = {x:39, y:24}
+  const EXPECTED_X = 39;
+  const EXPECTED_Y = 24;
+
+  it("V3→V4: new starterDrone is placed at MAP_SHOP_POS when no layout context is present", () => {
+    const v3: SaveGameV3 = {
+      version: 3,
+      mode: "release",
+      assets: {},
+      cellMap: {},
+      inventory: { coins: 0, wood: 0, stone: 0, iron: 0, copper: 0, ironIngot: 0, copperIngot: 0, axe: 0, pickaxe: 0, ironPickaxe: 0, ironAxe: 0 } as any,
+      purchasedBuildings: [],
+      placedBuildings: [],
+      warehousesPurchased: 0,
+      warehousesPlaced: 0,
+      warehouseInventories: {},
+      cablesPlaced: 0,
+      powerPolesPlaced: 0,
+      hotbarSlots: [],
+      activeSlot: 0,
+      smithy: { fuel: 0, progress: 0, processing: false, selectedRecipe: "iron" } as any,
+      generators: {},
+      battery: { stored: 0, capacity: 0 } as any,
+      floorMap: {},
+      autoMiners: {},
+      conveyors: {},
+      autoSmelters: {},
+      manualAssembler: {} as any,
+      machinePowerRatio: {},
+      saplingGrowAt: {},
+      collectionNodes: {},
+    };
+
+    const result = migrateSave(v3);
+
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    expect(result!.starterDrone.tileX).toBe(EXPECTED_X);
+    expect(result!.starterDrone.tileY).toBe(EXPECTED_Y);
+  });
+
+  it("V11→V12: synthetic drone is placed at MAP_SHOP_POS when starterDrone is absent", () => {
+    const latest = serializeState(createInitialState("release"));
+    // Build a V11-shaped save: remove drones, remove starterDrone
+    const v11: SaveGameV11 = {
+      ...(latest as any),
+      version: 11,
+      starterDrone: undefined as any,
+      drones: undefined as any,
+    };
+
+    const result = migrateSave(v11);
+
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    const starter = result!.drones["starter"];
+    expect(starter).toBeDefined();
+    expect(starter.tileX).toBe(EXPECTED_X);
+    expect(starter.tileY).toBe(EXPECTED_Y);
   });
 });
