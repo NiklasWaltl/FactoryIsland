@@ -4,7 +4,7 @@ import type { ShipState } from "../types/ship-types";
 import { drawQuest } from "../../ship/quest-registry";
 import { drawReward } from "../../ship/reward-table";
 import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
-import { createEmptyInventory } from "../inventory-ops";
+import { addResources, createEmptyInventory } from "../inventory-ops";
 import { addNotification } from "../utils/notifications";
 
 const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
@@ -142,12 +142,14 @@ function handleShipReturn(state: GameState, now: number): GameState {
 
   const reward = drawReward(ship.pendingMultiplier, ship.questPhase);
 
+  const isCoinReward = reward.itemId === "coins";
+  const nextInventory = isCoinReward
+    ? addResources(state.inventory, { coins: reward.amount })
+    : state.inventory;
   const currentInv =
     state.warehouseInventories[DOCK_WAREHOUSE_ID] ?? createEmptyInventory();
   const rewardInv = { ...currentInv };
-  if (reward.itemId === "coins") {
-    rewardInv.coins = (rewardInv.coins ?? 0) + reward.amount;
-  } else {
+  if (!isCoinReward) {
     const key = reward.itemId as keyof typeof rewardInv;
     rewardInv[key] = ((rewardInv[key] as number) ?? 0) + reward.amount;
   }
@@ -178,10 +180,13 @@ function handleShipReturn(state: GameState, now: number): GameState {
   return {
     ...state,
     ship: updatedShip,
+    inventory: nextInventory,
     notifications,
-    warehouseInventories: {
-      ...state.warehouseInventories,
-      [DOCK_WAREHOUSE_ID]: rewardInv,
-    },
+    warehouseInventories: isCoinReward
+      ? state.warehouseInventories
+      : {
+          ...state.warehouseInventories,
+          [DOCK_WAREHOUSE_ID]: rewardInv,
+        },
   };
 }
