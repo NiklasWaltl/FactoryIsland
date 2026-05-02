@@ -168,6 +168,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
       <div style={worldTransformStyle}>
         <div style={worldCanvasLayerStyle}>
           <PhaserHost
+            tileMap={state.tileMap}
             floorMap={state.floorMap}
             staticAssets={stableStaticAssets}
             drones={droneSnapshots}

@@ -12,13 +12,14 @@ export const logisticsSceneLayout: SceneDefinition = {
   id: "logistics",
   label: "Logistics dev scene",
   mode: "debug",
+  baseStartLayout: "include",
   resetGlobalInventory: true,
   globalInventory: { coins: 99999 },
   purchasedBuildings: ["generator"],
   placedBuildings: ["generator"],
   resources: [
-    resource("logistics-tree-1", "tree", 8, 8),
-    resource("logistics-stone-1", "stone", 9, 8),
+    resource("logistics-tree-1", "tree", 20, 12),
+    resource("logistics-stone-1", "stone", 21, 12),
   ],
   assets: [
     warehouse("logistics-warehouse-in", 12, 12),

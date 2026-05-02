@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { GRID_W, GRID_H, CELL_PX } from "../constants/grid";
+import { getInitialCameraFocusPoint } from "../world/camera-focus";
 import { cellKey } from "../store/utils/cell-key";
 import type { Direction, GameState } from "../store/types";
 import type { GameAction } from "../store/game-actions";
@@ -222,10 +223,11 @@ export function useGridInput(
     if (!el) return;
     const vw = el.clientWidth;
     const vh = el.clientHeight;
-    const cx = -(WORLD_W - vw) / 2;
-    const cy = -(WORLD_H - vh) / 2;
+    const focus = getInitialCameraFocusPoint(state.tileMap);
+    const cx = vw / 2 - focus.x;
+    const cy = vh / 2 - focus.y;
     setCam(clampCam(cx, cy, 1));
-  }, [clampCam]);
+  }, [clampCam, state.tileMap]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

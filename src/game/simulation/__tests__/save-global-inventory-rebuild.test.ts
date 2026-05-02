@@ -28,11 +28,23 @@ function emptyInv(): Inventory {
 
 function bareState(): GameState {
   const s = createInitialState("release");
+  const starterDrone = {
+    ...s.starterDrone,
+    hubId: null,
+    tileX: 0,
+    tileY: 0,
+  };
   return {
     ...s,
+    assets: {},
+    cellMap: {},
     inventory: emptyInv(),
     warehouseInventories: {},
     serviceHubs: {},
+    starterDrone,
+    drones: { starter: starterDrone },
+    warehousesPlaced: 0,
+    warehousesPurchased: 0,
   };
 }
 

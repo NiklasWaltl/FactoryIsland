@@ -12,6 +12,7 @@ import type {
   GameState,
   PlacedAsset,
 } from "../../store/types";
+import { DEPOSIT_TYPES } from "../../world/fixed-resource-layout";
 
 interface PlacementContext {
   readonly assets: Record<string, PlacedAsset>;
@@ -23,12 +24,6 @@ export interface SceneAssetDimensions {
   readonly width: 1 | 2;
   readonly height: 1 | 2;
 }
-
-const DEPOSIT_TYPES = new Set<AssetType>([
-  "stone_deposit",
-  "iron_deposit",
-  "copper_deposit",
-]);
 
 const RESOURCE_ASSET_TYPES = new Set<AssetType>([
   "tree",
@@ -63,12 +58,14 @@ export const getSceneAssetDimensions = (
     size,
     width:
       definition.width ??
-      (definition.type === "auto_smelter" || definition.type === "auto_assembler"
+      (definition.type === "auto_smelter" ||
+      definition.type === "auto_assembler"
         ? 2
         : size),
     height:
       definition.height ??
-      (definition.type === "auto_smelter" || definition.type === "auto_assembler"
+      (definition.type === "auto_smelter" ||
+      definition.type === "auto_assembler"
         ? 1
         : size),
   };
@@ -77,7 +74,8 @@ export const getSceneAssetDimensions = (
 export const getSceneResourceDimensions = (
   definition: Pick<SceneResourceDefinition, "resourceType" | "size">,
 ): SceneAssetDimensions => {
-  const size = definition.size ?? (isDepositResourceType(definition.resourceType) ? 2 : 1);
+  const size =
+    definition.size ?? (isDepositResourceType(definition.resourceType) ? 2 : 1);
   return { size, width: size, height: size };
 };
 
@@ -101,7 +99,12 @@ export const placeSceneResource = (
 
   const assets = { ...context.assets, [definition.id]: asset };
   const cellMap = { ...context.cellMap };
-  assertCellsFree({ assets: context.assets, cellMap: context.cellMap }, asset, dimensions, false);
+  assertCellsFree(
+    { assets: context.assets, cellMap: context.cellMap },
+    asset,
+    dimensions,
+    false,
+  );
 
   forEachCell(asset.x, asset.y, dimensions, (x, y) => {
     cellMap[`${x},${y}`] = asset.id;
@@ -159,7 +162,12 @@ const assertWithinGrid = (
   y: number,
   dimensions: SceneAssetDimensions,
 ): void => {
-  if (x < 0 || y < 0 || x + dimensions.width > GRID_W || y + dimensions.height > GRID_H) {
+  if (
+    x < 0 ||
+    y < 0 ||
+    x + dimensions.width > GRID_W ||
+    y + dimensions.height > GRID_H
+  ) {
     throw new Error(
       `Scene object '${id}' is outside the ${GRID_W}x${GRID_H} grid.`,
     );

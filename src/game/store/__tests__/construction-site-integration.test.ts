@@ -18,8 +18,19 @@ import {
 import type { GameState, BuildingType, PlacedAsset } from "../types";
 import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
 import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
+import {
+  ISLAND_SAND_BORDER_TILES,
+  ISLAND_WATER_BORDER_TILES,
+} from "../../world/island-generator";
 
 // ---- helpers ---------------------------------------------------------------
+
+const TEST_PLAYABLE_INSET =
+  ISLAND_WATER_BORDER_TILES + ISLAND_SAND_BORDER_TILES;
+const TEST_CONSTRUCTION_HUB_POS = {
+  x: TEST_PLAYABLE_INSET + 11,
+  y: TEST_PLAYABLE_INSET + 11,
+};
 
 function placeServiceHub(
   state: GameState,
@@ -89,7 +100,7 @@ function placeBuilding(
   y: number,
   direction?: string,
 ): GameState {
-  let s: GameState = {
+  const s: GameState = {
     ...clearArea(state, x, y, 3),
     buildMode: true,
     selectedBuildingType: bType as GameState["selectedBuildingType"],
@@ -111,7 +122,7 @@ function placeAutoMiner(
   depositY: number,
   direction = "east",
 ): GameState {
-  let s: GameState = {
+  const s: GameState = {
     ...state,
     buildMode: true,
     selectedBuildingType: "auto_miner" as GameState["selectedBuildingType"],
@@ -125,8 +136,15 @@ function placeAutoMiner(
 }
 
 function createConstructionBase(): GameState {
-  const debugState = buildSceneState(debugSceneLayout, createInitialState("debug"));
-  return placeServiceHub(debugState, 6, 6).state;
+  const debugState = buildSceneState(
+    debugSceneLayout,
+    createInitialState("debug"),
+  );
+  return placeServiceHub(
+    debugState,
+    TEST_CONSTRUCTION_HUB_POS.x,
+    TEST_CONSTRUCTION_HUB_POS.y,
+  ).state;
 }
 
 function findAvailableDeposit(state: GameState): PlacedAsset | undefined {
@@ -135,7 +153,8 @@ function findAvailableDeposit(state: GameState): PlacedAsset | undefined {
       (asset.type === "stone_deposit" ||
         asset.type === "iron_deposit" ||
         asset.type === "copper_deposit") &&
-      state.cellMap[`${asset.x},${asset.y}`] === asset.id,
+      state.cellMap[`${asset.x},${asset.y}`] === asset.id &&
+      state.tileMap[asset.y]?.[asset.x] === "grass",
   );
 }
 
@@ -227,12 +246,7 @@ describe("Construction Site Integration — special-case buildings", () => {
 
   it("auto_miner placed as construction site on deposit", () => {
     // Find a deposit in the map
-    const deposit = Object.values(base.assets).find(
-      (a) =>
-        a.type === "stone_deposit" ||
-        a.type === "iron_deposit" ||
-        a.type === "copper_deposit",
-    );
+    const deposit = findAvailableDeposit(base);
     if (!deposit) return; // skip if no deposit in initial state
     const state = placeAutoMiner(base, deposit.x, deposit.y);
     const miner = Object.values(state.assets).find(
@@ -245,12 +259,7 @@ describe("Construction Site Integration — special-case buildings", () => {
   });
 
   it("auto_miner — inventory not deducted when construction site", () => {
-    const deposit = Object.values(base.assets).find(
-      (a) =>
-        a.type === "stone_deposit" ||
-        a.type === "iron_deposit" ||
-        a.type === "copper_deposit",
-    );
+    const deposit = findAvailableDeposit(base);
     if (!deposit) return;
     const invBefore = { ...base.inventory };
     const state = placeAutoMiner(base, deposit.x, deposit.y);

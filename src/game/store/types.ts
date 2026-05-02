@@ -15,6 +15,7 @@ import type {
   RecipeAutomationPolicyMap,
 } from "../crafting/policies";
 import type { ItemId } from "../items/types";
+import type { TileType } from "../world/tile-types";
 import type { StarterDroneState } from "./types/drone-types";
 import type { KeepStockByWorkbench } from "./types/crafting-types";
 import type {
@@ -333,6 +334,8 @@ export interface GameState {
   mode: GameMode;
   assets: Record<string, PlacedAsset>;
   cellMap: Record<string, string>;
+  /** Terrain layer, indexed as [row][col]. */
+  tileMap: TileType[][];
   /** Global logistics buffer — passive fallback pool used when no warehouse or zone is assigned
    *  to a building. Receives manual harvest and auto-delivery output when no more specific
    *  target is configured. Use getCapacityPerResource(state) for the per-resource cap. */

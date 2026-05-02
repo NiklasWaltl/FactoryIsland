@@ -18,6 +18,10 @@ import type {
   StarterDroneState,
 } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
+import {
+  ISLAND_SAND_BORDER_TILES,
+  ISLAND_WATER_BORDER_TILES,
+} from "../../world/island-generator";
 
 export {
   createDefaultHubTargetStock,
@@ -51,7 +55,10 @@ export { addToCollectionNodeAt, gameReducer, MAP_SHOP_POS };
 export function createInitialState(
   mode: GameState["mode"] = "release",
 ): GameState {
-  const state = buildSceneState(debugSceneLayout, createBaseInitialState("debug"));
+  const state = buildSceneState(
+    debugSceneLayout,
+    createBaseInitialState("debug"),
+  );
   return { ...state, mode };
 }
 
@@ -68,6 +75,12 @@ export type {
 
 /** Proto-hub is placed at MAP_SHOP_POS.x + 3 in createInitialState. */
 export const HUB_POS = { x: MAP_SHOP_POS.x + 3, y: MAP_SHOP_POS.y };
+const TEST_PLAYABLE_INSET =
+  ISLAND_WATER_BORDER_TILES + ISLAND_SAND_BORDER_TILES;
+export const TEST_SERVICE_HUB_POS = {
+  x: TEST_PLAYABLE_INSET + 5,
+  y: TEST_PLAYABLE_INSET + 5,
+};
 
 export function droneTick(state: GameState): GameState {
   return gameReducer(state, { type: "DRONE_TICK" });

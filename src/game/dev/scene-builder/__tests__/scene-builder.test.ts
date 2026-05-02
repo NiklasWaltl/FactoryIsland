@@ -18,6 +18,7 @@ const scene: SceneDefinition = {
   id: "debug",
   label: "Builder smoke scene",
   mode: "debug",
+  clearBaseWorld: true,
   resetGlobalInventory: true,
   globalInventory: { coins: 1234 },
   starterDrone: { hubId: "hub" },

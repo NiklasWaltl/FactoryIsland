@@ -2,16 +2,19 @@ import React, { useRef, useEffect } from "react";
 import {
   createPhaserGame,
   FLOOR_MAP_EVENT,
+  TILE_MAP_EVENT,
   STATIC_ASSETS_EVENT,
   DRONE_STATE_EVENT,
   COLLECTION_NODES_EVENT,
   type FloorMapData,
+  type TileMapData,
   type StaticAssetSnapshot,
   type DroneSnapshot,
   type CollectionNodeSnapshot,
 } from "./PhaserGame";
 
 interface PhaserHostProps {
+  tileMap: TileMapData;
   floorMap: FloorMapData;
   staticAssets: StaticAssetSnapshot[];
   drones: DroneSnapshot[];
@@ -23,6 +26,7 @@ interface PhaserHostProps {
  * Handles clean mount/unmount and prevents double-init in React Strict Mode.
  */
 export const PhaserHost: React.FC<PhaserHostProps> = ({
+  tileMap,
   floorMap,
   staticAssets,
   drones,
@@ -48,6 +52,37 @@ export const PhaserHost: React.FC<PhaserHostProps> = ({
       gameRef.current = null;
     };
   }, []);
+
+  // Push tileMap into Phaser scene whenever its reducer-owned reference changes.
+  useEffect(() => {
+    const game = gameRef.current;
+    if (!game) return;
+
+    const tryEmit = (): boolean => {
+      try {
+        const scene = game.scene.getScene("WorldScene");
+        if (scene && scene.scene.isActive()) {
+          scene.events.emit(TILE_MAP_EVENT, tileMap);
+          return true;
+        }
+      } catch {
+        // Scene may not be registered yet; retry on next step.
+      }
+      return false;
+    };
+
+    if (tryEmit()) return;
+
+    const onStep = () => {
+      if (tryEmit()) {
+        game.events.off("step", onStep);
+      }
+    };
+    game.events.on("step", onStep);
+    return () => {
+      game.events.off("step", onStep);
+    };
+  }, [tileMap]);
 
   // Push floorMap into Phaser scene whenever it changes
   useEffect(() => {

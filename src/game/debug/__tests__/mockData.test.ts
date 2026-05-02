@@ -19,6 +19,17 @@ import {
 } from "../../store/reducer";
 import { buildSceneState } from "../../dev/scene-builder/build-scene-state";
 import { debugSceneLayout } from "../../dev/scenes/debug-scene.layout";
+import {
+  ISLAND_SAND_BORDER_TILES,
+  ISLAND_WATER_BORDER_TILES,
+} from "../../world/island-generator";
+
+const TEST_PLAYABLE_INSET =
+  ISLAND_WATER_BORDER_TILES + ISLAND_SAND_BORDER_TILES;
+const TEST_SERVICE_HUB_POS = {
+  x: TEST_PLAYABLE_INSET + 5,
+  y: TEST_PLAYABLE_INSET + 5,
+};
 
 function emptyInv(): Inventory {
   const inv = createInitialState("release").inventory;
@@ -165,7 +176,11 @@ describe("applyMockToState / DEBUG_MOCK_DRONE_HUB_INVENTORY", () => {
 
     expect(starterHubId).not.toBeNull();
 
-    const { state, hubId } = placeServiceHub(base, 6, 6);
+    const { state, hubId } = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const s1 = applyMockToState(state, "DEBUG_MOCK_DRONE_HUB_INVENTORY");
 
     expect(s1.serviceHubs[starterHubId!].inventory).toEqual(

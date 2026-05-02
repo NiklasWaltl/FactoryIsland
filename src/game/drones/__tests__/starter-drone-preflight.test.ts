@@ -1,11 +1,11 @@
 import {
   addNode,
   createInitialState,
-  DRONE_CAPACITY,
   DRONE_COLLECT_TICKS,
   droneTick,
   MAP_SHOP_POS,
   placeServiceHub,
+  TEST_SERVICE_HUB_POS,
   withDrone,
 } from "./test-utils";
 import type { GameState } from "./test-utils";
@@ -236,7 +236,11 @@ describe("DRONE_TICK – self-heal missing hub entry", () => {
 
   beforeEach(() => {
     const init = createInitialState("release");
-    const placed = placeServiceHub(init, 5, 5);
+    const placed = placeServiceHub(
+      init,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     base = placed.state;
     hubId = placed.hubId;
   });

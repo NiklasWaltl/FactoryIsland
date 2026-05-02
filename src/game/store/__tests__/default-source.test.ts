@@ -11,10 +11,7 @@ import {
   manhattanDist,
   cellKey,
 } from "../reducer";
-import {
-  BUILDINGS_WITH_DEFAULT_SOURCE,
-  BUILDING_COSTS,
-} from "../constants/buildings/index";
+import { BUILDINGS_WITH_DEFAULT_SOURCE } from "../constants/buildings/index";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -34,17 +31,17 @@ function stateWithOneWarehouse(): GameState {
   const whA: PlacedAsset = {
     id: "wh-A",
     type: "warehouse",
-    x: 5,
-    y: 5,
+    x: 11,
+    y: 11,
     size: 2,
     direction: "south",
   };
   const assets: Record<string, PlacedAsset> = { "wh-A": whA };
   const cellMap: Record<string, string> = {
-    [cellKey(5, 5)]: "wh-A",
-    [cellKey(6, 5)]: "wh-A",
-    [cellKey(5, 6)]: "wh-A",
-    [cellKey(6, 6)]: "wh-A",
+    [cellKey(11, 11)]: "wh-A",
+    [cellKey(12, 11)]: "wh-A",
+    [cellKey(11, 12)]: "wh-A",
+    [cellKey(12, 12)]: "wh-A",
   };
 
   return {
@@ -74,8 +71,8 @@ function stateWithTwoWarehouses(): GameState {
   const whB: PlacedAsset = {
     id: "wh-B",
     type: "warehouse",
-    x: 10,
-    y: 5,
+    x: 16,
+    y: 11,
     size: 2,
     direction: "south",
   };
@@ -84,10 +81,10 @@ function stateWithTwoWarehouses(): GameState {
     assets: { ...s.assets, "wh-B": whB },
     cellMap: {
       ...s.cellMap,
-      [cellKey(10, 5)]: "wh-B",
-      [cellKey(11, 5)]: "wh-B",
-      [cellKey(10, 6)]: "wh-B",
-      [cellKey(11, 6)]: "wh-B",
+      [cellKey(16, 11)]: "wh-B",
+      [cellKey(17, 11)]: "wh-B",
+      [cellKey(16, 12)]: "wh-B",
+      [cellKey(17, 12)]: "wh-B",
     },
     warehousesPlaced: 2,
     warehousesPurchased: 2,
@@ -163,7 +160,7 @@ describe("manhattanDist", () => {
 
 describe("getNearestWarehouseId", () => {
   it("returns the only warehouse when one exists", () => {
-    const s = stateWithOneWarehouse(); // wh-A at (5,5)
+    const s = stateWithOneWarehouse(); // wh-A at (11,11)
     expect(getNearestWarehouseId(s, 0, 0)).toBe("wh-A");
   });
 
@@ -173,15 +170,15 @@ describe("getNearestWarehouseId", () => {
   });
 
   it("returns the closer warehouse", () => {
-    const s = stateWithTwoWarehouses(); // wh-A at (5,5), wh-B at (10,5)
-    // (0,0) → wh-A: |0-5|+|0-5|=10, wh-B: |0-10|+|0-5|=15 → A
+    const s = stateWithTwoWarehouses(); // wh-A at (11,11), wh-B at (16,11)
+    // (0,0) is closer to wh-A.
     expect(getNearestWarehouseId(s, 0, 0)).toBe("wh-A");
-    // (12,5) → wh-A: |12-5|+|5-5|=7, wh-B: |12-10|+|5-5|=2 → B
-    expect(getNearestWarehouseId(s, 12, 5)).toBe("wh-B");
+    // (18,11) is closer to wh-B.
+    expect(getNearestWarehouseId(s, 18, 11)).toBe("wh-B");
   });
 
   it("uses lexicographic tie-break at equal distance", () => {
-    const s = stateWithTwoWarehouses(); // wh-A at (5,5), wh-B at (10,5)
+    const s = stateWithTwoWarehouses(); // wh-A at (11,11), wh-B at (16,11)
     // Midpoint (7,5): wh-A: |7-5|=2, wh-B: |7-10|=3 → not equal
     // Need equal distance: (7,5) dist to A=2+0=2, dist to B=3+0=3 not equal
     // Better: place at exact equidistant point
@@ -202,7 +199,7 @@ describe("getNearestWarehouseId", () => {
   });
 
   it("respects excludeId", () => {
-    const s = stateWithTwoWarehouses(); // wh-A at (5,5), wh-B at (10,5)
+    const s = stateWithTwoWarehouses(); // wh-A at (11,11), wh-B at (16,11)
     // (0,0) is closer to wh-A, but exclude wh-A → wh-B
     expect(getNearestWarehouseId(s, 0, 0, "wh-A")).toBe("wh-B");
   });
@@ -226,8 +223,8 @@ describe("getNearestWarehouseId", () => {
 
 describe("Auto-assign on placement (warehouse exists)", () => {
   it("workbench gets nearest warehouse on placement", () => {
-    const before = stateWithOneWarehouse(); // wh-A at (5,5)
-    const after = placeBuildingAt(before, "workbench", 0, 0);
+    const before = stateWithOneWarehouse(); // wh-A at (11,11)
+    const after = placeBuildingAt(before, "workbench", 14, 14);
 
     const wbId = findNewAssetId(before, after, "workbench");
     expect(wbId).toBeDefined();
@@ -236,7 +233,7 @@ describe("Auto-assign on placement (warehouse exists)", () => {
 
   it("smithy gets nearest warehouse on placement", () => {
     const before = stateWithOneWarehouse();
-    const after = placeBuildingAt(before, "smithy", 0, 0);
+    const after = placeBuildingAt(before, "smithy", 14, 14);
 
     const smId = findNewAssetId(before, after, "smithy");
     expect(smId).toBeDefined();
@@ -245,7 +242,7 @@ describe("Auto-assign on placement (warehouse exists)", () => {
 
   it("manual_assembler gets nearest warehouse on placement", () => {
     const before = stateWithOneWarehouse();
-    const after = placeBuildingAt(before, "manual_assembler", 0, 0);
+    const after = placeBuildingAt(before, "manual_assembler", 14, 14);
 
     const maId = findNewAssetId(before, after, "manual_assembler");
     expect(maId).toBeDefined();
@@ -253,9 +250,9 @@ describe("Auto-assign on placement (warehouse exists)", () => {
   });
 
   it("picks the nearer warehouse when two exist", () => {
-    const before = stateWithTwoWarehouses(); // wh-A at (5,5), wh-B at (10,5)
+    const before = stateWithTwoWarehouses(); // wh-A at (11,11), wh-B at (16,11)
     // Place near wh-B
-    const after = placeBuildingAt(before, "workbench", 12, 5);
+    const after = placeBuildingAt(before, "workbench", 19, 11);
 
     const wbId = findNewAssetId(before, after, "workbench");
     expect(wbId).toBeDefined();
@@ -263,9 +260,8 @@ describe("Auto-assign on placement (warehouse exists)", () => {
   });
 
   it("picks wh-A when placement is closer to A", () => {
-    const before = stateWithTwoWarehouses(); // wh-A at (5,5), wh-B at (10,5)
-    // Place at (0,0) → dist to A=10, dist to B=15 → A wins
-    const after = placeBuildingAt(before, "smithy", 0, 0);
+    const before = stateWithTwoWarehouses(); // wh-A at (11,11), wh-B at (16,11)
+    const after = placeBuildingAt(before, "smithy", 13, 14);
 
     const smId = findNewAssetId(before, after, "smithy");
     expect(smId).toBeDefined();
@@ -277,7 +273,7 @@ describe("Auto-assign on placement (warehouse exists)", () => {
     // Pre-assign some other building to wh-A
     before.buildingSourceWarehouseIds = { "existing-id": "wh-A" };
 
-    const after = placeBuildingAt(before, "workbench", 0, 0);
+    const after = placeBuildingAt(before, "workbench", 14, 14);
     // Old mapping preserved
     expect(after.buildingSourceWarehouseIds["existing-id"]).toBe("wh-A");
     // New workbench also assigned
@@ -293,7 +289,7 @@ describe("Auto-assign on placement (warehouse exists)", () => {
 describe("Auto-assign on placement (no warehouse)", () => {
   it("workbench stays global when no warehouse exists", () => {
     const before = stateWithNoWarehouse();
-    const after = placeBuildingAt(before, "workbench", 0, 0);
+    const after = placeBuildingAt(before, "workbench", 11, 11);
 
     const wbId = findNewAssetId(before, after, "workbench");
     expect(wbId).toBeDefined();
@@ -302,7 +298,7 @@ describe("Auto-assign on placement (no warehouse)", () => {
 
   it("smithy stays global when no warehouse exists", () => {
     const before = stateWithNoWarehouse();
-    const after = placeBuildingAt(before, "smithy", 0, 0);
+    const after = placeBuildingAt(before, "smithy", 11, 11);
 
     const smId = findNewAssetId(before, after, "smithy");
     expect(smId).toBeDefined();
@@ -311,7 +307,7 @@ describe("Auto-assign on placement (no warehouse)", () => {
 
   it("manual_assembler stays global when no warehouse exists", () => {
     const before = stateWithNoWarehouse();
-    const after = placeBuildingAt(before, "manual_assembler", 0, 0);
+    const after = placeBuildingAt(before, "manual_assembler", 11, 11);
 
     const maId = findNewAssetId(before, after, "manual_assembler");
     expect(maId).toBeDefined();
@@ -320,7 +316,7 @@ describe("Auto-assign on placement (no warehouse)", () => {
 
   it("no error and consistent state when no warehouse", () => {
     const before = stateWithNoWarehouse();
-    const after = placeBuildingAt(before, "workbench", 0, 0);
+    const after = placeBuildingAt(before, "workbench", 11, 11);
 
     expect(after.notifications.length).toBe(before.notifications.length);
     expect(typeof after.buildingSourceWarehouseIds).toBe("object");
@@ -336,7 +332,7 @@ describe("Non-crafting buildings unaffected", () => {
     const before = stateWithNoWarehouse();
     const after = gameReducer(
       { ...before, selectedBuildingType: "warehouse", buildMode: true },
-      { type: "BUILD_PLACE_BUILDING", x: 0, y: 0, direction: "south" },
+      { type: "BUILD_PLACE_BUILDING", x: 11, y: 11, direction: "south" },
     );
 
     const whId = findNewAssetId(before, after, "warehouse");
@@ -348,13 +344,13 @@ describe("Non-crafting buildings unaffected", () => {
     // Generator requires stone floor — place floor first
     const before = stateWithOneWarehouse();
     before.floorMap = {
-      [cellKey(0, 0)]: "stone_floor",
-      [cellKey(1, 0)]: "stone_floor",
-      [cellKey(0, 1)]: "stone_floor",
-      [cellKey(1, 1)]: "stone_floor",
+      [cellKey(14, 14)]: "stone_floor",
+      [cellKey(15, 14)]: "stone_floor",
+      [cellKey(14, 15)]: "stone_floor",
+      [cellKey(15, 15)]: "stone_floor",
     };
 
-    const after = placeBuildingAt(before, "generator", 0, 0);
+    const after = placeBuildingAt(before, "generator", 14, 14);
     const genId = findNewAssetId(before, after, "generator");
     if (genId) {
       expect(after.buildingSourceWarehouseIds[genId]).toBeUndefined();
@@ -363,7 +359,7 @@ describe("Non-crafting buildings unaffected", () => {
 
   it("cable placement does not create a source mapping", () => {
     const before = stateWithOneWarehouse();
-    const after = placeBuildingAt(before, "cable", 0, 0);
+    const after = placeBuildingAt(before, "cable", 14, 14);
     const cId = findNewAssetId(before, after, "cable");
     if (cId) {
       expect(after.buildingSourceWarehouseIds[cId]).toBeUndefined();
@@ -377,9 +373,9 @@ describe("Non-crafting buildings unaffected", () => {
 
 describe("Manual override after auto-assign", () => {
   it("auto-assigned source can be changed to a different warehouse", () => {
-    const before = stateWithTwoWarehouses(); // wh-A at (5,5), wh-B at (10,5)
+    const before = stateWithTwoWarehouses(); // wh-A at (11,11), wh-B at (16,11)
     // Place near wh-A → auto-assigns wh-A
-    const after = placeBuildingAt(before, "workbench", 0, 0);
+    const after = placeBuildingAt(before, "workbench", 13, 14);
 
     const wbId = findNewAssetId(before, after, "workbench")!;
     expect(after.buildingSourceWarehouseIds[wbId]).toBe("wh-A");
@@ -395,7 +391,7 @@ describe("Manual override after auto-assign", () => {
 
   it("auto-assigned source can be reset to global", () => {
     const before = stateWithOneWarehouse();
-    const after = placeBuildingAt(before, "smithy", 0, 0);
+    const after = placeBuildingAt(before, "smithy", 14, 14);
 
     const smId = findNewAssetId(before, after, "smithy")!;
     expect(after.buildingSourceWarehouseIds[smId]).toBe("wh-A");

@@ -1,15 +1,23 @@
-import type { SceneDefinition, SceneResourceDefinition } from "../scene-types";
+import type { SceneDefinition } from "../scene-types";
 import { createInitialState } from "../../store/initial-state";
 import type {
   AutoAssemblerEntry,
   AutoAssemblerRecipeId,
   AutoSmelterEntry,
-  CollectableItemType,
   GameState,
 } from "../../store/types";
+import {
+  DEPOSIT_RESOURCE,
+  isFixedResourceAssetType,
+  type FixedResourceOutput,
+} from "../../world/fixed-resource-layout";
 import { placeSceneAsset, placeSceneResource } from "./place-asset";
 import { registerSceneInventories } from "./register-inventories";
 import { registerScenePower } from "./register-power";
+import {
+  createBaseStartLayout,
+  hasRequiredBaseStartLayout,
+} from "../../world/base-start-layout";
 import { validateScene } from "./validate-scene";
 
 const CONVEYOR_TYPES = new Set([
@@ -21,50 +29,56 @@ const CONVEYOR_TYPES = new Set([
   "conveyor_underground_out",
 ]);
 
-type DepositResource = Extract<CollectableItemType, "stone" | "iron" | "copper">;
-
-const RESOURCE_BY_DEPOSIT_TYPE: Partial<Record<string, DepositResource>> = {
-  stone_deposit: "stone",
-  iron_deposit: "iron",
-  copper_deposit: "copper",
-};
+interface DepositResourceReference {
+  readonly id: string;
+  readonly resourceType: string;
+  readonly x: number;
+  readonly y: number;
+}
 
 export const buildSceneState = (
   scene: SceneDefinition,
   baseState: GameState = createInitialState(scene.mode),
 ): GameState => {
-  validateScene(scene);
+  const resolvedScene = resolveSceneDefinition(scene, baseState);
+  validateScene(resolvedScene);
 
-  let placement = {
-    assets: { ...baseState.assets },
-    cellMap: { ...baseState.cellMap },
-  };
+  let placement: Pick<GameState, "assets" | "cellMap"> = resolvedScene.clearBaseWorld
+    ? { assets: {}, cellMap: {} }
+    : {
+        assets: { ...baseState.assets },
+        cellMap: { ...baseState.cellMap },
+      };
 
-  for (const resourceDefinition of scene.resources ?? []) {
+  for (const resourceDefinition of resolvedScene.resources ?? []) {
     placement = placeSceneResource(placement, resourceDefinition);
   }
-  for (const assetDefinition of scene.assets) {
+  for (const assetDefinition of resolvedScene.assets) {
     placement = placeSceneAsset(placement, assetDefinition);
   }
 
   let state: GameState = {
     ...baseState,
-    mode: scene.mode ?? baseState.mode,
+    mode: resolvedScene.mode ?? baseState.mode,
     assets: placement.assets,
     cellMap: placement.cellMap,
-    floorMap: applySceneFloorTiles(baseState.floorMap, scene),
-    purchasedBuildings: scene.purchasedBuildings
-      ? [...scene.purchasedBuildings]
+    floorMap: applySceneFloorTiles(
+      resolvedScene.clearBaseWorld ? {} : baseState.floorMap,
+      resolvedScene,
+    ),
+    purchasedBuildings: resolvedScene.purchasedBuildings
+      ? [...resolvedScene.purchasedBuildings]
       : baseState.purchasedBuildings,
-    placedBuildings: scene.placedBuildings
-      ? [...scene.placedBuildings]
+    placedBuildings: resolvedScene.placedBuildings
+      ? [...resolvedScene.placedBuildings]
       : baseState.placedBuildings,
+    ...getClearBaseWorldState(resolvedScene, baseState),
   };
 
-  state = registerSceneInventories(state, scene);
-  state = registerSceneMachines(state, scene);
-  state = registerScenePower(state, scene);
-  state = registerStarterDrone(state, scene);
+  state = registerSceneInventories(state, resolvedScene);
+  state = registerSceneMachines(state, resolvedScene);
+  state = registerScenePower(state, resolvedScene);
+  state = registerStarterDrone(state, resolvedScene);
 
   return {
     ...state,
@@ -74,6 +88,62 @@ export const buildSceneState = (
     warehousesPlaced: Object.values(state.assets).filter(
       (asset) => asset.type === "warehouse",
     ).length,
+  };
+};
+
+const getClearBaseWorldState = (
+  scene: SceneDefinition,
+  baseState: GameState,
+): Partial<GameState> => {
+  if (!scene.clearBaseWorld) return {};
+
+  const starterDrone = {
+    ...baseState.starterDrone,
+    status: "idle" as const,
+    tileX: 0,
+    tileY: 0,
+    targetNodeId: null,
+    cargo: null,
+    ticksRemaining: 0,
+    hubId: null,
+    currentTaskType: null,
+    deliveryTargetId: null,
+    craftingJobId: null,
+  };
+
+  return {
+    warehouseInventories: {},
+    serviceHubs: {},
+    starterDrone,
+    drones: { starter: starterDrone },
+    generators: {},
+    connectedAssetIds: [],
+    poweredMachineIds: [],
+    machinePowerRatio: {},
+    autoMiners: {},
+    conveyors: {},
+    conveyorUndergroundPeers: {},
+    autoSmelters: {},
+    autoAssemblers: {},
+    constructionSites: {},
+    buildingSourceWarehouseIds: {},
+    buildingZoneIds: {},
+    collectionNodes: {},
+  };
+};
+
+const resolveSceneDefinition = (
+  scene: SceneDefinition,
+  baseState: GameState,
+): SceneDefinition => {
+  if (scene.baseStartLayout !== "include") return scene;
+  if (!scene.clearBaseWorld && hasRequiredBaseStartLayout(baseState)) return scene;
+
+  const baseStart = createBaseStartLayout(baseState.tileMap);
+  return {
+    ...scene,
+    starterDrone: scene.starterDrone ?? { hubId: baseStart.starterDroneHubId },
+    assets: [...baseStart.assets, ...scene.assets],
   };
 };
 
@@ -103,9 +173,7 @@ const registerSceneMachines = (
   const autoMiners = { ...state.autoMiners };
   const autoSmelters = { ...state.autoSmelters };
   const autoAssemblers = { ...state.autoAssemblers };
-  const resourcesById = new Map(
-    (scene.resources ?? []).map((resource) => [resource.id, resource]),
-  );
+  const resourcesById = getDepositResourceReferences(state, scene);
 
   for (const definition of scene.assets) {
     if (CONVEYOR_TYPES.has(definition.type)) {
@@ -119,7 +187,11 @@ const registerSceneMachines = (
     if (definition.type === "auto_miner") {
       const resource = definition.resourceId
         ? resourcesById.get(definition.resourceId)
-        : findDepositUnderMiner(scene.resources ?? [], definition.x, definition.y);
+        : findDepositUnderMiner(
+            resourcesById.values(),
+            definition.x,
+            definition.y,
+          );
       if (!resource) {
         throw new Error(
           `Scene auto miner '${definition.id}' must reference a deposit resource.`,
@@ -137,7 +209,9 @@ const registerSceneMachines = (
     }
 
     if (definition.type === "auto_assembler") {
-      autoAssemblers[definition.id] = createAutoAssemblerEntry(definition.recipeId);
+      autoAssemblers[definition.id] = createAutoAssemblerEntry(
+        definition.recipeId,
+      );
     }
   }
 
@@ -189,27 +263,56 @@ const registerStarterDrone = (
 };
 
 const findDepositUnderMiner = (
-  resources: readonly SceneResourceDefinition[],
+  resources: Iterable<DepositResourceReference>,
   x: number,
   y: number,
-): SceneResourceDefinition | undefined =>
-  resources.find(
-    (resource) =>
+): DepositResourceReference | undefined => {
+  for (const resource of resources) {
+    if (
       resource.x === x &&
       resource.y === y &&
-      resource.resourceType in RESOURCE_BY_DEPOSIT_TYPE,
-  );
+      isFixedResourceAssetType(resource.resourceType)
+    ) {
+      return resource;
+    }
+  }
+  return undefined;
+};
 
 const getResourceForDeposit = (
-  resource: SceneResourceDefinition,
-): DepositResource => {
-  const item = RESOURCE_BY_DEPOSIT_TYPE[resource.resourceType];
+  resource: DepositResourceReference,
+): FixedResourceOutput => {
+  const item = DEPOSIT_RESOURCE[resource.resourceType];
   if (!item) {
     throw new Error(
       `Scene resource '${resource.id}' is not a valid auto-miner deposit.`,
     );
   }
   return item;
+};
+
+const getDepositResourceReferences = (
+  state: GameState,
+  scene: SceneDefinition,
+): Map<string, DepositResourceReference> => {
+  const resourcesById = new Map<string, DepositResourceReference>();
+
+  for (const resource of scene.resources ?? []) {
+    if (!isFixedResourceAssetType(resource.resourceType)) continue;
+    resourcesById.set(resource.id, resource);
+  }
+
+  for (const asset of Object.values(state.assets)) {
+    if (!isFixedResourceAssetType(asset.type)) continue;
+    resourcesById.set(asset.id, {
+      id: asset.id,
+      resourceType: asset.type,
+      x: asset.x,
+      y: asset.y,
+    });
+  }
+
+  return resourcesById;
 };
 
 const createAutoSmelterEntry = (recipeId?: string): AutoSmelterEntry => ({

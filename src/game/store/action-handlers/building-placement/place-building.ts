@@ -136,6 +136,7 @@ export function handlePlaceBuildingAction(
     footprintSize: bSize,
     gridWidth: GRID_W,
     gridHeight: GRID_H,
+    tileMap: state.tileMap,
     cellMap: state.cellMap,
     floorMap: state.floorMap,
   });

@@ -1,4 +1,5 @@
 import { createInitialState } from "../../store/initial-state";
+import { BASE_START_IDS, hasRequiredBaseStartLayout } from "../../world/base-start-layout";
 import { applyDevScene, SCENES } from "../scene-factory";
 import { DEV_SCENE_IDS, DEV_SCENE_OPTIONS } from "../scene-types";
 
@@ -16,6 +17,7 @@ describe("scene-factory", () => {
     expect(state.autoAssemblers["auto-assembler-debug"].selectedRecipe).toBe(
       "metal_plate",
     );
+    expect(hasRequiredBaseStartLayout(state)).toBe(true);
   });
 
   it("builds an empty scene through the central mapping", () => {
@@ -32,13 +34,17 @@ describe("scene-factory", () => {
     }
   });
 
-  it("keeps unreleased technical scene ids aliased to a real layout", () => {
-    for (const sceneId of ["logistics", "power", "assembler"] as const) {
-      const state = applyDevScene(createInitialState("debug"), sceneId);
-      expect(state.assets["auto-assembler-debug"]?.type).toBe(
-        "auto_assembler",
-      );
-    }
+  it("builds technical scene ids through their registered layouts", () => {
+    const logistics = applyDevScene(createInitialState("debug"), "logistics");
+    const power = applyDevScene(createInitialState("debug"), "power");
+    const assembler = applyDevScene(createInitialState("debug"), "assembler");
+
+    expect(logistics.assets["logistics-warehouse-in"]?.type).toBe("warehouse");
+    expect(logistics.assets[BASE_START_IDS.serviceHub]?.type).toBe("service_hub");
+    expect(power.assets).toEqual({});
+    expect(assembler.assets["auto-assembler-debug"]?.type).toBe(
+      "auto_assembler",
+    );
   });
 
   it("can build every registered DevSceneId", () => {

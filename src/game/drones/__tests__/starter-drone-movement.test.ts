@@ -8,6 +8,7 @@ import {
   HUB_POS,
   MAP_SHOP_POS,
   placeServiceHub,
+  TEST_SERVICE_HUB_POS,
   withDrone,
 } from "./test-utils";
 import type { GameState } from "./test-utils";
@@ -161,12 +162,16 @@ describe("DRONE_TICK – returning_to_dock", () => {
 
   beforeEach(() => {
     const init = createInitialState("release");
-    const placed = placeServiceHub(init, 8, 8);
+    const placed = placeServiceHub(
+      init,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     base = placed.state;
   });
 
   it("idle drone not at dock transitions to returning_to_dock", () => {
-    // Move drone away from its dock (hub is at 8,8; move drone to 0,0)
+    // Move drone away from its dock.
     const state = withDrone(base, { tileX: 0, tileY: 0 });
     const next = droneTick(state);
     expect(next.starterDrone.status).toBe("returning_to_dock");
@@ -174,7 +179,7 @@ describe("DRONE_TICK – returning_to_dock", () => {
   });
 
   it("idle drone already at dock stays idle (same reference)", () => {
-    // After ASSIGN_DRONE_TO_HUB, drone is snapped to (8,8) which is the dock
+    // After ASSIGN_DRONE_TO_HUB, drone is snapped to the hub dock.
     const next = droneTick(base);
     // No nodes exist → no task → drone at dock → no state change
     expect(next.starterDrone.status).toBe("idle");
@@ -190,26 +195,32 @@ describe("DRONE_TICK – returning_to_dock", () => {
     });
     const next = droneTick(state);
     expect(next.starterDrone.status).toBe("returning_to_dock");
-    // Should have moved closer to (8,8)
-    const distBefore = Math.max(Math.abs(0 - 8), Math.abs(0 - 8));
+    const hubId = state.starterDrone.hubId!;
+    const hubAsset = state.assets[hubId];
+    const distBefore = Math.max(
+      Math.abs(0 - hubAsset.x),
+      Math.abs(0 - hubAsset.y),
+    );
     const distAfter = Math.max(
-      Math.abs(next.starterDrone.tileX - 8),
-      Math.abs(next.starterDrone.tileY - 8),
+      Math.abs(next.starterDrone.tileX - hubAsset.x),
+      Math.abs(next.starterDrone.tileY - hubAsset.y),
     );
     expect(distAfter).toBeLessThan(distBefore);
   });
 
   it("returning_to_dock snaps to dock and goes idle on arrival", () => {
+    const hubId = base.starterDrone.hubId!;
+    const hubAsset = base.assets[hubId];
     const state = withDrone(base, {
-      tileX: 7,
-      tileY: 8,
+      tileX: hubAsset.x - 1,
+      tileY: hubAsset.y,
       status: "returning_to_dock",
       ticksRemaining: 1,
     });
     const next = droneTick(state);
     expect(next.starterDrone.status).toBe("idle");
-    expect(next.starterDrone.tileX).toBe(8);
-    expect(next.starterDrone.tileY).toBe(8);
+    expect(next.starterDrone.tileX).toBe(hubAsset.x);
+    expect(next.starterDrone.tileY).toBe(hubAsset.y);
   });
 
   it("returning_to_dock aborts to collect when a task appears", () => {
@@ -257,8 +268,8 @@ describe("DRONE_TICK – position interpolation during flight", () => {
   it("updates drone position during moving_to_dropoff", () => {
     const { state: hubState, hubId } = placeServiceHub(
       createInitialState("release"),
-      5,
-      5,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
     );
     const hubAsset = hubState.assets[hubId];
     // Drone is far from hub — far enough for multiple ticks
@@ -292,7 +303,11 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
   it("hub_restock: drone flies to hub position, not MAP_SHOP_POS", () => {
     const init = createInitialState("release");
     // Place hub away from MAP_SHOP_POS so positions differ
-    const { state: hubState, hubId } = placeServiceHub(init, 10, 10);
+    const { state: hubState, hubId } = placeServiceHub(
+      init,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const hubAsset = hubState.assets[hubId];
     // Sanity: hub position must differ from MAP_SHOP_POS
     expect(hubAsset.x).not.toBe(MAP_SHOP_POS.x);
@@ -325,7 +340,11 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
 
   it("hub_restock with null deliveryTargetId still flies to hub via hubId", () => {
     const init = createInitialState("release");
-    const { state: hubState, hubId } = placeServiceHub(init, 10, 10);
+    const { state: hubState, hubId } = placeServiceHub(
+      init,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const hubAsset = hubState.assets[hubId];
 
     // Simulate edge case: deliveryTargetId is null but hubId is set
@@ -346,7 +365,11 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
 
   it("construction_supply: drone flies to construction site, not trader", () => {
     const init = createInitialState("release");
-    const { state: hubState, hubId } = placeServiceHub(init, 10, 10);
+    const { state: hubState, hubId } = placeServiceHub(
+      init,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     // Create a fake construction site asset at a known position
     const siteId = "test-site-001";
     let state: GameState = {

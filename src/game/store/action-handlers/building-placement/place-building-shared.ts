@@ -1,5 +1,7 @@
 import type { AssetType, Direction, GameState, PlacedAsset } from "../../types";
 import { GRID_W, GRID_H } from "../../../constants/grid";
+import { isPlayableTile } from "../../../world/island-generator";
+import type { TileType } from "../../../world/tile-types";
 import { cellKey } from "../../utils/cell-key";
 import { getAutoSmelterIoCells } from "../../asset-geometry";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
@@ -18,6 +20,7 @@ type BlockReason = Extract<
 
 const STATIC_BLOCK_NOTIFICATIONS: Partial<Record<BlockReason, string>> = {
   not_enough_resources: "Nicht genug Ressourcen!",
+  footprint_non_playable_tile: "Gebäude können nur auf Gras platziert werden.",
   workbench_already_exists: "Es kann nur eine Werkbank gebaut werden.",
   warehouse_limit_reached: "Maximale Anzahl an Lagerhäusern erreicht.",
 };
@@ -52,7 +55,10 @@ export function getAutoSmelterFootprintDimensions(dir: Direction): {
 
 export type AutoSmelterFootprintEligibilityDecision =
   | { kind: "eligible" }
-  | { kind: "blocked"; blockReason: "out_of_bounds" | "cell_occupied" };
+  | {
+      kind: "blocked";
+      blockReason: "out_of_bounds" | "non_playable_tile" | "cell_occupied";
+    };
 
 export function checkAutoSmelterFootprintEligibility(input: {
   x: number;
@@ -60,13 +66,18 @@ export function checkAutoSmelterFootprintEligibility(input: {
   width: 1 | 2;
   height: 1 | 2;
   dir: Direction;
+  tileMap: TileType[][];
   cellMap: Record<string, string>;
 }): AutoSmelterFootprintEligibilityDecision {
-  const { x, y, width, height, cellMap } = input;
+  const { x, y, width, height, tileMap, cellMap } = input;
   for (let dy = 0; dy < height; dy++) {
     for (let dx = 0; dx < width; dx++) {
       if (x + dx >= GRID_W || y + dy >= GRID_H) {
         return { kind: "blocked", blockReason: "out_of_bounds" };
+      }
+      const tile = tileMap[y + dy]?.[x + dx];
+      if (!tile || !isPlayableTile(tile)) {
+        return { kind: "blocked", blockReason: "non_playable_tile" };
       }
       if (cellMap[cellKey(x + dx, y + dy)]) {
         return { kind: "blocked", blockReason: "cell_occupied" };

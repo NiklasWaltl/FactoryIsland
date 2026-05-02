@@ -41,10 +41,20 @@ function clearCellForPlacement(
   };
 }
 
+function forcePlayableTile(state: GameState, x: number, y: number): GameState {
+  const tileMap = state.tileMap.map((row) => [...row]);
+  tileMap[y][x] = "grass";
+  return { ...state, tileMap };
+}
+
 describe("T09 underground-out map-edge span", () => {
   test("preview reports ug_tunnel_span at map edge", () => {
-    const base = clearCellForPlacement(
-      withPlacementResources(createInitialState("release")),
+    const base = forcePlayableTile(
+      clearCellForPlacement(
+        withPlacementResources(createInitialState("release")),
+        0,
+        10,
+      ),
       0,
       10,
     );
@@ -64,8 +74,12 @@ describe("T09 underground-out map-edge span", () => {
   });
 
   test("placement emits tunnel-span error notification at map edge", () => {
-    const base = clearCellForPlacement(
-      withPlacementResources(createInitialState("release")),
+    const base = forcePlayableTile(
+      clearCellForPlacement(
+        withPlacementResources(createInitialState("release")),
+        0,
+        10,
+      ),
       0,
       10,
     );

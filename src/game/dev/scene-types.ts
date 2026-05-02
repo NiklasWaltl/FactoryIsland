@@ -95,10 +95,14 @@ export interface SceneStarterDroneDefinition {
   readonly tileY?: number;
 }
 
+export type SceneBaseStartLayoutMode = "include" | "empty";
+
 export interface SceneDefinition {
   readonly id: DevSceneId;
   readonly label: string;
   readonly mode?: GameMode;
+  readonly clearBaseWorld?: boolean;
+  readonly baseStartLayout?: SceneBaseStartLayoutMode;
   readonly resetGlobalInventory?: boolean;
   readonly globalInventory?: Partial<Inventory>;
   readonly purchasedBuildings?: readonly BuildingType[];

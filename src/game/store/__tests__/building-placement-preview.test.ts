@@ -1,4 +1,4 @@
-import { GRID_H, GRID_W } from "../../constants/grid";
+import { GRID_W } from "../../constants/grid";
 import { cellKey } from "../utils/cell-key";
 import { createInitialState } from "../initial-state";
 import {
@@ -67,26 +67,7 @@ describe("previewBuildingPlacementAtCell", () => {
       ...base,
       inventory: { ...base.inventory, iron: 10 },
     };
-    let emptyX = -1;
-    let emptyY = -1;
-    outer: for (let gy = 0; gy < GRID_H; gy++) {
-      for (let gx = 0; gx < GRID_W; gx++) {
-        if (!state.cellMap[cellKey(gx, gy)]) {
-          emptyX = gx;
-          emptyY = gy;
-          break outer;
-        }
-      }
-    }
-    expect(emptyX).toBeGreaterThanOrEqual(0);
-
-    const r = previewBuildingPlacementAtCell(
-      state,
-      "conveyor",
-      emptyX,
-      emptyY,
-      "east",
-    );
+    const r = previewBuildingPlacementAtCell(state, "conveyor", 9, 9, "east");
     expect(r).toEqual({ ok: true });
   });
 
@@ -108,16 +89,16 @@ describe("previewBuildingPlacementAtCell", () => {
     const occupiedAsset: PlacedAsset = {
       id: "occupied",
       type: "tree",
-      x: 4,
-      y: 4,
+      x: 9,
+      y: 9,
       size: 1,
     };
     const base: GameState = {
       ...withPlacementResources(createInitialState("release")),
       assets: { occupied: occupiedAsset },
-      cellMap: { [cellKey(4, 4)]: "occupied" },
+      cellMap: { [cellKey(9, 9)]: "occupied" },
     };
-    const r = previewBuildingPlacementAtCell(base, "conveyor", 4, 4, "east");
+    const r = previewBuildingPlacementAtCell(base, "conveyor", 9, 9, "east");
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.reason).toBe("cell_occupied");

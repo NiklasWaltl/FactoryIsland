@@ -8,7 +8,7 @@ import { BUILDING_LABELS } from "../../constants/buildings/index";
 import {
   DEPOSIT_RESOURCE,
   DEPOSIT_TYPES,
-} from "../../constants/map/deposit-positions";
+} from "../../../world/fixed-resource-layout";
 import { DEFAULT_MACHINE_PRIORITY } from "../../constants/energy/energy-balance";
 import { cellKey } from "../../utils/cell-key";
 import { placeAsset } from "../../asset-mutation";
@@ -52,6 +52,7 @@ export function placeAutoMinerBranch(
   const autoMinerEligibilityDecision = decideAutoMinerPlacementEligibility({
     x,
     y,
+    tileMap: state.tileMap,
     cellMap: state.cellMap,
     assets: state.assets,
     autoMiners: state.autoMiners,
@@ -147,6 +148,7 @@ export function placeAutoSmelterBranch(
     width,
     height,
     dir: direction,
+    tileMap: state.tileMap,
     cellMap: state.cellMap,
   });
   if (footprintEligibilityDecision.kind === "blocked") {
@@ -156,6 +158,15 @@ export function placeAutoSmelterBranch(
         notifications: addErrorNotification(
           state.notifications,
           "Kein Platz für Auto Smelter.",
+        ),
+      };
+    }
+    if (footprintEligibilityDecision.blockReason === "non_playable_tile") {
+      return {
+        ...state,
+        notifications: addErrorNotification(
+          state.notifications,
+          "Gebäude können nur auf Gras platziert werden.",
         ),
       };
     }
@@ -266,6 +277,7 @@ export function placeAutoAssemblerBranch(
     width,
     height,
     dir: direction,
+    tileMap: state.tileMap,
     cellMap: state.cellMap,
   });
   if (footprintEligibilityDecision.kind === "blocked") {
@@ -275,6 +287,15 @@ export function placeAutoAssemblerBranch(
         notifications: addErrorNotification(
           state.notifications,
           "Kein Platz für Auto-Assembler.",
+        ),
+      };
+    }
+    if (footprintEligibilityDecision.blockReason === "non_playable_tile") {
+      return {
+        ...state,
+        notifications: addErrorNotification(
+          state.notifications,
+          "Gebäude können nur auf Gras platziert werden.",
         ),
       };
     }

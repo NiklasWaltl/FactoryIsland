@@ -1,14 +1,23 @@
 // ============================================================
 // INITIAL STATE
 // ------------------------------------------------------------
-// Structural base state only. Dev/test scenes are applied from
-// src/game/dev via the entry bootstrap in DEV builds.
+// Fresh runtime state. Dev/test scenes are applied from src/game/dev via the
+// entry bootstrap in DEV builds after this new-game baseline is created.
 // ============================================================
 
 import { createEmptyNetworkSlice } from "../inventory/reservationTypes";
 import { createEmptyCraftingQueue } from "../crafting/queue";
+import { GRID_H, GRID_W } from "../constants/grid";
+import { generateIslandTileMap } from "../world/island-generator";
+import { createFixedResourcePlacement } from "../world/fixed-resource-layout";
+import { applyBaseStartLayout } from "../world/base-start-layout";
 import { createInitialHotbar } from "./helpers/hotbar";
-import type { GameMode, GameState, Inventory, StarterDroneState } from "./types";
+import type {
+  GameMode,
+  GameState,
+  Inventory,
+  StarterDroneState,
+} from "./types";
 import { createEmptyInventory } from "./inventory-ops";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";
 
@@ -17,6 +26,8 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     ...createEmptyInventory(),
     coins: 1000,
   };
+  const tileMap = generateIslandTileMap(GRID_H, GRID_W);
+  const fixedResources = createFixedResourcePlacement(tileMap);
 
   const starterDrone: StarterDroneState = {
     status: "idle",
@@ -32,10 +43,11 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     droneId: "starter",
   };
 
-  return {
+  const state: GameState = {
     mode,
-    assets: {},
-    cellMap: {},
+    assets: fixedResources.assets,
+    cellMap: fixedResources.cellMap,
+    tileMap,
     inventory,
     purchasedBuildings: [],
     placedBuildings: [],
@@ -106,4 +118,6 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     splitterFilterState: {},
     selectedSplitterId: null,
   };
+
+  return applyBaseStartLayout(state);
 }

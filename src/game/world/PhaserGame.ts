@@ -1,8 +1,6 @@
 import Phaser from "phaser";
 import {
   ASSET_SPRITES,
-  GRASS_TUFTS,
-  GRASS_VARIANTS,
   STONE_FLOOR_BASE,
   STONE_FLOOR_BLOCKS,
   STONE_FLOOR_MORTAR,
@@ -11,12 +9,18 @@ import {
 import { CELL_PX, GRID_H, GRID_W } from "../constants/grid";
 import { ASSET_LABELS } from "../store/constants/ui/assets";
 import type { Direction } from "../store/types";
+import { getInitialCameraFocusPoint } from "./camera-focus";
+import { TileRenderer } from "./tile-renderer";
+import type { TileType } from "./tile-types";
 
 const GAME_W = GRID_W * CELL_PX;
 const GAME_H = GRID_H * CELL_PX;
 
 /** Event name used to push floorMap updates from React into the Phaser scene. */
 export const FLOOR_MAP_EVENT = "floorMapChanged";
+
+/** Event name used to push terrain tile snapshots from React into the Phaser scene. */
+export const TILE_MAP_EVENT = "tileMapChanged";
 
 /** Event name used to push static asset snapshots from React into the Phaser scene. */
 export const STATIC_ASSETS_EVENT = "staticAssetsChanged";
@@ -29,6 +33,9 @@ export const DRONE_STATE_EVENT = "droneStateChanged";
 
 /** The floorMap shape coming from React state. */
 export type FloorMapData = Record<string, string>;
+
+/** The terrain tileMap shape coming from React state. */
+export type TileMapData = TileType[][];
 
 export interface StaticAssetSnapshot {
   id: string;
@@ -117,8 +124,12 @@ const DIRECTION_ROTATION: Record<Direction, number> = {
   west: 180,
 };
 
-/** World scene � renders grass + stone floor as tilemap layers. */
+/** World scene - renders terrain tiles, stone floor, assets, drops, and drones. */
 class WorldScene extends Phaser.Scene {
+  /** Terrain graphics layer rendered below all other world objects. */
+  private tileRenderer: TileRenderer | null = null;
+  /** Last rendered terrain snapshot; reference compare is enough for reducer snapshots. */
+  private lastTileMap: TileMapData | null = null;
   /** Stone floor tilemap layer � tiles set/cleared via applyFloorMap(). */
   private floorLayer!: Phaser.Tilemaps.TilemapLayer;
   /** The firstgid assigned to the stone floor tileset in the shared tilemap. */
@@ -139,6 +150,8 @@ class WorldScene extends Phaser.Scene {
     string,
     { hubId: string | null; parked: boolean; status: string }
   >();
+  /** Initial camera focus is derived once from the reducer-owned tileMap. */
+  private hasAppliedInitialCameraFocus = false;
 
   constructor() {
     super({ key: "WorldScene" });
@@ -182,6 +195,15 @@ class WorldScene extends Phaser.Scene {
 
   create(): void {
     this.buildLayers();
+    this.tileRenderer = new TileRenderer(this, CELL_PX);
+    this.setWorldBounds(GRID_W, GRID_H);
+
+    this.events.once("shutdown", () => this.destroyTileRenderer());
+    this.events.once("destroy", () => this.destroyTileRenderer());
+
+    this.events.on(TILE_MAP_EVENT, (data: TileMapData) => {
+      this.applyTileMap(data);
+    });
 
     // Listen for floorMap updates from React
     this.events.on(FLOOR_MAP_EVENT, (data: FloorMapData) => {
@@ -199,6 +221,32 @@ class WorldScene extends Phaser.Scene {
     this.events.on(DRONE_STATE_EVENT, (data: DroneSnapshot[]) => {
       this.applyDroneStates(data);
     });
+  }
+
+  private applyTileMap(data: TileMapData): void {
+    if (data === this.lastTileMap) return;
+    this.lastTileMap = data;
+    this.setWorldBounds(data[0]?.length ?? 0, data.length);
+    this.applyInitialCameraFocus(data);
+    this.tileRenderer?.render(data);
+  }
+
+  private setWorldBounds(cols: number, rows: number): void {
+    this.cameras.main.setBounds(0, 0, cols * CELL_PX, rows * CELL_PX);
+  }
+
+  private applyInitialCameraFocus(data: TileMapData): void {
+    if (this.hasAppliedInitialCameraFocus) return;
+    const focus = getInitialCameraFocusPoint(data);
+    this.cameras.main.centerOn(focus.x, focus.y);
+    this.hasAppliedInitialCameraFocus = true;
+  }
+
+  private destroyTileRenderer(): void {
+    this.tileRenderer?.destroy();
+    this.tileRenderer = null;
+    this.lastTileMap = null;
+    this.hasAppliedInitialCameraFocus = false;
   }
 
   /** Apply a full floorMap snapshot � set or clear tiles as needed. */
@@ -532,32 +580,9 @@ class WorldScene extends Phaser.Scene {
   }
 
   /**
-   * Build all tilemap layers: grass (checkerboard) + stone floor (initially empty).
-   * Both share a single Phaser tilemap so tile rendering uses the same proven path.
+   * Build the stone floor tilemap layer. Terrain is drawn by TileRenderer below it.
    */
   private buildLayers(): void {
-    // === Grass spritesheet (2 variants side by side: 128�64) ===
-    const grassCt = this.textures.createCanvas(
-      "grass_tiles",
-      CELL_PX * 2,
-      CELL_PX,
-    )!;
-    const grassCtx = grassCt.context;
-
-    for (let v = 0; v < 2; v++) {
-      const ox = v * CELL_PX;
-      const { base, tuft } = GRASS_VARIANTS[v];
-
-      grassCtx.fillStyle = base;
-      grassCtx.fillRect(ox, 0, CELL_PX, CELL_PX);
-
-      grassCtx.fillStyle = tuft;
-      for (const [x, y, w, h] of GRASS_TUFTS) {
-        grassCtx.fillRect(ox + x * 2, y * 2, w * 2, h * 2);
-      }
-    }
-    grassCt.refresh();
-
     // === Stone floor spritesheet (single tile: 64�64) ===
     const floorCt = this.textures.createCanvas(
       "stone_floor_tiles",
@@ -580,30 +605,13 @@ class WorldScene extends Phaser.Scene {
     }
     floorCt.refresh();
 
-    // === Shared tilemap (80�50, 64px tiles) ===
+    // === Tilemap for floor overlays (80x50, 64px tiles) ===
     const map = this.make.tilemap({
       width: GRID_W,
       height: GRID_H,
       tileWidth: CELL_PX,
       tileHeight: CELL_PX,
     });
-
-    // Grass tileset + layer (tile indices: firstgid, firstgid+1)
-    const grassTs = map.addTilesetImage(
-      "grass_tiles",
-      "grass_tiles",
-      CELL_PX,
-      CELL_PX,
-      0,
-      0,
-    )!;
-    const grassLayer = map.createBlankLayer("grass", grassTs)!;
-
-    for (let y = 0; y < GRID_H; y++) {
-      for (let x = 0; x < GRID_W; x++) {
-        grassLayer.putTileAt(((x + y) % 2) + grassTs.firstgid, x, y);
-      }
-    }
 
     // Stone floor tileset + layer (initially empty, filled by applyFloorMap)
     const floorTs = map.addTilesetImage(

@@ -27,8 +27,8 @@ function buildBaselineState(): GameState {
   const wh: PlacedAsset = {
     id: "wh-A",
     type: "warehouse",
-    x: 4,
-    y: 4,
+    x: 11,
+    y: 11,
     size: 2,
     direction: "south",
   };
@@ -36,10 +36,10 @@ function buildBaselineState(): GameState {
     ...base,
     assets: { "wh-A": wh },
     cellMap: {
-      [cellKey(4, 4)]: "wh-A",
-      [cellKey(5, 4)]: "wh-A",
-      [cellKey(4, 5)]: "wh-A",
-      [cellKey(5, 5)]: "wh-A",
+      [cellKey(11, 11)]: "wh-A",
+      [cellKey(12, 11)]: "wh-A",
+      [cellKey(11, 12)]: "wh-A",
+      [cellKey(12, 12)]: "wh-A",
     },
     warehousesPlaced: 1,
     warehousesPurchased: 1,
@@ -68,7 +68,7 @@ function placeWorkbench(state: GameState, x: number, y: number): GameState {
 describe("Workbench is a single manual tool station", () => {
   it("places exactly one workbench when none exists", () => {
     const start = buildBaselineState();
-    const after = placeWorkbench(start, 0, 0);
+    const after = placeWorkbench(start, 14, 11);
     const workbenches = Object.values(after.assets).filter(
       (a) => a.type === "workbench",
     );
@@ -77,12 +77,12 @@ describe("Workbench is a single manual tool station", () => {
 
   it("blocks a second workbench placement and surfaces an error notification", () => {
     const start = buildBaselineState();
-    const afterFirst = placeWorkbench(start, 0, 0);
+    const afterFirst = placeWorkbench(start, 14, 11);
     expect(
       Object.values(afterFirst.assets).filter((a) => a.type === "workbench"),
     ).toHaveLength(1);
 
-    const afterSecond = placeWorkbench(afterFirst, 8, 0);
+    const afterSecond = placeWorkbench(afterFirst, 17, 11);
     const workbenches = Object.values(afterSecond.assets).filter(
       (a) => a.type === "workbench",
     );
@@ -95,22 +95,22 @@ describe("Workbench is a single manual tool station", () => {
 
   it("does not consume resources when the second placement is blocked", () => {
     const start = buildBaselineState();
-    const afterFirst = placeWorkbench(start, 0, 0);
+    const afterFirst = placeWorkbench(start, 14, 11);
     const inventoryBefore = { ...afterFirst.inventory };
 
-    const afterSecond = placeWorkbench(afterFirst, 8, 0);
+    const afterSecond = placeWorkbench(afterFirst, 17, 11);
     expect(afterSecond.inventory).toEqual(inventoryBefore);
   });
 
   it("placing a workbench does not enqueue any crafting jobs (no auto-startpoint)", () => {
     const start = buildBaselineState();
-    const after = placeWorkbench(start, 0, 0);
+    const after = placeWorkbench(start, 14, 11);
     expect(after.crafting.jobs).toHaveLength(0);
   });
 
   it("placing a workbench does not create keep-stock targets", () => {
     const start = buildBaselineState();
-    const after = placeWorkbench(start, 0, 0);
+    const after = placeWorkbench(start, 14, 11);
     expect(after.keepStockByWorkbench ?? {}).toEqual({});
   });
 });

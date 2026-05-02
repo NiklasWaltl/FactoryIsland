@@ -1,7 +1,6 @@
 import {
   addNode,
   BUILDING_COSTS,
-  createDefaultHubTargetStock,
   createEmptyHubInventory,
   createInitialState,
   droneTick,
@@ -12,6 +11,7 @@ import {
   placeServiceHub,
   PROTO_HUB_TARGET_STOCK,
   SERVICE_HUB_TARGET_STOCK,
+  TEST_SERVICE_HUB_POS,
   withDrone,
   withHubInventory,
   withTier2HubAndDockedDrones,
@@ -68,7 +68,11 @@ describe("DRONE_TICK – hub assignment", () => {
 
   it("does NOT auto-assign drone when a new service_hub is placed via build mode", () => {
     const droneHubBefore = base.starterDrone.hubId;
-    const { state, hubId } = placeHubOnly(base, 5, 5);
+    const { state, hubId } = placeHubOnly(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     // Drone hubId must remain unchanged (still the proto-hub from initial state)
     expect(state.starterDrone.hubId).toBe(droneHubBefore);
     expect(state.starterDrone.hubId).not.toBe(hubId);
@@ -77,7 +81,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("ASSIGN_DRONE_TO_HUB: assigns drone to hub and updates droneIds", () => {
-    const { state: hubState, hubId } = placeHubOnly(base, 5, 5);
+    const { state: hubState, hubId } = placeHubOnly(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const droneId = hubState.starterDrone.droneId;
     const state = gameReducer(hubState, {
       type: "ASSIGN_DRONE_TO_HUB",
@@ -89,7 +97,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("ASSIGN_DRONE_TO_HUB: removes drone from old hub's droneIds", () => {
-    const { state: hubState, hubId } = placeHubOnly(base, 5, 5);
+    const { state: hubState, hubId } = placeHubOnly(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const droneId = hubState.starterDrone.droneId;
     const oldHubId = hubState.starterDrone.hubId!;
     expect(hubState.serviceHubs[oldHubId].droneIds).toContain(droneId);
@@ -102,7 +114,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("ASSIGN_DRONE_TO_HUB: snaps drone to hub dock position", () => {
-    const { state: hubState, hubId } = placeHubOnly(base, 5, 5);
+    const { state: hubState, hubId } = placeHubOnly(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const droneId = hubState.starterDrone.droneId;
     const state = gameReducer(hubState, {
       type: "ASSIGN_DRONE_TO_HUB",
@@ -116,7 +132,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("ASSIGN_DRONE_TO_HUB: aborts in-progress task cleanly", () => {
-    const { state: hubState, hubId } = placeHubOnly(base, 5, 5);
+    const { state: hubState, hubId } = placeHubOnly(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const droneId = hubState.starterDrone.droneId;
     // Simulate drone mid-flight with a claimed node
     const nodeState = addNode(hubState, "wood", 3, 3, 5);
@@ -146,7 +166,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("delivers to hub position instead of MAP_SHOP_POS", () => {
-    const { state: hubState, hubId } = placeServiceHub(base, 5, 5);
+    const { state: hubState, hubId } = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     const hubAsset = hubState.assets[hubId];
 
     // Place drone in moving_to_dropoff with 1 tick remaining
@@ -165,7 +189,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("resets hubId and goes idle when hub is removed", () => {
-    const { state: hubState, hubId } = placeServiceHub(base, 5, 5);
+    const { state: hubState, hubId } = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     // Drone is mid-flight
     let state = withDrone(hubState, {
       status: "moving_to_dropoff",
@@ -194,7 +222,11 @@ describe("DRONE_TICK – hub assignment", () => {
   });
 
   it("completes full round trip delivering to hub", () => {
-    const { state: hubState, hubId } = placeServiceHub(base, 10, 10);
+    const { state: hubState, hubId } = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     // Set copper target > 0 so drone will collect it
     let state = addNode(hubState, "copper", 12, 10, 2);
     state = gameReducer(state, {
@@ -240,7 +272,11 @@ describe("DRONE_TICK – hub demand filtering", () => {
 
   beforeEach(() => {
     const init = createInitialState("release");
-    const placed = placeServiceHub(init, 5, 5);
+    const placed = placeServiceHub(
+      init,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     base = placed.state;
     hubId = placed.hubId;
   });
@@ -401,7 +437,11 @@ describe("SET_HUB_TARGET_STOCK", () => {
 
   beforeEach(() => {
     base = createInitialState("release");
-    const placed = placeServiceHub(base, 6, 6);
+    const placed = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     base = placed.state;
     hubId = placed.hubId;
   });
@@ -463,7 +503,11 @@ describe("Drone reacts to changed target stock", () => {
 
   beforeEach(() => {
     base = createInitialState("release");
-    const placed = placeServiceHub(base, 6, 6);
+    const placed = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
     base = placed.state;
     hubId = placed.hubId;
   });
