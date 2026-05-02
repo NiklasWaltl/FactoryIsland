@@ -6,7 +6,14 @@ import {
   BASE_START_IDS,
   hasRequiredBaseStartLayout,
 } from "../../../world/base-start-layout";
-import { DOCK_WAREHOUSE_ID } from "../apply-dock-warehouse-layout";
+import {
+  DOCK_WAREHOUSE_ID,
+  applyDockWarehouseLayout,
+} from "../apply-dock-warehouse-layout";
+import {
+  getDockBeachStartRow,
+  getDockWarehousePos,
+} from "../../constants/map/map-layout";
 import { getInitialCameraFocusTile } from "../../../world/camera-focus";
 import {
   getCorePlayableBounds,
@@ -79,6 +86,38 @@ describe("fresh state world/bootstrap invariants", () => {
     expect(state.warehousesPlaced).toBe(2);
   });
 
+  it("places the dock warehouse at the bottom beach transition without base-start conflicts", () => {
+    const dock = state.assets[DOCK_WAREHOUSE_ID];
+    const beachStartRow = getDockBeachStartRow(state.tileMap);
+    const dockPos = getDockWarehousePos(state.tileMap);
+
+    expect(dock).toMatchObject(dockPos);
+    expect(dockPos.x).toBe(Math.floor(state.tileMap[0].length / 2));
+    expect(dockPos.y).toBe(beachStartRow - 1);
+    expect(state.tileMap[dockPos.y]?.[dockPos.x]).toBe("grass");
+    expect(state.tileMap[beachStartRow]?.[dockPos.x]).toBe("sand");
+
+    const dockFootprint = footprintOf(dock);
+    for (const asset of collectBaseStartAssets(state)) {
+      expect(boundsOverlap(dockFootprint, footprintOf(asset))).toBe(false);
+    }
+  });
+
+  it("realigns an existing dock warehouse to the canonical beach transition", () => {
+    const dock = state.assets[DOCK_WAREHOUSE_ID];
+    const legacyState = moveDockWarehouseForTest(state, dock.x, dock.y - 3);
+    const realigned = applyDockWarehouseLayout(legacyState);
+    const dockPos = getDockWarehousePos(realigned.tileMap);
+
+    expect(realigned.assets[DOCK_WAREHOUSE_ID]).toMatchObject(dockPos);
+    expect(
+      realigned.cellMap[cellKeyForTest(dock.x, dock.y - 3)],
+    ).toBeUndefined();
+    expect(realigned.cellMap[cellKeyForTest(dockPos.x, dockPos.y)]).toBe(
+      DOCK_WAREHOUSE_ID,
+    );
+  });
+
   it("anchors the initial camera focus inside the playable core", () => {
     const focus = getInitialCameraFocusTile(state.tileMap);
     expect(isInsideCoreArea(focus.row, focus.col, state.tileMap)).toBe(true);
@@ -94,10 +133,7 @@ function expectRectangularTileMap(tileMap: TileType[][]): void {
   }
 }
 
-function expectBoundsAllGrass(
-  tileMap: TileType[][],
-  bounds: TileBounds,
-): void {
+function expectBoundsAllGrass(tileMap: TileType[][], bounds: TileBounds): void {
   for (let row = bounds.row; row < bounds.row + bounds.height; row += 1) {
     for (let col = bounds.col; col < bounds.col + bounds.width; col += 1) {
       expect(tileMap[row]?.[col]).toBe("grass");
@@ -118,4 +154,44 @@ function footprintOf(asset: PlacedAsset): TileBounds {
     width: asset.width ?? asset.size,
     height: asset.height ?? asset.size,
   };
+}
+
+function boundsOverlap(left: TileBounds, right: TileBounds): boolean {
+  return (
+    left.col < right.col + right.width &&
+    left.col + left.width > right.col &&
+    left.row < right.row + right.height &&
+    left.row + left.height > right.row
+  );
+}
+
+function moveDockWarehouseForTest(
+  state: GameState,
+  x: number,
+  y: number,
+): GameState {
+  const dock = state.assets[DOCK_WAREHOUSE_ID];
+  const cellMap = { ...state.cellMap };
+  for (const [key, assetId] of Object.entries(cellMap)) {
+    if (assetId === DOCK_WAREHOUSE_ID) delete cellMap[key];
+  }
+
+  for (let dx = 0; dx < (dock.width ?? dock.size); dx += 1) {
+    for (let dy = 0; dy < (dock.height ?? dock.size); dy += 1) {
+      cellMap[cellKeyForTest(x + dx, y + dy)] = DOCK_WAREHOUSE_ID;
+    }
+  }
+
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      [DOCK_WAREHOUSE_ID]: { ...dock, x, y },
+    },
+    cellMap,
+  };
+}
+
+function cellKeyForTest(x: number, y: number): string {
+  return `${x},${y}`;
 }

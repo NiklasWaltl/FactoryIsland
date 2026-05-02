@@ -104,6 +104,8 @@ export interface ShipSnapshot {
   dockTileY: number;
 }
 
+const SHIP_DOCKED_BEACH_ROW_OFFSET_TILES = 1;
+
 const COLLECTION_NODE_COLORS: Record<string, number> = {
   wood: 0x8b4513,
   stone: 0x808080,
@@ -626,7 +628,10 @@ class WorldScene extends Phaser.Scene {
     const container = this.shipContainer;
     if (!container) return;
     if (data.status === "docked") {
-      container.setPosition(data.dockTileX * CELL_PX, data.dockTileY * CELL_PX);
+      container.setPosition(
+        data.dockTileX * CELL_PX,
+        (data.dockTileY + SHIP_DOCKED_BEACH_ROW_OFFSET_TILES) * CELL_PX,
+      );
       container.setVisible(true);
       const label = container.getByName("label") as Phaser.GameObjects.Text;
       label.setText("⚓ Angedockt");
