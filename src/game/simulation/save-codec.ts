@@ -18,6 +18,8 @@ import {
   createDefaultHubTargetStock,
   createDefaultProtoHubTargetStock,
 } from "../store/constants/hub/hub-target-stock";
+import { createInitialShipState } from "../store/initial-state";
+import { applyDockWarehouseLayout } from "../store/bootstrap/apply-dock-warehouse-layout";
 import { cellKey } from "../store/utils/cell-key";
 import { createInitialState } from "../store/initial-state";
 import { sanitizeTileMap } from "../world/tile-map-utils";
@@ -90,6 +92,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     recipeAutomationPolicies: state.recipeAutomationPolicies ?? {},
     splitterRouteState: state.splitterRouteState ?? {},
     splitterFilterState: state.splitterFilterState ?? {},
+    ship: state.ship,
   };
 }
 
@@ -272,6 +275,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     ),
     splitterRouteState: save.splitterRouteState ?? {},
     splitterFilterState: save.splitterFilterState ?? {},
+    ship: (save as any).ship ?? createInitialShipState(),
 
     connectedAssetIds: [],
     poweredMachineIds: [],
@@ -415,7 +419,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     );
   }
 
-  return partial;
+  return applyDockWarehouseLayout(partial);
 }
 
 /**

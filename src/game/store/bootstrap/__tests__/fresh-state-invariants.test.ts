@@ -6,6 +6,7 @@ import {
   BASE_START_IDS,
   hasRequiredBaseStartLayout,
 } from "../../../world/base-start-layout";
+import { DOCK_WAREHOUSE_ID } from "../apply-dock-warehouse-layout";
 import { getInitialCameraFocusTile } from "../../../world/camera-focus";
 import {
   getCorePlayableBounds,
@@ -70,11 +71,12 @@ describe("fresh state world/bootstrap invariants", () => {
     }
 
     expect(Object.keys(state.serviceHubs)).toEqual([BASE_START_IDS.serviceHub]);
-    expect(Object.keys(state.warehouseInventories)).toEqual([
-      BASE_START_IDS.warehouse,
-    ]);
-    expect(state.warehousesPurchased).toBe(1);
-    expect(state.warehousesPlaced).toBe(1);
+    expect(Object.keys(state.warehouseInventories)).toEqual(
+      expect.arrayContaining([BASE_START_IDS.warehouse, DOCK_WAREHOUSE_ID]),
+    );
+    expect(Object.keys(state.warehouseInventories)).toHaveLength(2);
+    expect(state.warehousesPurchased).toBe(2);
+    expect(state.warehousesPlaced).toBe(2);
   });
 
   it("anchors the initial camera focus inside the playable core", () => {

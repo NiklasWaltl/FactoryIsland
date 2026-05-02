@@ -769,6 +769,36 @@ function makeServiceHub(): string {
 }
 
 // ---------------------------------------------------------------------------
+// DOCK WAREHOUSE — 2×2 (64×64 SVG) — anchor/ship palette
+// ---------------------------------------------------------------------------
+
+function makeDockWarehouse(): string {
+  let s = "";
+  // Dark teal background
+  s += r(2, 2, 60, 60, "#0a2030");
+  s += r(4, 4, 56, 56, "#0d3040");
+  // Teal border
+  s += r(0, 0, 64, 2, "#1e8090");
+  s += r(0, 62, 64, 2, "#1e8090");
+  s += r(0, 0, 2, 64, "#1e8090");
+  s += r(62, 0, 2, 64, "#1e8090");
+  // Dock platform
+  s += r(10, 42, 44, 6, "#1a4a5a");
+  s += r(12, 40, 40, 4, "#2a6a7a");
+  // Anchor symbol
+  s += r(29, 12, 6, 4, "#5de0f0");
+  s += r(28, 14, 8, 2, "#5de0f0");
+  s += r(30, 16, 4, 18, "#5de0f0");
+  s += r(22, 32, 8, 4, "#5de0f0");
+  s += r(34, 32, 8, 4, "#5de0f0");
+  s += r(24, 34, 4, 4, "#5de0f0");
+  s += r(36, 34, 4, 4, "#5de0f0");
+  // Highlight
+  s += r(30, 13, 2, 2, "#a0f0ff");
+  return svgURI(64, 64, s);
+}
+
+// ---------------------------------------------------------------------------
 // EXPORT MAPS
 // ---------------------------------------------------------------------------
 
@@ -801,6 +831,7 @@ export const ASSET_SPRITES: Record<AssetType, string> = {
   auto_smelter: makeAutoSmelter(),
   auto_assembler: makeAutoAssembler(),
   service_hub: makeServiceHub(),
+  dock_warehouse: makeDockWarehouse(),
 };
 
 /** Grass tile variants (0 / 1 for checkerboard) */

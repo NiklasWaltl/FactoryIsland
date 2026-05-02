@@ -329,6 +329,19 @@ export const BUILDING_REGISTRY: Readonly<Record<BuildingType, BuildingDef>> =
       eligibleAsConstructionSite: true,
       inputBuffer: null,
     },
+    dock_warehouse: {
+      type: "dock_warehouse",
+      label: "Dock-Lagerhaus",
+      description: "Das Lagerhaus am Dock. Nimmt Lieferungen für das Schiff entgegen und lagert Belohnungen.",
+      category: "storage",
+      cost: {},
+      size: 2,
+      stackable: false,
+      hasDefaultSourceWarehouse: false,
+      requiresStoneFloor: false,
+      eligibleAsConstructionSite: false,
+      inputBuffer: null,
+    },
   });
 
 // ---------------------------------------------------------------------------

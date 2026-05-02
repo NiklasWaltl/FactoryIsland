@@ -20,6 +20,7 @@ import type {
   KeepStockByWorkbench,
   HubTier,
 } from "../store/types";
+import type { ShipState } from "../store/types/ship-types";
 import type { TileType } from "../world/tile-types";
 import { GRID_H, GRID_W } from "../constants/grid";
 import { sanitizeTileMap } from "../world/tile-map-utils";
@@ -35,7 +36,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 21;
+export const CURRENT_SAVE_VERSION = 22;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -205,7 +206,13 @@ export interface SaveGameV21 extends Omit<SaveGameV20, "version"> {
   tileMap: TileType[][];
 }
 
-export type SaveGameLatest = SaveGameV21;
+export interface SaveGameV22 extends Omit<SaveGameV21, "version"> {
+  version: 22;
+  /** Ship quest loop state. */
+  ship: ShipState;
+}
+
+export type SaveGameLatest = SaveGameV22;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -491,6 +498,23 @@ function migrateV20ToV21(save: SaveGameV20): SaveGameV21 {
   };
 }
 
+function migrateV21ToV22(save: SaveGameV21): SaveGameV22 {
+  const existingShip = (save as unknown as Partial<SaveGameV22>).ship;
+  const ship: ShipState = existingShip ?? {
+    status: "sailing",
+    activeQuest: null,
+    nextQuest: null,
+    dockedAt: null,
+    departsAt: null,
+    returnsAt: Date.now() + 30_000,
+    rewardPending: false,
+    lastReward: null,
+    questPhase: 1,
+    shipsSinceLastFragment: 0,
+  };
+  return { ...save, version: 22, ship };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -513,6 +537,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 18, to: 19, migrate: migrateV18ToV19 },
   { from: 19, to: 20, migrate: migrateV19ToV20 },
   { from: 20, to: 21, migrate: migrateV20ToV21 },
+  { from: 21, to: 22, migrate: migrateV21ToV22 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

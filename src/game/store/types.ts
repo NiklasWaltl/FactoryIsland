@@ -80,7 +80,8 @@ export type AssetType =
   | "manual_assembler"
   | "auto_smelter"
   | "auto_assembler"
-  | "service_hub";
+  | "service_hub"
+  | "dock_warehouse";
 
 export type BuildingType =
   | "workbench"
@@ -100,7 +101,8 @@ export type BuildingType =
   | "manual_assembler"
   | "auto_smelter"
   | "auto_assembler"
-  | "service_hub";
+  | "service_hub"
+  | "dock_warehouse";
 
 /** Floor tiles that can be placed on the ground layer */
 export type FloorTileType = "stone_floor" | "grass_block";
@@ -125,6 +127,8 @@ export interface PlacedAsset {
    * ignorieren das Feld vollständig.
    */
   boosted?: boolean;
+  /** Marks this warehouse as the ship's dock warehouse. Only one may exist. */
+  isDockWarehouse?: boolean;
 }
 
 /**
@@ -203,6 +207,7 @@ export type UIPanel =
   | "manual_assembler"
   | "service_hub"
   | "conveyor_splitter"
+  | "dock_warehouse"
   | null;
 
 // ---- Battery ----

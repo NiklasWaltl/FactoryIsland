@@ -1,5 +1,6 @@
 import { loadAndHydrate, serializeState } from "../../simulation/save";
 import { BASE_START_IDS, hasRequiredBaseStartLayout } from "../../world/base-start-layout";
+import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
 import { getInitialCameraFocusTile } from "../../world/camera-focus";
 import { isInsideStartArea } from "../../world/core-layout";
 import { createInitialState } from "../initial-state";
@@ -25,8 +26,8 @@ describe("createInitialState base start layout", () => {
     ]);
     expect(state.starterDrone.hubId).toBe(BASE_START_IDS.serviceHub);
     expect(state.drones.starter.hubId).toBe(BASE_START_IDS.serviceHub);
-    expect(state.warehousesPlaced).toBe(1);
-    expect(state.warehousesPurchased).toBe(1);
+    expect(state.warehousesPlaced).toBe(2);
+    expect(state.warehousesPurchased).toBe(2);
   });
 
   it("hydrates a saved fresh state without duplicating base starter objects", () => {
@@ -38,9 +39,10 @@ describe("createInitialState base start layout", () => {
       expect(Object.values(hydrated.assets).filter((asset) => asset.id === id)).toHaveLength(1);
     }
     expect(Object.keys(hydrated.serviceHubs)).toEqual([BASE_START_IDS.serviceHub]);
-    expect(Object.keys(hydrated.warehouseInventories)).toEqual([
-      BASE_START_IDS.warehouse,
-    ]);
+    expect(Object.keys(hydrated.warehouseInventories)).toEqual(
+      expect.arrayContaining([BASE_START_IDS.warehouse, DOCK_WAREHOUSE_ID]),
+    );
+    expect(Object.keys(hydrated.warehouseInventories)).toHaveLength(2);
   });
 
   it("keeps the camera focus anchor valid for the materialized start area", () => {

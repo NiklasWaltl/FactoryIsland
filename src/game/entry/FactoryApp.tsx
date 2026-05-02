@@ -35,6 +35,7 @@ import { AutoAssemblerPanel } from "../ui/panels/AutoAssemblerPanel";
 import { ManualAssemblerPanel } from "../ui/panels/ManualAssemblerPanel";
 import { ServiceHubPanel } from "../ui/panels/ServiceHubPanel";
 import { ConveyorSplitterPanel } from "../ui/panels/ConveyorSplitterPanel";
+import { DockWarehousePanel } from "../ui/panels/DockWarehousePanel";
 import { BuildMenu } from "../ui/menus/BuildMenu";
 import { Notifications } from "../ui/hud/Notifications";
 import { AutoDeliveryFeed } from "../ui/hud/AutoDeliveryFeed";
@@ -293,6 +294,9 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       )}
       {state.openPanel === "conveyor_splitter" && (
         <ConveyorSplitterPanel state={state} dispatch={dispatch} />
+      )}
+      {state.openPanel === "dock_warehouse" && (
+        <DockWarehousePanel state={state} dispatch={dispatch} />
       )}
 
       <Hotbar state={state} dispatch={dispatch} />

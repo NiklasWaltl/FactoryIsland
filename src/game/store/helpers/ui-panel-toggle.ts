@@ -128,5 +128,13 @@ export function tryTogglePanelFromAsset(
     };
   }
 
+  if (asset.type === "dock_warehouse") {
+    const opening = state.openPanel !== "dock_warehouse";
+    return {
+      ...state,
+      openPanel: opening ? "dock_warehouse" : null,
+    };
+  }
+
   return null;
 }

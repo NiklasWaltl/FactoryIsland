@@ -40,6 +40,7 @@ export const ASSET_LABELS: Record<AssetType, string> = {
   auto_smelter: "Auto Smelter",
   auto_assembler: "Auto-Assembler",
   service_hub: "Drohnen-Hub",
+  dock_warehouse: "Dock-Lagerhaus",
 };
 
 export const ASSET_COLORS: Record<AssetType, string> = {
@@ -70,6 +71,7 @@ export const ASSET_COLORS: Record<AssetType, string> = {
   auto_smelter: "#e64545",
   auto_assembler: "#2e8b57",
   service_hub: "#4169E1",
+  dock_warehouse: "#1e8090",
 };
 
 export const ASSET_EMOJIS: Record<AssetType, string> = {
@@ -100,4 +102,5 @@ export const ASSET_EMOJIS: Record<AssetType, string> = {
   auto_smelter: "\u{1F525}",
   auto_assembler: "\u{1F528}",
   service_hub: "\u{1F6F8}",
+  dock_warehouse: "⚓",
 };

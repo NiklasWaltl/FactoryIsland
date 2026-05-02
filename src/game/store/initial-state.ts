@@ -11,6 +11,7 @@ import { GRID_H, GRID_W } from "../constants/grid";
 import { generateIslandTileMap } from "../world/island-generator";
 import { createFixedResourcePlacement } from "../world/fixed-resource-layout";
 import { applyBaseStartLayout } from "./bootstrap/apply-base-start-layout";
+import { applyDockWarehouseLayout } from "./bootstrap/apply-dock-warehouse-layout";
 import { createInitialHotbar } from "./helpers/hotbar";
 import type {
   GameMode,
@@ -136,5 +137,5 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     ship: createInitialShipState(),
   };
 
-  return applyBaseStartLayout(state);
+  return applyDockWarehouseLayout(applyBaseStartLayout(state));
 }
