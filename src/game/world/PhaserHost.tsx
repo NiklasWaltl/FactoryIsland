@@ -6,11 +6,13 @@ import {
   STATIC_ASSETS_EVENT,
   DRONE_STATE_EVENT,
   COLLECTION_NODES_EVENT,
+  SHIP_STATE_EVENT,
   type FloorMapData,
   type TileMapData,
   type StaticAssetSnapshot,
   type DroneSnapshot,
   type CollectionNodeSnapshot,
+  type ShipSnapshot,
 } from "./PhaserGame";
 
 interface PhaserHostProps {
@@ -19,6 +21,7 @@ interface PhaserHostProps {
   staticAssets: StaticAssetSnapshot[];
   drones: DroneSnapshot[];
   collectionNodes: CollectionNodeSnapshot[];
+  ship: ShipSnapshot;
 }
 
 /**
@@ -31,6 +34,7 @@ export const PhaserHost: React.FC<PhaserHostProps> = ({
   staticAssets,
   drones,
   collectionNodes,
+  ship,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
@@ -208,6 +212,37 @@ export const PhaserHost: React.FC<PhaserHostProps> = ({
       game.events.off("step", onStep);
     };
   }, [collectionNodes]);
+
+  // Push ship snapshot into Phaser scene whenever status or dock position changes.
+  useEffect(() => {
+    const game = gameRef.current;
+    if (!game) return;
+
+    const tryEmit = (): boolean => {
+      try {
+        const scene = game.scene.getScene("WorldScene");
+        if (scene && scene.scene.isActive()) {
+          scene.events.emit(SHIP_STATE_EVENT, ship);
+          return true;
+        }
+      } catch {
+        // Scene may not be registered yet; retry on next step.
+      }
+      return false;
+    };
+
+    if (tryEmit()) return;
+
+    const onStep = () => {
+      if (tryEmit()) {
+        game.events.off("step", onStep);
+      }
+    };
+    game.events.on("step", onStep);
+    return () => {
+      game.events.off("step", onStep);
+    };
+  }, [ship]);
 
   return (
     <div

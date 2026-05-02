@@ -8,6 +8,7 @@ import {
 import { PhaserHost } from "../world/PhaserHost";
 import { buildWorldOverlayData } from "./GridOverlays";
 import { buildSelectionOverlays } from "./GridSelection";
+import { getDockWarehousePos } from "../store/constants/map/map-layout";
 
 const WORLD_W = GRID_W * CELL_PX;
 const WORLD_H = GRID_H * CELL_PX;
@@ -128,6 +129,16 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
       .join(";"),
   ]);
 
+  const shipSnapshot = useMemo(() => {
+    const dockPos = getDockWarehousePos(state.tileMap);
+    return {
+      status: state.ship.status,
+      dockTileX: dockPos.x,
+      dockTileY: dockPos.y,
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.ship.status, state.tileMap]);
+
   const { placementOverlayElement, inspectionOverlayElement } =
     buildSelectionOverlays({
       state,
@@ -173,6 +184,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
             staticAssets={stableStaticAssets}
             drones={droneSnapshots}
             collectionNodes={collectionNodeSnapshots}
+            ship={shipSnapshot}
           />
         </div>
 

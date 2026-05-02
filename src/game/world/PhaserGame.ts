@@ -31,6 +31,9 @@ export const COLLECTION_NODES_EVENT = "collectionNodesChanged";
 /** Event name used to push drone state from React into the Phaser scene. */
 export const DRONE_STATE_EVENT = "droneStateChanged";
 
+/** Event name used to push ship state from React into the Phaser scene. */
+export const SHIP_STATE_EVENT = "shipStateChanged";
+
 /** The floorMap shape coming from React state. */
 export type FloorMapData = Record<string, string>;
 
@@ -66,7 +69,8 @@ export interface StaticAssetSnapshot {
     | "workbench"
     | "smithy"
     | "manual_assembler"
-    | "service_hub";
+    | "service_hub"
+    | "dock_warehouse";
   x: number;
   y: number;
   width: 1 | 2;
@@ -92,6 +96,12 @@ export interface DroneSnapshot {
   hubId: string | null;
   isParkedAtHub: boolean;
   parkingSlot: number | null;
+}
+
+export interface ShipSnapshot {
+  status: "sailing" | "docked" | "departing";
+  dockTileX: number;
+  dockTileY: number;
 }
 
 const COLLECTION_NODE_COLORS: Record<string, number> = {
@@ -152,6 +162,8 @@ class WorldScene extends Phaser.Scene {
   >();
   /** Initial camera focus is derived once from the reducer-owned tileMap. */
   private hasAppliedInitialCameraFocus = false;
+  /** Ship Phaser container: rectangle + anchor label. */
+  private shipContainer: Phaser.GameObjects.Container | null = null;
 
   constructor() {
     super({ key: "WorldScene" });
@@ -191,6 +203,7 @@ class WorldScene extends Phaser.Scene {
     this.load.image("asset:smithy", ASSET_SPRITES.smithy);
     this.load.image("asset:manual_assembler", ASSET_SPRITES.manual_assembler);
     this.load.image("asset:service_hub", ASSET_SPRITES.service_hub);
+    this.load.image("asset:dock_warehouse", ASSET_SPRITES.dock_warehouse);
   }
 
   create(): void {
@@ -221,6 +234,12 @@ class WorldScene extends Phaser.Scene {
     this.events.on(DRONE_STATE_EVENT, (data: DroneSnapshot[]) => {
       this.applyDroneStates(data);
     });
+
+    this.events.on(SHIP_STATE_EVENT, (data: ShipSnapshot) => {
+      this.applyShipState(data);
+    });
+
+    this.shipContainer = this.createShipContainer();
   }
 
   private applyTileMap(data: TileMapData): void {
@@ -577,6 +596,43 @@ class WorldScene extends Phaser.Scene {
     }
 
     this.lastDroneParkingState = nextDroneParkingState;
+  }
+
+  private createShipContainer(): Phaser.GameObjects.Container {
+    const container = this.add.container(0, 0);
+    const gfx = this.add.graphics();
+    gfx.name = "gfx";
+    gfx.fillStyle(0x2255aa, 1);
+    gfx.fillRect(0, 0, CELL_PX * 2, CELL_PX);
+    gfx.lineStyle(2, 0x88bbff, 1);
+    gfx.strokeRect(0, 0, CELL_PX * 2, CELL_PX);
+    const label = this.add
+      .text(CELL_PX, CELL_PX + 2, "", {
+        fontFamily: "Arial",
+        fontSize: "9px",
+        color: "#ffffff",
+        backgroundColor: "rgba(0,0,0,0.6)",
+        padding: { left: 4, right: 4, top: 1, bottom: 1 },
+      })
+      .setOrigin(0.5, 0);
+    label.name = "label";
+    container.add([gfx, label]);
+    container.setDepth(20);
+    container.setVisible(false);
+    return container;
+  }
+
+  private applyShipState(data: ShipSnapshot): void {
+    const container = this.shipContainer;
+    if (!container) return;
+    if (data.status === "docked") {
+      container.setPosition(data.dockTileX * CELL_PX, data.dockTileY * CELL_PX);
+      container.setVisible(true);
+      const label = container.getByName("label") as Phaser.GameObjects.Text;
+      label.setText("⚓ Angedockt");
+    } else {
+      container.setVisible(false);
+    }
   }
 
   /**

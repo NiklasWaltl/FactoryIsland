@@ -119,7 +119,8 @@ export function buildWorldOverlayData({
       asset.type === "workbench" ||
       asset.type === "smithy" ||
       asset.type === "manual_assembler" ||
-      asset.type === "service_hub"
+      asset.type === "service_hub" ||
+      asset.type === "dock_warehouse"
     ) {
       phaserStaticAssets.push({
         id: asset.id,
