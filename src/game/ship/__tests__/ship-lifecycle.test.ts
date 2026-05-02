@@ -5,6 +5,7 @@
 import { gameReducer, createInitialState } from "../../store/reducer";
 import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
 import { computeQualityMultiplier } from "../../store/action-handlers/ship-actions";
+import { MODULE_FRAGMENT_ITEM_ID } from "../ship-constants";
 import { drawReward } from "../reward-table";
 
 // ---- helpers -------------------------------------------------------
@@ -316,11 +317,10 @@ describe("shipsSinceLastFragment counter", () => {
       state = dispatch(state, { type: "SHIP_RETURN" });
       expect(state.ship.lastReward?.kind).toBe("module_fragment");
       expect(state.ship.shipsSinceLastFragment).toBe(0);
-      expect(state.moduleFragments).toEqual([
-        { tier: 1, count: 1 },
-        { tier: 2, count: 0 },
-        { tier: 3, count: 0 },
-      ]);
+      expect(state.moduleFragments).toBe(0);
+      expect(
+        state.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
+      ).toBe(1);
     } finally {
       Math.random = origRandom;
     }

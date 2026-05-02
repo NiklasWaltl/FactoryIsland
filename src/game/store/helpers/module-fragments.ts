@@ -1,54 +1,101 @@
-import type { FragmentTier, ModuleFragment } from "../types";
+import { MODULE_FRAGMENT_ITEM_ID } from "../../ship/ship-constants";
+import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
+import { createEmptyInventory } from "../inventory-ops";
+import type { GameState, Inventory, ModuleFragmentCount } from "../types";
 
-export const MODULE_FRAGMENT_TIERS: readonly FragmentTier[] = [1, 2, 3];
-
-export function createDefaultModuleFragments(): ModuleFragment[] {
-  return MODULE_FRAGMENT_TIERS.map((tier) => ({ tier, count: 0 }));
-}
-
-export function isFragmentTier(value: unknown): value is FragmentTier {
-  return value === 1 || value === 2 || value === 3;
-}
-
-export function normalizeModuleFragments(raw: unknown): ModuleFragment[] {
-  const counts = new Map<FragmentTier, number>();
-
-  if (Array.isArray(raw)) {
-    for (const entry of raw) {
-      if (!entry || typeof entry !== "object") continue;
-      const tier = (entry as Partial<ModuleFragment>).tier;
-      if (!isFragmentTier(tier)) continue;
-      counts.set(
-        tier,
-        normalizeFragmentCount((entry as Partial<ModuleFragment>).count),
-      );
-    }
+export function normalizeModuleFragmentCount(
+  raw: unknown,
+): ModuleFragmentCount {
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return Math.max(0, Math.floor(raw));
   }
 
-  return MODULE_FRAGMENT_TIERS.map((tier) => ({
-    tier,
-    count: counts.get(tier) ?? 0,
-  }));
+  if (!Array.isArray(raw)) return 0;
+
+  let total = 0;
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    total += normalizeModuleFragmentCount(
+      (entry as { count?: unknown }).count,
+    );
+  }
+
+  return total;
 }
 
-export function addModuleFragmentCount(
+export function addModuleFragments(
   fragments: unknown,
-  tier: FragmentTier,
   amount = 1,
-): ModuleFragment[] {
-  const increment = normalizeFragmentCount(amount);
-  const normalized = normalizeModuleFragments(fragments);
-  if (increment === 0) return normalized;
-
-  return normalized.map((entry) =>
-    entry.tier === tier
-      ? { ...entry, count: entry.count + increment }
-      : entry,
-  );
+): ModuleFragmentCount {
+  const increment = normalizeModuleFragmentCount(amount);
+  return normalizeModuleFragmentCount(fragments) + increment;
 }
 
-function normalizeFragmentCount(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value)
-    ? Math.max(0, Math.floor(value))
-    : 0;
+export function getDockWarehouseFragmentCount(
+  state: Pick<GameState, "warehouseInventories">,
+): number {
+  return state.warehouseInventories[DOCK_WAREHOUSE_ID]?.[
+    MODULE_FRAGMENT_ITEM_ID
+  ] ?? 0;
+}
+
+export function addDockWarehouseItem(
+  state: GameState,
+  item: keyof Inventory,
+  amount: number,
+): GameState {
+  const increment = normalizeModuleFragmentCount(amount);
+  if (increment === 0) return state;
+
+  const dockInventory =
+    state.warehouseInventories[DOCK_WAREHOUSE_ID] ?? createEmptyInventory();
+  const current = dockInventory[item] ?? 0;
+
+  return {
+    ...state,
+    warehouseInventories: {
+      ...state.warehouseInventories,
+      [DOCK_WAREHOUSE_ID]: {
+        ...dockInventory,
+        [item]: current + increment,
+      },
+    },
+  };
+}
+
+export function removeDockWarehouseItem(
+  state: GameState,
+  item: keyof Inventory,
+  amount: number,
+): { removed: boolean; state: GameState } {
+  const decrement = normalizeModuleFragmentCount(amount);
+  if (decrement === 0) return { removed: false, state };
+
+  const dockInventory = state.warehouseInventories[DOCK_WAREHOUSE_ID];
+  const current = dockInventory?.[item] ?? 0;
+  if (!dockInventory || current < decrement) return { removed: false, state };
+
+  return {
+    removed: true,
+    state: {
+      ...state,
+      warehouseInventories: {
+        ...state.warehouseInventories,
+        [DOCK_WAREHOUSE_ID]: {
+          ...dockInventory,
+          [item]: current - decrement,
+        },
+      },
+    },
+  };
+}
+
+export function collectDockWarehouseFragment(state: GameState): GameState {
+  const result = removeDockWarehouseItem(state, MODULE_FRAGMENT_ITEM_ID, 1);
+  if (!result.removed) return state;
+
+  return {
+    ...result.state,
+    moduleFragments: addModuleFragments(result.state.moduleFragments, 1),
+  };
 }

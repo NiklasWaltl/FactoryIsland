@@ -86,21 +86,25 @@ describe("FragmentTraderPanel", () => {
     expect(buyButton().disabled).toBe(false);
   });
 
-  it("shows the module inventory count", () => {
+  it("shows the collected module fragment count", () => {
     const state = {
       ...stateWithCoinsAndPity(500),
-      moduleInventory: [
-        {
-          id: "module-1",
-          type: "miner-boost" as const,
-          tier: 1 as const,
-          equippedTo: null,
-        },
-      ],
+      moduleFragments: 2,
     };
 
     renderPanel(state);
 
-    expect(container.textContent).toContain("Fragmente im Inventar: 1");
+    expect(container.textContent).toContain("Fragmente im Inventar: 2");
+  });
+
+  it("dispatches COLLECT_FRAGMENT after a successful buy", () => {
+    const dispatch = renderPanel(stateWithCoinsAndPity(500));
+
+    act(() => {
+      buyButton().click();
+    });
+
+    expect(dispatch).toHaveBeenNthCalledWith(1, { type: "BUY_FRAGMENT" });
+    expect(dispatch).toHaveBeenNthCalledWith(2, { type: "COLLECT_FRAGMENT" });
   });
 });

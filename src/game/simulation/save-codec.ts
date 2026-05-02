@@ -41,7 +41,7 @@ import {
   sanitizeConveyorUndergroundPeers,
 } from "./save-normalizer";
 import { isRuntimeGameStateSnapshot } from "./save-legacy";
-import { normalizeModuleFragments } from "../store/helpers/module-fragments";
+import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
 
 /**
  * Extract the persistable subset of runtime GameState and stamp it
@@ -59,7 +59,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     tileMap: state.tileMap,
     inventory: state.inventory,
     moduleInventory: state.moduleInventory ?? [],
-    moduleFragments: normalizeModuleFragments(state.moduleFragments),
+    moduleFragments: normalizeModuleFragmentCount(state.moduleFragments),
     purchasedBuildings: state.purchasedBuildings,
     placedBuildings: state.placedBuildings,
     warehousesPurchased: state.warehousesPurchased,
@@ -114,7 +114,9 @@ export function deserializeState(save: SaveGameLatest): GameState {
     tileMap: sanitizeTileMap(save.tileMap, GRID_H, GRID_W),
     inventory: save.inventory,
     moduleInventory: save.moduleInventory ?? [],
-    moduleFragments: normalizeModuleFragments((save as any).moduleFragments),
+    moduleFragments: normalizeModuleFragmentCount(
+      (save as any).moduleFragments,
+    ),
     purchasedBuildings: save.purchasedBuildings,
     placedBuildings: save.placedBuildings,
     warehousesPurchased: save.warehousesPurchased,

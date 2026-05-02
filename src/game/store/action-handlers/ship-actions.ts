@@ -3,10 +3,8 @@ import type { GameState } from "../types";
 import type { ShipState } from "../types/ship-types";
 import { drawQuest } from "../../ship/quest-registry";
 import { drawReward } from "../../ship/reward-table";
-import { DEFAULT_SHIP_MODULE_FRAGMENT_TIER } from "../../ship/ship-constants";
 import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
 import { addResources, createEmptyInventory } from "../inventory-ops";
-import { addModuleFragmentCount } from "../helpers/module-fragments";
 import { addNotification } from "../utils/notifications";
 
 const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
@@ -145,28 +143,19 @@ function handleShipReturn(state: GameState, now: number): GameState {
   const reward = drawReward(ship.pendingMultiplier, ship.questPhase);
 
   const isCoinReward = reward.itemId === "coins";
-  const isModuleFragmentReward = reward.kind === "module_fragment";
-  const shouldStoreRewardInDock = !isCoinReward && !isModuleFragmentReward;
   const nextInventory = isCoinReward
     ? addResources(state.inventory, { coins: reward.amount })
     : state.inventory;
   const currentInv =
     state.warehouseInventories[DOCK_WAREHOUSE_ID] ?? createEmptyInventory();
   const rewardInv = { ...currentInv };
-  if (shouldStoreRewardInDock) {
+  if (!isCoinReward) {
     const key = reward.itemId as keyof typeof rewardInv;
     rewardInv[key] = ((rewardInv[key] as number) ?? 0) + reward.amount;
   }
-  const nextModuleFragments = isModuleFragmentReward
-    ? addModuleFragmentCount(
-        state.moduleFragments,
-        DEFAULT_SHIP_MODULE_FRAGMENT_TIER,
-        reward.amount,
-      )
-    : state.moduleFragments;
 
   const isFragment =
-    isModuleFragmentReward || reward.kind === "complete_module";
+    reward.kind === "module_fragment" || reward.kind === "complete_module";
 
   const updatedShip: ShipState = {
     ...ship,
@@ -192,13 +181,12 @@ function handleShipReturn(state: GameState, now: number): GameState {
     ...state,
     ship: updatedShip,
     inventory: nextInventory,
-    moduleFragments: nextModuleFragments,
     notifications,
-    warehouseInventories: shouldStoreRewardInDock
-      ? {
+    warehouseInventories: isCoinReward
+      ? state.warehouseInventories
+      : {
           ...state.warehouseInventories,
           [DOCK_WAREHOUSE_ID]: rewardInv,
-        }
-      : state.warehouseInventories,
+        },
   };
 }

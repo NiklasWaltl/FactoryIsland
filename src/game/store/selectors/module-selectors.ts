@@ -6,3 +6,6 @@ export const selectModules = (state: GameState): Module[] =>
 
 export const selectModuleCount = (state: GameState): number =>
   selectModules(state).length;
+
+export const selectModuleFragmentCount = (state: GameState): number =>
+  state.moduleFragments;

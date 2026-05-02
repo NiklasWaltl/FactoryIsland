@@ -13,7 +13,7 @@ function freshState() {
 }
 
 describe("fragment trader", () => {
-  it("BUY_FRAGMENT spends 500 coins, adds a module, and resets pity", () => {
+  it("BUY_FRAGMENT spends 500 coins, stages a fragment, and resets pity", () => {
     const state = {
       ...freshState(),
       inventory: { ...freshState().inventory, coins: 750 },
@@ -23,12 +23,10 @@ describe("fragment trader", () => {
     const next = gameReducer(state, { type: "BUY_FRAGMENT" });
 
     expect(next.inventory.coins).toBe(750 - FRAGMENT_TRADER_BASE_COST);
-    expect(next.moduleInventory).toHaveLength(1);
-    expect(next.moduleInventory[0]).toMatchObject({
-      type: "miner-boost",
-      tier: 1,
-      equippedTo: null,
-    });
+    expect(next.moduleInventory).toHaveLength(0);
+    expect(
+      next.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
+    ).toBe(1);
     expect(next.ship.shipsSinceLastFragment).toBe(0);
   });
 
@@ -56,7 +54,9 @@ describe("fragment trader", () => {
     const next = gameReducer(state, { type: "BUY_FRAGMENT" });
 
     expect(next.inventory.coins).toBe(250 - FRAGMENT_TRADER_PITY_COST);
-    expect(next.moduleInventory).toHaveLength(1);
+    expect(
+      next.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
+    ).toBe(1);
     expect(next.ship.shipsSinceLastFragment).toBe(0);
   });
 
@@ -77,9 +77,9 @@ describe("fragment trader", () => {
 
     expect(next).not.toBe(state);
     expect(next.inventory.coins).toBe(750 - FRAGMENT_TRADER_BASE_COST);
-    expect(next.moduleInventory).toHaveLength(1);
+    expect(next.moduleInventory).toHaveLength(0);
     expect(
       next.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
-    ).toBe(WAREHOUSE_CAPACITY);
+    ).toBe(WAREHOUSE_CAPACITY + 1);
   });
 });

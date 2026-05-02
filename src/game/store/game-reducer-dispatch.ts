@@ -177,7 +177,7 @@ export function dispatchAction(
     // BUY_FRAGMENT is handled above by
     // handleCoinAction (see action-handlers/coin-actions.ts).
 
-    // ADD_MODULE_FRAGMENT is handled above by
+    // COLLECT_FRAGMENT is handled above by
     // handleModuleFragmentAction (see action-handlers/module-fragment-actions.ts).
 
     // CRAFT_WORKBENCH, REMOVE_BUILDING, EXPIRE_NOTIFICATIONS,

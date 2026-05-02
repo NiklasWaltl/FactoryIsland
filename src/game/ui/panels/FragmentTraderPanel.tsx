@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_EMOJIS } from "../../store/constants/resources";
-import { selectModuleCount } from "../../store/selectors/module-selectors";
+import { selectModuleFragmentCount } from "../../store/selectors/module-selectors";
 import {
   FRAGMENT_TRADER_PITY_COST,
   getFragmentTraderCostForShipsSinceLastFragment,
@@ -39,7 +39,7 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
       0,
       PITY_THRESHOLD - shipsSinceLastFragment,
     );
-    const moduleCount = selectModuleCount(state);
+    const fragmentCount = selectModuleFragmentCount(state);
     const canAfford = state.inventory.coins >= cost;
     const canBuy = canAfford && !purchaseConfirmed;
     const buttonLabel = discountActive
@@ -50,6 +50,7 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
       if (!canBuy) return;
       dispatch({ type: "BUY_FRAGMENT" });
       setPurchaseConfirmed(true);
+      dispatch({ type: "COLLECT_FRAGMENT" });
       closeTimerRef.current = window.setTimeout(() => {
         dispatch({ type: "CLOSE_PANEL" });
       }, FEEDBACK_CLOSE_DELAY_MS);
@@ -79,7 +80,7 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
         </div>
 
         <div className="fi-fragment-trader-count">
-          Fragmente im Inventar: <strong>{moduleCount}</strong>
+          Fragmente im Inventar: <strong>{fragmentCount}</strong>
         </div>
 
         <div className="fi-fragment-trader-offer">

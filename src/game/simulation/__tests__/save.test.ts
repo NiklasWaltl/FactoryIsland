@@ -392,11 +392,27 @@ describe("migrateSave – missing fields get defaults", () => {
 
     expect(result).not.toBeNull();
     expect(result!.version).toBe(CURRENT_SAVE_VERSION);
-    expect(result!.moduleFragments).toEqual([
-      { tier: 1, count: 0 },
-      { tier: 2, count: 0 },
-      { tier: 3, count: 0 },
-    ]);
+    expect(result!.moduleFragments).toBe(0);
+  });
+
+  it("migrates v24 tiered module fragment saves into a flat counter", () => {
+    const latest = serializeState(createInitialState("release"));
+    const { version: _ignoreVersion, ...legacyShape } = latest;
+    const v24 = {
+      ...legacyShape,
+      version: 24,
+      moduleFragments: [
+        { tier: 1, count: 2 },
+        { tier: 2, count: 3 },
+        { tier: 3, count: 4 },
+      ],
+    };
+
+    const result = migrateSave(v24);
+
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    expect(result!.moduleFragments).toBe(9);
   });
 });
 

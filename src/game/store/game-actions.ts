@@ -10,7 +10,6 @@ import type {
   DroneRole,
   GameState,
   Inventory,
-  FragmentTier,
 } from "./types";
 import type { ConveyorItem } from "./types/conveyor-types";
 import type { SplitterOutputSide } from "./slices/splitter-filter-state";
@@ -25,7 +24,7 @@ export type GameAction =
   | { type: "SET_ACTIVE_SLOT"; slot: number }
   | { type: "BUY_MAP_SHOP_ITEM"; itemKey: string }
   | { type: "BUY_FRAGMENT" }
-  | { type: "ADD_MODULE_FRAGMENT"; payload: { tier: FragmentTier } }
+  | { type: "COLLECT_FRAGMENT" }
   /** @deprecated Use JOB_ENQUEUE and JOB_TICK. */
   | { type: "CRAFT_WORKBENCH"; recipeKey: string }
   | { type: "TOGGLE_PANEL"; panel: UIPanel }

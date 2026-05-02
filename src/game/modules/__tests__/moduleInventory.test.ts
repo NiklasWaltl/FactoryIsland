@@ -1,8 +1,10 @@
 import { createInitialState, gameReducer } from "../../store/reducer";
 import { loadAndHydrate, serializeState } from "../../simulation/save";
+import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
 import {
   FRAGMENT_TRADER_BASE_COST,
   FRAGMENT_TRADER_PITY_COST,
+  MODULE_FRAGMENT_ITEM_ID,
   PITY_THRESHOLD,
 } from "../../ship/ship-constants";
 
@@ -11,7 +13,7 @@ function freshState() {
 }
 
 describe("moduleInventory", () => {
-  it("BUY_FRAGMENT with enough coins creates a tier-1 unequipped module", () => {
+  it("BUY_FRAGMENT with enough coins stages one fragment item in the dock warehouse", () => {
     const state = {
       ...freshState(),
       inventory: { ...freshState().inventory, coins: 750 },
@@ -20,17 +22,13 @@ describe("moduleInventory", () => {
     const next = gameReducer(state, { type: "BUY_FRAGMENT" });
 
     expect(next.inventory.coins).toBe(750 - FRAGMENT_TRADER_BASE_COST);
-    expect(next.moduleInventory).toHaveLength(1);
-    expect(next.moduleInventory[0].id).toEqual(expect.any(String));
-    expect(next.moduleInventory[0].id.length).toBeGreaterThan(0);
-    expect(next.moduleInventory[0]).toMatchObject({
-      type: "miner-boost",
-      tier: 1,
-      equippedTo: null,
-    });
+    expect(next.moduleInventory).toHaveLength(0);
+    expect(
+      next.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
+    ).toBe(1);
   });
 
-  it("BUY_FRAGMENT with pity at the threshold costs 250 and creates a module", () => {
+  it("BUY_FRAGMENT with pity at the threshold costs 250 and stages a fragment", () => {
     const state = {
       ...freshState(),
       inventory: { ...freshState().inventory, coins: 250 },
@@ -43,7 +41,9 @@ describe("moduleInventory", () => {
     const next = gameReducer(state, { type: "BUY_FRAGMENT" });
 
     expect(next.inventory.coins).toBe(250 - FRAGMENT_TRADER_PITY_COST);
-    expect(next.moduleInventory).toHaveLength(1);
+    expect(
+      next.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
+    ).toBe(1);
   });
 
   it("BUY_FRAGMENT with too few coins leaves state unchanged", () => {
@@ -57,6 +57,7 @@ describe("moduleInventory", () => {
     expect(next).toBe(state);
     expect(next.inventory.coins).toBe(499);
     expect(next.moduleInventory).toHaveLength(0);
+    expect(next.moduleFragments).toBe(0);
   });
 
   it("hydrates missing moduleInventory to an empty array", () => {
@@ -71,16 +72,32 @@ describe("moduleInventory", () => {
     expect(hydrated.moduleInventory).toEqual([]);
   });
 
-  it("ADD_MODULE_FRAGMENT increments the selected tier counter", () => {
-    const next = gameReducer(freshState(), {
-      type: "ADD_MODULE_FRAGMENT",
-      payload: { tier: 2 },
-    });
+  it("COLLECT_FRAGMENT with gear in dock warehouse increments fragments and removes one gear", () => {
+    const state = {
+      ...freshState(),
+      warehouseInventories: {
+        ...freshState().warehouseInventories,
+        [DOCK_WAREHOUSE_ID]: {
+          ...freshState().warehouseInventories[DOCK_WAREHOUSE_ID],
+          [MODULE_FRAGMENT_ITEM_ID]: 2,
+        },
+      },
+    };
 
-    expect(next.moduleFragments).toEqual([
-      { tier: 1, count: 0 },
-      { tier: 2, count: 1 },
-      { tier: 3, count: 0 },
-    ]);
+    const next = gameReducer(state, { type: "COLLECT_FRAGMENT" });
+
+    expect(next.moduleFragments).toBe(1);
+    expect(
+      next.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
+    ).toBe(1);
+  });
+
+  it("COLLECT_FRAGMENT without gear in dock warehouse leaves state unchanged", () => {
+    const state = freshState();
+
+    const next = gameReducer(state, { type: "COLLECT_FRAGMENT" });
+
+    expect(next).toBe(state);
+    expect(next.moduleFragments).toBe(0);
   });
 });

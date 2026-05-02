@@ -3,6 +3,7 @@ import { RESOURCE_EMOJIS } from "../../store/constants/resources";
 import type { GameState, Inventory } from "../../store/types";
 import { getCapacityPerResource } from "../../store/warehouse-capacity";
 import { selectGlobalInventoryView } from "../../store/helpers/inventory-queries";
+import { ModuleFragmentCounter } from "./ModuleFragmentCounter";
 
 interface ResourceBarProps {
   state: GameState;
@@ -57,6 +58,8 @@ export const ResourceBar: React.FC<ResourceBarProps> = React.memo(
             </div>
           );
         })}
+
+        <ModuleFragmentCounter state={state} />
       </div>
     );
   },
