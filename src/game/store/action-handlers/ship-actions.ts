@@ -98,10 +98,7 @@ function handleShipDepart(state: GameState, now: number): GameState {
   const dockInv = state.warehouseInventories[DOCK_WAREHOUSE_ID];
   const delivered =
     quest && dockInv
-      ? Math.min(
-          (dockInv[quest.itemId as keyof typeof dockInv] as number) ?? 0,
-          quest.amount,
-        )
+      ? ((dockInv[quest.itemId as keyof typeof dockInv] as number) ?? 0)
       : 0;
   const required = quest?.amount ?? 0;
 
