@@ -1,4 +1,5 @@
 import { GRID_H, GRID_W } from "../../../../constants/grid";
+import { isTileFootprintPlayable } from "../../../../world/tile-footprint-utils";
 import { placeAsset } from "../../../asset-mutation";
 import { cellKey } from "../../../utils/cell-key";
 import {
@@ -41,6 +42,16 @@ export function runNaturalSpawnPhase(ctx: NaturalSpawnContext): GameState {
     const y = Math.floor(Math.random() * GRID_H);
     if (state.cellMap[cellKey(x, y)]) continue;
     if (hasNearbyAsset(state.cellMap, x, y)) continue;
+    if (
+      !isTileFootprintPlayable(state.tileMap, {
+        row: y,
+        col: x,
+        width: 1,
+        height: 1,
+      })
+    ) {
+      continue;
+    }
     const placed = placeAsset(state.assets, state.cellMap, "sapling", x, y, 1);
     if (!placed) continue;
     return {

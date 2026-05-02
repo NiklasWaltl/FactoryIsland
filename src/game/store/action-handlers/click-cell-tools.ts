@@ -10,7 +10,8 @@
 // UI prelude/build-mode routing stays outside this handler.
 // ============================================================
 
-import { DEPOSIT_TYPES } from "../constants/map/deposit-positions";
+import { DEPOSIT_TYPES } from "../../world/fixed-resource-layout";
+import { isTileFootprintPlayable } from "../../world/tile-footprint-utils";
 import {
   SAPLING_DROP_CHANCE,
   SAPLING_GROW_MS,
@@ -287,6 +288,16 @@ export function handleClickCellToolAction(
 
   if (slot.toolKind === "sapling") {
     if (slot.amount <= 0 || asset) return state;
+    if (
+      !isTileFootprintPlayable(state.tileMap, {
+        row: y,
+        col: x,
+        width: 1,
+        height: 1,
+      })
+    ) {
+      return state;
+    }
 
     const placed = placeAsset(state.assets, state.cellMap, "sapling", x, y, 1);
     if (!placed) return state;
