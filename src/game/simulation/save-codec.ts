@@ -155,7 +155,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     })(),
 
     starterDrone: (() => {
-      const drone = sanitizeStarterDrone(save.starterDrone);
+      const drone = sanitizeStarterDrone(save.starterDrone, save.tileMap);
       let d = drone;
       if (d.hubId && !save.assets[d.hubId]) {
         d = { ...d, hubId: null };
@@ -194,7 +194,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
       const raw = save.drones ?? {};
       const cleaned: Record<string, StarterDroneState> = {};
       for (const [id, rawDrone] of Object.entries(raw)) {
-        let d = sanitizeStarterDrone(rawDrone);
+        let d = sanitizeStarterDrone(rawDrone, save.tileMap);
         if (d.hubId && !save.assets[d.hubId]) d = { ...d, hubId: null };
         if (d.deliveryTargetId && !save.assets[d.deliveryTargetId]) {
           d = { ...d, deliveryTargetId: null, currentTaskType: null };

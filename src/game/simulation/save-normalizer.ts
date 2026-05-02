@@ -8,7 +8,9 @@ import type {
   KeepStockTargetEntry,
   KeepStockByWorkbench,
 } from "../store/types";
+import type { TileType } from "../world/tile-types";
 import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
+import { getStartModulePosition } from "../store/bootstrap/start-module-position";
 import { KEEP_STOCK_MAX_TARGET } from "../store/reducer";
 import type { NetworkSlice, Reservation } from "../inventory/reservationTypes";
 import { createEmptyNetworkSlice } from "../inventory/reservationTypes";
@@ -333,11 +335,15 @@ const VALID_DRONE_STATUSES = new Set([
 
 export function sanitizeStarterDrone(
   raw: StarterDroneState | undefined | null,
+  tileMap?: TileType[][],
 ): StarterDroneState {
+  const pos = tileMap !== undefined
+    ? getStartModulePosition({ assets: {}, tileMap })
+    : MAP_SHOP_POS; // legacy fallback: tileMap not available at normalization time
   const fallback: StarterDroneState = {
     status: "idle",
-    tileX: MAP_SHOP_POS.x,
-    tileY: MAP_SHOP_POS.y,
+    tileX: pos.x,
+    tileY: pos.y,
     targetNodeId: null,
     cargo: null,
     ticksRemaining: 0,
@@ -359,8 +365,8 @@ export function sanitizeStarterDrone(
 
   return {
     status,
-    tileX: Number.isFinite(raw.tileX) ? raw.tileX : MAP_SHOP_POS.x,
-    tileY: Number.isFinite(raw.tileY) ? raw.tileY : MAP_SHOP_POS.y,
+    tileX: Number.isFinite(raw.tileX) ? raw.tileX : pos.x,
+    tileY: Number.isFinite(raw.tileY) ? raw.tileY : pos.y,
     targetNodeId: needsReset ? null : (raw.targetNodeId ?? null),
     cargo: needsReset ? null : (raw.cargo ?? null),
     ticksRemaining: needsReset ? 0 : ticksRemaining,
