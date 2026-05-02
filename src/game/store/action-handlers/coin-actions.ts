@@ -4,10 +4,8 @@ import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
 import { createEmptyInventory } from "../inventory-ops";
 import {
-  FRAGMENT_TRADER_BASE_COST,
-  FRAGMENT_TRADER_PITY_COST,
+  getFragmentTraderCostForShipsSinceLastFragment,
   MODULE_FRAGMENT_ITEM_ID,
-  PITY_THRESHOLD,
 } from "../../ship/ship-constants";
 
 export interface SpendCoinsResult {
@@ -32,9 +30,9 @@ export function spendCoins(state: GameState, amount: number): SpendCoinsResult {
 }
 
 export function getFragmentTraderCost(state: Pick<GameState, "ship">): number {
-  return state.ship.shipsSinceLastFragment >= PITY_THRESHOLD
-    ? FRAGMENT_TRADER_PITY_COST
-    : FRAGMENT_TRADER_BASE_COST;
+  return getFragmentTraderCostForShipsSinceLastFragment(
+    state.ship.shipsSinceLastFragment,
+  );
 }
 
 export function handleCoinAction(
