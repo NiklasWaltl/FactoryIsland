@@ -8,7 +8,10 @@ import {
 import { PhaserHost } from "../world/PhaserHost";
 import { buildWorldOverlayData } from "./GridOverlays";
 import { buildSelectionOverlays } from "./GridSelection";
-import { getDockWarehousePos } from "../store/constants/map/map-layout";
+import {
+  getDockWarehouseInputTile,
+  getDockWarehousePos,
+} from "../store/constants/map/map-layout";
 
 const WORLD_W = GRID_W * CELL_PX;
 const WORLD_H = GRID_H * CELL_PX;
@@ -131,10 +134,13 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
 
   const shipSnapshot = useMemo(() => {
     const dockPos = getDockWarehousePos(state.tileMap);
+    const dockInputTile = getDockWarehouseInputTile(state.tileMap);
     return {
       status: state.ship.status,
       dockTileX: dockPos.x,
       dockTileY: dockPos.y,
+      inputTileX: dockInputTile.x,
+      inputTileY: dockInputTile.y,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ship.status, state.tileMap]);

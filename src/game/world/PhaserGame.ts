@@ -103,6 +103,8 @@ export interface ShipSnapshot {
   status: "sailing" | "docked" | "departing";
   dockTileX: number;
   dockTileY: number;
+  inputTileX: number;
+  inputTileY: number;
 }
 
 const COLLECTION_NODE_COLORS: Record<string, number> = {
@@ -165,6 +167,9 @@ class WorldScene extends Phaser.Scene {
   private hasAppliedInitialCameraFocus = false;
   /** Ship Phaser container: rectangle + anchor label. */
   private shipContainer: Phaser.GameObjects.Container | null = null;
+  /** Dock warehouse conveyor input marker, visible while the ship waits for cargo. */
+  private dockInputMarkerContainer: Phaser.GameObjects.Container | null = null;
+  private dockInputMarkerTween: Phaser.Tweens.Tween | null = null;
 
   constructor() {
     super({ key: "WorldScene" });
@@ -241,6 +246,7 @@ class WorldScene extends Phaser.Scene {
     });
 
     this.shipContainer = this.createShipContainer();
+    this.dockInputMarkerContainer = this.createDockInputMarkerContainer();
   }
 
   private applyTileMap(data: TileMapData): void {
@@ -634,9 +640,71 @@ class WorldScene extends Phaser.Scene {
       container.setVisible(true);
       const label = container.getByName("label") as Phaser.GameObjects.Text;
       label.setText("⚓ Angedockt");
+      this.showDockInputMarker(data.inputTileX, data.inputTileY);
     } else {
       container.setVisible(false);
+      this.hideDockInputMarker();
     }
+  }
+
+  private createDockInputMarkerContainer(): Phaser.GameObjects.Container {
+    const container = this.add.container(0, 0);
+    const pulseLayer = this.add.container(0, 0);
+    pulseLayer.name = "pulse";
+
+    const gfx = this.add.graphics();
+    gfx.lineStyle(2, 0x00ffcc, 0.85);
+    gfx.fillStyle(0x00ffcc, 0.1);
+    gfx.fillRoundedRect(3, 3, CELL_PX - 6, CELL_PX - 6, 5);
+    gfx.strokeRoundedRect(3, 3, CELL_PX - 6, CELL_PX - 6, 5);
+    gfx.lineStyle(2, 0xffffff, 0.55);
+    gfx.beginPath();
+    gfx.moveTo(CELL_PX / 2, 10);
+    gfx.lineTo(CELL_PX / 2, CELL_PX - 14);
+    gfx.moveTo(CELL_PX / 2 - 5, CELL_PX - 19);
+    gfx.lineTo(CELL_PX / 2, CELL_PX - 13);
+    gfx.lineTo(CELL_PX / 2 + 5, CELL_PX - 19);
+    gfx.strokePath();
+    pulseLayer.add(gfx);
+
+    const label = this.add
+      .text(CELL_PX / 2, -14, "Förderband hier", {
+        fontFamily: "Arial",
+        fontSize: "10px",
+        color: "#dffcff",
+        backgroundColor: "rgba(0,32,40,0.72)",
+        padding: { left: 4, right: 4, top: 1, bottom: 1 },
+      })
+      .setOrigin(0.5, 1);
+    label.name = "label";
+
+    container.add([pulseLayer, label]);
+    container.setDepth(21);
+    container.setVisible(false);
+    this.dockInputMarkerTween = this.tweens.add({
+      targets: pulseLayer,
+      alpha: 0.3,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      paused: true,
+    });
+    return container;
+  }
+
+  private showDockInputMarker(tileX: number, tileY: number): void {
+    const marker = this.dockInputMarkerContainer;
+    if (!marker) return;
+    marker.setPosition(tileX * CELL_PX, tileY * CELL_PX);
+    marker.setVisible(true);
+    this.dockInputMarkerTween?.resume();
+  }
+
+  private hideDockInputMarker(): void {
+    const marker = this.dockInputMarkerContainer;
+    if (!marker) return;
+    marker.setVisible(false);
+    this.dockInputMarkerTween?.pause();
   }
 
   /**

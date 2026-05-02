@@ -38,13 +38,20 @@ export function getDockBeachStartRow(tileMap: TileType[][]): number {
   );
 }
 
-/** Tile directly to the left of the dock warehouse — used as the conveyor input tile. */
+/** Tile on the dock warehouse footprint used as the visible conveyor input marker. */
+export function getInputTilePosition(dockWarehouse: { x: number; y: number }): {
+  x: number;
+  y: number;
+} {
+  return { x: dockWarehouse.x, y: dockWarehouse.y };
+}
+
 export function getDockWarehouseInputTile(tileMap: TileType[][]): {
   x: number;
   y: number;
 } {
   const pos = getDockWarehousePos(tileMap);
-  return { x: pos.x - 1, y: pos.y };
+  return getInputTilePosition(pos);
 }
 
 function getTileMapWidth(tileMap: TileType[][]): number {

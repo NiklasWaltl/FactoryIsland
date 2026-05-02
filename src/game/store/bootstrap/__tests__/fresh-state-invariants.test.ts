@@ -14,7 +14,9 @@ import {
   BEACH_START_ROW,
   WATER_START_ROW,
   getDockBeachStartRow,
+  getDockWarehouseInputTile,
   getDockWarehousePos,
+  getInputTilePosition,
 } from "../../constants/map/map-layout";
 import { ISLAND_SAND_BORDER_TILES } from "../../../world/island-generator";
 import { getInitialCameraFocusTile } from "../../../world/camera-focus";
@@ -108,6 +110,14 @@ describe("fresh state world/bootstrap invariants", () => {
     for (const asset of collectBaseStartAssets(state)) {
       expect(boundsOverlap(dockFootprint, footprintOf(asset))).toBe(false);
     }
+  });
+
+  it("resolves the dock warehouse conveyor input marker tile on the last grass row", () => {
+    const dock = state.assets[DOCK_WAREHOUSE_ID];
+    const markerTile = getInputTilePosition(dock);
+
+    expect(markerTile).toEqual({ x: dock.x, y: BEACH_START_ROW - 1 });
+    expect(getDockWarehouseInputTile(state.tileMap)).toEqual(markerTile);
   });
 
   it("realigns an existing dock warehouse to the canonical beach transition", () => {
