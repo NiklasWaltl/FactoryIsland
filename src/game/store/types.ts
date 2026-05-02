@@ -209,6 +209,7 @@ export type UIPanel =
   | "service_hub"
   | "conveyor_splitter"
   | "dock_warehouse"
+  | "fragment_trader"
   | null;
 
 // ---- Battery ----

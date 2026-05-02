@@ -85,6 +85,16 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
           </button>
         </div>
 
+        <button
+          className="fi-btn fi-btn-sm"
+          onClick={() =>
+            dispatch({ type: "TOGGLE_PANEL", panel: "fragment_trader" })
+          }
+          style={{ width: "100%", marginBottom: 12 }}
+        >
+          Fragmente kaufen
+        </button>
+
         <div style={{ display: "grid", gap: 8 }}>
           {/* Ship status */}
           <div style={{ display: "flex", justifyContent: "space-between" }}>
