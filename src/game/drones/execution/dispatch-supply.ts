@@ -72,7 +72,11 @@ export function getNearbyWarehousesForDispatch(
   const out: NearbyWarehouseDispatchCandidate[] = [];
   for (const whId in state.warehouseInventories) {
     const whAsset = state.assets[whId];
-    if (!whAsset || whAsset.type !== "warehouse") continue;
+    if (
+      !whAsset ||
+      (whAsset.type !== "warehouse" && whAsset.isDockWarehouse !== true)
+    )
+      continue;
     if (isUnderConstruction(state, whId)) continue;
     const available = getAvailableWarehouseDispatchSupply(
       state,

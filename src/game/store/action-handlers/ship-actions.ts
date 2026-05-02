@@ -27,8 +27,8 @@ function randomVoyageMs(): number {
 export function computeQualityMultiplier(
   delivered: number,
   required: number,
-): 1 | 2 | 3 {
-  if (required <= 0) return 1;
+): 0 | 1 | 2 | 3 {
+  if (required <= 0 || delivered <= 0) return 0;
   const pct = delivered / required;
   if (pct >= 2.0) return 3;
   if (pct >= 1.5) return 2;
@@ -112,7 +112,7 @@ function handleShipDepart(state: GameState, now: number): GameState {
     dockedAt: null,
     departsAt: null,
     returnsAt: now + randomVoyageMs(),
-    rewardPending: true,
+    rewardPending: multiplier > 0,
     pendingMultiplier: multiplier,
     shipsSinceLastFragment: ship.shipsSinceLastFragment + 1,
   };
@@ -129,6 +129,17 @@ function handleShipDepart(state: GameState, now: number): GameState {
 
 function handleShipReturn(state: GameState, now: number): GameState {
   const ship = state.ship;
+  if (!ship.rewardPending || ship.pendingMultiplier === 0) {
+    return {
+      ...state,
+      ship: {
+        ...ship,
+        rewardPending: false,
+        pendingMultiplier: 1,
+      },
+    };
+  }
+
   const reward = drawReward(ship.pendingMultiplier, ship.questPhase);
 
   const currentInv =

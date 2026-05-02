@@ -26,6 +26,20 @@ function dockedState() {
   return dispatch(freshState(), { type: "SHIP_DOCK" });
 }
 
+function withQuestCargo(state: ReturnType<typeof freshState>) {
+  const quest = state.ship.activeQuest!;
+  return {
+    ...state,
+    warehouseInventories: {
+      ...state.warehouseInventories,
+      [DOCK_WAREHOUSE_ID]: {
+        ...state.warehouseInventories[DOCK_WAREHOUSE_ID],
+        [quest.itemId]: quest.amount,
+      },
+    },
+  };
+}
+
 // ---- Status transition tests ----------------------------------------
 
 describe("ship status transitions", () => {
@@ -55,19 +69,38 @@ describe("ship status transitions", () => {
     expect(state.ship.departsAt! - state.ship.dockedAt!).toBeCloseTo(DOCK_WAIT_MS, -2);
   });
 
-  it("SHIP_DEPART → sailing, rewardPending true", () => {
-    const state = dispatch(freshState(), { type: "SHIP_DOCK" }, { type: "SHIP_DEPART" });
+  it("SHIP_DEPART → sailing, rewardPending true when cargo was delivered", () => {
+    let state = dispatch(freshState(), { type: "SHIP_DOCK" });
+    const quest = state.ship.activeQuest!;
+    state = {
+      ...state,
+      warehouseInventories: {
+        ...state.warehouseInventories,
+        [DOCK_WAREHOUSE_ID]: {
+          ...state.warehouseInventories[DOCK_WAREHOUSE_ID],
+          [quest.itemId]: quest.amount,
+        },
+      },
+    };
+    state = dispatch(state, { type: "SHIP_DEPART" });
     expect(state.ship.status).toBe("sailing");
     expect(state.ship.rewardPending).toBe(true);
   });
 
   it("SHIP_RETURN → sailing, rewardPending false, lastReward set", () => {
-    const state = dispatch(
-      freshState(),
-      { type: "SHIP_DOCK" },
-      { type: "SHIP_DEPART" },
-      { type: "SHIP_RETURN" },
-    );
+    let state = dispatch(freshState(), { type: "SHIP_DOCK" });
+    const quest = state.ship.activeQuest!;
+    state = {
+      ...state,
+      warehouseInventories: {
+        ...state.warehouseInventories,
+        [DOCK_WAREHOUSE_ID]: {
+          ...state.warehouseInventories[DOCK_WAREHOUSE_ID],
+          [quest.itemId]: quest.amount,
+        },
+      },
+    };
+    state = dispatch(state, { type: "SHIP_DEPART" }, { type: "SHIP_RETURN" });
     expect(state.ship.status).toBe("sailing");
     expect(state.ship.rewardPending).toBe(false);
     expect(state.ship.lastReward).not.toBeNull();
@@ -79,6 +112,18 @@ describe("ship status transitions", () => {
 
     state = dispatch(state, { type: "SHIP_DOCK" });
     expect(state.ship.status).toBe("docked");
+
+    const quest = state.ship.activeQuest!;
+    state = {
+      ...state,
+      warehouseInventories: {
+        ...state.warehouseInventories,
+        [DOCK_WAREHOUSE_ID]: {
+          ...state.warehouseInventories[DOCK_WAREHOUSE_ID],
+          [quest.itemId]: quest.amount,
+        },
+      },
+    };
 
     state = dispatch(state, { type: "SHIP_DEPART" });
     expect(state.ship.status).toBe("sailing");
@@ -123,8 +168,8 @@ describe("computeQualityMultiplier", () => {
     expect(computeQualityMultiplier(5, 10)).toBe(1);
   });
 
-  it("zero required → 1x (no-quest guard)", () => {
-    expect(computeQualityMultiplier(0, 0)).toBe(1);
+  it("zero required → 0x (no-quest guard)", () => {
+    expect(computeQualityMultiplier(0, 0)).toBe(0);
   });
 
   it("between 100% and 150% → 1x", () => {
@@ -264,7 +309,8 @@ describe("shipsSinceLastFragment counter", () => {
     // Roll 0.935 * 100 = 93.5 → hits module_fragment bucket
     Math.random = () => 0.935;
     try {
-      let state = dispatch(freshState(), { type: "SHIP_DOCK" }, { type: "SHIP_DEPART" });
+      let state = withQuestCargo(dispatch(freshState(), { type: "SHIP_DOCK" }));
+      state = dispatch(state, { type: "SHIP_DEPART" });
       expect(state.ship.shipsSinceLastFragment).toBe(1);
 
       state = dispatch(state, { type: "SHIP_RETURN" });
@@ -280,7 +326,8 @@ describe("shipsSinceLastFragment counter", () => {
     // Roll 0.25 → hits coins bucket (0–50)
     Math.random = () => 0.25;
     try {
-      let state = dispatch(freshState(), { type: "SHIP_DOCK" }, { type: "SHIP_DEPART" });
+      let state = withQuestCargo(dispatch(freshState(), { type: "SHIP_DOCK" }));
+      state = dispatch(state, { type: "SHIP_DEPART" });
       state = dispatch(state, { type: "SHIP_RETURN" });
       expect(state.ship.lastReward?.kind).toBe("coins");
       expect(state.ship.shipsSinceLastFragment).toBeGreaterThan(0);
@@ -294,7 +341,8 @@ describe("shipsSinceLastFragment counter", () => {
     // complete_module is at weight 98–100. Roll 0.99 → 99 → complete_module
     Math.random = () => 0.99;
     try {
-      let state = dispatch(freshState(), { type: "SHIP_DOCK" }, { type: "SHIP_DEPART" });
+      let state = withQuestCargo(dispatch(freshState(), { type: "SHIP_DOCK" }));
+      state = dispatch(state, { type: "SHIP_DEPART" });
       state = dispatch(state, { type: "SHIP_RETURN" });
       expect(state.ship.lastReward?.kind).toBe("complete_module");
       expect(state.ship.shipsSinceLastFragment).toBe(0);

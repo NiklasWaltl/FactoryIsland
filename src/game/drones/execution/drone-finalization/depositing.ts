@@ -7,7 +7,11 @@ import { isHubUpgradeDeliverySatisfied } from "../../../buildings/service-hub/hu
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import { getBuildingInputConfig } from "../../../store/constants/buildings/index";
 import { getMaxDrones } from "../../../store/selectors/hub-tier-selectors";
-import { addResources } from "../../../store/inventory-ops";
+import {
+  addResources,
+  createEmptyInventory,
+} from "../../../store/inventory-ops";
+import { getWarehouseCapacity } from "../../../store/warehouse-capacity";
 import { syncDrones, applyDroneUpdate } from "../../utils/drone-state-helpers";
 import { parseWorkbenchTaskNodeId } from "../../../store/workbench/workbench-task-utils";
 import {
@@ -89,6 +93,56 @@ export function handleDepositingStatus(
     const deliveryId = depositingTaskRoute.targetId;
     const targetAsset = state.assets[deliveryId];
     const cfg = targetAsset ? getBuildingInputConfig(targetAsset.type) : null;
+    if (
+      targetAsset?.isDockWarehouse === true &&
+      state.ship.status === "docked" &&
+      state.ship.activeQuest?.itemId === itemType
+    ) {
+      const currentInv =
+        state.warehouseInventories[deliveryId] ?? createEmptyInventory();
+      const current = currentInv[itemType] ?? 0;
+      const remainingQuestNeed = Math.max(
+        0,
+        state.ship.activeQuest.amount - current,
+      );
+      const remainingWarehouseSpace = Math.max(
+        0,
+        getWarehouseCapacity(state.mode) - current,
+      );
+      const applied = Math.min(
+        amount,
+        remainingQuestNeed,
+        remainingWarehouseSpace,
+      );
+      const leftover = amount - applied;
+      const newWarehouseInventories =
+        applied > 0
+          ? {
+              ...state.warehouseInventories,
+              [deliveryId]: {
+                ...currentInv,
+                [itemType]: current + applied,
+              },
+            }
+          : state.warehouseInventories;
+      const newInv =
+        leftover > 0
+          ? addResources(state.inventory, { [itemType]: leftover })
+          : state.inventory;
+      debugLog.inventory(
+        `Drone deposited ${applied}× ${itemType} into dock warehouse ${deliveryId}` +
+          (leftover > 0 ? ` (${leftover} overflow → global)` : ""),
+      );
+      return applyDroneUpdate(
+        {
+          ...state,
+          inventory: newInv,
+          warehouseInventories: newWarehouseInventories,
+        },
+        droneId,
+        idleDrone,
+      );
+    }
     if (
       targetAsset &&
       cfg &&

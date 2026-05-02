@@ -115,6 +115,7 @@ export function gatherWarehouseBuildingSupplyCandidates(
       drone.droneId,
     );
     for (const warehouse of nearby) {
+      if (warehouse.warehouseId === target.assetId) continue;
       const syntheticNodeId = `wh:${warehouse.warehouseId}:${target.resource}`;
       const stickyBonus =
         drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;

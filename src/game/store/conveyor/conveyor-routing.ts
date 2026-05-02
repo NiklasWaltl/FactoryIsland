@@ -265,7 +265,7 @@ export const decideConveyorTargetSelection = <TSource>(
 
   // Priority 1: conveyor stands directly on a warehouse input tile.
   for (const wAsset of Object.values(input.state.assets)) {
-    if (wAsset.type !== "warehouse") continue;
+    if (!isWarehouseStorageAsset(wAsset)) continue;
     if (
       input.convAsset.x === wAsset.x &&
       input.convAsset.y === wAsset.y + assetHeight(wAsset)
@@ -490,7 +490,7 @@ export const decideConveyorTargetSelection = <TSource>(
     };
   }
 
-  if (nextAsset?.type === "warehouse") {
+  if (nextAsset && isWarehouseStorageAsset(nextAsset)) {
     if (
       !input.isValidWarehouseInput(
         input.convAsset.x,
@@ -643,4 +643,12 @@ function cellKey(x: number, y: number): string {
 
 function assetHeight(asset: Pick<PlacedAsset, "height" | "size">): number {
   return asset.height ?? asset.size;
+}
+
+function isWarehouseStorageAsset(
+  asset: PlacedAsset | null | undefined,
+): boolean {
+  return (
+    !!asset && (asset.type === "warehouse" || asset.isDockWarehouse === true)
+  );
 }

@@ -3,6 +3,33 @@ import { MAX_DRONES_PER_BUILDING_SUPPLY } from "../../../store/constants/drone/d
 import { DRONE_CAPACITY } from "../../../store/constants/drone/drone-config";
 import type { CollectableItemType, GameState } from "../../../store/types";
 
+type BuildingSupplyDemandState = Pick<
+  GameState,
+  "assets" | "generators" | "drones" | "collectionNodes"
+> &
+  Partial<Pick<GameState, "ship" | "warehouseInventories">>;
+
+type BuildingSupplySlotState = Pick<
+  GameState,
+  "assets" | "generators" | "drones"
+> &
+  Partial<Pick<GameState, "ship" | "warehouseInventories">>;
+
+function getDockWarehouseRawNeed(
+  state: Pick<GameState, "assets"> &
+    Partial<Pick<GameState, "ship" | "warehouseInventories">>,
+  assetId: string,
+  itemType: CollectableItemType,
+): number | null {
+  const asset = state.assets[assetId];
+  if (!asset?.isDockWarehouse) return null;
+  const quest =
+    state.ship?.status === "docked" ? state.ship.activeQuest : null;
+  if (!quest || quest.itemId !== itemType) return 0;
+  const current = state.warehouseInventories?.[assetId]?.[itemType] ?? 0;
+  return Math.max(0, quest.amount - current);
+}
+
 function getBuildingInputCurrent(
   state: Pick<GameState, "assets" | "generators">,
   assetId: string,
@@ -54,16 +81,23 @@ export function getInboundBuildingSupplyAmount(
 }
 
 export function getRemainingBuildingInputDemand(
-  state: Pick<
-    GameState,
-    "assets" | "generators" | "drones" | "collectionNodes"
-  >,
+  state: BuildingSupplyDemandState,
   assetId: string,
   itemType: CollectableItemType,
   excludeDroneId?: string,
 ): number {
   const asset = state.assets[assetId];
   if (!asset) return 0;
+  const dockRawNeed = getDockWarehouseRawNeed(state, assetId, itemType);
+  if (dockRawNeed !== null) {
+    const inbound = getInboundBuildingSupplyAmount(
+      state,
+      assetId,
+      itemType,
+      excludeDroneId,
+    );
+    return Math.max(0, dockRawNeed - inbound);
+  }
   const cfg = getBuildingInputConfig(asset.type);
   if (!cfg || cfg.resource !== itemType) return 0;
   const current = getBuildingInputCurrent(state, assetId);
@@ -97,13 +131,26 @@ export function getAssignedBuildingSupplyDroneCount(
 }
 
 export function getOpenBuildingSupplyDroneSlots(
-  state: Pick<GameState, "assets" | "generators" | "drones">,
+  state: BuildingSupplySlotState,
   assetId: string,
   itemType: CollectableItemType,
   excludeDroneId?: string,
 ): number {
   const asset = state.assets[assetId];
   if (!asset) return 0;
+  const dockRawNeed = getDockWarehouseRawNeed(state, assetId, itemType);
+  if (dockRawNeed !== null) {
+    const desiredDrones = Math.min(
+      MAX_DRONES_PER_BUILDING_SUPPLY,
+      Math.ceil(dockRawNeed / DRONE_CAPACITY),
+    );
+    const assigned = getAssignedBuildingSupplyDroneCount(
+      state,
+      assetId,
+      excludeDroneId,
+    );
+    return Math.max(0, desiredDrones - assigned);
+  }
   const cfg = getBuildingInputConfig(asset.type);
   if (!cfg || cfg.resource !== itemType) return 0;
   const current = getBuildingInputCurrent(state, assetId);
