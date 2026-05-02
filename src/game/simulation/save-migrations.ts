@@ -500,18 +500,21 @@ function migrateV20ToV21(save: SaveGameV20): SaveGameV21 {
 
 function migrateV21ToV22(save: SaveGameV21): SaveGameV22 {
   const existingShip = (save as unknown as Partial<SaveGameV22>).ship;
-  const ship: ShipState = existingShip ?? {
-    status: "sailing",
-    activeQuest: null,
-    nextQuest: null,
-    dockedAt: null,
-    departsAt: null,
-    returnsAt: Date.now() + 30_000,
-    rewardPending: false,
-    lastReward: null,
-    questPhase: 1,
-    shipsSinceLastFragment: 0,
-  };
+  const ship: ShipState = existingShip
+    ? { ...existingShip, pendingMultiplier: (existingShip as any).pendingMultiplier ?? 1 }
+    : {
+        status: "sailing",
+        activeQuest: null,
+        nextQuest: null,
+        dockedAt: null,
+        departsAt: null,
+        returnsAt: Date.now() + 30_000,
+        rewardPending: false,
+        lastReward: null,
+        questPhase: 1,
+        shipsSinceLastFragment: 0,
+        pendingMultiplier: 1,
+      };
   return { ...save, version: 22, ship };
 }
 

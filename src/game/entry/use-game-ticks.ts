@@ -6,6 +6,7 @@ import {
   LOGISTICS_TICK_MS,
   CRAFTING_TICK_MS,
   DRONE_TICK_MS,
+  SHIP_TICK_MS,
 } from "../store/constants/timing/timing";
 import {
   SMITHY_TICK_MS,
@@ -126,6 +127,14 @@ export function useGameTicks(
     const id = setInterval(() => {
       dispatch({ type: "DRONE_TICK" });
     }, DRONE_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // Ship tick: status transitions, countdown management
+  useEffect(() => {
+    const id = setInterval(() => {
+      dispatch({ type: "SHIP_TICK" });
+    }, SHIP_TICK_MS);
     return () => clearInterval(id);
   }, []);
 }

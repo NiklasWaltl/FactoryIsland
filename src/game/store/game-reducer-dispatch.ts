@@ -58,6 +58,7 @@ import { handleDroneRoleAction } from "./action-handlers/drone-role-actions";
 import { handleDroneTickAction } from "./action-handlers/drone-tick-actions";
 import { handleDroneAssignmentAction } from "./action-handlers/drone-assignment";
 import { handleLogisticsTickAction } from "./action-handlers/logistics-tick";
+import { handleShipAction } from "./action-handlers/ship-actions";
 
 export function dispatchAction(
   state: GameState,
@@ -150,6 +151,8 @@ export function dispatchAction(
       ? handleLogisticsTickAction(state, LOGISTICS_TICK_IO_DEPS)
       : null;
   if (logisticsTickResult !== null) return logisticsTickResult;
+  const shipResult = handleShipAction(state, action);
+  if (shipResult !== null) return shipResult;
   switch (action.type) {
     // NETWORK_*, CRAFT_REQUEST_WITH_PREREQUISITES, JOB_*,
     // SET_KEEP_STOCK_TARGET and SET_RECIPE_AUTOMATION_POLICY are handled
@@ -223,6 +226,9 @@ export function dispatchAction(
 
     // DRONE_TICK is handled above by
     // handleDroneTickAction (see action-handlers/drone-tick-actions/index.ts).
+
+    // SHIP_TICK, SHIP_DOCK, SHIP_DEPART and SHIP_RETURN are handled above by
+    // handleShipAction (see action-handlers/ship-actions.ts).
 
     default:
       return state;

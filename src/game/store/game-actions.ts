@@ -149,4 +149,9 @@ export type GameAction =
   // Inventory-network reservations (Step 2)
   | NetworkAction
   // Crafting jobs (Step 3)
-  | CraftingAction;
+  | CraftingAction
+  // Ship quest loop
+  | { type: "SHIP_TICK" }
+  | { type: "SHIP_DOCK" }
+  | { type: "SHIP_DEPART" }
+  | { type: "SHIP_RETURN" };

@@ -35,6 +35,7 @@ export function createInitialShipState(): ShipState {
     lastReward: null,
     questPhase: 1,
     shipsSinceLastFragment: 0,
+    pendingMultiplier: 1,
   };
 }
 

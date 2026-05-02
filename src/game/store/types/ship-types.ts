@@ -49,4 +49,6 @@ export interface ShipState {
   questPhase: number;
   /** Ships completed without a fragment drop (pity counter — unused until Block 6) */
   shipsSinceLastFragment: number;
+  /** Quality multiplier computed at SHIP_DEPART and read at SHIP_RETURN */
+  pendingMultiplier: 1 | 2 | 3;
 }

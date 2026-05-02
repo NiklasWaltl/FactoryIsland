@@ -23,3 +23,6 @@ export const CRAFTING_TICK_MS = 500;
 
 /** Tick interval for the drone state machine (ms). */
 export const DRONE_TICK_MS = 500;
+
+/** Tick interval for the ship quest state machine (ms). */
+export const SHIP_TICK_MS = 1_000;
