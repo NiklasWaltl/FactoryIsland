@@ -13,7 +13,6 @@ import { cleanBuildingSourceIds } from "../buildings/warehouse/warehouse-assignm
 import { getDroneHomeDock } from "../drones/dock/drone-dock";
 import { computeConnectedAssetIds } from "../logistics/connectivity";
 import { cleanBuildingZoneIds } from "../zones/production-zone-cleanup";
-import { MAP_SHOP_POS } from "../store/constants/map/map-layout";
 import { getStartModulePosition } from "../store/bootstrap/start-module-position";
 import {
   createDefaultHubTargetStock,
@@ -298,11 +297,13 @@ export function deserializeState(save: SaveGameLatest): GameState {
     (a) => a.type === "service_hub",
   );
   if (!hasAnyHub) {
+    // center of standard 80×50 grid — used as spatial search origin, not as drone home position
+    const HUB_SEARCH_CENTER = { x: 39, y: 24 } as const;
     const candidates: { x: number; y: number; dist: number }[] = [];
     for (let dy = -8; dy <= 8; dy++) {
       for (let dx = -8; dx <= 8; dx++) {
-        const wx = MAP_SHOP_POS.x + dx;
-        const wy = MAP_SHOP_POS.y + dy;
+        const wx = HUB_SEARCH_CENTER.x + dx;
+        const wy = HUB_SEARCH_CENTER.y + dy;
         if (wx < 0 || wy < 0 || wx + 2 > GRID_W || wy + 2 > GRID_H) continue;
         candidates.push({ x: wx, y: wy, dist: Math.abs(dx) + Math.abs(dy) });
       }
