@@ -7,12 +7,14 @@ import {
   DRONE_STATE_EVENT,
   COLLECTION_NODES_EVENT,
   SHIP_STATE_EVENT,
+  COIN_AWARD_EVENT,
   type FloorMapData,
   type TileMapData,
   type StaticAssetSnapshot,
   type DroneSnapshot,
   type CollectionNodeSnapshot,
   type ShipSnapshot,
+  type CoinAwardPayload,
 } from "./PhaserGame";
 
 interface PhaserHostProps {
@@ -22,6 +24,7 @@ interface PhaserHostProps {
   drones: DroneSnapshot[];
   collectionNodes: CollectionNodeSnapshot[];
   ship: ShipSnapshot;
+  coins: number;
 }
 
 /**
@@ -35,9 +38,11 @@ export const PhaserHost: React.FC<PhaserHostProps> = ({
   drones,
   collectionNodes,
   ship,
+  coins,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
+  const previousCoinsRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -243,6 +248,46 @@ export const PhaserHost: React.FC<PhaserHostProps> = ({
       game.events.off("step", onStep);
     };
   }, [ship]);
+
+  useEffect(() => {
+    const previousCoins = previousCoinsRef.current;
+    previousCoinsRef.current = coins;
+    if (previousCoins === null || coins <= previousCoins) return;
+
+    const game = gameRef.current;
+    if (!game) return;
+
+    const payload: CoinAwardPayload = {
+      amount: coins - previousCoins,
+      fromTileX: ship.dockTileX,
+      fromTileY: ship.dockTileY,
+    };
+
+    const tryEmit = (): boolean => {
+      try {
+        const scene = game.scene.getScene("WorldScene");
+        if (scene && scene.scene.isActive()) {
+          scene.events.emit(COIN_AWARD_EVENT, payload);
+          return true;
+        }
+      } catch {
+        // Scene may not be registered yet; retry on next step.
+      }
+      return false;
+    };
+
+    if (tryEmit()) return;
+
+    const onStep = () => {
+      if (tryEmit()) {
+        game.events.off("step", onStep);
+      }
+    };
+    game.events.on("step", onStep);
+    return () => {
+      game.events.off("step", onStep);
+    };
+  }, [coins, ship]);
 
   return (
     <div

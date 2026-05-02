@@ -191,6 +191,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
             drones={droneSnapshots}
             collectionNodes={collectionNodeSnapshots}
             ship={shipSnapshot}
+            coins={state.inventory.coins}
           />
         </div>
 

@@ -35,6 +35,14 @@ export const DRONE_STATE_EVENT = "droneStateChanged";
 /** Event name used to push ship state from React into the Phaser scene. */
 export const SHIP_STATE_EVENT = "shipStateChanged";
 
+export const COIN_AWARD_EVENT = "coin_award_event";
+
+export interface CoinAwardPayload {
+  amount: number;
+  fromTileX: number;
+  fromTileY: number;
+}
+
 /** The floorMap shape coming from React state. */
 export type FloorMapData = Record<string, string>;
 
@@ -136,6 +144,21 @@ const DIRECTION_ROTATION: Record<Direction, number> = {
   south: 90,
   west: 180,
 };
+
+const COIN_AWARD_MIN_PARTICLES = 8;
+const COIN_AWARD_MAX_PARTICLES = 12;
+const COIN_AWARD_AMOUNT_PER_EXTRA_PARTICLE = 50;
+const COIN_AWARD_PARTICLE_RADIUS_PX = 4;
+const COIN_AWARD_PARTICLE_COLOR = 0xffd700;
+const COIN_AWARD_START_SPREAD_PX = 20;
+const COIN_AWARD_DURATION_MS = 600;
+const COIN_AWARD_DELAY_STEP_MS = 40;
+const COIN_AWARD_DEPTH = 1_000;
+const HUD_COIN_X = 28;
+const HUD_COIN_Y = 26;
+const HUD_COIN_BUMP_RADIUS_PX = 8;
+const HUD_COIN_BUMP_SCALE = 1.3;
+const HUD_COIN_BUMP_DURATION_MS = 200;
 
 /** World scene - renders terrain tiles, stone floor, assets, drops, and drones. */
 class WorldScene extends Phaser.Scene {
@@ -243,6 +266,10 @@ class WorldScene extends Phaser.Scene {
 
     this.events.on(SHIP_STATE_EVENT, (data: ShipSnapshot) => {
       this.applyShipState(data);
+    });
+
+    this.events.on(COIN_AWARD_EVENT, (payload: CoinAwardPayload) => {
+      this.playCoinAwardAnimation(payload);
     });
 
     this.shipContainer = this.createShipContainer();
@@ -705,6 +732,84 @@ class WorldScene extends Phaser.Scene {
     if (!marker) return;
     marker.setVisible(false);
     this.dockInputMarkerTween?.pause();
+  }
+
+  private playCoinAwardAnimation(payload: CoinAwardPayload): void {
+    const start = this.getScreenPointFromTile(payload.fromTileX, payload.fromTileY);
+    const particleCount = Phaser.Math.Clamp(
+      COIN_AWARD_MIN_PARTICLES +
+        Math.floor(payload.amount / COIN_AWARD_AMOUNT_PER_EXTRA_PARTICLE),
+      COIN_AWARD_MIN_PARTICLES,
+      COIN_AWARD_MAX_PARTICLES,
+    );
+
+    for (let index = 0; index < particleCount; index += 1) {
+      const coin = this.add
+        .circle(
+          start.x +
+            Phaser.Math.Between(
+              -COIN_AWARD_START_SPREAD_PX,
+              COIN_AWARD_START_SPREAD_PX,
+            ),
+          start.y +
+            Phaser.Math.Between(
+              -COIN_AWARD_START_SPREAD_PX,
+              COIN_AWARD_START_SPREAD_PX,
+            ),
+          COIN_AWARD_PARTICLE_RADIUS_PX,
+          COIN_AWARD_PARTICLE_COLOR,
+        )
+        .setDepth(COIN_AWARD_DEPTH)
+        .setScrollFactor(0);
+
+      this.tweens.add({
+        targets: coin,
+        x: HUD_COIN_X,
+        y: HUD_COIN_Y,
+        alpha: 0,
+        duration: COIN_AWARD_DURATION_MS,
+        ease: "Cubic.easeIn",
+        delay: index * COIN_AWARD_DELAY_STEP_MS,
+        onComplete: () => coin.destroy(),
+      });
+    }
+
+    this.playCoinHudBump();
+  }
+
+  private getScreenPointFromTile(
+    tileX: number,
+    tileY: number,
+  ): { x: number; y: number } {
+    const camera = this.cameras.main;
+    const worldX = tileX * CELL_PX + CELL_PX / 2;
+    const worldY = tileY * CELL_PX + CELL_PX / 2;
+    return {
+      x: (worldX - camera.scrollX) * camera.zoom,
+      y: (worldY - camera.scrollY) * camera.zoom,
+    };
+  }
+
+  private playCoinHudBump(): void {
+    const hudCoin = this.add
+      .circle(
+        HUD_COIN_X,
+        HUD_COIN_Y,
+        HUD_COIN_BUMP_RADIUS_PX,
+        COIN_AWARD_PARTICLE_COLOR,
+        0.85,
+      )
+      .setDepth(COIN_AWARD_DEPTH + 1)
+      .setScrollFactor(0);
+
+    this.tweens.add({
+      targets: hudCoin,
+      scale: HUD_COIN_BUMP_SCALE,
+      duration: HUD_COIN_BUMP_DURATION_MS / 2,
+      ease: "Cubic.easeOut",
+      yoyo: true,
+      onComplete: () => hudCoin.destroy(),
+    });
   }
 
   /**
