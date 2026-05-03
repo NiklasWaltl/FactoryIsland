@@ -31,19 +31,24 @@ When a task is named:
 | New recipe | Crafting, Simulation/Recipes | Inventory, UI-Panels |
 | New UI panel | UI-Panels | Store, Selection-State |
 | New drone rule | Drones | Inventory, Tick-Pipeline |
+| Shop / Fragments | Fragment Trader, `BUY_FRAGMENT` / `COLLECT_FRAGMENT` | Game-Actions, Modules |
+| New ship quest / reward | Ship / Dock Quest System, Persistence | Save codec, save migrations |
+| New module / module-lab recipe | Modules / Module Lab System | `moduleLabConstants`, module-lab-actions, save checklist |
+| New splitter filter behavior | Conveyor Splitter Filter / Route State | `splitter-filter-state`, conveyor-routing, `SET_SPLITTER_FILTER` |
+| New dev scene | Dev Scenes | scene-factory, DevSceneSelector, FactoryApp dev branch |
 
 ---
 
 ## 2. Stack & Guiding Rules
 
-- **Stack:** React 18 + TypeScript + Phaser 3 + Vite. Tests via Jest. Yarn 1.x.
+- **Stack:** React 19 + TypeScript + Phaser 3.80 + Vite 5; Jest; Yarn 1.x.
 - **State:** a single `useReducer` (`GameState` in [src/game/store/types.ts](src/game/store/types.ts)). Single source of truth.
-- **Tick-driven:** ~10 independent `setInterval` calls in [src/game/entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) (mounted from [src/game/entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx)) → `dispatch({type: "*_TICK"})`.
-- **Golden rule:** Phaser NEVER calls `dispatch`. Only the React UI may mutate state. Phaser reads snapshots.
-- **Action discoverability:** `grep "case \"X_ACTION\":" src/game` returns exactly one match.
+- **Tick-driven:** 12 independent `setInterval` calls in [src/game/entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) (mounted from [src/game/entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx)) → `dispatch({type: "*_TICK"})`.
+- **Golden rule:** Phaser never dispatches. React layer dispatches from: UI events, tick hooks (`use-game-ticks.ts`), keyboard handlers, and DEV debug mock. Phaser reads snapshots.
+- **Action discoverability:** Search exact action string. Note: some actions are handled via handler predicates or dispatch-chain guards, not switch-case (e.g. `auto-assembler-actions.ts`).
 - **`GameAction` union:** canonical in [src/game/store/game-actions.ts](src/game/store/game-actions.ts). No re-export hub.
-- **Persistence:** `localStorage` every 10 s + `beforeunload`. HMR restore via `sessionStorage`.
-- **Determinism:** all tick logic is pure functions over `state`.
+- **Persistence:** `localStorage` every 10 s + `beforeunload`. DEV-only HMR snapshot stored on `window.__FI_HMR_STATE__` via `debug/hmrState.ts`.
+- **Determinism:** Most reducers are pure, but several tick handlers use `Math.random()` and `Date.now()` (e.g. natural spawn, module lab, ship actions). Verify test injection/mocking per handler.
 
 ---
 
@@ -51,7 +56,7 @@ When a task is named:
 
 1. `main.factory.tsx` boots React → mounts `FactoryApp`.
 2. `FactoryApp` selects mode (`debug` | `release`) and mounts `GameInner` with `key=mode`.
-3. `GameInner` initializes `useReducer(gameReducer)` and ~10 tick intervals.
+3. `GameInner` initializes `useReducer(gameReducer)` and 12 tick intervals.
 4. UI (HUD + Panels) reads `state` as a prop and calls `dispatch` directly.
 5. Phaser (`PhaserHost` + `PhaserGame`) receives state snapshots for render synchronization.
 6. All mutations → `dispatch(action)` → `gameReducer` → cluster handler chain → new state.
@@ -68,16 +73,19 @@ When a task is named:
 | **Reducer / Dispatch** | [src/game/store/reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Central action dispatch chain | entire `GameState` | entire `GameState` | all action handlers | UI, rendering |
 | **Action-Handlers** | [src/game/store/action-handlers/](src/game/store/action-handlers/) | Cluster handler per action type | `state` + `deps` | slices via pure updates | Decisions, Helpers, Selectors | tick scheduling |
 | **Game-Actions Union** | [src/game/store/game-actions.ts](src/game/store/game-actions.ts) | Canonical `GameAction` discriminated union | — | — | item/recipe types | logic (types only) |
-| **Crafting** | [src/game/crafting/](src/game/crafting/) | Job lifecycle: queued→reserved→crafting→delivering→done | `crafting`, `network`, inventories | `crafting`, inventories, `keepStockByWorkbench` | Inventory, Items, Recipes | drone movement |
+| **Crafting** | [src/game/crafting/](src/game/crafting/) | Job lifecycle: queued→reserved→crafting→delivering→done | `crafting`, `network`, `inventory`, `warehouseInventories`, `serviceHubs`, `recipeAutomationPolicies` | `crafting`, `network`, `inventory`, `warehouseInventories`, `serviceHubs`, `keepStockByWorkbench`, `recipeAutomationPolicies` | Inventory, Items, Recipes | drone movement |
 | **Drones** | [src/game/drones/](src/game/drones/) | Task selection, movement, cargo FSM | `drones`, `assets`, `crafting`, inventories | `drones`, `starterDrone`, target inventories, `collectionNodes` | Decisions, Selectors | energy, crafting planning |
-| **Inventory / Reservations** | [src/game/inventory/](src/game/inventory/) | Logical holds on physical stock (`network`) | `inventory`, `warehouseInventories`, `network` | `network` (reservations) | Items | physical movement |
+| **Inventory / Reservations** | [src/game/inventory/](src/game/inventory/) | Logical holds on physical stock (`network`) | `inventory`, `warehouseInventories`, `serviceHubs`, `network` | `network` (reservations) | Items | physical movement |
 | **Items** | [src/game/items/](src/game/items/) | `ItemId` union, item registry, stack sizes | — | — | — | Recipes |
 | **Recipes** | [src/game/simulation/recipes/](src/game/simulation/recipes/) | Static recipe definitions per workbench type | — | — | Items | crafting lifecycle |
-| **Logistics-Tick** | [src/game/store/action-handlers/logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) (+ `logistics-tick/`) | AutoMiner, Conveyor, AutoSmelter per 500ms | `assets`, inventories, `conveyors` | `inventory`, `warehouseInventories`, `autoMiners`, `autoSmelters`, `conveyors`, `notifications` | Decisions, Conveyor | drones, crafting |
-| **Energy / Power** | [src/game/store/energy/](src/game/store/energy/), [src/game/power/](src/game/power/) | network connectivity, consumer priority, generator burn | `assets`, `cellMap`, `constructionSites`, `generators`, `battery`, `connectedAssetIds` | `poweredMachineIds`, `machinePowerRatio`, `generators`, `battery` | Decisions | Crafting, Logistics |
+| **Logistics-Tick** | [src/game/store/action-handlers/logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) (+ `logistics-tick/`) | AutoMiner, Conveyor, AutoSmelter, AutoAssembler per 500ms | `assets`, inventories, `conveyors` | `inventory`, `warehouseInventories`, `autoMiners`, `autoSmelters`, `autoAssemblers`, `conveyors`, `smithy`, `notifications`, `autoDeliveryLog` | Decisions, Conveyor | drones, crafting |
+| **Energy / Power** | [src/game/store/energy/](src/game/store/energy/), [src/game/power/](src/game/power/) | network connectivity, consumer priority, generator burn | `assets`, `cellMap`, `constructionSites`, `generators`, `battery`, `connectedAssetIds`, active machine state | `poweredMachineIds`, `machinePowerRatio`, `generators`, `battery` | Decisions | Crafting, Logistics |
 | **Buildings** | [src/game/buildings/](src/game/buildings/), [src/game/store/constants/buildings/](src/game/store/constants/buildings/) | building definitions, input targets, service-hub/warehouse helpers | `assets`, `placedBuildings` | via reducer | Items | placement validation |
 | **Zones** | [src/game/zones/](src/game/zones/) | production-zone aggregation and cleanup | `productionZones`, `assets` | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | Decisions | crafting plan |
-| **Conveyor** | [src/game/store/conveyor/](src/game/store/conveyor/) | belt geometry, routing, underground pairing | `conveyors`, `assets` | via Logistics-Tick | — | item definition |
+| **Conveyor** | [src/game/store/conveyor/](src/game/store/conveyor/) | belt geometry, routing, underground pairing, splitter filter/route state | `conveyors`, `assets`, `splitterRouteState`, `splitterFilterState` | via Logistics-Tick, `SET_SPLITTER_FILTER` | — | item definition |
+| **Ship / Dock Quest System** | [src/game/ship/](src/game/ship/), [src/game/store/types/ship-types.ts](src/game/store/types/ship-types.ts), [src/game/store/action-handlers/ship-actions.ts](src/game/store/action-handlers/ship-actions.ts) | ship voyage, dock quests, rewards | `ship`, dock warehouse inventory | `ship`, `warehouseInventories`, rewards, module fragments | Dock Warehouse, Modules, Save | generic logistics |
+| **Modules / Module Lab System** | [src/game/modules/](src/game/modules/), [src/game/constants/moduleLabConstants.ts](src/game/constants/moduleLabConstants.ts), [src/game/store/action-handlers/module-lab-actions.ts](src/game/store/action-handlers/module-lab-actions.ts) | module inventory, fragments, lab crafting jobs | `moduleInventory`, `moduleFragments`, `moduleLabJob` | `moduleInventory`, `moduleFragments`, `moduleLabJob`, equipped module slots | Ship, UI, Save | normal workbench crafting |
+| **Bootstrap / Initial Fixed Layout** | [src/game/store/bootstrap/](src/game/store/bootstrap/), [src/game/store/initial-state.ts](src/game/store/initial-state.ts) | seeded fixed assets such as Dock Warehouse | initial state, building registry | initial asset/cell/inventory layout | Save, Buildings, Ship | runtime placement rules |
 | **Decisions** | [src/game/store/decisions/](src/game/store/decisions/) | Pure eligibility/placement/dropoff logic | `state` (read-only) | — | Helpers, Selectors | state mutation |
 | **Selectors** | [src/game/store/selectors/](src/game/store/selectors/) | Read-only aggregations for UI/drones | `state` | never | — | mutation |
 | **Grid (UI)** | [src/game/grid/](src/game/grid/) | click handling, overlays, placement preview | `state` | `dispatch` | UI helpers | Phaser render |
@@ -85,6 +93,7 @@ When a task is named:
 | **UI Panels / HUD** | [src/game/ui/panels/](src/game/ui/panels/), [src/game/ui/hud/](src/game/ui/hud/) | side panels per building, hotbar, notifications | `state` | `dispatch` | Selectors | logic |
 | **Persistence (Save)** | [src/game/simulation/](src/game/simulation/) | localStorage codec, migrations, normalizer | `state` | never (in the reducer sense) | Types | live state |
 | **Debug** | [src/game/debug/](src/game/debug/) | DEV tools, debug overlays (tree-shaken) | `state` | via `DEBUG_SET_STATE` | — | Production |
+| **Dev Scenes (DEV only)** | [src/game/dev/](src/game/dev/) | debug-only scene presets selected by URL | scene layouts, initial state | DEV initial state snapshot | FactoryApp, scene-builder | production |
 | **Constants** | [src/game/constants/](src/game/constants/), [src/game/store/constants/](src/game/store/constants/) | grid dimensions, timing, capacities, recipe constants | — | — | — | — |
 
 ---
@@ -106,6 +115,7 @@ When a task is named:
 - **Cluster handler:** [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/).
 - **Strict separation:** planning vs. execution phase in the tick.
 - **Source union:** `global | warehouse | zone` — determines where reads come from and where delivery goes.
+- **Additional touched slices:** also reads/writes `network`, `warehouseInventories`, `inventory`, `serviceHubs`, and `recipeAutomationPolicies`.
 
 ### 5.3 Drones
 
@@ -121,9 +131,10 @@ When a task is named:
 |---|---|---|
 | 1 | `state.inventory` | Global fallback pool (manual harvesting, crafting without explicit source) |
 | 2 | `state.warehouseInventories[id]` | Physical warehouses — auto-delivery lands here |
-| 3 | `state.network.reservations` | Logical holds on (1)+(2). NOT physical. |
+| 3 | `state.serviceHubs[id].inventory` | Physical hub-local stock used by hub fallback and drone flows |
+| 4 | `state.network.reservations` | Logical holds on physical sources. NOT physical. |
 
-**Canonical:** Physical inventory is the source of truth. `network` is only derived holds. Reservations are managed through owner keys (convention: `ownerKey === jobId`).
+**Canonical:** Physical inventory is the source of truth. `network` is only derived holds. Crafting reservations connect jobs and holds through `reservationOwnerId` on jobs and `ownerId` on reservation entries.
 
 ### 5.5 Tick Pipeline
 
@@ -132,36 +143,120 @@ When a task is named:
 | `GROW_SAPLINGS` | 1000 | always | growth-actions |
 | `SMITHY_TICK` | 100 | only when processing | machine-actions |
 | `MANUAL_ASSEMBLER_TICK` | 100 | only when processing | manual-assembler-actions |
+| `MODULE_LAB_TICK` | 500 | active module lab job | module-lab-actions |
 | `GENERATOR_TICK` | 200 | min. 1 running | machine-actions |
 | `ENERGY_NET_TICK` | 2000 | always | energy-net-tick |
 | `LOGISTICS_TICK` | 500 | always | logistics-tick |
 | `JOB_TICK` | 500 | pending Jobs OR Keep-Stock-Targets | crafting-queue-actions |
 | `DRONE_TICK` | 500 | always | drone-tick-actions |
+| `SHIP_TICK` | 1000 | always | ship-actions |
 | `EXPIRE_NOTIFICATIONS` | 500 | always | maintenance-actions |
 | `NATURAL_SPAWN` | 60000 | always | growth-actions |
 
 All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts); [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) mounts the hook.
 
+**LOGISTICS_TICK internal phases:** AutoMiner → Conveyor → AutoSmelter → AutoAssembler. Phase 4: `runAutoAssemblerPhase` (see [logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts)). Commit write set includes `autoAssemblers`, `smithy`, and `autoDeliveryLog`.
+
 ### 5.6 Energy Network
 
 - **Tick phases:** [store/energy/](src/game/store/energy/) — production, consumers (priority-sorted), distribution.
+- **Important paths:** [energy-tick-phases.ts](src/game/store/energy/energy-tick-phases.ts), [energy-priority.ts](src/game/power/energy-priority.ts).
 - **Connectivity:** [logistics/connectivity.ts](src/game/logistics/connectivity.ts) — BFS over asset topology and pole range.
 - **Write access:** `poweredMachineIds`, `machinePowerRatio`, `battery.stored`; `connectedAssetIds` is updated separately via `computeConnectedAssetIds()` when topology changes.
 - **Consumer priority:** `MachinePriority` 1..5 — smaller number = earlier power access (`1` = highest priority).
+- **Consumer filtering:** consumer phase includes active-processing checks for AutoSmelter and AutoAssembler.
 
 ### 5.7 Action Clusters (most common entry points)
 
-| Cluster | Path | Action Count |
+| Cluster | Path | Action Count / Representative Actions |
 |---|---|---|
-| Crafting | [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/) | 13 |
-| Building Placement | [building-placement.ts](src/game/store/action-handlers/building-placement.ts) + [building-placement/](src/game/store/action-handlers/building-placement/) | 2 |
+| Crafting | [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/) | 13; `JOB_TICK`, `JOB_ENQUEUE`, `SET_KEEP_STOCK_TARGET`, `NETWORK_*` |
+| Building Placement | [building-placement.ts](src/game/store/action-handlers/building-placement.ts) + [building-placement/](src/game/store/action-handlers/building-placement/) | 2; `BUILD_PLACE_BUILDING`, `BUILD_REMOVE_ASSET` |
 | Machines | [machine-actions.ts](src/game/store/action-handlers/machine-actions.ts) + [machine-actions/](src/game/store/action-handlers/machine-actions/) | many |
+| Machine Config | [machine-config.ts](src/game/store/action-handlers/machine-config.ts) | `SET_MACHINE_PRIORITY`, `SET_MACHINE_BOOST`, `SET_SPLITTER_FILTER` |
+| Auto Assembler | [auto-assembler-actions.ts](src/game/store/action-handlers/auto-assembler-actions.ts) | `AUTO_ASSEMBLER_SET_RECIPE` |
+| Ship | [ship-actions.ts](src/game/store/action-handlers/ship-actions.ts) | `SHIP_TICK`, `SHIP_DOCK`, `SHIP_DEPART`, `SHIP_RETURN` |
+| Module Lab | [module-lab-actions.ts](src/game/store/action-handlers/module-lab-actions.ts) | `MODULE_LAB_TICK`, `START_MODULE_CRAFT`, `COLLECT_MODULE`, `PLACE_MODULE`, `REMOVE_MODULE` |
+| Build Mode | [game-actions.ts](src/game/store/game-actions.ts), [build-mode-actions/](src/game/store/action-handlers/build-mode-actions/), [building-placement.ts](src/game/store/action-handlers/building-placement.ts) | `TOGGLE_BUILD_MODE`, `SELECT_BUILD_BUILDING`, `SELECT_BUILD_FLOOR_TILE`, `BUILD_PLACE_BUILDING`, `BUILD_REMOVE_ASSET` |
 | Click-Cell | [click-cell.ts](src/game/store/action-handlers/click-cell.ts) | 1 (central, dispatches internally) |
-| Logistics | [logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) + [logistics-tick/](src/game/store/action-handlers/logistics-tick/) | 1 |
+| Logistics | [logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) + [logistics-tick/](src/game/store/action-handlers/logistics-tick/) | 1; `LOGISTICS_TICK` |
 
-### 5.8 UI-Panels (1 panel per building type)
+Table is representative, not exhaustive.
 
-[src/game/ui/panels/](src/game/ui/panels/): `WarehousePanel`, `SmithyPanel`, `WorkbenchPanel`, `ManualAssemblerPanel`, `AutoAssemblerPanel`, `AutoMinerPanel`, `AutoSmelterPanel`, `BatteryPanel`, `GeneratorPanel`, `MapShopPanel`, `PowerPolePanel`, `ServiceHubPanel`, `EnergyDebugOverlay`, `ZoneSourceSelector`. Trigger via `openPanel` field + `selectedXxxId`.
+### 5.8 UI Surfaces (Panels, HUD, Menus)
+
+| Component | Purpose |
+|---|---|
+| `WarehousePanel` | Warehouse inventory, source, zone, and hotbar transfer UI |
+| `SmithyPanel` | Smithy fuel/input/recipe/output UI |
+| `WorkbenchPanel` | Workbench crafting jobs and automation UI |
+| `ManualAssemblerPanel` | Manual assembler recipe and progress UI |
+| `AutoAssemblerPanel` | Auto assembler recipe, buffers, and status UI |
+| `AutoMinerPanel` | Auto miner status, source, and module controls |
+| `AutoSmelterPanel` | Auto smelter recipe, source, and module controls |
+| `BatteryPanel` | Battery storage UI |
+| `GeneratorPanel` | Generator fuel/refill UI |
+| `MapShopPanel` | Building unlock/shop UI |
+| `PowerPolePanel` | Power pole range/status UI |
+| `ServiceHubPanel` | Hub inventory, target stock, drones, and upgrade UI |
+| `ConveyorSplitterPanel` | Filter/route config for splitters |
+| `DockWarehousePanel` | Ship dock & warehouse UI |
+| `FragmentTraderPanel` | Module fragment trading |
+| `ModulLabPanel` | Module lab job management |
+| `Hotbar` | Active tool/building slots |
+| `ResourceBar` | Top-level resource display |
+| `Notifications` | Temporary success/error notifications |
+| `AutoDeliveryFeed` | Recent automatic deliveries |
+| `ProductionStatusFeed` | Production/debug status feed |
+| `ShipStatusBar` | Ship status HUD overlay |
+| `EnergyDebugOverlay` | In-world energy debug overlay |
+| `EnergyDebugHud` | Energy debug HUD overlay |
+| `ZoneSourceSelector` | Shared source/zone selector embedded in crafting and auto-machine panels |
+| `BuildMenu` | Build category + item selector |
+| `ModeSelect` | Game mode switching |
+| `DevSceneSelector` | DEV scene switching by URL param |
+| `DebugPanel` | DEV mock/reset/HMR tools |
+
+Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/game/ui/menus/BuildMenu.tsx), [ModeSelect.tsx](src/game/ui/menus/ModeSelect.tsx).
+
+### 5.9 Ship / Dock Quest System
+
+- **State:** `ShipState` is persisted in `state.ship`.
+- **Key actions:** `SHIP_TICK`, `SHIP_DOCK`, `SHIP_DEPART`, `SHIP_RETURN`.
+- **UI:** [ShipStatusBar.tsx](src/game/ui/hud/ShipStatusBar.tsx), [DockWarehousePanel.tsx](src/game/ui/panels/DockWarehousePanel.tsx).
+- **Coupling:** Dock Warehouse is coupled to ship state; reward flow yields module fragments and complete modules.
+- **Save risk:** ship state must be included in save codec and migration.
+- **Key files:** [ship-types.ts](src/game/store/types/ship-types.ts), [ship-actions.ts](src/game/store/action-handlers/ship-actions.ts).
+
+### 5.10 Modules / Module Lab System
+
+- **State:** `moduleInventory`, `moduleFragments`, `moduleLabJob` are all persisted.
+- **Tick:** `MODULE_LAB_TICK` advances active module lab jobs.
+- **Key actions:** see [module-lab-actions.ts](src/game/store/action-handlers/module-lab-actions.ts).
+- **UI:** [ModulLabPanel.tsx](src/game/ui/panels/ModulLabPanel.tsx) (single-l spelling is intentional).
+- **Recipe guidance:** [moduleLabConstants.ts](src/game/constants/moduleLabConstants.ts).
+- **Save checklist:** include `moduleInventory`, `moduleFragments`, and `moduleLabJob`.
+
+### 5.11 Bootstrap / Initial Fixed Layout
+
+- Dock Warehouse is NOT a normal buildable; it is seeded via bootstrap.
+- Normalized through: [apply-dock-warehouse-layout.ts](src/game/store/bootstrap/apply-dock-warehouse-layout.ts), [registry.ts](src/game/store/constants/buildings/registry.ts), [initial-state.ts](src/game/store/initial-state.ts).
+- Tied to ship state initialization; must be preserved across migrations.
+
+### 5.12 Conveyor Splitter Filter / Route State
+
+- **Splitter State (persisted):** `splitterRouteState` stores round-robin routing per splitter.
+- **Splitter filters (persisted):** `splitterFilterState` stores item filter rules per splitter output side.
+- **Key action:** `SET_SPLITTER_FILTER`.
+- **Routing logic:** [conveyor-routing.ts](src/game/store/conveyor/conveyor-routing.ts).
+- **UI:** [ConveyorSplitterPanel.tsx](src/game/ui/panels/ConveyorSplitterPanel.tsx).
+
+### 5.13 Dev Scenes (DEV only)
+
+- **Scenes:** `debug`, `logistics`, `power`, `assembler`, `empty`.
+- **Selection:** URL `?scene=` parameter.
+- **Entry:** [scene-factory.ts](src/game/dev/scene-factory.ts), [DevSceneSelector.tsx](src/game/dev/DevSceneSelector.tsx), `applyDevScene`.
+- **Mount:** toggled through the [FactoryApp.tsx](src/game/entry/FactoryApp.tsx) DEV branch.
 
 ---
 
@@ -175,8 +270,9 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
 | **Reducer-Split** | [reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Thin entry point and actual dispatch chain live in separate files |
 | **Phase-File-Explosion** | `crafting-queue-actions/phases/` | A change typically touches 3 files (index + phase + deps) |
 | **Save-Migrations** | [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Schema change without migration → hydration errors for existing saves |
+| **New persisted slices (save v28)** | [simulation/save-codec.ts](src/game/simulation/save-codec.ts), [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Current save version: 28. Includes `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterFilterState`, `splitterRouteState` |
 | **Energy Consumer Priority** | [power/energy-priority.ts](src/game/power/energy-priority.ts) | Ordering bugs → wrong `machinePowerRatio` |
-| **`GameState` is a Flat Interface** | [store/types.ts:316](src/game/store/types.ts#L316) | ~62 fields; logical slice separation is only conceptual |
+| **`GameState` is a Flat Interface** | [store/types.ts:378](src/game/store/types.ts#L378) | 62 top-level fields; logical slice separation is only conceptual. Notable fields: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `splitterRouteState`, `splitterFilterState`, `ship` |
 | **HMR-Restore** | [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) | DEV-only code; do not test in prod |
 
 ---
@@ -192,8 +288,13 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
 5. **Placement validation:** account for it in [grid/placement-validation.ts](src/game/grid/placement-validation.ts).
 6. **Tick handler** (if processing): create a new cluster under [store/action-handlers/](src/game/store/action-handlers/), add the action to the union in [game-actions.ts](src/game/store/game-actions.ts), register `setInterval` in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts).
 7. **Sprite/render:** [src/game/world/PhaserGame.ts](src/game/world/PhaserGame.ts) + [assets/sprites/](src/game/assets/sprites/).
-8. **UI panel:** new file in [ui/panels/](src/game/ui/panels/), extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts), `TOGGLE_PANEL` applies automatically.
-9. **Save migration:** if the slice is new → entry in [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts).
+8. **Build menu:** add the asset to `BUILD_CATEGORIES` in [registry.ts](src/game/store/constants/buildings/registry.ts).
+9. **UI panel:** new file in [ui/panels/](src/game/ui/panels/), extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts).
+10. **Panel routing:** register panel in `tryTogglePanelFromAsset` ([ui-panel-toggle.ts](src/game/store/helpers/ui-panel-toggle.ts)).
+11. **Factory route:** add the `state.openPanel === "xxx" && <XxxPanel … />` render route in [FactoryApp.tsx](src/game/entry/FactoryApp.tsx).
+12. **Selection state:** define any `selectedXxxId` field in `GameState` and reset it explicitly where needed.
+13. **Save migration:** if the slice is new → entry in [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts).
+14. **Integration test:** add a targeted placement/panel/save test for the new building path.
 
 ### 7.2 Add a New Recipe
 
@@ -203,7 +304,11 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
    - Manual Assembler → [ManualAssemblerRecipes.ts](src/game/simulation/recipes/ManualAssemblerRecipes.ts)
    - Auto Assembler → [AutoAssemblerV1Recipes.ts](src/game/simulation/recipes/AutoAssemblerV1Recipes.ts)
    - Workbench → [WorkbenchRecipes.ts](src/game/simulation/recipes/WorkbenchRecipes.ts)
-3. Add an entry with `id`, `inputs[]`, `outputs[]`, `durationMs`, `workbenchType`.
+3. Use the schema for that recipe family:
+   - Workbench: `key`, `label`, `emoji`, `inputItem`, `outputItem`, `processingTime`, `outputAmount`, `costs`. `costs` is the canonical ingredient field.
+   - Smelting: `inputItem`, `outputItem`, `processingTime`, `outputAmount`, `inputAmount`.
+   - Manual Assembler: `key`, `inputItem`, `outputItem`, `processingTime`, `outputAmount`, `inputAmount`.
+   - Auto Assembler V1: `id`, `inputItem`, `inputAmount`, `outputItem`, `processingTimeSec`.
 4. **Index re-exports automatically** via [recipes/index.ts](src/game/simulation/recipes/index.ts).
 5. **No reducer change required** — recipes are read from the registry at runtime.
 6. UI lists recipes automatically in the corresponding panel; if needed, check sprite/display name in [items/registry.ts](src/game/items/registry.ts).
@@ -212,10 +317,12 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
 
 1. Create component under [ui/panels/](src/game/ui/panels/), props: `state`, `dispatch`, selected ID if needed.
 2. Extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts) with the new value.
-3. If selection-dependent: new `selectedXxxId` field in `GameState` + reset in `CLOSE_PANEL`/`TOGGLE_PANEL` ([store/action-handlers/ui-actions.ts](src/game/store/action-handlers/ui-actions.ts)).
-4. Click handler: trigger in [store/action-handlers/click-cell.ts](src/game/store/action-handlers/click-cell.ts) (opens panel on asset click).
-5. Add panel routing in the render hierarchy ([ui/](src/game/ui/) main layout) — pattern: `state.openPanel === "xxx" && <XxxPanel … />`.
-6. Create selectors for read-only data in [store/selectors/](src/game/store/selectors/) — UI must not import directly from `reducer.ts`.
+3. If selection-dependent: new `selectedXxxId` field in `GameState`; selected IDs must be reset explicitly.
+4. Panel routing lives in [ui-panel-toggle.ts](src/game/store/helpers/ui-panel-toggle.ts) + [FactoryApp.tsx](src/game/entry/FactoryApp.tsx).
+5. `TOGGLE_PANEL` only toggles `openPanel`; it does not automatically handle selected IDs.
+6. Asset-to-panel routing goes through `tryTogglePanelFromAsset` in [ui-cell-prelude.ts](src/game/store/action-handlers/ui-cell-prelude.ts).
+7. Add panel routing in the render hierarchy — pattern: `state.openPanel === "xxx" && <XxxPanel … />`.
+8. Create selectors for read-only data in [store/selectors/](src/game/store/selectors/) — UI must not import directly from `reducer.ts`.
 
 ---
 

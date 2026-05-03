@@ -27,7 +27,7 @@ Onboarding in this order:
 3. [TYPES.md](./TYPES.md) — type domains.
 4. [`entry/FactoryApp.tsx`](./entry/FactoryApp.tsx) — Boot, Hydration, Save/HMR.
 5. [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts) — all tick dispatches visible.
-6. [`store/types.ts`](./store/types.ts) from L316 — `GameState` shape.
+6. [`store/types.ts`](./store/types.ts) from L378 — `GameState` shape.
 7. [`store/reducer.ts`](./store/reducer.ts) — thin reducer entry point.
 8. [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts) — actual dispatch chain.
 9. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union.
@@ -65,7 +65,7 @@ main.factory.tsx
             ├─ useReducer(gameReducer | gameReducerWithInvariants)
             │     state: GameState  •  dispatch: (GameAction) => void
             ├─ useGameTicks(state, dispatch)
-            │    └─ ~10× setInterval → dispatch({type: "X_TICK"})
+            │    └─ 12 independent setInterval hooks → dispatch({type: "X_TICK"})
             ├─ localStorage save (alle 10 s + beforeunload)
             ├─ HMR-State-Restore (DEV)
             ├─ Grid (Phaser-Host + React-Overlays)
@@ -84,14 +84,16 @@ All mutations run through `dispatch`. Phaser is read-only via `state` snapshots.
 | Natural Spawn | 60 000 | `NATURAL_SPAWN` | always | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
 | Smithy | 100 | `SMITHY_TICK` | only when `smithy.processing` | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `smithy` |
 | Manual Assembler | 100 | `MANUAL_ASSEMBLER_TICK` | only when `manualAssembler.processing` | [`manual-assembler-actions.ts`](./store/action-handlers/manual-assembler-actions.ts) | `manualAssembler`, source inventory, `notifications` |
+| Module Lab | 500 | `MODULE_LAB_TICK` | only while `moduleLabJob !== null` | [`module-lab-actions.ts`](./store/action-handlers/module-lab-actions.ts) | `moduleLabJob`, `moduleInventory`, `moduleFragments`, `assets`, `notifications` |
 | Generator | 200 | `GENERATOR_TICK` | only when at least 1 generator is running | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `generators` |
 | Energy Net | 2000 | `ENERGY_NET_TICK` | always | inline `switch` → [`energy-net-tick.ts`](./store/energy/energy-net-tick.ts) | `battery.stored`, `poweredMachineIds`, `machinePowerRatio` |
-| Logistics | 500 | `LOGISTICS_TICK` | always | inline `switch` → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
+| Logistics | 500 | `LOGISTICS_TICK` | always | dispatch-chain guard → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `autoAssemblers`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
 | Crafting Jobs | 500 | `JOB_TICK` | only when pending jobs OR active keep-stock targets | [`crafting-queue-actions`](./store/action-handlers/crafting-queue-actions/) | `crafting`, `network`, physical inventories, `keepStockByWorkbench` |
 | Drones | 500 | `DRONE_TICK` | always | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
+| Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
 | Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
 
-Constants in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts).
+Constants in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts), [`constants/moduleLabConstants.ts`](./constants/moduleLabConstants.ts).
 
 **Consequence of nondeterminism:** Tick logic must be sufficiently commutative. Race conditions are tolerated because each tick performs a complete reducer pass and no intermediate states are shared across ticks.
 
@@ -119,38 +121,60 @@ UI and Phaser consume `state` exclusively as a prop / snapshot. Read-only aggreg
 
 ### Inventory Data Flow
 
-`GameState` contains three inventory layers that together define the truth about stock:
+`GameState` contains three physical stock layers plus one logical reservation layer:
 
 1. `inventory` — global fallback pool.
-2. `warehouseInventories[id]` — physical warehouses.
-3. `network.reservations` — logical holds on (1)+(2).
+2. `warehouseInventories[id]` — physical warehouse and dock-warehouse storage.
+3. `serviceHubs[id].inventory` — physical hub-local stock for drone and hub flows.
+4. `network.reservations` — logical holds over physical sources.
 
-**Canonical:** physical state is the source of truth; `network` is derived. Reservations are managed through owner keys (convention: `ownerKey === jobId`).
+**Canonical:** physical state is the source of truth; `network` is derived. Crafting jobs link to reservations through `job.reservationOwnerId`, and reservation entries store that value as `ownerId`.
 Detailed routing to inventory code: [/SYSTEM_REGISTRY.md §5.4](../../SYSTEM_REGISTRY.md).
 
 ---
 
 ## State Map
 
-`GameState` is a single flat interface in [`store/types.ts:316`](./store/types.ts#L316) with ~62 fields. Logically, it decomposes into the following slices:
+`GameState` is a single flat interface in [`store/types.ts:378`](./store/types.ts#L378). Logically, it decomposes into the following slices:
 
 | Slice (logical) | Fields | Persisted |
 |---|---|---|
 | **Identity** | `mode` | yes |
-| **Inventories** | `inventory`, `warehouseInventories`, `network` | yes |
-| **Assets / World** | `assets`, `cellMap`, `floorMap`, `collectionNodes`, `saplingGrowAt` | yes |
+| **Inventories** | `inventory`, `warehouseInventories`, `serviceHubs`, `network` | yes |
+| **Terrain / World** | `tileMap`, `floorMap`, `assets`, `cellMap`, `collectionNodes`, `saplingGrowAt` | yes |
 | **Build / Shop** | `purchasedBuildings`, `placedBuildings`, `warehousesPurchased`, `warehousesPlaced`, `cablesPlaced`, `powerPolesPlaced`, `buildMode`, `selectedBuildingType`, `selectedFloorTile` | partial |
 | **Hotbar** | `hotbarSlots`, `activeSlot` | yes |
-| **Machines** | `smithy`, `manualAssembler`, `autoMiners`, `autoSmelters`, `conveyors`, `generators`, `battery` | yes |
+| **Machines / Logistics** | `smithy`, `manualAssembler`, `autoMiners`, `autoSmelters`, `autoAssemblers`, `conveyors`, `conveyorUndergroundPeers`, `generators`, `battery` | yes |
+| **Conveyor Routing** | `splitterRouteState`, `splitterFilterState` | yes |
 | **Energy** | `connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio`, `energyDebugOverlay` | partial |
-| **Drones / Hubs** | `starterDrone`, `drones`, `serviceHubs`, `constructionSites` | yes |
+| **Drones / Hubs** | `starterDrone`, `drones`, `constructionSites` | yes |
 | **Zones** | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | yes |
 | **Crafting** | `crafting`, `keepStockByWorkbench`, `recipeAutomationPolicies` | yes |
-| **UI (transient)** | `openPanel`, `selectedWarehouseId`, `selectedPowerPoleId`, `selectedAutoMinerId`, `selectedAutoSmelterId`, `selectedGeneratorId`, `selectedServiceHubId`, `selectedCraftingBuildingId`, `notifications`, `autoDeliveryLog` | no |
+| **Modules / Module Lab** | `moduleInventory`, `moduleFragments`, `moduleLabJob` | yes |
+| **Ship / Dock** | `ship` | yes |
+| **UI (transient)** | `openPanel`, `selectedWarehouseId`, `selectedPowerPoleId`, `selectedAutoMinerId`, `selectedAutoSmelterId`, `selectedAutoAssemblerId`, `selectedGeneratorId`, `selectedServiceHubId`, `selectedCraftingBuildingId`, `selectedSplitterId`, `notifications`, `autoDeliveryLog` | no |
 
 `starterDrone` and `drones[id]` are kept synchronized — legacy for backward compatibility. (*UNCERTAIN:* Migration path not documented; for `syncDrones`, see [`drones/utils/drone-state-helpers.ts`](./drones/utils/drone-state-helpers.ts).)
 
 Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
+
+## Current Runtime Domains Not Shown In The Old Core Loop
+
+### Ship / Dock Quest System
+
+`state.ship` is persisted and advanced by `SHIP_TICK`. Dock quests use the fixed Dock Warehouse inventory (`dock-warehouse`) and can reward coins, resources, module fragments, or complete modules.
+
+### Modules / Module Lab
+
+`moduleFragments`, `moduleInventory`, and `moduleLabJob` are persisted. The Module Lab consumes fragments, advances with `MODULE_LAB_TICK`, and writes completed module instances into `moduleInventory`; equipped modules are mirrored on `asset.moduleSlot`.
+
+### Conveyor Route State
+
+`conveyorUndergroundPeers`, `splitterRouteState`, and `splitterFilterState` are persisted logistics state. Splitter route/filter updates live in the conveyor routing layer and `SET_SPLITTER_FILTER`.
+
+### Bootstrap / Fixed Dock Warehouse
+
+The Dock Warehouse is not a normal build-menu placement. It is seeded and normalized by `applyDockWarehouseLayout()` and stored as a fixed `dock_warehouse` asset with `isDockWarehouse: true`.
 
 ---
 
@@ -175,19 +199,19 @@ Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 
 ### 1. `GameAction` is standalone (Wave 2/3/3.5)
 
-[`store/game-actions.ts`](./store/game-actions.ts) is the only canonical source of the `GameAction` union. No reducer code, no mixed-in logic — pure type definition. `actions.ts` (formerly a pure re-export) was removed; all 45 handlers import directly.
+[`store/game-actions.ts`](./store/game-actions.ts) is the only canonical source of the `GameAction` union. No reducer code, no mixed-in logic — pure type definition. The old `actions.ts` re-export is gone; action handlers import `GameAction` directly from `store/game-actions.ts`.
 
 **Rationale:** `grep "type GameAction ="` returns exactly one match. Findability for LLMs and humans.
 
 ### 2. Read-only selectors in `store/selectors/`
 
-[`store/selectors/`](./store/selectors/) contains only non-mutating aggregations (zone, source status, conveyor-zone status). `reducer.ts` re-exports them only for compatibility reasons.
+[`store/selectors/`](./store/selectors/) contains read-only view helpers, including zone/source/conveyor status, hub tier, drone status, and module selectors. New code should import selectors directly from `store/selectors/**`. `reducer.ts` still re-exports `reducer-public-api.ts` as a compatibility surface for older consumers.
 
 **Rationale:** UI and drone code should import directly from `selectors/`, not via `reducer.ts`. One symbol — one canonical file.
 
 ### 3. Constants directly from `constants/`
 
-Grid and building constants (`GRID_W`, `GRID_H`, `CELL_PX`, `WAREHOUSE_CAPACITY`) are imported directly from [`constants/grid.ts`](./constants/grid.ts) and [`store/constants/buildings/index.ts`](./store/constants/buildings/index.ts). `reducer.ts` is no longer a re-export hub.
+Grid/building constants have canonical homes under `constants/` and `store/constants/`. Prefer direct imports for new code. For backward compatibility, `store/reducer.ts` still re-exports `reducer-public-api.ts`, and `simulation/game.ts` re-exports `store/reducer`.
 
 ### 4. Cluster handler chain instead of mega-switch
 
@@ -195,9 +219,9 @@ Grid and building constants (`GRID_W`, `GRID_H`, `CELL_PX`, `WAREHOUSE_CAPACITY`
 
 **Rationale:** Clusters are grouped by domain (crafting, drones, energy). A domain change touches only one cluster. Deps are injected to avoid ESM cycles with `reducer.ts`.
 
-### 5. Three inventory layers coexist
+### 5. Physical inventory layers + reservation layer coexist
 
-`inventory` (global) / `warehouseInventories` (physical) / `network` (logically reserved). Physical state is the source of truth.
+`inventory` (global) / `warehouseInventories` (physical warehouses + dock warehouse) / `serviceHubs[].inventory` (physical hub stock) + `network` (logical reservations). Physical state is the source of truth.
 
 **Rationale:** Reservations must be able to apply independently of physical stock (crafting reserves before it delivers), but physical inventory must remain readable at all times without a reservation lookup (manual harvesting, UI).
 
@@ -224,7 +248,7 @@ No global tick orchestrator — every `setInterval` runs independently.
 | **Hub / Service Hub** | Drone home base with its own inventory (`ServiceHubInventory`). |
 | **Workbench** | Crafting asset; occupied by crafting jobs. |
 | **Network Slice** | Logical reservations on physical inventory. Defined in [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts). |
-| **Owner** | Owner of a reservation. Convention: `ownerKey === jobId`. |
+| **Owner** | Owner of a reservation. Convention: `reservationOwnerId === job.id` and reservation `ownerId === reservationOwnerId`. |
 | **Source / CraftingInventorySource** | Discriminated union: `global` \| `warehouse` \| `zone`. |
 | **Zone / ProductionZone** | Logical grouping of buildings + warehouses with aggregated stock. |
 | **Job-Lifecycle** | `queued → reserved → crafting → delivering → done|cancelled`. |
@@ -232,7 +256,7 @@ No global tick orchestrator — every `setInterval` runs independently.
 | **Tick-Phase** | Internal step of a tick handler (e.g. `auto-miner` in `LOGISTICS_TICK`). |
 | **Cluster** | Group of related action types with a shared handler under `store/action-handlers/`. |
 | **Deps** | Reducer-internal helpers injected into handlers. Avoids ESM cycles. |
-| **HMR** | Hot Module Replacement. State is mirrored in `sessionStorage`. |
+| **HMR** | Hot Module Replacement. In DEV, state is mirrored on `window.__FI_HMR_STATE__` via `debug/hmrState.ts`. |
 | **Construction Site** | Building that still has outstanding resource debt. Drones deliver. |
 | **DroneRole** | `auto | construction | supply` — affects only task scoring; role changes mutate only `drone.role` and do **not** cancel running tasks. |
 
