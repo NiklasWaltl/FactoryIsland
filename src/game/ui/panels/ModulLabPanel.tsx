@@ -3,7 +3,7 @@
 // active job tracking, and owned-module management.
 // ============================================================
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import type { Module } from "../../modules/module.types";
@@ -46,10 +46,9 @@ export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
       return () => clearInterval(id);
     }, [job]);
 
-    const remainingMs = useMemo(() => {
-      if (!job) return 0;
-      return job.startedAt + job.durationMs - Date.now();
-    }, [job, /* timer */ Date.now()]);
+    // Computed fresh each render — depends on Date.now() which can't be a memo dep.
+    // The setNowTick interval (above) forces re-renders while a job is crafting.
+    const remainingMs = job ? job.startedAt + job.durationMs - Date.now() : 0;
 
     const close = () => dispatch({ type: "CLOSE_PANEL" });
 

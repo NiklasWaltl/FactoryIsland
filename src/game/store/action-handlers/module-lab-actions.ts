@@ -64,7 +64,11 @@ function moduleLabTick(state: GameState): GameState {
 
 function collectModule(state: GameState): GameState {
   const job = state.moduleLabJob;
-  if (!job || job.status !== "done") return state;
+  if (!job) return state;
+  // Belt-and-suspenders: don't collect if the wall-clock says the job isn't done yet,
+  // even if somehow status slipped through as "done" due to a deserialization quirk.
+  if (job.startedAt + job.durationMs > Date.now()) return state;
+  if (job.status !== "done") return state;
 
   const newModule: Module = {
     id: generateModuleId(),
