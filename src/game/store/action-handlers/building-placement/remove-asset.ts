@@ -16,6 +16,7 @@ import { addResources } from "../../inventory-ops";
 import { removeAsset } from "../../asset-mutation";
 import { reassignBuildingSourceIds } from "../../../buildings/warehouse/warehouse-assignment";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
+import { clearModulesEquippedToAny } from "../module-compat";
 import {
   type BuildingPlacementIoDeps,
   logPlacementInvariantWarnings,
@@ -435,6 +436,7 @@ export function handleRemoveAssetAction(
       },
     };
   }
+  partialRemove = clearModulesEquippedToAny(partialRemove, stripAssetIds);
   const nextState = {
     ...partialRemove,
     connectedAssetIds: computeConnectedAssetIds(partialRemove),

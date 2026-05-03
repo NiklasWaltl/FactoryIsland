@@ -1,5 +1,12 @@
 import type { ItemId } from "../../items/types";
 
+export type RewardType =
+  | "coins"
+  | "basic_resource"
+  | "rare_resource"
+  | "module_fragment"
+  | "complete_module";
+
 export type ShipStatus =
   | "sailing"    // ship is at sea, returning or on first approach
   | "docked"     // ship is at the dock, quest visible, countdown running
@@ -18,7 +25,7 @@ export interface ShipQuest {
 
 export interface ShipReward {
   /** Reward category for display purposes */
-  kind: "coins" | "basic_resource" | "rare_resource" | "module_fragment" | "complete_module";
+  kind: RewardType;
   /** Item key (or "coins") */
   itemId: string;
   /** Amount granted */
@@ -39,6 +46,8 @@ export interface ShipState {
   dockedAt: number | null;
   /** Timestamp when the ship will depart (ms) */
   departsAt: number | null;
+  /** Timestamp when the docked ship leaves without an explicit departure (ms) */
+  departureAt: number | null;
   /** Timestamp when the ship will return from its voyage (ms) */
   returnsAt: number | null;
   /** True while waiting for SHIP_RETURN to distribute the reward */
@@ -49,6 +58,8 @@ export interface ShipState {
   questPhase: number;
   /** Ships completed without a fragment drop (pity counter — unused until Block 6) */
   shipsSinceLastFragment: number;
+  /** Phase-5+ ships completed without a fragment/module drop. */
+  pityCounter: number;
   /** Quality multiplier computed at SHIP_DEPART and read at SHIP_RETURN; 0 means no reward. */
   pendingMultiplier: 0 | 1 | 2 | 3;
 }

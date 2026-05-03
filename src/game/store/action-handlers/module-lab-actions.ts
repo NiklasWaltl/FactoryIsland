@@ -17,6 +17,8 @@ import {
   getRecipeFragmentCost,
 } from "../../constants/moduleLabConstants";
 import { normalizeModuleFragmentCount } from "../helpers/module-fragments";
+import { addErrorNotification } from "../utils/notifications";
+import { isModuleCompatibleWithAsset } from "./module-compat";
 
 function generateModuleId(): string {
   // Sufficient for in-game ids; uniqueness is per-save and unconstrained by NFT addresses.
@@ -92,7 +94,26 @@ function placeModule(
   const inventory = state.moduleInventory ?? [];
   const target = inventory.find((m) => m.id === moduleId);
   if (!target) return state;
-  if (!state.assets[buildingId]) return state;
+  const asset = state.assets[buildingId];
+  if (!asset) return state;
+  if (inventory.some((m) => m.equippedTo === buildingId)) {
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Gebäude hat bereits ein Modul eingesetzt",
+      ),
+    };
+  }
+  if (!isModuleCompatibleWithAsset(target.type, asset.type)) {
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Dieses Modul passt nicht zu diesem Gebäude",
+      ),
+    };
+  }
 
   return {
     ...state,
@@ -102,11 +123,16 @@ function placeModule(
   };
 }
 
-function removeModule(state: GameState, moduleId: string): GameState {
+function removeModule(
+  state: GameState,
+  moduleId: string,
+  assetId?: string,
+): GameState {
   const inventory = state.moduleInventory ?? [];
   const target = inventory.find((m) => m.id === moduleId);
   if (!target) return state;
   if (target.equippedTo === null) return state;
+  if (assetId !== undefined && target.equippedTo !== assetId) return state;
 
   return {
     ...state,
@@ -129,8 +155,13 @@ export function handleModuleLabAction(
       return collectModule(state);
     case "PLACE_MODULE":
       return placeModule(state, action.moduleId, action.buildingId);
-    case "REMOVE_MODULE":
-      return removeModule(state, action.moduleId);
+    case "REMOVE_MODULE": {
+      const runtimeAction = action as Extract<
+        GameAction,
+        { type: "REMOVE_MODULE" }
+      > & { assetId?: string };
+      return removeModule(state, action.moduleId, runtimeAction.assetId);
+    }
     default:
       return null;
   }

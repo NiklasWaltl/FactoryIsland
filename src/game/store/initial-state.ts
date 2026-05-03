@@ -30,11 +30,13 @@ export function createInitialShipState(): ShipState {
     nextQuest: null,
     dockedAt: null,
     departsAt: null,
+    departureAt: null,
     returnsAt: Date.now() + 30_000,
     rewardPending: false,
     lastReward: null,
     questPhase: 1,
     shipsSinceLastFragment: 0,
+    pityCounter: 0,
     pendingMultiplier: 1,
   };
 }

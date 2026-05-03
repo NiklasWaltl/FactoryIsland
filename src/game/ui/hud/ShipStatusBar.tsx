@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 
@@ -17,8 +17,16 @@ function formatCountdown(ms: number): string {
 
 export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
   ({ state }) => {
+    const [, setNowTick] = useState(0);
+
+    useEffect(() => {
+      const id = setInterval(() => setNowTick((tick) => tick + 1), 250);
+      return () => clearInterval(id);
+    }, []);
+
     const ship = state.ship;
     const now = Date.now();
+    const departureAt = ship.departureAt ?? ship.departsAt;
 
     let statusText: string;
     let statusColor: string;
@@ -28,8 +36,8 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
       case "docked":
         statusText = "🚢 Angedockt";
         statusColor = "#86efac";
-        if (ship.departsAt) {
-          countdown = `Abfahrt: ${formatCountdown(ship.departsAt - now)}`;
+        if (departureAt !== null) {
+          countdown = `Abfahrt: ${formatCountdown(departureAt - now)}`;
         }
         break;
       case "departing":

@@ -1,10 +1,21 @@
 import type { GameAction } from "../game-actions";
-import type { GameState } from "../types";
+import type { GameState, Inventory } from "../types";
 import type { ShipState } from "../types/ship-types";
+import type { Module } from "../../modules/module.types";
 import { drawQuest } from "../../ship/quest-registry";
 import { drawReward } from "../../ship/reward-table";
+import {
+  MODULE_FRAGMENT_ITEM_ID,
+  SHIP_FRAGMENT_PITY_THRESHOLD,
+  SHIP_WAIT_DURATION_MS,
+} from "../../ship/ship-constants";
 import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
 import { addResources, createEmptyInventory } from "../inventory-ops";
+import {
+  addDockWarehouseItem,
+  addModuleFragments,
+  collectDockWarehouseFragment,
+} from "../helpers/module-fragments";
 import { addNotification } from "../utils/notifications";
 
 const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
@@ -17,11 +28,59 @@ const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
 /** Voyage duration range: 3–5 minutes in ms */
 const VOYAGE_MIN_MS = 3 * 60 * 1_000;
 const VOYAGE_MAX_MS = 5 * 60 * 1_000;
-/** Docked wait time: 2 minutes */
-const DOCK_WAIT_MS = 2 * 60 * 1_000;
 
 function randomVoyageMs(): number {
   return VOYAGE_MIN_MS + Math.random() * (VOYAGE_MAX_MS - VOYAGE_MIN_MS);
+}
+
+function getDepartureAt(ship: ShipState): number | null {
+  return ship.departureAt ?? ship.departsAt ?? null;
+}
+
+function getPityCounter(ship: ShipState): number {
+  return Number.isFinite(ship.pityCounter)
+    ? ship.pityCounter
+    : ship.shipsSinceLastFragment;
+}
+
+function getUpdatedRewardCounters(
+  ship: ShipState,
+  droppedFragmentLikeReward: boolean,
+): Pick<ShipState, "shipsSinceLastFragment" | "pityCounter"> {
+  const shipsSinceLastFragment = droppedFragmentLikeReward
+    ? 0
+    : ship.shipsSinceLastFragment + 1;
+  const tracksPity = ship.questPhase >= 5;
+  const pityCounter = droppedFragmentLikeReward
+    ? 0
+    : tracksPity
+      ? getPityCounter(ship) + 1
+      : getPityCounter(ship);
+
+  return { shipsSinceLastFragment, pityCounter };
+}
+
+function createShipRewardModule(now: number): Module {
+  return {
+    id: `ship-mod-${now.toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    type: "miner-boost",
+    tier: 1,
+    equippedTo: null,
+  };
+}
+
+function addCompleteModuleReward(state: GameState, now: number): GameState {
+  if (!Array.isArray(state.moduleInventory)) {
+    return {
+      ...state,
+      moduleFragments: addModuleFragments(state.moduleFragments, 3),
+    };
+  }
+
+  return {
+    ...state,
+    moduleInventory: [...state.moduleInventory, createShipRewardModule(now)],
+  };
 }
 
 export function computeQualityMultiplier(
@@ -46,15 +105,20 @@ export function handleShipAction(
       const ship = state.ship;
       const now = Date.now();
 
-      if (ship.status === "sailing" && ship.returnsAt !== null && now >= ship.returnsAt) {
+      if (
+        (ship.status === "sailing" || ship.status === "departing") &&
+        ship.returnsAt !== null &&
+        now >= ship.returnsAt
+      ) {
         if (ship.rewardPending) {
           return handleShipReturn(state, now);
         }
         return handleShipDock(state, now);
       }
 
-      if (ship.status === "docked" && ship.departsAt !== null && now >= ship.departsAt) {
-        return handleShipDepart(state, now);
+      const departureAt = getDepartureAt(ship);
+      if (ship.status === "docked" && departureAt !== null && now >= departureAt) {
+        return handleShipTimedDeparture(state, now);
       }
 
       return state;
@@ -77,18 +141,44 @@ export function handleShipAction(
 function handleShipDock(state: GameState, now: number): GameState {
   const quest = drawQuest(state.ship.questPhase);
   const nextQuest = drawQuest(state.ship.questPhase);
+  const departureAt = now + SHIP_WAIT_DURATION_MS;
   const updatedShip: ShipState = {
     ...state.ship,
     status: "docked",
     activeQuest: quest,
     nextQuest,
     dockedAt: now,
-    departsAt: now + DOCK_WAIT_MS,
+    departsAt: departureAt,
+    departureAt,
     returnsAt: null,
     rewardPending: false,
     pendingMultiplier: 1,
   };
   return { ...state, ship: updatedShip };
+}
+
+function handleShipTimedDeparture(state: GameState, now: number): GameState {
+  const updatedShip: ShipState = {
+    ...state.ship,
+    status: "departing",
+    activeQuest: null,
+    nextQuest: null,
+    dockedAt: null,
+    departsAt: null,
+    departureAt: null,
+    returnsAt: now + randomVoyageMs(),
+    rewardPending: false,
+    pendingMultiplier: 1,
+  };
+
+  return {
+    ...state,
+    ship: updatedShip,
+    warehouseInventories: {
+      ...state.warehouseInventories,
+      [DOCK_WAREHOUSE_ID]: createEmptyInventory(),
+    },
+  };
 }
 
 function handleShipDepart(state: GameState, now: number): GameState {
@@ -111,10 +201,10 @@ function handleShipDepart(state: GameState, now: number): GameState {
     status: "sailing",
     dockedAt: null,
     departsAt: null,
+    departureAt: null,
     returnsAt: now + randomVoyageMs(),
     rewardPending: multiplier > 0,
     pendingMultiplier: multiplier,
-    shipsSinceLastFragment: ship.shipsSinceLastFragment + 1,
   };
 
   return {
@@ -140,22 +230,47 @@ function handleShipReturn(state: GameState, now: number): GameState {
     };
   }
 
-  const reward = drawReward(ship.pendingMultiplier, ship.questPhase);
+  const reward = drawReward(
+    ship.pendingMultiplier,
+    ship.questPhase,
+    getPityCounter(ship) >= SHIP_FRAGMENT_PITY_THRESHOLD,
+  );
 
-  const isCoinReward = reward.itemId === "coins";
-  const nextInventory = isCoinReward
-    ? addResources(state.inventory, { coins: reward.amount })
-    : state.inventory;
-  const currentInv =
-    state.warehouseInventories[DOCK_WAREHOUSE_ID] ?? createEmptyInventory();
-  const rewardInv = { ...currentInv };
-  if (!isCoinReward) {
-    const key = reward.itemId as keyof typeof rewardInv;
-    rewardInv[key] = ((rewardInv[key] as number) ?? 0) + reward.amount;
+  let rewardState = state;
+  switch (reward.kind) {
+    case "coins":
+      rewardState = {
+        ...rewardState,
+        inventory: addResources(rewardState.inventory, {
+          coins: reward.amount,
+        }),
+      };
+      break;
+    case "basic_resource":
+    case "rare_resource":
+      rewardState = addDockWarehouseItem(
+        rewardState,
+        reward.itemId as keyof Inventory,
+        reward.amount,
+      );
+      break;
+    case "module_fragment":
+      rewardState = collectDockWarehouseFragment(
+        addDockWarehouseItem(
+          rewardState,
+          MODULE_FRAGMENT_ITEM_ID,
+          reward.amount,
+        ),
+      );
+      break;
+    case "complete_module":
+      rewardState = addCompleteModuleReward(rewardState, now);
+      break;
   }
 
   const isFragment =
     reward.kind === "module_fragment" || reward.kind === "complete_module";
+  const counters = getUpdatedRewardCounters(ship, isFragment);
 
   const updatedShip: ShipState = {
     ...ship,
@@ -164,29 +279,23 @@ function handleShipReturn(state: GameState, now: number): GameState {
     nextQuest: null,
     dockedAt: null,
     departsAt: null,
+    departureAt: null,
     returnsAt: now + randomVoyageMs(),
     rewardPending: false,
     lastReward: reward,
     pendingMultiplier: 1,
-    shipsSinceLastFragment: isFragment ? 0 : ship.shipsSinceLastFragment,
+    ...counters,
   };
 
   const notifications = addNotification(
-    state.notifications,
+    rewardState.notifications,
     reward.itemId,
     reward.amount,
   );
 
   return {
-    ...state,
+    ...rewardState,
     ship: updatedShip,
-    inventory: nextInventory,
     notifications,
-    warehouseInventories: isCoinReward
-      ? state.warehouseInventories
-      : {
-          ...state.warehouseInventories,
-          [DOCK_WAREHOUSE_ID]: rewardInv,
-        },
   };
 }

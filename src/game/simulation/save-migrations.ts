@@ -40,7 +40,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 26;
+export const CURRENT_SAVE_VERSION = 27;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -241,7 +241,13 @@ export interface SaveGameV26 extends Omit<SaveGameV25, "version"> {
   moduleLabJob: ModuleLabJob | null;
 }
 
-export type SaveGameLatest = SaveGameV26;
+export interface SaveGameV27 extends Omit<SaveGameV26, "version"> {
+  version: 27;
+  /** Ship state with departureAt and Phase-5+ pityCounter fields. */
+  ship: ShipState;
+}
+
+export type SaveGameLatest = SaveGameV27;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -263,6 +269,61 @@ type MigrationStep = {
   to: number;
   migrate: (save: any) => any;
 };
+
+function normalizeNonNegativeInteger(raw: unknown, fallback = 0): number {
+  return typeof raw === "number" && Number.isFinite(raw)
+    ? Math.max(0, Math.floor(raw))
+    : fallback;
+}
+
+function normalizePositiveInteger(raw: unknown, fallback = 1): number {
+  return typeof raw === "number" && Number.isFinite(raw)
+    ? Math.max(1, Math.floor(raw))
+    : fallback;
+}
+
+function normalizeTimestamp(raw: unknown): number | null {
+  return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+}
+
+function normalizePendingMultiplier(raw: unknown): 0 | 1 | 2 | 3 {
+  return raw === 0 || raw === 1 || raw === 2 || raw === 3 ? raw : 1;
+}
+
+function normalizeShipState(raw: unknown): ShipState {
+  const ship = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const departureAt = normalizeTimestamp(ship.departureAt ?? ship.departsAt);
+  const shipsSinceLastFragment = normalizeNonNegativeInteger(
+    ship.shipsSinceLastFragment,
+  );
+  const pityCounter = normalizeNonNegativeInteger(
+    ship.pityCounter,
+    shipsSinceLastFragment,
+  );
+  const status =
+    ship.status === "docked" ||
+    ship.status === "departing" ||
+    ship.status === "sailing"
+      ? ship.status
+      : "sailing";
+
+  return {
+    status,
+    activeQuest: (ship.activeQuest as ShipState["activeQuest"]) ?? null,
+    nextQuest: (ship.nextQuest as ShipState["nextQuest"]) ?? null,
+    dockedAt: normalizeTimestamp(ship.dockedAt),
+    departsAt: departureAt,
+    departureAt,
+    returnsAt:
+      "returnsAt" in ship ? normalizeTimestamp(ship.returnsAt) : Date.now() + 30_000,
+    rewardPending: ship.rewardPending === true,
+    lastReward: (ship.lastReward as ShipState["lastReward"]) ?? null,
+    questPhase: normalizePositiveInteger(ship.questPhase, 1),
+    shipsSinceLastFragment,
+    pityCounter,
+    pendingMultiplier: normalizePendingMultiplier(ship.pendingMultiplier),
+  };
+}
 
 function migrateV1ToV2(save: SaveGameV1): SaveGameV2 {
   const oldGen: GeneratorState = save.generator ?? {
@@ -529,21 +590,7 @@ function migrateV20ToV21(save: SaveGameV20): SaveGameV21 {
 
 function migrateV21ToV22(save: SaveGameV21): SaveGameV22 {
   const existingShip = (save as unknown as Partial<SaveGameV22>).ship;
-  const ship: ShipState = existingShip
-    ? { ...existingShip, pendingMultiplier: (existingShip as any).pendingMultiplier ?? 1 }
-    : {
-        status: "sailing",
-        activeQuest: null,
-        nextQuest: null,
-        dockedAt: null,
-        departsAt: null,
-        returnsAt: Date.now() + 30_000,
-        rewardPending: false,
-        lastReward: null,
-        questPhase: 1,
-        shipsSinceLastFragment: 0,
-        pendingMultiplier: 1,
-      };
+  const ship = normalizeShipState(existingShip);
   return { ...save, version: 22, ship };
 }
 
@@ -568,6 +615,10 @@ function migrateV24ToV25(save: SaveGameV24): SaveGameV25 {
 
 function migrateV25ToV26(save: SaveGameV25): SaveGameV26 {
   return { ...save, version: 26, moduleLabJob: null };
+}
+
+function migrateV26ToV27(save: SaveGameV26): SaveGameV27 {
+  return { ...save, version: 27, ship: normalizeShipState(save.ship) };
 }
 
 const MIGRATIONS: MigrationStep[] = [
@@ -597,6 +648,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 23, to: 24, migrate: migrateV23ToV24 },
   { from: 24, to: 25, migrate: migrateV24ToV25 },
   { from: 25, to: 26, migrate: migrateV25ToV26 },
+  { from: 26, to: 27, migrate: migrateV26ToV27 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

@@ -5,7 +5,7 @@
 import { gameReducer, createInitialState } from "../../store/reducer";
 import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
 import { computeQualityMultiplier } from "../../store/action-handlers/ship-actions";
-import { MODULE_FRAGMENT_ITEM_ID } from "../ship-constants";
+import { MODULE_FRAGMENT_ITEM_ID, SHIP_WAIT_DURATION_MS } from "../ship-constants";
 import { drawReward } from "../reward-table";
 
 // ---- helpers -------------------------------------------------------
@@ -56,7 +56,7 @@ describe("ship status transitions", () => {
     expect(state.ship.nextQuest).not.toBeNull();
   });
 
-  it("SHIP_DOCK sets dockedAt and departsAt (+2 min)", () => {
+  it("SHIP_DOCK sets dockedAt and departure timers (+5 min)", () => {
     const before = Date.now();
     const state = dispatch(freshState(), { type: "SHIP_DOCK" });
     const after = Date.now();
@@ -65,9 +65,10 @@ describe("ship status transitions", () => {
     expect(state.ship.dockedAt!).toBeGreaterThanOrEqual(before);
     expect(state.ship.dockedAt!).toBeLessThanOrEqual(after);
 
-    const DOCK_WAIT_MS = 2 * 60 * 1_000;
     expect(state.ship.departsAt).not.toBeNull();
-    expect(state.ship.departsAt! - state.ship.dockedAt!).toBeCloseTo(DOCK_WAIT_MS, -2);
+    expect(state.ship.departureAt).not.toBeNull();
+    expect(state.ship.departsAt).toBe(state.ship.departureAt);
+    expect(state.ship.departureAt! - state.ship.dockedAt!).toBeCloseTo(SHIP_WAIT_DURATION_MS, -2);
   });
 
   it("SHIP_DEPART → sailing, rewardPending true when cargo was delivered", () => {
@@ -297,9 +298,18 @@ describe("drawReward distribution over 1000 draws", () => {
 // ---- shipsSinceLastFragment counter --------------------------------
 
 describe("shipsSinceLastFragment counter", () => {
-  it("increments on SHIP_DEPART", () => {
-    const state = dispatch(freshState(), { type: "SHIP_DOCK" }, { type: "SHIP_DEPART" });
-    expect(state.ship.shipsSinceLastFragment).toBe(1);
+  it("increments on non-fragment SHIP_RETURN", () => {
+    const origRandom = Math.random;
+    Math.random = () => 0.25;
+    try {
+      let state = withQuestCargo(dispatch(freshState(), { type: "SHIP_DOCK" }));
+      state = dispatch(state, { type: "SHIP_DEPART" });
+      expect(state.ship.shipsSinceLastFragment).toBe(0);
+      state = dispatch(state, { type: "SHIP_RETURN" });
+      expect(state.ship.shipsSinceLastFragment).toBe(1);
+    } finally {
+      Math.random = origRandom;
+    }
   });
 
   it("resets to 0 on fragment drop (module_fragment)", () => {
@@ -312,15 +322,15 @@ describe("shipsSinceLastFragment counter", () => {
     try {
       let state = withQuestCargo(dispatch(freshState(), { type: "SHIP_DOCK" }));
       state = dispatch(state, { type: "SHIP_DEPART" });
-      expect(state.ship.shipsSinceLastFragment).toBe(1);
+      expect(state.ship.shipsSinceLastFragment).toBe(0);
 
       state = dispatch(state, { type: "SHIP_RETURN" });
       expect(state.ship.lastReward?.kind).toBe("module_fragment");
       expect(state.ship.shipsSinceLastFragment).toBe(0);
-      expect(state.moduleFragments).toBe(0);
+      expect(state.moduleFragments).toBe(1);
       expect(
-        state.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID],
-      ).toBe(1);
+        state.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID] ?? 0,
+      ).toBe(0);
     } finally {
       Math.random = origRandom;
     }

@@ -7,10 +7,11 @@
 import {
   gameReducer,
   createInitialState,
-  type GameAction,
-  type GameState,
 } from "../reducer";
+import type { Module } from "../../modules/module.types";
 import { MODULE_FRAGMENT_RECIPES } from "../../constants/moduleLabConstants";
+import type { GameAction } from "../game-actions";
+import type { GameState, PlacedAsset } from "../types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -22,6 +23,38 @@ function tick(state: GameState, action: GameAction): GameState {
 
 function withFragments(state: GameState, count: number): GameState {
   return { ...state, moduleFragments: count };
+}
+
+function makeAsset(id: string, type: PlacedAsset["type"]): PlacedAsset {
+  return { id, type, x: 7, y: 7, size: 1 };
+}
+
+function makeModule(module: Partial<Module> & Pick<Module, "id">): Module {
+  return {
+    type: "miner-boost",
+    tier: 1,
+    equippedTo: null,
+    ...module,
+  };
+}
+
+function withAssetsAndModules(
+  state: GameState,
+  assets: PlacedAsset[],
+  modules: Module[],
+): GameState {
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      ...Object.fromEntries(assets.map((asset) => [asset.id, asset])),
+    },
+    cellMap: {
+      ...state.cellMap,
+      ...Object.fromEntries(assets.map((asset) => [`${asset.x},${asset.y}`, asset.id])),
+    },
+    moduleInventory: modules,
+  };
 }
 
 const tier1 = MODULE_FRAGMENT_RECIPES.find((r) => r.id === "module_tier1")!;
@@ -141,5 +174,132 @@ describe("module_lab reducer invariants", () => {
     } finally {
       fakeNow.mockRestore();
     }
+  });
+
+  it("PLACE_MODULE: no-op when target building already has a module", () => {
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [makeAsset("miner-1", "auto_miner")],
+      [
+        makeModule({ id: "module-1", equippedTo: "miner-1" }),
+        makeModule({ id: "module-2" }),
+      ],
+    );
+
+    const after = tick(state, {
+      type: "PLACE_MODULE",
+      moduleId: "module-2",
+      buildingId: "miner-1",
+    });
+
+    expect(after.moduleInventory).toBe(state.moduleInventory);
+    expect(after.notifications).toHaveLength(state.notifications.length + 1);
+    expect(after.notifications.at(-1)?.displayName).toBe(
+      "Gebäude hat bereits ein Modul eingesetzt",
+    );
+  });
+
+  it("PLACE_MODULE: no-op when module type is incompatible with target building", () => {
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [makeAsset("miner-1", "auto_miner")],
+      [makeModule({ id: "module-1", type: "smelter-boost" })],
+    );
+
+    const after = tick(state, {
+      type: "PLACE_MODULE",
+      moduleId: "module-1",
+      buildingId: "miner-1",
+    });
+
+    expect(after.moduleInventory).toBe(state.moduleInventory);
+    expect(after.notifications).toHaveLength(state.notifications.length + 1);
+    expect(after.notifications.at(-1)?.displayName).toBe(
+      "Dieses Modul passt nicht zu diesem Gebäude",
+    );
+  });
+
+  it("PLACE_MODULE: no-op when target asset does not exist", () => {
+    const state = withAssetsAndModules(createInitialState("release"), [], [
+      makeModule({ id: "module-1" }),
+    ]);
+
+    const after = tick(state, {
+      type: "PLACE_MODULE",
+      moduleId: "module-1",
+      buildingId: "missing-asset",
+    });
+
+    expect(after).toBe(state);
+  });
+
+  it("PLACE_MODULE: equips a compatible module and leaves one module on the asset", () => {
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [makeAsset("miner-1", "auto_miner")],
+      [makeModule({ id: "module-1" }), makeModule({ id: "module-2" })],
+    );
+
+    const after = tick(state, {
+      type: "PLACE_MODULE",
+      moduleId: "module-1",
+      buildingId: "miner-1",
+    });
+
+    expect(after.moduleInventory.find((m) => m.id === "module-1")?.equippedTo).toBe(
+      "miner-1",
+    );
+    expect(after.moduleInventory.filter((m) => m.equippedTo === "miner-1")).toHaveLength(
+      1,
+    );
+  });
+
+  it("REMOVE_MODULE: no-op when module is not equipped", () => {
+    const state = withAssetsAndModules(createInitialState("release"), [], [
+      makeModule({ id: "module-1" }),
+    ]);
+
+    const after = tick(state, { type: "REMOVE_MODULE", moduleId: "module-1" });
+
+    expect(after).toBe(state);
+  });
+
+  it("REMOVE_MODULE: no-op when optional assetId does not match", () => {
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [makeAsset("miner-1", "auto_miner")],
+      [makeModule({ id: "module-1", equippedTo: "miner-1" })],
+    );
+
+    const after = tick(state, {
+      type: "REMOVE_MODULE",
+      moduleId: "module-1",
+      assetId: "miner-2",
+    } as GameAction);
+
+    expect(after).toBe(state);
+  });
+
+  it("BUILD_REMOVE_ASSET clears equipped modules pointing at the removed building", () => {
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [makeAsset("miner-1", "auto_miner")],
+      [
+        makeModule({ id: "module-1", equippedTo: "miner-1" }),
+        makeModule({ id: "module-2", equippedTo: "miner-1" }),
+      ],
+    );
+    const removableState = { ...state, buildMode: true };
+
+    const after = tick(removableState, {
+      type: "BUILD_REMOVE_ASSET",
+      assetId: "miner-1",
+    });
+
+    expect(after.assets["miner-1"]).toBeUndefined();
+    expect(after.moduleInventory).toEqual([
+      { ...state.moduleInventory[0], equippedTo: null },
+      { ...state.moduleInventory[1], equippedTo: null },
+    ]);
   });
 });
