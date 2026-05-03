@@ -1,236 +1,236 @@
 # SYSTEM_REGISTRY.md
 
-> AI-freundliche Navigationskarte für Factory Island. Ist-Zustand, kein Soll-Zustand.
-> Stand: verifiziert 2026-05-01.
+> AI-friendly navigation map for Factory Island. Current state, not target state.
+> Last verified: 2026-05-01.
 
 ---
 
-## 1. Zweck
+## 1. Purpose
 
-Kompakter Index aller Kernsysteme mit Pfaden, Verantwortlichkeiten, Lese-/Schreibgrenzen und Einstiegspunkten — damit zukünftige Prompts den richtigen Code in 1–2 Tool-Calls finden, ohne erst zu explorieren.
+Compact index of all core systems with paths, responsibilities, read/write boundaries, and entry points — so future prompts can find the right code in 1–2 tool calls without exploratory searching first.
 
-Tiefere Inhalte: siehe [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md), [src/game/TYPES.md](src/game/TYPES.md), [README.md](README.md).
+Deeper content: see [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md), [src/game/TYPES.md](src/game/TYPES.md), [README.md](README.md).
 
 ---
 
-## AI-Nutzung dieser Datei
+## AI Usage of This File
 
-Nutze diese Datei als Routing-Übersicht, nicht als Detaildokument.
-Wenn eine Aufgabe genannt wird:
-1. Bestimme zuerst das betroffene System.
-2. Lies dann nur die genannten Hauptpfade dieses Systems.
-3. Ziehe ARCHITECTURE.md nur für Runtime- oder Datenflussfragen hinzu.
-4. Ziehe TYPES.md nur für Typ-/Domainfragen hinzu.
-5. Wenn eine Information hier als UNSICHER markiert ist, validiere sie im Code, bevor du Änderungen vorschlägst.
+Use this file as a routing overview, not as a detail document.
+When a task is named:
+1. Identify the affected system first.
+2. Then read only the listed main paths for that system.
+3. Pull in ARCHITECTURE.md only for runtime or data-flow questions.
+4. Pull in TYPES.md only for type/domain questions.
+5. If information here is marked as UNCERTAIN, validate it in code before proposing changes.
 
-### Task-zu-System-Matrix
+### Task-to-System Matrix
 
-| Task | Primäre Systeme | Sekundäre Systeme |
+| Task | Primary Systems | Secondary Systems |
 |---|---|---|
-| Neues Building | Building Placement, Reducer, UI-Panels | Inventory, Energy |
-| Neues Rezept | Crafting, Simulation/Recipes | Inventory, UI-Panels |
-| Neues UI-Panel | UI-Panels | Store, Selection-State |
-| Neue Drohnenregel | Drones | Inventory, Tick-Pipeline |
+| New building | Building Placement, Reducer, UI-Panels | Inventory, Energy |
+| New recipe | Crafting, Simulation/Recipes | Inventory, UI-Panels |
+| New UI panel | UI-Panels | Store, Selection-State |
+| New drone rule | Drones | Inventory, Tick-Pipeline |
 
 ---
 
-## 2. Stack & Leitregeln
+## 2. Stack & Guiding Rules
 
 - **Stack:** React 18 + TypeScript + Phaser 3 + Vite. Tests via Jest. Yarn 1.x.
-- **State:** ein einziger `useReducer` (`GameState` in [src/game/store/types.ts](src/game/store/types.ts)). Single source of truth.
-- **Tick-getrieben:** ~10 unabhängige `setInterval` in [src/game/entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) (eingehängt aus [src/game/entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx)) → `dispatch({type: "*_TICK"})`.
-- **Goldene Regel:** Phaser ruft NIE `dispatch`. Nur React-UI darf mutieren. Phaser liest Snapshots.
-- **Action-Discoverability:** `grep "case \"X_ACTION\":" src/game` ergibt genau einen Treffer.
-- **`GameAction`-Union:** kanonisch in [src/game/store/game-actions.ts](src/game/store/game-actions.ts). Kein Re-Export-Hub.
-- **Persistenz:** `localStorage` alle 10 s + `beforeunload`. HMR-Restore via `sessionStorage`.
-- **Determinismus:** alle Tick-Logik pure Funktionen über `state`.
+- **State:** a single `useReducer` (`GameState` in [src/game/store/types.ts](src/game/store/types.ts)). Single source of truth.
+- **Tick-driven:** ~10 independent `setInterval` calls in [src/game/entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) (mounted from [src/game/entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx)) → `dispatch({type: "*_TICK"})`.
+- **Golden rule:** Phaser NEVER calls `dispatch`. Only the React UI may mutate state. Phaser reads snapshots.
+- **Action discoverability:** `grep "case \"X_ACTION\":" src/game` returns exactly one match.
+- **`GameAction` union:** canonical in [src/game/store/game-actions.ts](src/game/store/game-actions.ts). No re-export hub.
+- **Persistence:** `localStorage` every 10 s + `beforeunload`. HMR restore via `sessionStorage`.
+- **Determinism:** all tick logic is pure functions over `state`.
 
 ---
 
-## 3. Runtime-Karte
+## 3. Runtime Map
 
-1. `main.factory.tsx` bootet React → mountet `FactoryApp`.
-2. `FactoryApp` wählt Mode (`debug` | `release`) und mountet `GameInner` mit `key=mode`.
-3. `GameInner` initialisiert `useReducer(gameReducer)` und ~10 Tick-Intervalle.
-4. UI (HUD + Panels) liest `state` als Prop und ruft `dispatch` direkt.
-5. Phaser (`PhaserHost` + `PhaserGame`) erhält State-Snapshots zur Render-Synchronisation.
-6. Alle Mutationen → `dispatch(action)` → `gameReducer` → Cluster-Handler-Kette → neuer State.
-7. Save-Codec serialisiert `GameState` periodisch in `localStorage`; Hydration beim Mount.
-8. Tick-Reihenfolge innerhalb eines Browser-Frames ist NICHT garantiert.
+1. `main.factory.tsx` boots React → mounts `FactoryApp`.
+2. `FactoryApp` selects mode (`debug` | `release`) and mounts `GameInner` with `key=mode`.
+3. `GameInner` initializes `useReducer(gameReducer)` and ~10 tick intervals.
+4. UI (HUD + Panels) reads `state` as a prop and calls `dispatch` directly.
+5. Phaser (`PhaserHost` + `PhaserGame`) receives state snapshots for render synchronization.
+6. All mutations → `dispatch(action)` → `gameReducer` → cluster handler chain → new state.
+7. Save codec periodically serializes `GameState` into `localStorage`; hydration on mount.
+8. Tick order within a browser frame is NOT guaranteed.
 
 ---
 
-## 4. Kernsysteme — Übersicht
+## 4. Core Systems — Overview
 
-| System | Hauptpfad | Verantwortung | Liest | Schreibt | Abhängigkeiten | Nicht zuständig für |
+| System | Main Path | Responsibility | Reads | Writes | Dependencies | Not Responsible For |
 |---|---|---|---|---|---|---|
-| **Entry / Bootstrap** | [src/game/entry/](src/game/entry/) | App-Shell, Reducer-Mount, Tick-Intervalle, HMR-Restore | `state` (Lifecycle) | `dispatch` | Store, UI, Save | Game-Logik, Rendering |
-| **Reducer / Dispatch** | [src/game/store/reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Zentrale Action-Dispatch-Kette | gesamter `GameState` | gesamter `GameState` | alle Action-Handler | UI, Rendering |
-| **Action-Handlers** | [src/game/store/action-handlers/](src/game/store/action-handlers/) | Cluster-Handler pro Action-Typ | `state` + `deps` | Slices via Pure Updates | Decisions, Helpers, Selectors | Tick-Scheduling |
-| **Game-Actions Union** | [src/game/store/game-actions.ts](src/game/store/game-actions.ts) | Kanonische `GameAction`-Discriminated-Union | — | — | Item/Recipe-Typen | Logik (nur Typen) |
-| **Crafting** | [src/game/crafting/](src/game/crafting/) | Job-Lifecycle: queued→reserved→crafting→delivering→done | `crafting`, `network`, Inventare | `crafting`, Inventare, `keepStockByWorkbench` | Inventory, Items, Recipes | Drohnen-Bewegung |
-| **Drones** | [src/game/drones/](src/game/drones/) | Task-Selection, Movement, Cargo-FSM | `drones`, `assets`, `crafting`, Inventare | `drones`, `starterDrone`, Ziel-Inventare, `collectionNodes` | Decisions, Selectors | Energie, Crafting-Planung |
-| **Inventory / Reservations** | [src/game/inventory/](src/game/inventory/) | Logische Holds auf physischem Stock (`network`) | `inventory`, `warehouseInventories`, `network` | `network` (Reservations) | Items | Physische Bewegung |
-| **Items** | [src/game/items/](src/game/items/) | `ItemId`-Union, Item-Registry, Stack-Größen | — | — | — | Recipes |
-| **Recipes** | [src/game/simulation/recipes/](src/game/simulation/recipes/) | Statische Rezeptdefinitionen pro Workbench-Typ | — | — | Items | Crafting-Lifecycle |
-| **Logistics-Tick** | [src/game/store/action-handlers/logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) (+ `logistics-tick/`) | AutoMiner, Conveyor, AutoSmelter pro 500ms | `assets`, Inventare, `conveyors` | `inventory`, `warehouseInventories`, `autoMiners`, `autoSmelters`, `conveyors`, `notifications` | Decisions, Conveyor | Drohnen, Crafting |
-| **Energy / Power** | [src/game/store/energy/](src/game/store/energy/), [src/game/power/](src/game/power/) | Netz-Konnektivität, Verbraucher-Priorität, Generator-Burn | `assets`, `cellMap`, `constructionSites`, `generators`, `battery`, `connectedAssetIds` | `poweredMachineIds`, `machinePowerRatio`, `generators`, `battery` | Decisions | Crafting, Logistics |
-| **Buildings** | [src/game/buildings/](src/game/buildings/), [src/game/store/constants/buildings/](src/game/store/constants/buildings/) | Building-Definitionen, Input-Targets, Service-Hub-/Warehouse-Helper | `assets`, `placedBuildings` | über Reducer | Items | Placement-Validierung |
-| **Zones** | [src/game/zones/](src/game/zones/) | Production-Zone-Aggregation und Cleanup | `productionZones`, `assets` | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | Decisions | Crafting-Plan |
-| **Conveyor** | [src/game/store/conveyor/](src/game/store/conveyor/) | Belt-Geometrie, Routing, Underground-Pairing | `conveyors`, `assets` | über Logistics-Tick | — | Item-Definition |
-| **Decisions** | [src/game/store/decisions/](src/game/store/decisions/) | Reine Eligibility-/Placement-/Dropoff-Logik | `state` (read-only) | — | Helpers, Selectors | State-Mutation |
-| **Selectors** | [src/game/store/selectors/](src/game/store/selectors/) | Read-only Aggregations für UI/Drones | `state` | nie | — | Mutation |
-| **Grid (UI)** | [src/game/grid/](src/game/grid/) | Click-Handling, Overlays, Placement-Preview | `state` | `dispatch` | UI-Helpers | Phaser-Render |
-| **World (Phaser)** | [src/game/world/](src/game/world/) | Phaser-Game + React-Host für Rendering | State-Snapshot | nie | Sprites | Logik |
-| **UI Panels / HUD** | [src/game/ui/panels/](src/game/ui/panels/), [src/game/ui/hud/](src/game/ui/hud/) | Side-Panels pro Building, Hotbar, Notifications | `state` | `dispatch` | Selectors | Logik |
-| **Persistence (Save)** | [src/game/simulation/](src/game/simulation/) | localStorage-Codec, Migrations, Normalizer | `state` | nie (im Reducer-Sinn) | Types | Live-State |
-| **Debug** | [src/game/debug/](src/game/debug/) | DEV-Tools, Debug-Overlays (tree-shaken) | `state` | via `DEBUG_SET_STATE` | — | Production |
-| **Constants** | [src/game/constants/](src/game/constants/), [src/game/store/constants/](src/game/store/constants/) | Grid-Dimensionen, Timing, Capacities, Recipes-Constants | — | — | — | — |
+| **Entry / Bootstrap** | [src/game/entry/](src/game/entry/) | App shell, reducer mount, tick intervals, HMR restore | `state` (lifecycle) | `dispatch` | Store, UI, Save | game logic, rendering |
+| **Reducer / Dispatch** | [src/game/store/reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Central action dispatch chain | entire `GameState` | entire `GameState` | all action handlers | UI, rendering |
+| **Action-Handlers** | [src/game/store/action-handlers/](src/game/store/action-handlers/) | Cluster handler per action type | `state` + `deps` | slices via pure updates | Decisions, Helpers, Selectors | tick scheduling |
+| **Game-Actions Union** | [src/game/store/game-actions.ts](src/game/store/game-actions.ts) | Canonical `GameAction` discriminated union | — | — | item/recipe types | logic (types only) |
+| **Crafting** | [src/game/crafting/](src/game/crafting/) | Job lifecycle: queued→reserved→crafting→delivering→done | `crafting`, `network`, inventories | `crafting`, inventories, `keepStockByWorkbench` | Inventory, Items, Recipes | drone movement |
+| **Drones** | [src/game/drones/](src/game/drones/) | Task selection, movement, cargo FSM | `drones`, `assets`, `crafting`, inventories | `drones`, `starterDrone`, target inventories, `collectionNodes` | Decisions, Selectors | energy, crafting planning |
+| **Inventory / Reservations** | [src/game/inventory/](src/game/inventory/) | Logical holds on physical stock (`network`) | `inventory`, `warehouseInventories`, `network` | `network` (reservations) | Items | physical movement |
+| **Items** | [src/game/items/](src/game/items/) | `ItemId` union, item registry, stack sizes | — | — | — | Recipes |
+| **Recipes** | [src/game/simulation/recipes/](src/game/simulation/recipes/) | Static recipe definitions per workbench type | — | — | Items | crafting lifecycle |
+| **Logistics-Tick** | [src/game/store/action-handlers/logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) (+ `logistics-tick/`) | AutoMiner, Conveyor, AutoSmelter per 500ms | `assets`, inventories, `conveyors` | `inventory`, `warehouseInventories`, `autoMiners`, `autoSmelters`, `conveyors`, `notifications` | Decisions, Conveyor | drones, crafting |
+| **Energy / Power** | [src/game/store/energy/](src/game/store/energy/), [src/game/power/](src/game/power/) | network connectivity, consumer priority, generator burn | `assets`, `cellMap`, `constructionSites`, `generators`, `battery`, `connectedAssetIds` | `poweredMachineIds`, `machinePowerRatio`, `generators`, `battery` | Decisions | Crafting, Logistics |
+| **Buildings** | [src/game/buildings/](src/game/buildings/), [src/game/store/constants/buildings/](src/game/store/constants/buildings/) | building definitions, input targets, service-hub/warehouse helpers | `assets`, `placedBuildings` | via reducer | Items | placement validation |
+| **Zones** | [src/game/zones/](src/game/zones/) | production-zone aggregation and cleanup | `productionZones`, `assets` | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | Decisions | crafting plan |
+| **Conveyor** | [src/game/store/conveyor/](src/game/store/conveyor/) | belt geometry, routing, underground pairing | `conveyors`, `assets` | via Logistics-Tick | — | item definition |
+| **Decisions** | [src/game/store/decisions/](src/game/store/decisions/) | Pure eligibility/placement/dropoff logic | `state` (read-only) | — | Helpers, Selectors | state mutation |
+| **Selectors** | [src/game/store/selectors/](src/game/store/selectors/) | Read-only aggregations for UI/drones | `state` | never | — | mutation |
+| **Grid (UI)** | [src/game/grid/](src/game/grid/) | click handling, overlays, placement preview | `state` | `dispatch` | UI helpers | Phaser render |
+| **World (Phaser)** | [src/game/world/](src/game/world/) | Phaser game + React host for rendering | state snapshot | never | Sprites | logic |
+| **UI Panels / HUD** | [src/game/ui/panels/](src/game/ui/panels/), [src/game/ui/hud/](src/game/ui/hud/) | side panels per building, hotbar, notifications | `state` | `dispatch` | Selectors | logic |
+| **Persistence (Save)** | [src/game/simulation/](src/game/simulation/) | localStorage codec, migrations, normalizer | `state` | never (in the reducer sense) | Types | live state |
+| **Debug** | [src/game/debug/](src/game/debug/) | DEV tools, debug overlays (tree-shaken) | `state` | via `DEBUG_SET_STATE` | — | Production |
+| **Constants** | [src/game/constants/](src/game/constants/), [src/game/store/constants/](src/game/store/constants/) | grid dimensions, timing, capacities, recipe constants | — | — | — | — |
 
 ---
 
-## 5. Detailkarten
+## 5. Detail Maps
 
-### 5.1 Reducer & Dispatch-Kette
+### 5.1 Reducer & Dispatch Chain
 
-- **Einstieg:** [reducer.ts](src/game/store/reducer.ts) — dünner Entry-Point für `gameReducer` + `gameReducerWithInvariants`.
-- **Echte Dispatch-Logik:** [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) (extrahiert).
-- **Pattern:** Kette aus `handleXAction(state, action, deps?) → GameState | null`. `null` = Fallthrough. Verbleibende Actions → inline `switch`.
-- **Public API:** [reducer-public-api.ts](src/game/store/reducer-public-api.ts) — Re-Exports für externe Konsumenten.
+- **Entry point:** [reducer.ts](src/game/store/reducer.ts) — thin entry point for `gameReducer` + `gameReducerWithInvariants`.
+- **Actual dispatch logic:** [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) (extracted).
+- **Pattern:** chain of `handleXAction(state, action, deps?) → GameState | null`. `null` = fallthrough. Remaining actions → inline `switch`.
+- **Public API:** [reducer-public-api.ts](src/game/store/reducer-public-api.ts) — re-exports for external consumers.
 
-### 5.2 Crafting-System
+### 5.2 Crafting System
 
 - **README:** [src/game/crafting/README.md](src/game/crafting/README.md).
 - **Lifecycle:** `queued → reserved → crafting → delivering → done|cancelled` ([crafting/types.ts](src/game/crafting/types.ts)).
-- **Drei Schichten:** Reservation (`inventory/`) · Queue (`crafting/queue/`) · Tick-Phasen (`crafting/tick.ts` + `crafting/tickPhases.ts`).
-- **Cluster-Handler:** [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/).
-- **Strikte Trennung:** Planning vs. Execution Phase im Tick.
-- **Source-Union:** `global | warehouse | zone` — bestimmt, woher gelesen und wohin geliefert wird.
+- **Three layers:** reservation (`inventory/`) · queue (`crafting/queue/`) · tick phases (`crafting/tick.ts` + `crafting/tickPhases.ts`).
+- **Cluster handler:** [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/).
+- **Strict separation:** planning vs. execution phase in the tick.
+- **Source union:** `global | warehouse | zone` — determines where reads come from and where delivery goes.
 
 ### 5.3 Drones
 
-- **Task-Auswahl:** [drones/selection/select-drone-task.ts](src/game/drones/selection/select-drone-task.ts) — Scoring-basiert.
-- **Tasktypen:** `construction_supply`, `hub_restock`, `hub_dispatch`, `workbench_delivery`, `building_supply` ([store/types.ts](src/game/store/types.ts)).
-- **Roles:** `auto | construction | supply` — beeinflussen NUR Scoring (Bonus); kein hartes Filter. Rollenwechsel bricht laufende Tasks NICHT ab.
-- **Sync-Falle:** `starterDrone` ↔ `drones[id]` — duplizierter State, gehalten via `syncDrones` ([drones/utils/drone-state-helpers.ts](src/game/drones/utils/drone-state-helpers.ts)). UNSICHER: Migrationspfad zur Konsolidierung nicht dokumentiert.
+- **Task selection:** [drones/selection/select-drone-task.ts](src/game/drones/selection/select-drone-task.ts) — scoring-based.
+- **Task types:** `construction_supply`, `hub_restock`, `hub_dispatch`, `workbench_delivery`, `building_supply` ([store/types.ts](src/game/store/types.ts)).
+- **Roles:** `auto | construction | supply` — affect ONLY scoring (bonus); no hard filter. Role changes do NOT cancel running tasks.
+- **Sync trap:** `starterDrone` ↔ `drones[id]` — duplicated state, kept via `syncDrones` ([drones/utils/drone-state-helpers.ts](src/game/drones/utils/drone-state-helpers.ts)). UNCERTAIN: migration path toward consolidation is not documented.
 - **FSM:** `DroneStatus` (idle / moving_to_collect / collecting / moving_to_dropoff / …).
 
-### 5.4 Inventar-Hierarchie (kritische Verwirrungsquelle)
+### 5.4 Inventory Hierarchy (critical source of confusion)
 
-| Schicht | Feld | Rolle |
+| Layer | Field | Role |
 |---|---|---|
-| 1 | `state.inventory` | Globaler Fallback-Pool (manuelle Ernte, Crafting ohne explizite Quelle) |
-| 2 | `state.warehouseInventories[id]` | Physische Lager — Auto-Delivery landet hier |
-| 3 | `state.network.reservations` | Logische Holds auf (1)+(2). NICHT physisch. |
+| 1 | `state.inventory` | Global fallback pool (manual harvesting, crafting without explicit source) |
+| 2 | `state.warehouseInventories[id]` | Physical warehouses — auto-delivery lands here |
+| 3 | `state.network.reservations` | Logical holds on (1)+(2). NOT physical. |
 
-**Kanonisch:** Physisches Inventar ist Source-of-Truth. `network` ist nur abgeleitete Holds. Reservierungen werden über Owner-Keys (Konvention: `ownerKey === jobId`) verwaltet.
+**Canonical:** Physical inventory is the source of truth. `network` is only derived holds. Reservations are managed through owner keys (convention: `ownerKey === jobId`).
 
-### 5.5 Tick-Pipeline
+### 5.5 Tick Pipeline
 
-| Tick | ms | Bedingung | Handler |
+| Tick | ms | Condition | Handler |
 |---|---|---|---|
-| `GROW_SAPLINGS` | 1000 | immer | growth-actions |
-| `SMITHY_TICK` | 100 | nur wenn processing | machine-actions |
-| `MANUAL_ASSEMBLER_TICK` | 100 | nur wenn processing | manual-assembler-actions |
-| `GENERATOR_TICK` | 200 | min. 1 läuft | machine-actions |
-| `ENERGY_NET_TICK` | 2000 | immer | energy-net-tick |
-| `LOGISTICS_TICK` | 500 | immer | logistics-tick |
+| `GROW_SAPLINGS` | 1000 | always | growth-actions |
+| `SMITHY_TICK` | 100 | only when processing | machine-actions |
+| `MANUAL_ASSEMBLER_TICK` | 100 | only when processing | manual-assembler-actions |
+| `GENERATOR_TICK` | 200 | min. 1 running | machine-actions |
+| `ENERGY_NET_TICK` | 2000 | always | energy-net-tick |
+| `LOGISTICS_TICK` | 500 | always | logistics-tick |
 | `JOB_TICK` | 500 | pending Jobs OR Keep-Stock-Targets | crafting-queue-actions |
-| `DRONE_TICK` | 500 | immer | drone-tick-actions |
-| `EXPIRE_NOTIFICATIONS` | 500 | immer | maintenance-actions |
-| `NATURAL_SPAWN` | 60000 | immer | growth-actions |
+| `DRONE_TICK` | 500 | always | drone-tick-actions |
+| `EXPIRE_NOTIFICATIONS` | 500 | always | maintenance-actions |
+| `NATURAL_SPAWN` | 60000 | always | growth-actions |
 
-Alle Tick-Intervalle liegen in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts); [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) bindet den Hook ein.
+All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts); [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) mounts the hook.
 
-### 5.6 Energy-Netz
+### 5.6 Energy Network
 
-- **Tick-Phasen:** [store/energy/](src/game/store/energy/) — Production, Consumers (Priority-sortiert), Distribution.
-- **Konnektivität:** [logistics/connectivity.ts](src/game/logistics/connectivity.ts) — BFS über Asset-Topologie und Pole-Reichweite.
-- **Schreibzugriff:** `poweredMachineIds`, `machinePowerRatio`, `battery.stored`; `connectedAssetIds` wird bei Topologie-Änderungen separat via `computeConnectedAssetIds()` aktualisiert.
-- **Verbraucher-Priorität:** `MachinePriority` 1..5 — kleinere Zahl = früherer Stromzugriff (`1` = höchste Priorität).
+- **Tick phases:** [store/energy/](src/game/store/energy/) — production, consumers (priority-sorted), distribution.
+- **Connectivity:** [logistics/connectivity.ts](src/game/logistics/connectivity.ts) — BFS over asset topology and pole range.
+- **Write access:** `poweredMachineIds`, `machinePowerRatio`, `battery.stored`; `connectedAssetIds` is updated separately via `computeConnectedAssetIds()` when topology changes.
+- **Consumer priority:** `MachinePriority` 1..5 — smaller number = earlier power access (`1` = highest priority).
 
-### 5.7 Action-Cluster (häufigste Einstiege)
+### 5.7 Action Clusters (most common entry points)
 
-| Cluster | Pfad | Anteil Actions |
+| Cluster | Path | Action Count |
 |---|---|---|
 | Crafting | [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/) | 13 |
 | Building Placement | [building-placement.ts](src/game/store/action-handlers/building-placement.ts) + [building-placement/](src/game/store/action-handlers/building-placement/) | 2 |
-| Machines | [machine-actions.ts](src/game/store/action-handlers/machine-actions.ts) + [machine-actions/](src/game/store/action-handlers/machine-actions/) | viele |
-| Click-Cell | [click-cell.ts](src/game/store/action-handlers/click-cell.ts) | 1 (zentral, dispatcht intern) |
+| Machines | [machine-actions.ts](src/game/store/action-handlers/machine-actions.ts) + [machine-actions/](src/game/store/action-handlers/machine-actions/) | many |
+| Click-Cell | [click-cell.ts](src/game/store/action-handlers/click-cell.ts) | 1 (central, dispatches internally) |
 | Logistics | [logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) + [logistics-tick/](src/game/store/action-handlers/logistics-tick/) | 1 |
 
-### 5.8 UI-Panels (1 Panel pro Building-Typ)
+### 5.8 UI-Panels (1 panel per building type)
 
-[src/game/ui/panels/](src/game/ui/panels/): `WarehousePanel`, `SmithyPanel`, `WorkbenchPanel`, `ManualAssemblerPanel`, `AutoAssemblerPanel`, `AutoMinerPanel`, `AutoSmelterPanel`, `BatteryPanel`, `GeneratorPanel`, `MapShopPanel`, `PowerPolePanel`, `ServiceHubPanel`, `EnergyDebugOverlay`, `ZoneSourceSelector`. Trigger via `openPanel`-Feld + `selectedXxxId`.
+[src/game/ui/panels/](src/game/ui/panels/): `WarehousePanel`, `SmithyPanel`, `WorkbenchPanel`, `ManualAssemblerPanel`, `AutoAssemblerPanel`, `AutoMinerPanel`, `AutoSmelterPanel`, `BatteryPanel`, `GeneratorPanel`, `MapShopPanel`, `PowerPolePanel`, `ServiceHubPanel`, `EnergyDebugOverlay`, `ZoneSourceSelector`. Trigger via `openPanel` field + `selectedXxxId`.
 
 ---
 
-## 6. Hotspots & Risikobereiche
+## 6. Hotspots & Risk Areas
 
-| Hotspot | Datei / Bereich | Risiko |
+| Hotspot | File / Area | Risk |
 |---|---|---|
-| **Drei Inventare** | `inventory` / `warehouseInventories` / `network` | Falsche Schicht editiert → Stock-Inkonsistenz |
-| **`starterDrone` ↔ `drones[id]`** | [drones/utils/drone-state-helpers.ts](src/game/drones/utils/drone-state-helpers.ts) | Beide editieren ohne `syncDrones` → Drift |
-| **Tick-Race** | [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) | Reihenfolge unbestimmt; Logik muss kommutativ-genug sein |
-| **Reducer-Split** | [reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Thin Entry-Point und echte Dispatch-Kette liegen in getrennten Dateien |
-| **Phase-File-Explosion** | `crafting-queue-actions/phases/` | Eine Änderung berührt typischerweise 3 Dateien (Index + Phase + Deps) |
-| **Save-Migrations** | [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Schema-Änderung ohne Migration → Hydration-Fehler bei Bestandsspeichern |
-| **Energy-Konsumenten-Priorität** | [power/energy-priority.ts](src/game/power/energy-priority.ts) | Ordering-Bugs → falsche `machinePowerRatio` |
-| **`GameState` ist Flat-Interface** | [store/types.ts:316](src/game/store/types.ts#L316) | ~62 Felder; logische Slice-Trennung nur konzeptuell |
-| **HMR-Restore** | [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) | DEV-only Code; nicht in Prod testen |
+| **Three Inventories** | `inventory` / `warehouseInventories` / `network` | Wrong layer edited → stock inconsistency |
+| **`starterDrone` ↔ `drones[id]`** | [drones/utils/drone-state-helpers.ts](src/game/drones/utils/drone-state-helpers.ts) | Editing both without `syncDrones` → drift |
+| **Tick-Race** | [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) | Order is nondeterministic; logic must be sufficiently commutative |
+| **Reducer-Split** | [reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Thin entry point and actual dispatch chain live in separate files |
+| **Phase-File-Explosion** | `crafting-queue-actions/phases/` | A change typically touches 3 files (index + phase + deps) |
+| **Save-Migrations** | [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Schema change without migration → hydration errors for existing saves |
+| **Energy Consumer Priority** | [power/energy-priority.ts](src/game/power/energy-priority.ts) | Ordering bugs → wrong `machinePowerRatio` |
+| **`GameState` is a Flat Interface** | [store/types.ts:316](src/game/store/types.ts#L316) | ~62 fields; logical slice separation is only conceptual |
+| **HMR-Restore** | [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) | DEV-only code; do not test in prod |
 
 ---
 
-## 7. Änderungsrezepte
+## 7. Change Recipes
 
-### 7.1 Neues Building hinzufügen
+### 7.1 Add a New Building
 
-1. **Item-ID** (falls eigenes Item): [items/registry.ts](src/game/items/registry.ts) + ggf. [items/types.ts](src/game/items/types.ts).
-2. **Building-Definition:** [src/game/store/constants/buildings/registry.ts](src/game/store/constants/buildings/registry.ts) (Größe, Kosten, Strombedarf).
-3. **AssetType-Union:** in [store/types.ts](src/game/store/types.ts) erweitern (sofern neuer Asset-Typ).
-4. **Initial-State / Slice:** falls eigenes Slice nötig (z. B. analog `autoSmelters`), in [initial-state.ts](src/game/store/initial-state.ts) + `GameState` ergänzen.
-5. **Placement-Validierung:** [grid/placement-validation.ts](src/game/grid/placement-validation.ts) berücksichtigen.
-6. **Tick-Handler** (falls verarbeitend): neuen Cluster unter [store/action-handlers/](src/game/store/action-handlers/) anlegen, Action zur Union in [game-actions.ts](src/game/store/game-actions.ts) hinzufügen, `setInterval` in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts) registrieren.
-7. **Sprite/Render:** [src/game/world/PhaserGame.ts](src/game/world/PhaserGame.ts) + [assets/sprites/](src/game/assets/sprites/).
-8. **UI-Panel:** neue Datei in [ui/panels/](src/game/ui/panels/), `UIPanel`-Union in [store/types.ts](src/game/store/types.ts) erweitern, `TOGGLE_PANEL` greift automatisch.
-9. **Save-Migration:** falls Slice neu → [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) Eintrag.
+1. **Item ID** (if it has its own item): [items/registry.ts](src/game/items/registry.ts) + [items/types.ts](src/game/items/types.ts) if needed.
+2. **Building definition:** [src/game/store/constants/buildings/registry.ts](src/game/store/constants/buildings/registry.ts) (size, cost, power demand).
+3. **AssetType union:** extend in [store/types.ts](src/game/store/types.ts) (if this is a new asset type).
+4. **Initial state / slice:** if a dedicated slice is needed (e.g. analogous to `autoSmelters`), add it in [initial-state.ts](src/game/store/initial-state.ts) + `GameState`.
+5. **Placement validation:** account for it in [grid/placement-validation.ts](src/game/grid/placement-validation.ts).
+6. **Tick handler** (if processing): create a new cluster under [store/action-handlers/](src/game/store/action-handlers/), add the action to the union in [game-actions.ts](src/game/store/game-actions.ts), register `setInterval` in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts).
+7. **Sprite/render:** [src/game/world/PhaserGame.ts](src/game/world/PhaserGame.ts) + [assets/sprites/](src/game/assets/sprites/).
+8. **UI panel:** new file in [ui/panels/](src/game/ui/panels/), extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts), `TOGGLE_PANEL` applies automatically.
+9. **Save migration:** if the slice is new → entry in [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts).
 
-### 7.2 Neues Rezept hinzufügen
+### 7.2 Add a New Recipe
 
-1. **Output/Input-Items** in [items/registry.ts](src/game/items/registry.ts) sicherstellen.
-2. **Recipe-Datei wählen** (passend zum Workbench-Typ):
+1. **Output/input items** in [items/registry.ts](src/game/items/registry.ts) must exist.
+2. **Choose recipe file** (matching the workbench type):
    - Smithy → [SmeltingRecipes.ts](src/game/simulation/recipes/SmeltingRecipes.ts)
    - Manual Assembler → [ManualAssemblerRecipes.ts](src/game/simulation/recipes/ManualAssemblerRecipes.ts)
    - Auto Assembler → [AutoAssemblerV1Recipes.ts](src/game/simulation/recipes/AutoAssemblerV1Recipes.ts)
    - Workbench → [WorkbenchRecipes.ts](src/game/simulation/recipes/WorkbenchRecipes.ts)
-3. Eintrag mit `id`, `inputs[]`, `outputs[]`, `durationMs`, `workbenchType` ergänzen.
-4. **Index re-exportiert automatisch** über [recipes/index.ts](src/game/simulation/recipes/index.ts).
-5. **Keine Reducer-Änderung nötig** — Rezepte werden zur Laufzeit aus der Registry gelesen.
-6. UI listet Rezepte automatisch im jeweiligen Panel; ggf. Sprite/Display-Name in [items/registry.ts](src/game/items/registry.ts) prüfen.
+3. Add an entry with `id`, `inputs[]`, `outputs[]`, `durationMs`, `workbenchType`.
+4. **Index re-exports automatically** via [recipes/index.ts](src/game/simulation/recipes/index.ts).
+5. **No reducer change required** — recipes are read from the registry at runtime.
+6. UI lists recipes automatically in the corresponding panel; if needed, check sprite/display name in [items/registry.ts](src/game/items/registry.ts).
 
-### 7.3 Neues UI-Panel
+### 7.3 New UI Panel
 
-1. Komponente unter [ui/panels/](src/game/ui/panels/) erstellen, Props: `state`, `dispatch`, ggf. selektierte ID.
-2. `UIPanel`-Union in [store/types.ts](src/game/store/types.ts) um neuen Wert erweitern.
-3. Falls selektionsabhängig: neues `selectedXxxId`-Feld in `GameState` + Reset in `CLOSE_PANEL`/`TOGGLE_PANEL` ([store/action-handlers/ui-actions.ts](src/game/store/action-handlers/ui-actions.ts)).
-4. Click-Handler: Trigger in [store/action-handlers/click-cell.ts](src/game/store/action-handlers/click-cell.ts) (öffnet Panel beim Asset-Klick).
-5. Panel-Routing in der Render-Hierarchie ([ui/](src/game/ui/) Hauptlayout) ergänzen — Pattern: `state.openPanel === "xxx" && <XxxPanel … />`.
-6. Selectors für Read-Only-Daten in [store/selectors/](src/game/store/selectors/) anlegen — UI nicht direkt aus `reducer.ts` importieren.
+1. Create component under [ui/panels/](src/game/ui/panels/), props: `state`, `dispatch`, selected ID if needed.
+2. Extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts) with the new value.
+3. If selection-dependent: new `selectedXxxId` field in `GameState` + reset in `CLOSE_PANEL`/`TOGGLE_PANEL` ([store/action-handlers/ui-actions.ts](src/game/store/action-handlers/ui-actions.ts)).
+4. Click handler: trigger in [store/action-handlers/click-cell.ts](src/game/store/action-handlers/click-cell.ts) (opens panel on asset click).
+5. Add panel routing in the render hierarchy ([ui/](src/game/ui/) main layout) — pattern: `state.openPanel === "xxx" && <XxxPanel … />`.
+6. Create selectors for read-only data in [store/selectors/](src/game/store/selectors/) — UI must not import directly from `reducer.ts`.
 
 ---
 
-## 8. Verweise
+## 8. References
 
-- [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md) — Tiefenarchitektur, Reading-Order, Tick-Pipeline-Details, Glossar.
-- [src/game/TYPES.md](src/game/TYPES.md) — Typ-Index pro Domain (Store, Crafting, Items, Inventory, Drones).
-- [src/game/crafting/README.md](src/game/crafting/README.md) — Job-Lifecycle im Detail.
+- [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md) — deep architecture, reading order, tick pipeline details, glossary.
+- [src/game/TYPES.md](src/game/TYPES.md) — type index by domain (Store, Crafting, Items, Inventory, Drones).
+- [src/game/crafting/README.md](src/game/crafting/README.md) — job lifecycle in detail.
 - [README.md](README.md) — Setup, Build, Test.
 - [AGENTS.md](AGENTS.md) — AI-Agent-Guidelines.
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — bekannte Probleme.
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) — known issues.
 
 ---
 
-## TODO / UNSICHER
+## TODO / UNCERTAIN
 
-- **`starterDrone` ↔ `drones[id]` Migrationspfad:** unklar dokumentiert. Siehe ARCHITECTURE.md §State Map.
-- **Tick-Reihenfolge-Garantien:** keine globale Orchestrierung. Race-Sicherheit pro Tick nicht formal geprüft.
+- **`starterDrone` ↔ `drones[id]` migration path:** documentation unclear. See ARCHITECTURE.md §State Map.
+- **Tick order guarantees:** no global orchestration. Race safety per tick has not been formally verified.

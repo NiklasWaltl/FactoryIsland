@@ -12,11 +12,25 @@
 
 import type { ModuleType } from "../modules/module.types";
 
+type ModuleTier = 1 | 2 | 3;
+type YieldEffect = { readonly yieldMultiplier: number };
+
 /** Footprint side length in cells (Module Lab is 2×2). */
 export const MODULE_LAB_SIZE = { w: 2, h: 2 } as const;
 
 /** Tick interval for the Module Lab job-progress check. */
 export const MODULE_LAB_TICK_MS = 500;
+
+export const MODULE_EFFECTS = {
+  "miner-boost": {
+    1: { yieldMultiplier: 1.1 },
+    2: { yieldMultiplier: 1.25 },
+    3: { yieldMultiplier: 1.5 },
+  },
+} as const satisfies Record<
+  Extract<ModuleType, "miner-boost">,
+  Record<ModuleTier, YieldEffect>
+>;
 
 export interface ModuleLabRecipe {
   readonly id: string;

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import type { Module } from "../../modules/module.types";
 import type { GameState, Inventory, MachinePriority } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
@@ -9,6 +10,10 @@ import {
 } from "../../store/constants/energy/energy-balance";
 import { AUTO_MINER_BOOST_MULTIPLIER } from "../../store/constants/energy/boost-multipliers";
 import { getSourceStatusInfo } from "../../store/selectors/source-status";
+import {
+  getEquippedModule,
+  getFreeModulesForType,
+} from "../../store/selectors/module-selectors";
 import {
   getCapacityPerResource,
   getZoneItemCapacity,
@@ -21,6 +26,122 @@ interface AutoMinerPanelProps {
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
 }
+
+const MODULE_TYPE_LABELS: Record<Module["type"], string> = {
+  "miner-boost": "Miner Boost",
+  "smelter-boost": "Smelter Boost",
+};
+
+function getModuleDisplayName(module: Module): string {
+  return `${MODULE_TYPE_LABELS[module.type]} Tier ${module.tier}`;
+}
+
+function getModuleTierBadge(module: Module): string {
+  return `T${module.tier}`;
+}
+
+interface ModuleSlotSectionProps {
+  assetId: string;
+  equippedModule: Module | null;
+  freeModules: Module[];
+  dispatch: React.Dispatch<GameAction>;
+}
+
+const ModuleSlotSection: React.FC<ModuleSlotSectionProps> = ({
+  assetId,
+  equippedModule,
+  freeModules,
+  dispatch,
+}) => (
+  <div
+    data-testid="auto-miner-module-slot"
+    style={{
+      display: "grid",
+      gap: 8,
+      borderTop: "1px solid rgba(255,255,255,0.12)",
+      paddingTop: 10,
+      marginTop: 2,
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <strong>🔩 Modul-Slot</strong>
+      {!equippedModule && (
+        <span style={{ fontSize: 12, color: "#9ca3af" }}>[Leer]</span>
+      )}
+    </div>
+
+    {equippedModule ? (
+      <>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+          }}
+        >
+          <span>{getModuleDisplayName(equippedModule)}</span>
+          <strong>{getModuleTierBadge(equippedModule)} ✓ Aktiv</strong>
+        </div>
+        <button
+          className="fi-btn fi-btn-sm"
+          onClick={() =>
+            dispatch({ type: "REMOVE_MODULE", moduleId: equippedModule.id })
+          }
+        >
+          Herausnehmen
+        </button>
+      </>
+    ) : freeModules.length === 0 ? (
+      <div style={{ fontSize: 12, color: "#9ca3af" }}>
+        Keine Module verfügbar — im Modul-Labor craften
+      </div>
+    ) : (
+      <div style={{ display: "grid", gap: 6 }}>
+        <span style={{ fontSize: 12, color: "#9ca3af" }}>
+          Verfügbare Module:
+        </span>
+        {freeModules.map((module) => (
+          <div
+            key={module.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+            }}
+          >
+            <span>{getModuleDisplayName(module)}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <strong>{getModuleTierBadge(module)}</strong>
+              <button
+                className="fi-btn fi-btn-sm"
+                onClick={() =>
+                  dispatch({
+                    type: "PLACE_MODULE",
+                    moduleId: module.id,
+                    assetId,
+                  })
+                }
+              >
+                Einsetzen
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
   ({ state, dispatch }) => {
@@ -108,6 +229,8 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
     const itemsPerMinute = itemsPerTick * 60;
     const baseDrain = ENERGY_DRAIN["auto_miner"] ?? 0;
     const currentDrain = baseDrain * boostFactor;
+    const equippedModule = getEquippedModule(state, minerId);
+    const freeMinerModules = getFreeModulesForType(state, "miner-boost");
 
     return (
       <div
@@ -268,6 +391,12 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
               })}
             </div>
           </div>
+          <ModuleSlotSection
+            assetId={minerId}
+            equippedModule={equippedModule}
+            freeModules={freeMinerModules}
+            dispatch={dispatch}
+          />
         </div>
       </div>
     );

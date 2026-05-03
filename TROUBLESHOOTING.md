@@ -1,28 +1,28 @@
 # TROUBLESHOOTING.md — Factory Island
 
-Häufige Fehler, Ursachen und Lösungen für Entwicklung und Build.
+Common errors, causes, and solutions for development and build.
 
 ---
 
 ## 1. Build & TypeScript
 
-### `tsc` schlägt fehl bei `yarn build`
+### `tsc` fails during `yarn build`
 
-| Ursache | Lösung |
+| Cause | Solution |
 |---|---|
-| Pfad-Alias fehlt | Factory Island nutzt nur relative Imports innerhalb `src/game/`. Einziger Alias: `game/*`. |
-| Typ fehlt in `store/reducer.ts` | Neue Typen müssen in `store/reducer.ts` definiert und ggf. in `types/game.ts` re-exportiert werden. |
-| `tsconfig.factory.json` nicht verwendet | Prüfen: `tsc --project tsconfig.factory.json` (nicht `tsconfig.json`). |
-| Fehlende `vite/client`-Typen | `tsconfig.factory.json` muss `"types": ["vite/client"]` enthalten. |
+| Path alias missing | Factory Island uses only relative imports within `src/game/`. Only alias: `game/*`. |
+| Type missing in `store/reducer.ts` | New types must be defined in `store/reducer.ts` and re-exported in `types/game.ts` if needed. |
+| `tsconfig.factory.json` not used | Check: `tsc --project tsconfig.factory.json` (not `tsconfig.json`). |
+| Missing `vite/client` types | `tsconfig.factory.json` must contain `"types": ["vite/client"]`. |
 
-### Import-Fehler: `Cannot find module 'features/...'`
+### Import error: `Cannot find module 'features/...'`
 
-Factory Island hat nur den Pfad-Alias `game/*` → `src/game/*`.
+Factory Island has only the path alias `game/*` → `src/game/*`.
 
-- ❌ `import { something } from "features/game"` — existiert nicht
-- ✅ `import { something } from "../store/reducer"` — relativer Import
+- ❌ `import { something } from "features/game"` — does not exist
+- ✅ `import { something } from "../store/reducer"` — relative import
 
-### Import-Fehler: Rezepte direkt importiert
+### Import error: recipes imported directly
 
 ```
 // ❌ Fehler: Rezepte nur via Barrel importieren
@@ -34,145 +34,145 @@ import { getSmeltingRecipe } from "./recipes";
 
 ---
 
-## 2. Dev-Server
+## 2. Dev Server
 
-### `yarn dev` startet nicht
+### `yarn dev` does not start
 
-| Prüfpunkt | Aktion |
+| Checkpoint | Action |
 |---|---|
-| Port belegt | Port 3000 wird verwendet (`server.port: 3000`). Anderen Prozess beenden. |
-| `node_modules` fehlt | `yarn install` ausführen. |
-| Vite-Version inkompatibel | `vite@^5.4.21` wird benötigt (siehe `package.json`). |
+| Port occupied | Port 3000 is used (`server.port: 3000`). Stop the other process. |
+| `node_modules` missing | Run `yarn install`. |
+| Vite version incompatible | `vite@^5.4.21` is required (see `package.json`). |
 
-### HMR funktioniert nicht / State geht verloren
+### HMR does not work / state is lost
 
-- HMR-State wird über `window.__FI_HMR_STATE__` gesichert (nur im DEV-Modus).
-- Falls HMR nicht greift: Browser-Konsole auf `[HMR]`-Meldungen prüfen.
-- Bei Problemen: Seite manuell neu laden (F5). Debug-Modus startet mit vollständigem Test-Setup.
+- HMR state is saved via `window.__FI_HMR_STATE__` (DEV mode only).
+- If HMR does not apply: check the browser console for `[HMR]` messages.
+- Workaround: manually reload the page (F5). Debug mode starts with the complete test setup.
 
-### Phaser-Canvas bleibt schwarz / fehlt
+### Phaser canvas stays black / is missing
 
-- `PhaserHost.tsx` mountet das Canvas in `Grid.tsx`. Prüfen, ob `PhaserHost` gerendert wird.
-- Phaser-Sprites müssen in `PhaserGame.ts` `preload()` geladen werden — fehlende Sprites loggen Fehler in der Konsole.
-- Canvas hat `pointer-events: none` — das ist korrekt, Klicks laufen über React.
-
----
-
-## 3. White Screen / App lädt nicht
-
-### Checkliste
-
-1. **Browser-Konsole öffnen** (F12) → Fehlermeldung lesen.
-2. **GameErrorBoundary prüfen**: Bei Render-Fehlern fängt die Error-Boundary den Crash ab und zeigt "Etwas ist schiefgelaufen" mit einem "Erneut versuchen"-Button (löscht localStorage-Save + remountet App). Wenn stattdessen eine blanke Seite ohne Text → JavaScript-Fehler vor React-Mount prüfen (z.B. in `main.factory.tsx`).
-3. **Entry-Point prüfen**: `index.factory.html` muss auf `/src/game/entry/main.factory.tsx` verweisen.
-4. **Reducer-Fehler**: Unbehandelte Action-Typen im Reducer werfen keinen Fehler, können aber zu unerwartetem State führen.
-5. **Corrupt Save**: Wenn `localStorage` einen ungültigen Save enthält:
-   - Konsole: `localStorage.removeItem("factory-island-save")` → Seite neu laden.
-   - Alternativ: Application-Tab → Local Storage → Eintrag löschen.
-6. **Fehlende Felder in GameState**: Wenn neue Felder hinzugefügt wurden, aber `save.ts` nicht migriert → Crash beim Laden alter Saves (siehe Abschnitt 4).
+- `PhaserHost.tsx` mounts the canvas in `Grid.tsx`. Check whether `PhaserHost` is rendered.
+- Phaser sprites must be loaded in `PhaserGame.ts` `preload()` — missing sprites log errors in the console.
+- Canvas has `pointer-events: none` — this is correct; clicks go through React.
 
 ---
 
-## 4. Save/Load-Probleme
+## 3. White Screen / App does not load
 
-### Alter Save crasht nach Code-Änderung
+### Checklist
 
-**Ursache**: Neue Felder in `GameState` ohne entsprechende Migration in `save.ts`.
+1. **Open browser console** (F12) → read the error message.
+2. **Check GameErrorBoundary**: for render errors, the error boundary catches the crash and shows "Something went wrong" with a "Try again" button (deletes the localStorage save + remounts the app). If instead there is a blank page without text → check for a JavaScript error before React mount (e.g. in `main.factory.tsx`).
+3. **Check entry point**: `index.factory.html` must point to `/src/game/entry/main.factory.tsx`.
+4. **Reducer error**: unhandled action types in the reducer do not throw an error, but can lead to unexpected state.
+5. **Corrupt save**: if `localStorage` contains an invalid save:
+   - Console: `localStorage.removeItem("factory-island-save")` → reload page.
+   - Alternative: Application tab → Local Storage → delete entry.
+6. **Missing fields in GameState**: if new fields were added but `save.ts` was not migrated → crash when loading old saves (see section 4).
 
-**Lösung**:
-1. `CURRENT_SAVE_VERSION` in `save.ts` erhöhen.
-2. Neues Interface `SaveGameV{N}` definieren.
-3. Migrationsfunktion `migrateV{N-1}ToV{N}()` schreiben.
-4. Eintrag `{ from: N-1, to: N, migrate: migrateV{N-1}ToV{N} }` in `MIGRATIONS`-Array.
-5. `SaveGameLatest`-Alias auf neues Interface zeigen lassen.
+---
 
-**Schneller Workaround** (nur Entwicklung):
+## 4. Save/Load Issues
+
+### Old save crashes after code change
+
+**Cause**: New fields in `GameState` without a corresponding migration in `save.ts`.
+
+**Solution**:
+1. Increment `CURRENT_SAVE_VERSION` in `save.ts`.
+2. Define new interface `SaveGameV{N}`.
+3. Write migration function `migrateV{N-1}ToV{N}()`.
+4. Add entry `{ from: N-1, to: N, migrate: migrateV{N-1}ToV{N} }` to the `MIGRATIONS` array.
+5. Point the `SaveGameLatest` alias to the new interface.
+
+**Quick workaround** (development only):
 ```javascript
 // Browser-Konsole
 localStorage.removeItem("factory-island-save");
 ```
 
-### Save wird beim Laden ignoriert (leerer State nach Refresh)
+### Save is ignored on load (empty state after refresh)
 
-**Ursache**: `loadAndHydrate(raw, mode)` lädt nur wenn `save.mode === mode`. Debug-Save wird im Release-Modus nicht geladen und umgekehrt.
+**Cause**: `loadAndHydrate(raw, mode)` loads only when `save.mode === mode`. A debug save is not loaded in release mode and vice versa.
 
-**Lösung**: Beim Neustart denselben Modus (Debug/Release) wie beim letzten Speichern wählen.
+**Solution**: On restart, choose the same mode (debug/release) as when the game was last saved.
 
-### Save enthält abgeleiteten State
+### Save contains derived state
 
-`serializeState()` persistiert nur Kern-Felder. Transiente Felder werden beim Laden neu gesetzt:
-- `connectedAssetIds` → `computeConnectedAssetIds()` (sofort in `deserializeState`)
-- `poweredMachineIds` → nächster `ENERGY_NET_TICK`
-- `openPanel`, `notifications`, `buildMode` → Defaults
-- `autoDeliveryLog`, `energyDebugOverlay` → leer / false
+`serializeState()` persists only core fields. Transient fields are reset during load:
+- `connectedAssetIds` → `computeConnectedAssetIds()` (immediately in `deserializeState`)
+- `poweredMachineIds` → next `ENERGY_NET_TICK`
+- `openPanel`, `notifications`, `buildMode` → defaults
+- `autoDeliveryLog`, `energyDebugOverlay` → empty / false
 
-Falls ein neues Feld transient sein soll: **nicht** in `SaveGameV*` aufnehmen, sondern in `deserializeState()` mit Default initialisieren.
+If a new field should be transient: do **not** include it in `SaveGameV*`; initialize it with a default in `deserializeState()` instead.
 
 ---
 
-## 5. Energie-Netz-Probleme
+## 5. Energy Network Issues
 
-### Maschine bekommt keinen Strom
+### Machine receives no power
 
-| Prüfpunkt | Detail |
+| Checkpoint | Detail |
 |---|---|
-| Generator platziert? | Muss auf Steinboden stehen (`REQUIRES_STONE_FLOOR`). |
-| Generator hat Brennstoff? | Holz hinzufügen + starten. |
-| Kabelverbindung? | Nur `cable`, `generator`, `power_pole` sind Kabelleiter (Phase-1-BFS). Maschinen und Batterien leiten keine Energie durch Kabel weiter. |
-| Power Pole in Reichweite? | Chebyshev-Distanz ≤ 3 Tiles (`POWER_POLE_RANGE`). Maschine muss im Bereich eines über Kabel verbundenen Poles liegen. |
-| Maschine in `ENERGY_DRAIN` registriert? | Neue Maschinen müssen dort eingetragen sein. |
-| Priorität zu niedrig? | `MachinePriority` 5 = niedrigste. Bei Engpass werden niedrige Prioritäten gedrosselt. |
-| Auto-Smelter zieht zu viel? | Im Processing-Zustand 60 J/Periode (statt 10 J idle). Bei Vollbetrieb ausreichend Generatorkapazität einplanen. |
+| Generator placed? | Must stand on stone floor (`REQUIRES_STONE_FLOOR`). |
+| Generator has fuel? | Add wood + start. |
+| Cable connection? | Only `cable`, `generator`, `power_pole` are cable conductors (phase-1 BFS). Machines and batteries do not conduct energy through cables. |
+| Power Pole in range? | Chebyshev distance ≤ 3 tiles (`POWER_POLE_RANGE`). Machine must be within range of a pole connected via cable. |
+| Machine registered in `ENERGY_DRAIN`? | New machines must be registered there. |
+| Priority too low? | `MachinePriority` 5 = lowest. During shortage, lower priorities are throttled. |
+| Auto-Smelter draws too much? | In processing state, 60 J/period (instead of 10 J idle). Plan sufficient generator capacity for full operation. |
 
-### Debug: Energienetz visualisieren
+### Debug: visualize energy network
 
-Im Debug-Modus: `TOGGLE_ENERGY_DEBUG`-Action oder UI-Button → `EnergyDebugOverlay` zeigt Netzwerk-Topologie.
+In debug mode: `TOGGLE_ENERGY_DEBUG` action or UI button → `EnergyDebugOverlay` shows network topology.
 
 ---
 
-## 6. Förderband / Logistik
+## 6. Conveyor / Logistics
 
-### Förderband wird im Logistics-Tick ignoriert
+### Conveyor is ignored during Logistics-Tick
 
-**Ursache**: `conveyors[id]` wurde beim Platzieren nicht initialisiert.
+**Cause**: `conveyors[id]` was not initialized when placed.
 
-**Lösung**: Beim Platzieren eines Förderbands muss `conveyors[id] = { queue: [] }` im Reducer gesetzt werden.
+**Solution**: When placing a conveyor, the reducer must set `conveyors[id] = { queue: [] }`.
 
-### Items stauen sich / Maschine zeigt OUTPUT_BLOCKED
+### Items back up / machine shows OUTPUT_BLOCKED
 
-- Output-Tile hat maximale Kapazität: `CONVEYOR_TILE_CAPACITY = 4`.
-- Maschine wartet, bis Platz auf dem Ausgangs-Förderband frei wird.
-- Prüfen: Ist das nächste Förderband richtig ausgerichtet (`direction`)?
+- Output tile has maximum capacity: `CONVEYOR_TILE_CAPACITY = 4`.
+- Machine waits until space is free on the output conveyor.
+- Check: is the next conveyor aligned correctly (`direction`)?
 
-### Warehouse nimmt keine Items an
+### Warehouse accepts no items
 
-Der Warehouse-Eingang ist **richtungsabhängig** — abhängig von `warehouse.direction`:
+The warehouse input is **direction-dependent** — depending on `warehouse.direction`:
 
-| warehouse.direction | Eingang-Position | Förderband muss zeigen |
+| warehouse.direction | Input Position | Conveyor must point |
 |---|---|---|
 | `"south"` (Default) | `(x, y + height)` | `"north"` |
 | `"north"` | `(x, y - 1)` | `"south"` |
 | `"east"` | `(x + width, y)` | `"west"` |
 | `"west"` | `(x - 1, y)` | `"east"` |
 
-Validierung: `isValidWarehouseInput(entityX, entityY, entityDir, warehouse)` aus `store/reducer`.
+Validation: `isValidWarehouseInput(entityX, entityY, entityDir, warehouse)` from `store/reducer`.
 
 ---
 
-## 7. Asset-Platzierung
+## 7. Asset Placement
 
-### Gebäude lässt sich nicht platzieren
+### Building cannot be placed
 
-| Prüfpunkt | Detail |
+| Checkpoint | Detail |
 |---|---|
-| Kollision? | `placeAsset()` prüft auf überlappende Assets. |
-| Falscher Boden? | Generator braucht Steinboden. |
-| Auto-Miner nicht auf Deposit? | Muss direkt auf `stone_deposit`, `iron_deposit` oder `copper_deposit` stehen. |
-| Richtung nicht gesetzt? | Default ist `"east"`. R-Taste zum Wechseln. |
+| Collision? | `placeAsset()` checks for overlapping assets. |
+| Wrong floor? | Generator requires stone floor. |
+| Auto-Miner not on deposit? | Must stand directly on `stone_deposit`, `iron_deposit`, or `copper_deposit`. |
+| Direction not set? | Default is `"east"`. R key to switch. |
 
-### Größen-Bugs bei rotierbaren Maschinen
+### Size bugs for rotatable machines
 
-`PlacedAsset` hat `size`, `width` und `height`. `assetWidth`/`assetHeight` sind **interne Funktionen** in `reducer.ts` — nicht exportiert. Außerhalb von `reducer.ts` direkt verwenden:
+`PlacedAsset` has `size`, `width`, and `height`. `assetWidth`/`assetHeight` are **internal functions** in `reducer.ts` — not exported. Outside `reducer.ts`, use directly:
 
 ```typescript
 // ✅ Korrekt
@@ -183,71 +183,71 @@ const h = asset.height ?? asset.size;
 const w = asset.size;
 ```
 
-Auto-Smelter: `size=2, width=2, height=1` — mit `asset.size` allein wäre die Höhe falsch.
+Auto-Smelter: `size=2, width=2, height=1` — with `asset.size` alone, the height would be wrong.
 
 ---
 
 ## 8. Phaser / Sprites
 
-### Sprite wird nicht angezeigt
+### Sprite is not displayed
 
-1. Prüfen, ob Sprite in `assets/sprites/sprites.ts` (`ASSET_SPRITES`) definiert ist.
-2. Prüfen, ob `PhaserGame.ts` `preload()` den Sprite-Key lädt.
-3. Browser-Konsole auf 404-Fehler für Sprite-URLs prüfen.
+1. Check whether the sprite is defined in `assets/sprites/sprites.ts` (`ASSET_SPRITES`).
+2. Check whether `PhaserGame.ts` `preload()` loads the sprite key.
+3. Check the browser console for 404 errors for sprite URLs.
 
-### Phaser-Welt und React-UI sind versetzt
+### Phaser world and React UI are offset
 
-- Beide müssen dieselbe Transform-Basis (`Grid.tsx`) verwenden.
-- Keine zweite Kamera- oder Offset-Logik erstellen.
-- `PhaserHost` liegt innerhalb des World-Containers in `Grid.tsx`.
-
----
-
-## 9. Debug-Modus
-
-### Debug-Panel erscheint nicht
-
-- Nur sichtbar wenn `IS_DEV = true` (Vite DEV-Build) UND `state.mode === "debug"`.
-- In Production ist alles via `import.meta.env.DEV` tree-shaken.
-- Beim Start über `ModeSelect.tsx` "debug" wählen.
-
-### Debug-Logs erscheinen nicht in der Konsole
-
-Debug-Logger prüft **zwei Bedingungen**:
-1. `import.meta.env.DEV` — muss true sein (DEV-Build, nicht Production)
-2. `isDebugEnabled()` — Runtime-Toggle, kann aus Debug-UI deaktiviert werden
-
-Beide müssen true sein. Runtime-Toggle zurücksetzen: `import { setDebugEnabled } from "./debug/debugConfig"; setDebugEnabled(true)` in der Browser-Konsole (DEV-Build vorausgesetzt).
-
-### Mock-Daten haben keinen Effekt
-
-- Mock-Actions (`DEBUG_MOCK_RESOURCES` etc.) werden über `applyMockToState()` verarbeitet.
-- Nur im Debug-Modus verfügbar (Guard: `IS_DEV`).
-- Ergebnis wird als `DEBUG_SET_STATE`-Action dispatched.
+- Both must use the same transform basis (`Grid.tsx`).
+- Do not create a second camera or offset logic.
+- `PhaserHost` sits inside the world container in `Grid.tsx`.
 
 ---
 
-## 10. Schnell-Checkliste
+## 9. Debug Mode
 
-| Problem | Erste Aktion |
+### Debug panel does not appear
+
+- Visible only when `IS_DEV = true` (Vite DEV build) AND `state.mode === "debug"`.
+- In production, everything is tree-shaken via `import.meta.env.DEV`.
+- On startup, choose "debug" via `ModeSelect.tsx`.
+
+### Debug logs do not appear in the console
+
+Debug logger checks **two conditions**:
+1. `import.meta.env.DEV` — must be true (DEV build, not production)
+2. `isDebugEnabled()` — runtime toggle, can be disabled from debug UI
+
+Both must be true. Reset runtime toggle: `import { setDebugEnabled } from "./debug/debugConfig"; setDebugEnabled(true)` in the browser console (requires DEV build).
+
+### Mock data has no effect
+
+- Mock actions (`DEBUG_MOCK_RESOURCES` etc.) are processed via `applyMockToState()`.
+- Available only in debug mode (guard: `IS_DEV`).
+- Result is dispatched as a `DEBUG_SET_STATE` action.
+
+---
+
+## 10. Quick Checklist
+
+| Problem | First Action |
 |---|---|
-| Build schlägt fehl | `tsc --project tsconfig.factory.json` separat ausführen → Fehlermeldung lesen |
-| White Screen (blank) | Browser-Konsole (F12) → JS-Fehler prüfen |
-| White Screen mit Text | GameErrorBoundary fing Fehler — "Erneut versuchen" oder Save manuell löschen |
-| Alter Save crasht | `localStorage.removeItem("factory-island-save")` |
-| Save wird ignoriert | Mode-Mismatch? Debug-Save wird im Release-Modus nicht geladen |
-| Maschine ohne Strom | Energienetz-Debug-Overlay aktivieren; Kabelleiter prüfen (nur cable/generator/power_pole) |
-| Auto-Smelter ohne Strom | Hohen Drain (60 J/Periode processing) beachten — mehr Generator-Kapazität |
-| Förderband ignoriert | `conveyors[id]` im Reducer-Case prüfen |
-| Warehouse nimmt nichts an | Richtungsabhängiger Eingang: `getWarehouseInputCell()` prüfen |
-| Sprite fehlt | `ASSET_SPRITES` in `sprites.ts` + `preload()` in `PhaserGame.ts` prüfen |
-| HMR-State verloren | Seite neu laden — Debug-Modus startet mit Test-Setup |
-| Import-Fehler | Nur relative Imports in `src/game/`, einziger Alias: `game/*` |
-| Neues Feld crasht Saves | Migration in `save.ts` ergänzen, `CURRENT_SAVE_VERSION` erhöhen |
-| Panel zeigt nichts | Prüfen ob Panel in `GameInner` (FactoryApp.tsx) eingebunden und `UIPanel`-Union erweitert |
-| assetWidth/assetHeight fehlt | Nicht exportiert — direkt `asset.width ?? asset.size` verwenden |
-| Debug-Logs fehlen | Beide Bedingungen prüfen: `import.meta.env.DEV` AND `isDebugEnabled()` |
+| Build fails | Run `tsc --project tsconfig.factory.json` separately → read error message |
+| White Screen (blank) | Browser console (F12) → check JS error |
+| White Screen with text | GameErrorBoundary caught error — "Try again" or manually delete save |
+| Old save crashes | `localStorage.removeItem("factory-island-save")` |
+| Save is ignored | Mode mismatch? Debug save is not loaded in release mode |
+| Machine without power | Enable energy network debug overlay; check cable conductors (only cable/generator/power_pole) |
+| Auto-Smelter without power | Account for high drain (60 J/period processing) — more generator capacity |
+| Conveyor ignored | Check `conveyors[id]` in reducer case |
+| Warehouse accepts nothing | Direction-dependent input: check `getWarehouseInputCell()` |
+| Sprite missing | Check `ASSET_SPRITES` in `sprites.ts` + `preload()` in `PhaserGame.ts` |
+| HMR state lost | Reload page — debug mode starts with test setup |
+| Import error | Only relative imports in `src/game/`, only alias: `game/*` |
+| New field crashes saves | Add migration in `save.ts`, increment `CURRENT_SAVE_VERSION` |
+| Panel shows nothing | Check whether panel is mounted in `GameInner` (FactoryApp.tsx) and `UIPanel` union is extended |
+| assetWidth/assetHeight missing | Not exported — use `asset.width ?? asset.size` directly |
+| Debug logs missing | Check both conditions: `import.meta.env.DEV` AND `isDebugEnabled()` |
 
 ---
 
-*Last updated: 2026-04-17 — Wartungshinweis: Bei neuen Fehlermustern oder Build-Änderungen diese Datei ergänzen. Keine Duplikation mit `ARCHITECTURE.md` — dort steht die Struktur, hier die Problemlösung.*
+*Last updated: 2026-04-17 — Maintenance note: When new error patterns or build changes appear, extend this file. No duplication with `ARCHITECTURE.md` — structure belongs there, troubleshooting belongs here.*

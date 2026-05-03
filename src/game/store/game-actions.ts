@@ -161,5 +161,16 @@ export type GameAction =
   | { type: "START_MODULE_CRAFT"; recipeId: string }
   | { type: "MODULE_LAB_TICK" }
   | { type: "COLLECT_MODULE" }
-  | { type: "PLACE_MODULE"; moduleId: string; buildingId: string }
-  | { type: "REMOVE_MODULE"; moduleId: string };
+  | {
+      type: "PLACE_MODULE";
+      moduleId: string;
+      assetId: string;
+      buildingId?: string;
+    }
+  | {
+      type: "PLACE_MODULE";
+      moduleId: string;
+      buildingId: string;
+      assetId?: string;
+    }
+  | { type: "REMOVE_MODULE"; moduleId: string; assetId?: string };

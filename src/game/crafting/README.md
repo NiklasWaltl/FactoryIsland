@@ -1,16 +1,16 @@
 # `crafting/` — Crafting Subsystem
 
-> Komplexestes Subsystem im Repo. Diese README ersetzt das Lesen von 5+ Dateien.
+> Most complex subsystem in the repo. This README replaces reading 5+ files.
 
 ---
 
 ## Purpose
 
-Verwaltet alle Crafting-Jobs (Workbench, Manual Assembler, Smithy via Output-Routing). Strikt getrennt: **Planning** (was soll gebaut werden) vs. **Execution** (laufende Jobs voranbringen). Reservierungen leben in [`../inventory/`](../inventory/), Output-Routing hier in [`output.ts`](./output.ts).
+Manages all crafting jobs (Workbench, Manual Assembler, Smithy via output routing). Strictly separated: **Planning** (what should be built) vs. **Execution** (advance running jobs). Reservations live in [`../inventory/`](../inventory/), output routing here in [`output.ts`](./output.ts).
 
 ---
 
-## Job-Lifecycle
+## Job Lifecycle
 
 ```
                     ┌──────────────────────┐
@@ -41,57 +41,57 @@ Verwaltet alle Crafting-Jobs (Workbench, Manual Assembler, Smithy via Output-Rou
    Aus jedem Status → cancelled (terminal, Reservierungen released)
 ```
 
-Reihenfolge der Phasen pro Tick (`crafting/tick.ts`):
+Phase order per tick (`crafting/tick.ts`):
 
 1. **Progress active `crafting` jobs** — commit ingredients + transition → `delivering`
-2. **Promote `queued` → `reserved`** — wenn Ingredients reservierbar
-3. **Promote `reserved` → `crafting`** — wenn Workbench frei (instant fertig wenn `processingTime===0`)
+2. **Promote `queued` → `reserved`** — when ingredients are reservable
+3. **Promote `reserved` → `crafting`** — when workbench is free (instant completion when `processingTime===0`)
 
-→ Ein frisch enqueued Job kann in einem einzigen Tick `queued → reserved → crafting → delivering` durchlaufen.
+→ A freshly enqueued job can traverse `queued → reserved → crafting → delivering` in a single tick.
 
-Statusdefinition: [`crafting/types.ts:27`](./types.ts#L27).
+Status definition: [`crafting/types.ts:27`](./types.ts#L27).
 
 ---
 
-## Planning vs. Execution (Architekturregel)
+## Planning vs. Execution (architecture rule)
 
-`JOB_TICK` ist in zwei Phasen geteilt ([`tickPhases.ts`](./tickPhases.ts)):
+`JOB_TICK` is split into two phases ([`tickPhases.ts`](./tickPhases.ts)):
 
-| Phase | Datei | Darf neue Jobs enqueuen? | Verantwortung |
+| Phase | File | May enqueue new jobs? | Responsibility |
 |---|---|---|---|
-| **Planning** | [`workflows/keepStockWorkflow.ts`](./workflows/keepStockWorkflow.ts) | **ja, einzig hier** | Keep-Stock-Refills entscheiden + planen + enqueuen |
-| **Execution** | [`tick.ts`](./tick.ts) → `tick/job-lifecycle.ts` | **nein, niemals** | bestehende Jobs voranbringen |
+| **Planning** | [`workflows/keepStockWorkflow.ts`](./workflows/keepStockWorkflow.ts) | **yes, only here** | decide + plan + enqueue keep-stock refills |
+| **Execution** | [`tick.ts`](./tick.ts) → `tick/job-lifecycle.ts` | **no, never** | advance existing jobs |
 
-**Regel:** Conveyor-, Drone- und Smelter-Ticks dürfen ebenfalls niemals neue Crafting-Jobs erzeugen. Wenn ein Feature neue Auto-Start-Logik braucht, kommt es in die Planning-Phase.
+**Rule:** Conveyor, drone, and smelter ticks must also never create new crafting jobs. If a feature needs new auto-start logic, it belongs in the Planning phase.
 
 ---
 
-## Modulkarte
+## Module Map
 
-| Datei / Ordner | Zweck |
+| File / Folder | Purpose |
 |---|---|
-| [`types.ts`](./types.ts) | Pure Data-Types: `CraftingJob`, `CraftingQueueState`, `JobStatus`, `CraftingInventorySource`. |
-| [`tick.ts`](./tick.ts) | Orchestrator. Re-Export-Hub. Phase 2 (Reservation) lebt hier. |
-| [`tickPhases.ts`](./tickPhases.ts) | Splittet `JOB_TICK` in `applyPlanningTriggers` + `applyExecutionTick`. |
-| [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts) | finish/cancel/release Helpers + DEV-Invarianten. |
-| [`tick/source-selection.ts`](./tick/source-selection.ts) | `pickCraftingPhysicalSourceForIngredient` — wo kommt Zutat physisch her. |
-| [`tick/hub-inventory-view.ts`](./tick/hub-inventory-view.ts) | Hub↔Inventory-Adapter (Hub-Inventar als virtuelles "Warehouse"). |
-| [`queue/queue.ts`](./queue/queue.ts) | Pure Queue-Helper: enqueue/cancel/move/setPriority/sortByPriorityFifo. |
-| [`queue/jobStatus.ts`](./queue/jobStatus.ts) | Read-only Statusabfragen für Planning + UI. |
+| [`types.ts`](./types.ts) | Pure data types: `CraftingJob`, `CraftingQueueState`, `JobStatus`, `CraftingInventorySource`. |
+| [`tick.ts`](./tick.ts) | Orchestrator. Re-export hub. Phase 2 (reservation) lives here. |
+| [`tickPhases.ts`](./tickPhases.ts) | Splits `JOB_TICK` into `applyPlanningTriggers` + `applyExecutionTick`. |
+| [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts) | finish/cancel/release helpers + DEV invariants. |
+| [`tick/source-selection.ts`](./tick/source-selection.ts) | `pickCraftingPhysicalSourceForIngredient` — where the ingredient physically comes from. |
+| [`tick/hub-inventory-view.ts`](./tick/hub-inventory-view.ts) | Hub↔inventory adapter (hub inventory as virtual "Warehouse"). |
+| [`queue/queue.ts`](./queue/queue.ts) | Pure queue helpers: enqueue/cancel/move/setPriority/sortByPriorityFifo. |
+| [`queue/jobStatus.ts`](./queue/jobStatus.ts) | Read-only status queries for planning + UI. |
 | [`queue/index.ts`](./queue/index.ts) | Barrel. |
-| [`planner/planner.ts`](./planner/planner.ts) | `buildWorkbenchAutoCraftPlan` — erzeugt Step-Liste für Keep-Stock-Refills (rekursiv über Recipes). |
+| [`planner/planner.ts`](./planner/planner.ts) | `buildWorkbenchAutoCraftPlan` — creates step list for keep-stock refills (recursive through recipes). |
 | [`planner/index.ts`](./planner/index.ts) | Barrel. |
-| [`policies/policies.ts`](./policies/policies.ts) | `RecipeAutomationPolicy`-Logik (autoCraftAllowed, keepInStockAllowed, manualOnly). |
-| [`policies/keepStockDecision.ts`](./policies/keepStockDecision.ts) | Pro-Target Gate-Entscheidung (single source of truth, geteilt mit UI). |
+| [`policies/policies.ts`](./policies/policies.ts) | `RecipeAutomationPolicy` logic (autoCraftAllowed, keepInStockAllowed, manualOnly). |
+| [`policies/keepStockDecision.ts`](./policies/keepStockDecision.ts) | Per-target gate decision (single source of truth, shared with UI). |
 | [`policies/index.ts`](./policies/index.ts) | Barrel. |
-| [`workflows/keepStockWorkflow.ts`](./workflows/keepStockWorkflow.ts) | Planning-Side-Effect: Refill-Steps planen + enqueuen + per-Step neu prüfen. |
-| [`crafting-sources.ts`](./crafting-sources.ts) | Auflösung von `CraftingInventorySource` → konkrete Inventar-Ansicht (`getCraftingSourceInventory`, `applyCraftingSourceInventory`). |
-| [`output.ts`](./output.ts) | `routeOutput` — wohin landet fertiger Output (Warehouse → Hub → global Fallback). |
-| [`workbench-input-buffer.ts`](./workbench-input-buffer.ts), [`workbench-input-complete.ts`](./workbench-input-complete.ts) | Drone-Input-Buffer pro Workbench (Drones liefern Zutaten; Job startet erst, wenn Buffer komplett). |
+| [`workflows/keepStockWorkflow.ts`](./workflows/keepStockWorkflow.ts) | Planning side effect: plan + enqueue refill steps + recheck per step. |
+| [`crafting-sources.ts`](./crafting-sources.ts) | Resolves `CraftingInventorySource` → concrete inventory view (`getCraftingSourceInventory`, `applyCraftingSourceInventory`). |
+| [`output.ts`](./output.ts) | `routeOutput` — where finished output lands (Warehouse → Hub → global fallback). |
+| [`workbench-input-buffer.ts`](./workbench-input-buffer.ts), [`workbench-input-complete.ts`](./workbench-input-complete.ts) | Drone input buffer per workbench (drones deliver ingredients; job starts only when buffer is complete). |
 
 ---
 
-## Schichten-Überblick (Daten-Sicht)
+## Layer Overview (Data View)
 
 ```
               ┌────────────────────────────────────────┐
@@ -113,46 +113,46 @@ Statusdefinition: [`crafting/types.ts:27`](./types.ts#L27).
    └──────────────────────┘    └──────────────────────────────┘
 ```
 
-**Source-of-Truth-Regel:** Physische Inventare sind autoritativ. `network.reserved` ist *immer* ≤ physisch verfügbar (DEV-Invariante in [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts)).
+**Source-of-truth rule:** Physical inventories are authoritative. `network.reserved` is *always* ≤ physically available (DEV invariant in [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts)).
 
 ---
 
-## Häufige Aufgaben → Einstiegspunkte
+## Common Tasks → Entry Points
 
-| Aufgabe | Datei zum Lesen/Editieren |
+| Task | File to Read/Edit |
 |---|---|
-| Neue Recipe hinzufügen | [`../simulation/recipes/`](../simulation/recipes/) (kein crafting-Code-Change nötig) |
-| Job-Statusübergang ändern | [`tick.ts`](./tick.ts) + [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts) |
-| Output-Routing ändern (z. B. Hub-Priorität) | [`output.ts`](./output.ts) |
-| Auto-Refill-Verhalten ändern | [`workflows/keepStockWorkflow.ts`](./workflows/keepStockWorkflow.ts) + [`policies/keepStockDecision.ts`](./policies/keepStockDecision.ts) |
-| Reservierungs-Bug | [`../inventory/reservations.ts`](../inventory/reservations.ts) — *nicht* in `crafting/` |
-| UI-Anzeige von Job-Status | [`../ui/panels/WorkbenchPanel.tsx`](../ui/panels/WorkbenchPanel.tsx) + [`../ui/hud/productionTransparency.ts`](../ui/hud/productionTransparency.ts) |
-| Planner-Tiefe / Ingredient-Auflösung | [`planner/planner.ts`](./planner/planner.ts) (`DEFAULT_MAX_DEPTH = 12`) |
+| Add new Recipe | [`../simulation/recipes/`](../simulation/recipes/) (no crafting code change needed) |
+| Change job status transition | [`tick.ts`](./tick.ts) + [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts) |
+| Change output routing (e.g. hub priority) | [`output.ts`](./output.ts) |
+| Change auto-refill behavior | [`workflows/keepStockWorkflow.ts`](./workflows/keepStockWorkflow.ts) + [`policies/keepStockDecision.ts`](./policies/keepStockDecision.ts) |
+| Reservation bug | [`../inventory/reservations.ts`](../inventory/reservations.ts) — *not* in `crafting/` |
+| UI display of job status | [`../ui/panels/WorkbenchPanel.tsx`](../ui/panels/WorkbenchPanel.tsx) + [`../ui/hud/productionTransparency.ts`](../ui/hud/productionTransparency.ts) |
+| Planner depth / ingredient resolution | [`planner/planner.ts`](./planner/planner.ts) (`DEFAULT_MAX_DEPTH = 12`) |
 
 ---
 
 ## Recipe Schema (`WorkbenchRecipe`)
 
-Definiert in [`../simulation/recipes/WorkbenchRecipes.ts`](../simulation/recipes/WorkbenchRecipes.ts). Wichtig zu verstehen, *welches* Feld die Crafting-Pipeline tatsächlich liest:
+Defined in [`../simulation/recipes/WorkbenchRecipes.ts`](../simulation/recipes/WorkbenchRecipes.ts). Important to understand *which* field the crafting pipeline actually reads:
 
-| Feld | Typ | Wird vom Crafting-System wofür benutzt? |
+| Field | Type | Used by the crafting system for what? |
 |---|---|---|
-| `key` | `string` | Recipe-ID (`recipeId`-Lookup via `getWorkbenchRecipe`). |
-| `label`, `emoji` | `string` | UI-only (Workbench-Panel, Tooltips). |
-| `outputItem` | `string` | Was der Job produziert; via `routeOutput` ausgeliefert. Muss in `isKnownItemId` registriert sein. |
-| `outputAmount` | `number` | Output-Menge pro Job-Abschluss. |
-| `processingTime` | `number` (Sekunden) | Workbench-Timer-Dauer. **`processingTime: 0` ist ein Sonderpfad** (siehe unten). |
-| **`costs`** | `Partial<Record<keyof Inventory, number>>` | **Kanonische Ingredient-Quelle.** [`queue/queue.ts`](./queue/queue.ts) `recipeIngredientsToStacks` iteriert ausschließlich über `costs`, um die `ingredients: ItemStack[]` des Jobs zu bauen. Reservierungen + Plan-Ingredients ([`planner/planner.ts`](./planner/planner.ts)) lesen ebenfalls aus `costs`. |
-| `inputItem` | `string` | **Wird im Crafting-Flow nicht gelesen.** Kein Treffer in `crafting/` für `recipe.inputItem`. Das Feld ist ein Legacy-Hint für UI/Smelter-ähnliche Pfade — bei Workbench-Recipes ist es informational. (*Notes: zu verifizieren bei späteren Erweiterungen — siehe Hinweis unten.*) |
+| `key` | `string` | Recipe ID (`recipeId` lookup via `getWorkbenchRecipe`). |
+| `label`, `emoji` | `string` | UI-only (Workbench panel, tooltips). |
+| `outputItem` | `string` | What the job produces; delivered via `routeOutput`. Must be registered in `isKnownItemId`. |
+| `outputAmount` | `number` | Output amount per job completion. |
+| `processingTime` | `number` (seconds) | Workbench timer duration. **`processingTime: 0` is a special path** (see below). |
+| **`costs`** | `Partial<Record<keyof Inventory, number>>` | **Canonical ingredient source.** [`queue/queue.ts`](./queue/queue.ts) `recipeIngredientsToStacks` iterates exclusively over `costs` to build the job's `ingredients: ItemStack[]`. Reservations + plan ingredients ([`planner/planner.ts`](./planner/planner.ts)) also read from `costs`. |
+| `inputItem` | `string` | **Not read in the crafting flow.** No match in `crafting/` for `recipe.inputItem`. The field is a legacy hint for UI/smelter-like paths — in Workbench recipes it is informational. (*Notes: to verify during later extensions — see note below.*) |
 
-> **Wenn du Kosten/Dauer eines Recipes änderst:**
-> - Kosten ⇒ `costs` editieren (nicht `inputItem`).
-> - Dauer ⇒ `processingTime` editieren.
-> - Laufende Jobs nutzen den eingefrorenen Snapshot (siehe Recipe-Snapshot-Strategie unten) — der Effekt ist nur bei *neu enqueueten* Jobs sichtbar.
+> **When you change costs/duration of a Recipe:**
+> - Costs ⇒ edit `costs` (not `inputItem`).
+> - Duration ⇒ edit `processingTime`.
+> - Running jobs use the frozen snapshot (see recipe snapshot strategy below) — the effect is visible only for *newly enqueued* jobs.
 
-### `processingTime: 0` Sonderpfad
+### `processingTime: 0` Special Path
 
-In [`tick.ts`](./tick.ts) (Phase 3, Promotion `reserved → crafting`):
+In [`tick.ts`](./tick.ts) (Phase 3, promotion `reserved → crafting`):
 
 ```ts
 if (promoted.processingTime === 0) {
@@ -161,25 +161,25 @@ if (promoted.processingTime === 0) {
 }
 ```
 
-Effekt: Der Job traversiert `queued → reserved → crafting → delivering` in **einem einzigen `JOB_TICK`**. `finishCraftingJob` committed Reservations sofort und routet den Output direkt. UI-seitig wird der `crafting`-Zustand nie sichtbar — der Job erscheint praktisch instant in `delivering`.
+Effect: The job traverses `queued → reserved → crafting → delivering` in **a single `JOB_TICK`**. `finishCraftingJob` commits reservations immediately and routes the output directly. On the UI side, the `crafting` state is never visible — the job effectively appears instantly in `delivering`.
 
-### Recipe-Familien-Disambiguierung
+### Recipe Family Disambiguation
 
-Drei verschiedene Recipe-Typen existieren parallel; das Crafting-Subsystem nutzt **nur** `WorkbenchRecipe`:
+Three different recipe types exist in parallel; the crafting subsystem uses **only** `WorkbenchRecipe`:
 
-| Recipe-Typ | Datei | Konsumiert von |
+| Recipe Type | File | Consumed by |
 |---|---|---|
-| `WorkbenchRecipe` | [`recipes/WorkbenchRecipes.ts`](../simulation/recipes/WorkbenchRecipes.ts) | `crafting/` (Jobs, Planner, Queue) — `costs` als Ingredients |
-| `SmeltingRecipe` | [`recipes/SmeltingRecipes.ts`](../simulation/recipes/SmeltingRecipes.ts) | [`store/action-handlers/logistics-tick/phases/auto-smelter.ts`](../store/action-handlers/logistics-tick/phases/auto-smelter.ts) — nutzt `inputItem`/`inputAmount`/`outputItem` |
-| `ManualAssemblerRecipe` | [`recipes/ManualAssemblerRecipes.ts`](../simulation/recipes/ManualAssemblerRecipes.ts) | [`store/action-handlers/manual-assembler-actions.ts`](../store/action-handlers/manual-assembler-actions.ts) — nutzt `inputItem`/`inputAmount`/`outputItem` |
+| `WorkbenchRecipe` | [`recipes/WorkbenchRecipes.ts`](../simulation/recipes/WorkbenchRecipes.ts) | `crafting/` (jobs, planner, queue) — `costs` as ingredients |
+| `SmeltingRecipe` | [`recipes/SmeltingRecipes.ts`](../simulation/recipes/SmeltingRecipes.ts) | [`store/action-handlers/logistics-tick/phases/auto-smelter.ts`](../store/action-handlers/logistics-tick/phases/auto-smelter.ts) — uses `inputItem`/`inputAmount`/`outputItem` |
+| `ManualAssemblerRecipe` | [`recipes/ManualAssemblerRecipes.ts`](../simulation/recipes/ManualAssemblerRecipes.ts) | [`store/action-handlers/manual-assembler-actions.ts`](../store/action-handlers/manual-assembler-actions.ts) — uses `inputItem`/`inputAmount`/`outputItem` |
 
 ---
 
 ## Notes & Gotchas
 
-- **Recipe-Snapshot-Strategie:** `CraftingJob` friert `ingredients`, `output`, `processingTime` beim Enqueue ein. Mid-Game-Recipe-Edits korrumpieren laufende Jobs nicht.
-- **`enqueuedAt` ≠ Wallclock.** Es ist ein monotoner Sequence-Counter. `startedAt`/`finishesAt` sind dagegen Wallclock-`Date.now()` und nur informativ.
-- **`done_pending_storage` existiert absichtlich nicht** — Warehouses haben kein hartes Item-Cap, das einen Deposit ablehnen könnte.
-- **Owner-Konvention:** `job.owner === job.id`. Stored explizit, um die Verbindung sichtbar zu machen.
-- **Planner ist rekursiv** mit `DEFAULT_MAX_DEPTH = 12`. Tiefe Recipe-Bäume können theoretisch abbrechen. (*Notes: in der Praxis nicht beobachtet — zu verifizieren.*)
-- **Tests** liegen unter [`__tests__/`](./__tests__/) und [`workflows/__tests__/`](./workflows/__tests__/). Lifecycle-Übergänge sind dort verbindlich dokumentiert.
+- **Recipe snapshot strategy:** `CraftingJob` freezes `ingredients`, `output`, `processingTime` on enqueue. Mid-game recipe edits do not corrupt running jobs.
+- **`enqueuedAt` ≠ Wallclock.** It is a monotonic sequence counter. `startedAt`/`finishesAt` are wallclock `Date.now()` and informational only.
+- **`done_pending_storage` intentionally does not exist** — warehouses do not have a hard item cap that could reject a deposit.
+- **Owner convention:** `job.owner === job.id`. Stored explicitly to make the connection visible.
+- **Planner is recursive** with `DEFAULT_MAX_DEPTH = 12`. Deep recipe trees could theoretically abort. (*Notes: not observed in practice — to verify.*)
+- **Tests** live under [`__tests__/`](./__tests__/) and [`workflows/__tests__/`](./workflows/__tests__/). Lifecycle transitions are documented there authoritatively.

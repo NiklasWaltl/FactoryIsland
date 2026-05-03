@@ -1,5 +1,6 @@
 import { AUTO_MINER_PRODUCE_TICKS } from "../../../constants/drone/drone-config";
 import { getCraftingSourceInventory } from "../../../../crafting/crafting-sources";
+import { getAutoMinerOutputAmount } from "../../../../simulation/mining-utils";
 import { getZoneWarehouseIds } from "../../../../zones/production-zone-aggregation";
 import {
   decideAutoMinerOutputTarget,
@@ -9,6 +10,7 @@ import { resolveBuildingSource } from "../../../building-source";
 import { directionOffset } from "../../../utils/direction";
 import { addResources } from "../../../inventory-ops";
 import { getBoostMultiplier } from "../../../helpers/machine-priority";
+import { getEquippedModule } from "../../../selectors/module-selectors";
 import {
   applySourceInventory,
   getLiveLogisticsState,
@@ -38,6 +40,8 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
     const { minerAsset } = minerTickEligibility;
 
     const minerBoost = getBoostMultiplier(minerAsset);
+    const equippedModule = getEquippedModule(state, minerId);
+    const outputAmount = getAutoMinerOutputAmount(equippedModule);
     let progress = miner.progress + minerBoost;
     if (progress >= AUTO_MINER_PRODUCE_TICKS) {
       const dir = minerAsset.direction ?? "east";
@@ -79,12 +83,16 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
             ? state.conveyors[outAssetId]
             : ctx.newConveyorsL[outAssetId];
         const outQueue = outConv?.queue ?? [];
+        const outputItems = Array.from(
+          { length: outputAmount },
+          () => miner.resource,
+        );
         ctx.newConveyorsL =
           ctx.newConveyorsL === state.conveyors
             ? { ...state.conveyors }
             : ctx.newConveyorsL;
         ctx.newConveyorsL[outAssetId] = {
-          queue: [...outQueue, miner.resource],
+          queue: [...outQueue, ...outputItems],
         };
         progress = 0;
         ctx.changed = true;
@@ -97,7 +105,7 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
         outputDecision.targetType === "source_fallback"
       ) {
         const newSourceInv = addResources(sourceInv, {
-          [outputDecision.outputKey]: 1,
+          [outputDecision.outputKey]: outputAmount,
         });
         applySourceInventory(ctx, source, newSourceInv);
         ctx.newAutoDeliveryLogL = deps.addAutoDelivery(

@@ -1,41 +1,41 @@
 # Factory Island — Type Index
 
-> Domänen-Typwissen. Quick reference für AI-Prompting.
-> **Stand:** verifiziert 2026-05-01.
+> Domain type knowledge. Quick reference for AI prompting.
+> **Last verified:** 2026-05-01.
 
 ---
 
-## Wann lese ich diese Datei?
+## When should I read this file?
 
-- Du brauchst die **Typsignatur** eines Domain-Konzepts (Job, Drone, Reservation, Asset).
-- Du willst wissen, **welche Typen zwischen Domänen geteilt** werden (Cross-Domain).
-- Du fügst einen **neuen Typ** hinzu und brauchst die Konventionen + Checkliste.
+- You need the **type signature** of a domain concept (job, drone, reservation, asset).
+- You want to know **which types are shared between domains** (cross-domain).
+- You are adding a **new type** and need the conventions + checklist.
 
-## Was finde ich hier nicht?
+## What is not covered here?
 
-- **Welche Datei ist für X zuständig?** → [/SYSTEM_REGISTRY.md](../../SYSTEM_REGISTRY.md).
-- **Wie laufen Ticks / Dispatches / Datenfluss?** → [ARCHITECTURE.md](./ARCHITECTURE.md).
+- **Which file is responsible for X?** → [/SYSTEM_REGISTRY.md](../../SYSTEM_REGISTRY.md).
+- **How do ticks / dispatches / data flow work?** → [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
 ## Reading Order
 
-1. Diese Übersicht lesen, betroffene Domain identifizieren.
-2. Quelldatei der Domain öffnen (Spalte "Source").
-3. Bei Cross-Domain-Änderung: §"Cross-Domain Dependencies" am Ende prüfen.
+1. Read this overview and identify the affected domain.
+2. Open the source file for the domain ("Source" column).
+3. For cross-domain changes: check §"Cross-Domain Dependencies" at the end.
 
 ---
 
-## Domänenübersicht
+## Domain Overview
 
-| Domain | Source | Inhalt |
+| Domain | Source | Contents |
 |---|---|---|
-| Store & Core State | [`store/types.ts`](./store/types.ts) | `GameState` + alle Slice-Typen |
-| Crafting | [`crafting/types.ts`](./crafting/types.ts) | Job-Lifecycle-Typen |
-| Items | [`items/types.ts`](./items/types.ts) | Item-IDs, Kategorien, Stacks |
-| Inventory / Reservations | [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts) | Reservation-Typen, Network-Slice |
-| Drones | [`drones/candidates/types.ts`](./drones/candidates/types.ts), [`drones/candidates/candidate-builder.ts`](./drones/candidates/candidate-builder.ts) | Task-Auswahl-Typen |
-| Game Actions | [`store/game-actions.ts`](./store/game-actions.ts) | `GameAction`-Union |
+| Store & Core State | [`store/types.ts`](./store/types.ts) | `GameState` + all slice types |
+| Crafting | [`crafting/types.ts`](./crafting/types.ts) | job lifecycle types |
+| Items | [`items/types.ts`](./items/types.ts) | item IDs, categories, stacks |
+| Inventory / Reservations | [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts) | reservation types, network slice |
+| Drones | [`drones/candidates/types.ts`](./drones/candidates/types.ts), [`drones/candidates/candidate-builder.ts`](./drones/candidates/candidate-builder.ts) | task-selection types |
+| Game Actions | [`store/game-actions.ts`](./store/game-actions.ts) | `GameAction` union type |
 
 ---
 
@@ -45,29 +45,29 @@
 
 | Type | Description |
 |------|-------------|
-| `GameState` | Root state object — alle Runtime-Daten (assets, inventory, drones, crafting, energy, UI) |
-| `PlacedAsset` | Building oder Resource-Node auf dem Grid: `{ id, type, x, y, size, direction?, priority?, boosted? }` |
-| `AssetType` | Union aller Grid-Entities: trees, buildings, conveyors, service hubs, etc. |
-| `BuildingType` | Subset von `AssetType` — nur Player-platzierbare Buildings |
-| `Inventory` | `{ coins: number } & Record<ItemId, number>` — globaler oder per-Warehouse-Pool |
+| `GameState` | Root state object — all runtime data (assets, inventory, drones, crafting, energy, UI) |
+| `PlacedAsset` | Building or resource node on the grid: `{ id, type, x, y, size, direction?, priority?, boosted? }` |
+| `AssetType` | Union of all grid entities: trees, buildings, conveyors, service hubs, etc. |
+| `BuildingType` | Subset of `AssetType` — only player-placeable buildings |
+| `Inventory` | `{ coins: number } & Record<ItemId, number>` — global or per-warehouse pool |
 | `Direction` | `"north" \| "east" \| "south" \| "west"` |
-| `GameMode` | `"release" \| "debug"` — steuert Infinite-Warehouse + Drop-Rate-Overrides |
-| `CollectableItemType` | `"wood" \| "stone" \| "iron" \| "copper"` — physikalisch von Drones aufnehmbar |
-| `CollectionNode` | World-dropped Resource-Pile mit Tile + Claim-Status |
+| `GameMode` | `"release" \| "debug"` — controls infinite warehouse + drop-rate overrides |
+| `CollectableItemType` | `"wood" \| "stone" \| "iron" \| "copper"` — physically collectable by drones |
+| `CollectionNode` | World-dropped resource pile with tile + claim status |
 | `DroneTaskType` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply"` |
-| `StarterDroneState` | Runtime-State eines Drones: position, status, cargo, task, hub |
-| `DroneRole` | `"auto" \| "construction" \| "supply"` — biased Scoring, kein Hard-Filter |
-| `DroneStatus` | FSM-States: `idle`, `moving_to_collect`, `collecting`, `moving_to_dropoff`, … |
-| `ServiceHubEntry` | Per-Hub: inventory, target stock, tier, assigned drones |
-| `HubTier` | `1 \| 2` — Proto-Hub vs Service-Hub |
-| `ConstructionSite` | Outstanding Resource-Schuld: `{ buildingType, remaining }` |
-| `ProductionZone` | Gruppiert Warehouses + Crafting-Buildings zu lokalem Pool |
-| `CraftingSource` | Wo Crafting liest/schreibt: `"global" \| "warehouse" \| "zone"` |
-| `UIPanel` | Welches Side-Panel offen ist (`"warehouse"`, `"smithy"`, … oder `null`) |
-| `MachinePriority` | `1..5` — Energy-Scheduling-Priorität (`1` hoch, `5` niedrig) |
-| `AutoSmelterEntry` | Per-Smelter Belt-Processing: input buffer, processing, pending output, status |
-| `GeneratorState` | Fuel-Slot + Burn-Progress + Drone-Refill-Counter |
-| `GameNotification` | Transient HUD-Notification: resource, displayName, amount, expiry |
+| `StarterDroneState` | Runtime state of a drone: position, status, cargo, task, hub |
+| `DroneRole` | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter |
+| `DroneStatus` | FSM states: `idle`, `moving_to_collect`, `collecting`, `moving_to_dropoff`, … |
+| `ServiceHubEntry` | Per hub: inventory, target stock, tier, assigned drones |
+| `HubTier` | `1 \| 2` — proto hub vs service hub |
+| `ConstructionSite` | Outstanding resource debt: `{ buildingType, remaining }` |
+| `ProductionZone` | Groups warehouses + crafting buildings into a local pool |
+| `CraftingSource` | Where crafting reads/writes: `"global" \| "warehouse" \| "zone"` |
+| `UIPanel` | Which side panel is open (`"warehouse"`, `"smithy"`, … or `null`) |
+| `MachinePriority` | `1..5` — energy-scheduling priority (`1` high, `5` low) |
+| `AutoSmelterEntry` | Per-smelter belt processing: input buffer, processing, pending output, status |
+| `GeneratorState` | Fuel slot + burn progress + drone refill counter |
+| `GameNotification` | Transient HUD notification: resource, displayName, amount, expiry |
 
 ---
 
@@ -77,13 +77,13 @@
 
 | Type | Description |
 |------|-------------|
-| `CraftingJob` | Snapshot-Style Job: frozen recipe, status, progress, source, reservation owner |
+| `CraftingJob` | Snapshot-style job: frozen recipe, status, progress, source, reservation owner |
 | `JobStatus` | `"queued" \| "reserved" \| "crafting" \| "delivering" \| "done" \| "cancelled"` |
 | `JobPriority` | `"high" \| "normal" \| "low"` |
 | `JobSource` | `"player" \| "automation"` |
 | `CraftingQueueState` | `state.crafting` slice: `{ jobs, nextJobSeq, lastError }` |
-| `CraftingInventorySource` | Physical Stock-Scope: global / warehouse / zone (mit `warehouseIds`) |
-| `CraftingErrorKind` | Error-Codes: `UNKNOWN_RECIPE`, `UNKNOWN_WORKBENCH`, `INVALID_TRANSITION`, … |
+| `CraftingInventorySource` | Physical stock scope: global / warehouse / zone (with `warehouseIds`) |
+| `CraftingErrorKind` | Error codes: `UNKNOWN_RECIPE`, `UNKNOWN_WORKBENCH`, `INVALID_TRANSITION`, … |
 | `RecipeId` | `string` alias |
 | `JobId` | `string` alias |
 
@@ -95,12 +95,12 @@
 
 | Type | Description |
 |------|-------------|
-| `ItemId` | Union aller Item-IDs: raw, material, intermediate, buildable, tool, seed |
+| `ItemId` | Union of all item IDs: raw, material, intermediate, buildable, tool, seed |
 | `ItemCategory` | `"raw_resource" \| "material" \| "intermediate" \| "buildable" \| "seed" \| "player_gear"` |
-| `ItemDef` | Statische Metadata: displayName, category, stackSize, hotbar-Eligibility |
+| `ItemDef` | Static metadata: displayName, category, stackSize, hotbar eligibility |
 | `ItemStack` | `{ itemId: ItemId, count: number }` |
-| `WarehouseId` | `string` alias — Asset-ID eines Warehouses |
-| `NetworkStockView` | Read-only Snapshot aggregierter Warehouse-Totals |
+| `WarehouseId` | `string` alias — asset ID of a warehouse |
+| `NetworkStockView` | Read-only snapshot of aggregated warehouse totals |
 
 ---
 
@@ -110,12 +110,12 @@
 
 | Type | Description |
 |------|-------------|
-| `Reservation` | Active Hold: item, amount, ownerKind, ownerId, optionaler Scope-Key |
+| `Reservation` | Active hold: item, amount, ownerKind, ownerId, optional scope key |
 | `ReservationOwnerKind` | `"crafting_job" \| "system_request"` |
 | `ReservationId` | `string` alias |
 | `NetworkSlice` | `state.network`: `{ reservations, nextReservationId, lastError }` |
 | `NetworkErrorKind` | `"INSUFFICIENT_STOCK" \| "UNKNOWN_RESERVATION" \| "EMPTY_BATCH"` |
-| `MissingItem` | Per-Item Shortfall auf failed Batch: requested vs available |
+| `MissingItem` | Per-item shortfall for a failed batch: requested vs available |
 
 ---
 
@@ -125,10 +125,10 @@
 
 | Type | Source | Description |
 |------|--------|-------------|
-| `DroneSelectionCandidate` | `candidates/types.ts` | Scored Task-Option: taskType, nodeId, deliveryTargetId, score, bonus-Breakdown |
+| `DroneSelectionCandidate` | `candidates/types.ts` | Scored task option: taskType, nodeId, deliveryTargetId, score, bonus breakdown |
 | `CandidateBonuses` | `candidates/candidate-builder.ts` | Optional: role, sticky, urgency, demand, spread |
 
-Drone-FSM- und Role-Typen leben in [`store/types.ts`](./store/types.ts) — siehe oben.
+Drone FSM and role types live in [`store/types.ts`](./store/types.ts) — see above.
 
 ---
 
@@ -148,45 +148,45 @@ store/types.ts
   ↑ imported by: drones/candidates/*.ts, action-handlers/**
 ```
 
-Im geprüften Ausschnitt existieren keine zirkulären Typ-Abhängigkeiten zwischen diesen Modulen.
+In the verified excerpt, no circular type dependencies exist between these modules.
 
 ---
 
-## Typ-Konventionen
+## Type Conventions
 
-- **String-Aliases für IDs:** `RecipeId`, `JobId`, `WarehouseId`, `ReservationId` — alle reine `string`-Aliasse für Lesbarkeit, kein Branding.
-- **Diskriminierte Unions** mit String-Literal-Discriminator: `JobStatus`, `DroneStatus`, `CraftingInventorySource`, `GameAction["type"]`.
-- **Slice-Typen** sind separat exportiert (`CraftingQueueState`, `NetworkSlice`) und werden in `GameState` kompositioniert — nicht inline definiert.
-- **Owner-Konvention:** Reservation-Owner für Crafting-Jobs verwenden `ownerKey === jobId`.
-- **Frozen-Recipe-Pattern:** `CraftingJob` enthält ein eingefrorenes Snapshot-Recipe — Recipe-Edits ändern keine laufenden Jobs.
-
----
-
-## Typ-Checklisten
-
-### Neuen Drone-Task-Typ hinzufügen
-
-1. [`store/types.ts`](./store/types.ts) — Wert zur `DroneTaskType`-Union ergänzen.
-2. Neue `*-candidates.ts`-Datei unter [`drones/candidates/`](./drones/candidates/) anlegen.
-3. [`drones/candidates/scoring/scoring-constants.ts`](./drones/candidates/scoring/scoring-constants.ts) — Scoring-Gewichte.
-4. [`drones/selection/select-drone-task-bindings.ts`](./drones/selection/select-drone-task-bindings.ts) — Binding registrieren.
-
-### Neuen Action-Typ hinzufügen
-
-1. [`store/game-actions.ts`](./store/game-actions.ts) — Discriminated-Union-Branch ergänzen.
-2. Cluster-Handler unter [`store/action-handlers/`](./store/action-handlers/) wählen oder anlegen; `HANDLED_ACTION_TYPES`-Set erweitern.
-3. Falls Tick-getrieben: `setInterval` in [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts) registrieren.
-
-### Neues `GameState`-Slice-Feld
-
-1. Feld zu `GameState` in [`store/types.ts`](./store/types.ts) hinzufügen.
-2. Initial-Wert in [`store/initial-state.ts`](./store/initial-state.ts).
-3. Save-Migration in [`simulation/save-migrations.ts`](./simulation/save-migrations.ts) für Bestandsspeicher.
-4. Persistenz-Status in `ARCHITECTURE.md` §State Map dokumentieren.
+- **String aliases for IDs:** `RecipeId`, `JobId`, `WarehouseId`, `ReservationId` — all are pure `string` aliases for readability, with no branding.
+- **Discriminated unions** with string-literal discriminators: `JobStatus`, `DroneStatus`, `CraftingInventorySource`, `GameAction["type"]`.
+- **Slice types** are exported separately (`CraftingQueueState`, `NetworkSlice`) and composed into `GameState` — not defined inline.
+- **Owner convention:** reservation owners for crafting jobs use `ownerKey === jobId`.
+- **Frozen recipe pattern:** `CraftingJob` contains a frozen recipe snapshot — recipe edits do not change running jobs.
 
 ---
 
-## Verweise
+## Type Checklists
 
-- [/SYSTEM_REGISTRY.md](../../SYSTEM_REGISTRY.md) — System-Routing, Pfade, Änderungsrezepte.
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — Runtime-Flow, State-Map mit Persistenz, Architekturentscheidungen.
+### Add a new drone task type
+
+1. [`store/types.ts`](./store/types.ts) — add a value to the `DroneTaskType` union.
+2. Create a new `*-candidates.ts` file under [`drones/candidates/`](./drones/candidates/).
+3. [`drones/candidates/scoring/scoring-constants.ts`](./drones/candidates/scoring/scoring-constants.ts) — scoring weights.
+4. [`drones/selection/select-drone-task-bindings.ts`](./drones/selection/select-drone-task-bindings.ts) — register the binding.
+
+### Add a new action type
+
+1. [`store/game-actions.ts`](./store/game-actions.ts) — add a discriminated-union branch.
+2. Select or create a cluster handler under [`store/action-handlers/`](./store/action-handlers/); extend the `HANDLED_ACTION_TYPES` set.
+3. If tick-driven: register the `setInterval` in [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts).
+
+### New `GameState` slice field
+
+1. Add the field to `GameState` in [`store/types.ts`](./store/types.ts).
+2. Initial value in [`store/initial-state.ts`](./store/initial-state.ts).
+3. Save migration in [`simulation/save-migrations.ts`](./simulation/save-migrations.ts) for existing saves.
+4. Document persistence status in `ARCHITECTURE.md` §State Map.
+
+---
+
+## References
+
+- [/SYSTEM_REGISTRY.md](../../SYSTEM_REGISTRY.md) — system routing, paths, change recipes.
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — runtime flow, state map with persistence, architecture decisions.

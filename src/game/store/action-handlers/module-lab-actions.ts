@@ -5,7 +5,7 @@
 //   START_MODULE_CRAFT  - spend fragments, open a job
 //   MODULE_LAB_TICK     - flip the job to "done" once durationMs has elapsed
 //   COLLECT_MODULE      - move the finished module into moduleInventory
-//   PLACE_MODULE        - assign module → building (equippedTo)
+//   PLACE_MODULE        - assign module → asset (equippedTo + asset.moduleSlot)
 //   REMOVE_MODULE       - clear module.equippedTo
 // ============================================================
 
@@ -89,14 +89,16 @@ function collectModule(state: GameState): GameState {
 function placeModule(
   state: GameState,
   moduleId: string,
-  buildingId: string,
+  assetId: string,
 ): GameState {
   const inventory = state.moduleInventory ?? [];
   const target = inventory.find((m) => m.id === moduleId);
   if (!target) return state;
-  const asset = state.assets[buildingId];
+  if (target.equippedTo !== null) return state;
+
+  const asset = state.assets[assetId];
   if (!asset) return state;
-  if (inventory.some((m) => m.equippedTo === buildingId)) {
+  if (asset.moduleSlot || inventory.some((m) => m.equippedTo === assetId)) {
     return {
       ...state,
       notifications: addErrorNotification(
@@ -118,8 +120,12 @@ function placeModule(
   return {
     ...state,
     moduleInventory: inventory.map((m) =>
-      m.id === moduleId ? { ...m, equippedTo: buildingId } : m,
+      m.id === moduleId ? { ...m, equippedTo: assetId } : m,
     ),
+    assets: {
+      ...state.assets,
+      [assetId]: { ...asset, moduleSlot: moduleId },
+    },
   };
 }
 
@@ -134,11 +140,20 @@ function removeModule(
   if (target.equippedTo === null) return state;
   if (assetId !== undefined && target.equippedTo !== assetId) return state;
 
+  const equippedAssetId = target.equippedTo;
+  const equippedAsset = state.assets[equippedAssetId];
+
   return {
     ...state,
     moduleInventory: inventory.map((m) =>
       m.id === moduleId ? { ...m, equippedTo: null } : m,
     ),
+    assets: equippedAsset
+      ? {
+          ...state.assets,
+          [equippedAssetId]: { ...equippedAsset, moduleSlot: null },
+        }
+      : state.assets,
   };
 }
 
@@ -153,15 +168,12 @@ export function handleModuleLabAction(
       return moduleLabTick(state);
     case "COLLECT_MODULE":
       return collectModule(state);
-    case "PLACE_MODULE":
-      return placeModule(state, action.moduleId, action.buildingId);
-    case "REMOVE_MODULE": {
-      const runtimeAction = action as Extract<
-        GameAction,
-        { type: "REMOVE_MODULE" }
-      > & { assetId?: string };
-      return removeModule(state, action.moduleId, runtimeAction.assetId);
+    case "PLACE_MODULE": {
+      const assetId = action.assetId ?? action.buildingId;
+      return assetId ? placeModule(state, action.moduleId, assetId) : state;
     }
+    case "REMOVE_MODULE":
+      return removeModule(state, action.moduleId, action.assetId);
     default:
       return null;
   }

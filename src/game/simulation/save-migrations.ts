@@ -40,7 +40,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 27;
+export const CURRENT_SAVE_VERSION = 28;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -247,7 +247,11 @@ export interface SaveGameV27 extends Omit<SaveGameV26, "version"> {
   ship: ShipState;
 }
 
-export type SaveGameLatest = SaveGameV27;
+export interface SaveGameV28 extends Omit<SaveGameV27, "version"> {
+  version: 28;
+}
+
+export type SaveGameLatest = SaveGameV28;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -621,6 +625,15 @@ function migrateV26ToV27(save: SaveGameV26): SaveGameV27 {
   return { ...save, version: 27, ship: normalizeShipState(save.ship) };
 }
 
+function migrateV27ToV28(save: SaveGameV27): SaveGameV28 {
+  const assets: Record<string, PlacedAsset> = {};
+  for (const [id, asset] of Object.entries(save.assets ?? {})) {
+    assets[id] = { ...asset, moduleSlot: asset.moduleSlot ?? null };
+  }
+
+  return { ...save, version: 28, assets };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -649,6 +662,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 24, to: 25, migrate: migrateV24ToV25 },
   { from: 25, to: 26, migrate: migrateV25ToV26 },
   { from: 26, to: 27, migrate: migrateV26ToV27 },
+  { from: 27, to: 28, migrate: migrateV27ToV28 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

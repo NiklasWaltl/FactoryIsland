@@ -132,6 +132,8 @@ export interface PlacedAsset {
    * ignorieren das Feld vollständig.
    */
   boosted?: boolean;
+  /** Cached equipped module id for fast UI lookup; Module.equippedTo stays authoritative. */
+  moduleSlot?: string | null;
   /** Marks this warehouse as the ship's dock warehouse. Only one may exist. */
   isDockWarehouse?: boolean;
 }
