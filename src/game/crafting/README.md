@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Manages all crafting jobs (Workbench, Manual Assembler, Smithy via output routing). Strictly separated: **Planning** (what should be built) vs. **Execution** (advance running jobs). Reservations live in [`../inventory/`](../inventory/), output routing here in [`output.ts`](./output.ts).
+Das Crafting-Subsystem verwaltet die Workbench-Job-Queue. Manual Assembler und Smelting laufen in eigenen Action-Pfaden; gemeinsam genutzt wird das Output-Routing. Strictly separated: **Planning** (what should be built) vs. **Execution** (advance running jobs). Reservations live in [`../inventory/`](../inventory/), output routing here in [`output.ts`](./output.ts).
 
 ---
 
@@ -38,8 +38,9 @@ Manages all crafting jobs (Workbench, Manual Assembler, Smithy via output routin
                     │        done          │  terminal
                     └──────────────────────┘
 
-   Aus jedem Status → cancelled (terminal, Reservierungen released)
 ```
+
+Cancel ist für `queued`, `reserved` und `crafting` erlaubt. `delivering` und `done` sind terminal und nicht stornierbar.
 
 Phase order per tick (`crafting/tick.ts`):
 
@@ -47,7 +48,7 @@ Phase order per tick (`crafting/tick.ts`):
 2. **Promote `queued` → `reserved`** — when ingredients are reservable
 3. **Promote `reserved` → `crafting`** — when workbench is free (instant completion when `processingTime===0`)
 
-→ A freshly enqueued job can traverse `queued → reserved → crafting → delivering` in a single tick.
+Ein neu enqueueter Job erreicht `delivering` im selben Tick nur wenn der Input-Buffer bereits vollständig gefüllt ist und `processingTime === 0`.
 
 Status definition: [`crafting/types.ts:27`](./types.ts#L27).
 
@@ -89,6 +90,50 @@ Status definition: [`crafting/types.ts:27`](./types.ts#L27).
 | [`output.ts`](./output.ts) | `routeOutput` — where finished output lands (Warehouse → Hub → global fallback). |
 | [`workbench-input-buffer.ts`](./workbench-input-buffer.ts), [`workbench-input-complete.ts`](./workbench-input-complete.ts) | Drone input buffer per workbench (drones deliver ingredients; job starts only when buffer is complete). |
 
+Die Execution ist auf einen Orchestrator (`tick`) und drei Phasenmodule aufgeteilt: `progress` (crafting-Jobs), `reserve` (queued-Jobs), `promote` (reserved-Jobs). Lifecycle-Helfer liegen in `job-lifecycle`.
+
+---
+
+## Advanced / Implementation Details
+
+### Execution-Phasen
+
+Die drei Phasenmodule `progress`, `reserve` und `promote` kapseln die jeweiligen Tick-Transitionen und werden vom Orchestrator in fester Reihenfolge aufgerufen.
+
+### Planner-Core
+
+Der Planner ist zweistufig: öffentliche Planner-API + rekursiver `planner-core` mit Fehler-Typisierung, Zustandsprojektion und `DEFAULT_MAX_DEPTH`. Der Core seedet erwartete Outputs nur für Jobs in `reserved`, `crafting` oder `delivering` derselben Inventory-Source.
+
+### Scope-Key-System
+
+Reservations nutzen ein Scope-Key-System mit Legacy-Scope und source-spezifischen Lane-Scopes (Warehouse-Lane).
+
+### Output-Routing-API
+
+Neben `routeOutput` gehören `resolveOutputDestination` und `pickOutputWarehouseId` zur gemeinsamen Runtime/Planner-API.
+
+### CraftingAction-Union
+
+`CraftingAction` umfasst Queue-Aktionen sowie `CRAFT_REQUEST_WITH_PREREQUISITES` für Plan-und-Enqueue-Flows.
+
+### Prioritätskonfiguration
+
+Reihenfolge ist zentral über `PRIORITY_ORDER` und `defaultPriorityFor` definiert. Queue-Reorder ist auf `queued`/`reserved` begrenzt; `top` setzt hohe Priorität und einen FIFO-Sentinel via `enqueuedAt`.
+
+### Keep-Stock-Entscheidungsmodell
+
+Entscheidungen sind als typed Decision-Union (`skip` | `satisfied` | `enqueue`) mit klaren Skip-Codes modelliert. Blocker umfassen offene Player-Jobs, Construction-Sites und pending Service-Hub-Upgrades.
+
+### Lifecycle-Übergänge außerhalb des Crafting-Ticks
+
+- **Input-Commit:** Ingredient-Reservations werden beim Workbench-Input-Pickup committed und physisch ausgebucht.
+- **delivering → done:** Dieser Übergang inkl. Output-Deposit liegt im Drone-Workbench-Finalizer, nicht im Crafting-Tick.
+- **Input-Complete-Prüfung:** Basiert auf `getWorkbenchJobInputAmount` aus den Drone-Need-Resolvern.
+
+### Globale Source / Pseudo-Warehouse-Modell
+
+Für globale Quellen werden Global-Inventory und Hub-Collectables über pseudo-Warehouse-IDs in ein einheitliches View-Modell überführt.
+
 ---
 
 ## Layer Overview (Data View)
@@ -113,7 +158,7 @@ Status definition: [`crafting/types.ts:27`](./types.ts#L27).
    └──────────────────────┘    └──────────────────────────────┘
 ```
 
-**Source-of-truth rule:** Physical inventories are authoritative. `network.reserved` is *always* ≤ physically available (DEV invariant in [`tick/job-lifecycle.ts`](./tick/job-lifecycle.ts)).
+**Source-of-truth rule:** Die DEV-Invariant prüft Konsistenz zwischen Jobs und Reservations. Physische Verfügbarkeit wird über die Reservation-Engine abgesichert.
 
 ---
 
@@ -128,6 +173,8 @@ Status definition: [`crafting/types.ts:27`](./types.ts#L27).
 | Reservation bug | [`../inventory/reservations.ts`](../inventory/reservations.ts) — *not* in `crafting/` |
 | UI display of job status | [`../ui/panels/WorkbenchPanel.tsx`](../ui/panels/WorkbenchPanel.tsx) + [`../ui/hud/productionTransparency.ts`](../ui/hud/productionTransparency.ts) |
 | Planner depth / ingredient resolution | [`planner/planner.ts`](./planner/planner.ts) (`DEFAULT_MAX_DEPTH = 12`) |
+
+Status-Transitionen finden in den Phasenmodulen und `job-lifecycle`-Helfern statt. `DEFAULT_MAX_DEPTH` ist im Planner-Core konfiguriert.
 
 ---
 
@@ -161,7 +208,7 @@ if (promoted.processingTime === 0) {
 }
 ```
 
-Effect: The job traverses `queued → reserved → crafting → delivering` in **a single `JOB_TICK`**. `finishCraftingJob` commits reservations immediately and routes the output directly. On the UI side, the `crafting` state is never visible — the job effectively appears instantly in `delivering`.
+Bei `processingTime === 0` wechselt der Job im selben Tick nach `delivering`. Output-Einlagerung und der Übergang nach `done` folgen im Drone-Workbench-Finalizer.
 
 ### Recipe Family Disambiguation
 
@@ -180,6 +227,6 @@ Three different recipe types exist in parallel; the crafting subsystem uses **on
 - **Recipe snapshot strategy:** `CraftingJob` freezes `ingredients`, `output`, `processingTime` on enqueue. Mid-game recipe edits do not corrupt running jobs.
 - **`enqueuedAt` ≠ Wallclock.** It is a monotonic sequence counter. `startedAt`/`finishesAt` are wallclock `Date.now()` and informational only.
 - **`done_pending_storage` intentionally does not exist** — warehouses do not have a hard item cap that could reject a deposit.
-- **Owner convention:** `job.owner === job.id`. Stored explicitly to make the connection visible.
+- **Owner convention:** `reservationOwnerId` entspricht `job.id`.
 - **Planner is recursive** with `DEFAULT_MAX_DEPTH = 12`. Deep recipe trees could theoretically abort. (*Notes: not observed in practice — to verify.*)
 - **Tests** live under [`__tests__/`](./__tests__/) and [`workflows/__tests__/`](./workflows/__tests__/). Lifecycle transitions are documented there authoritatively.

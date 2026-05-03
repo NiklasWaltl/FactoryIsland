@@ -4,61 +4,58 @@ Dieses Dokument richtet sich an KI-Coding-Agenten, die an diesem Repository arbe
 
 ## Projektziel
 
-Factory Island ist ein eigenständiges 2D-Fabrik-Aufbauspiel.
+Factory Island ist ein eigenstaendiges 2D-Fabrik-Aufbauspiel.
 
 ## Aktiver Scope
 
 - Arbeite in `src/game/**`, `index.factory.html`, `vite.factory.config.ts`, `tsconfig.factory.json`, `package.json`, `public/` und `.github/workflows/`.
 
-## Wichtige Regeln
+## Verbindliche Read-Order
 
-- Keine neuen npm-Abhängigkeiten ohne Rückfrage.
-- Keine großen Refactors ohne vorherigen Plan; keine neuen Re-Export-Hubs ohne klaren Grund.
+1. `.continue/prompts/project-context.md`
+2. [SYSTEM_REGISTRY.md](SYSTEM_REGISTRY.md)
+3. [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md) nur bei Runtime-/Datenflussfragen
+4. [src/game/TYPES.md](src/game/TYPES.md) nur bei Typfragen
+
+Nutze dieses Dokument als Verhaltensregeln und verlinke fuer Details auf die obigen Quellen statt Inhalte zu duplizieren.
+
+## Arbeitsmodus
+
+- Bestimme zuerst das owning system und lies danach nur die direkt betroffenen Codepfade.
+- Verändere nur die Dateien, die fuer die Aufgabe notwendig sind.
+- Arbeite in kleinen, pruefbaren Schritten; bei groesseren Aenderungen erst kurzer Plan mit Risiko.
+- Wenn Doku und Code widersprechen, gilt der Code. Markiere die Doku zur Nachpflege.
+- Pruefe vor jedem Edit Action-/Tick-/Selector-/Typ-Pfad sowie Save-/Compat-Risiko.
+
+## Architektur- und Boundary-Regeln
+
 - Keine Spiellogik in UI-Komponenten.
-- Keine Magic Numbers; nutze vorhandene Konstanten.
-- Behalte den Build funktionsfähig (`yarn build`).
-
-## Architekturhinweise
-
-- `FactoryApp.tsx` ist der Root für Spielzustand und Ticks (`useReducer` + `setInterval`).
-- `store/reducer.ts` ist die zentrale Quelle für State, Typen, Konstanten und Reducer-Logik.
-- `simulation/game.ts` ist ein Re-Export-Wrapper (`export * from "../store/reducer"`) für bestehende Imports.
-- Rezepte gehören ausschließlich nach `src/game/simulation/recipes/`.
-- Neue UI-Elemente gehören in `src/game/ui/**`.
-- `BuildMenu.tsx` liegt unter `src/game/ui/menus/` (nicht unter `ui/panels/`).
+- React mutiert State nur via `dispatch`; Phaser ist read-only und dispatcht nicht.
+- Keine neuen Re-Export-Hubs ohne klaren Grund.
+- Rezepte nur unter `src/game/simulation/recipes/`.
+- Neue UI-Elemente unter `src/game/ui/**`; `BuildMenu.tsx` liegt unter `src/game/ui/menus/`.
 - Debug-Code nur hinter `import.meta.env.DEV`.
 
-## Arbeitsweise
+## Build-/Check-Standards
 
-- Verändere nur die Dateien, die für die aktuelle Aufgabe nötig sind.
-- Wenn eine Änderung mehrere Dateien betrifft, arbeite in kleinen, überprüfbaren Schritten.
-- Zeige vor größeren Änderungen kurz Plan, betroffene Dateien und Risiko.
-- Nach Codeänderungen immer die passenden Tests oder Builds ausführen.
+Fuehre nach Aenderungen immer passende Verifikation aus:
 
-### Verbindlicher Ablauf vor Codeänderungen
-
-- Lies zuerst `.continue/prompts/project-context.md`, dann `SYSTEM_REGISTRY.md`.
-- Ziehe `src/game/ARCHITECTURE.md` nur für Runtime-/Datenflussfragen hinzu; `src/game/TYPES.md` nur für Typfragen.
-- Bestimme zuerst das owning system und lies danach nur die direkt betroffenen Codepfade.
-- Prüfe vor jedem Edit Action-/Tick-/Selector-/Typ-Pfad sowie Save-/Compat-Risiko.
-- Wenn Doku und Code widersprechen, gilt der Code; markiere die Doku zur Nachpflege.
-
-## Prüfbefehle
-
-- Lokal starten: `yarn dev`
-- Bauen: `yarn build`
-- Typecheck: `tsc --project tsconfig.factory.json --noEmit`
+- Dev: `yarn dev`
+- Build: `yarn build`
+- Typecheck: `yarn tsc -p tsconfig.factory.json --noEmit`
 - Tests: `yarn test`
 - Lint: `yarn lint`
 
 ## Bekannte Stolperfallen
 
-- Alte Saves müssen über `normalizeLoadedState()` kompatibel bleiben.
-- Bei Größenberechnungen nie direkt `asset.size` verwenden, sondern die vorhandenen Helper.
+- Alte Saves muessen ueber `normalizeLoadedState()` kompatibel bleiben.
+- Bei Groessenberechnungen nie direkt `asset.size` verwenden, sondern vorhandene Helper.
 - Rotierbare Maschinen brauchen korrekte `direction`-Logik.
-- Wenn ein Build-Fehler auftritt, zuerst die betroffene Konfigurations- oder Importkette prüfen.
+- Bei Build-Fehlern zuerst Konfigurations- und Importkette pruefen.
+- In dieser Windows-Umgebung ist `rg` ggf. nicht verfuegbar; nutze dann VS-Code-Suche oder `Select-String`.
 
-## Verboten
+## Guardrails
 
-- Keine stillen Fallbacks für fehlende Logik.
-- Keine Änderung ohne anschließende Verifikation.
+- Keine neuen npm-Abhaengigkeiten ohne Rueckfrage.
+- Keine stillen Fallbacks fuer fehlende Logik.
+- Keine Aenderung ohne anschliessende Verifikation.

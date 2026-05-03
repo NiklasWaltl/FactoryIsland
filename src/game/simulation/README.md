@@ -18,7 +18,7 @@ SaveGameLatest  ──►  JSON.stringify  ──►  localStorage[SAVE_KEY]
 
 localStorage[SAVE_KEY]  ──►  JSON.parse  ──►  unknown
    │
-   │ migrateSave()  ← Kette migrateV0ToV1 … migrateV15ToV16
+   │ migrateSave()  ← Kette migrateV0ToV1 … migrateV27ToV28
    ▼
 SaveGameLatest
    │
@@ -37,11 +37,15 @@ GameState (runtime, hydratiert)
 | Datei | Zweck |
 |---|---|
 | [`save.ts`](./save.ts) | Top-Level Public API. |
-| [`save-codec.ts`](./save-codec.ts) | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields). |
-| [`save-migrations.ts`](./save-migrations.ts) | `CURRENT_SAVE_VERSION`, alle `SaveGameVN`-Interfaces, `migrateVNToVN+1`-Funktionen, Migrations-Chain. |
-| [`save-normalizer.ts`](./save-normalizer.ts) | `sanitizeXxx`-Funktionen für inkonsistente / verlorengegangene Sub-Slices (z. B. `sanitizeNetworkSlice`, `sanitizeCraftingQueue`, `sanitizeStarterDrone`). |
+| [`save-codec.ts`](./save-codec.ts) | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields) + `loadAndHydrate` (one-stop Helper: parse → migrate → hydrate). |
+| [`save-migrations.ts`](./save-migrations.ts) | `CURRENT_SAVE_VERSION` (aktuell: 28), alle `SaveGameVN`-Interfaces (V1–V28), `migrateVNToVN+1`-Funktionen (V0→V28), Migrations-Chain + `clampGeneratorFuel` (pure Load-Guard für Generator-Fuel-Overflow). |
+| [`save-normalizer.ts`](./save-normalizer.ts) | `sanitizeXxx`-Funktionen: `sanitizeNetworkSlice`, `sanitizeCraftingQueue`, `sanitizeStarterDrone`, `sanitizeConveyorUndergroundPeers`, `sanitizeKeepStockByWorkbench`, `sanitizeRecipeAutomationPolicies` + `rebuildGlobalInventoryFromStorage` (re-derives `globalInventory` aus warehouse/hub-Slices). |
 | [`save-legacy.ts`](./save-legacy.ts) | V0 (pre-versioned) → V1 Sonderfall + Runtime-Snapshot-Detection. |
-| [`recipes/`](./recipes/) | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler). Nicht persistenz-relevant. |
+| [`recipes/`](./recipes/) | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler / AutoAssemblerV1). Nicht persistenz-relevant. |
+| [`game.ts`](./game.ts) | Compatibility-Re-Export; leitet alle Importe an `../store/reducer` weiter. |
+| [`mining-utils.ts`](./mining-utils.ts) | Hilfsfunktionen für Auto-Miner-Tick (Yield-Multiplikator, etc.). |
+| [`smelting-utils.ts`](./smelting-utils.ts) | Hilfsfunktionen für Auto-Smelter-Tick (Speed-Multiplikator, Tick-Intervall, etc.). |
+| [`__tests__/`](./__tests__/) | Roundtrip-, Migrations- und Simulation-Unit-Tests (10 Test-Dateien). |
 
 ---
 
@@ -64,6 +68,8 @@ Beispiel: `state.fooBar: Record<string, number>` soll persistiert werden.
 3. `CURRENT_SAVE_VERSION` von `N` → `N+1` bumpen.
 4. Neue Migrations-Funktion `migrateV<N>ToV<N+1>(save: SaveGameV<N>): SaveGameV<N+1>` schreiben — typischer Inhalt: `{ ...save, version: N+1, fooBar: {} }`.
 5. In der `migrations`-Chain einen Eintrag `{ from: N, to: N+1, migrate: migrateV<N>ToV<N+1> }` ergänzen.
+
+> **Aktueller Stand:** `CURRENT_SAVE_VERSION = 28` (V28). Nächste Migration wäre V28→V29.
 
 ### Schritt 4 — Whitelist im Codec
 [`save-codec.ts`](./save-codec.ts) → `serializeState`: Feld in den zurückgegebenen Object-Literal aufnehmen. **Ohne diesen Schritt wird das Feld nie gespeichert**, egal was im Type steht.
@@ -91,7 +97,7 @@ Wenn das Feld inhaltliche Invarianten hat (z. B. Foreign Keys auf andere `state`
 - **HMR-Path geht ebenfalls durch Migration:** Wer den Versionsbump vergisst, bekommt im DEV nach Hot-Reload eine "alte" Save-Version → Migration läuft → Feld könnte zurückgesetzt werden.
 - **`deserializeState` startet von `createInitialState`:** Fehlt der Default dort, ist der hydratisierte State für *neue* Spielstände inkonsistent mit migrated-Saves.
 - **`autoDeliveryLog`, `notifications`, `openPanel`, `selected*Id` sind absichtlich NICHT persistiert** — UI-transient. Nicht in `serializeState` aufnehmen, sonst überschreibt Save den UI-State.
-- **`connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio`** werden in `deserializeState` re-derived (über `computeConnectedAssetIds`). Persistieren wäre redundant und driftet.
+- **`connectedAssetIds`, `poweredMachineIds`** werden in `deserializeState` re-derived (über `computeConnectedAssetIds`). Persistieren wäre redundant und driftet.
 - **`drones[id]` und `starterDrone`** sind redundant gespeichert (Legacy). `deserializeState` sanitisiert beide separat über `sanitizeStarterDrone` — neue Drone-Felder müssen dort auch ergänzt werden.
 
 ---
