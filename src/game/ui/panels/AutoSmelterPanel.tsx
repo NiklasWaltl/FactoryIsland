@@ -1,4 +1,5 @@
 import React from "react";
+import type { Module } from "../../modules/module.types";
 import type { GameState, Inventory } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import {
@@ -7,6 +8,10 @@ import {
 } from "../../store/constants/energy/energy-smelter";
 import { AUTO_SMELTER_BOOST_MULTIPLIER } from "../../store/constants/energy/boost-multipliers";
 import { getSourceStatusInfo } from "../../store/selectors/source-status";
+import {
+  getEquippedModule,
+  getFreeModulesForType,
+} from "../../store/selectors/module-selectors";
 import {
   getCapacityPerResource,
   getZoneItemCapacity,
@@ -20,6 +25,122 @@ interface AutoSmelterPanelProps {
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
 }
+
+const MODULE_TYPE_LABELS: Record<Module["type"], string> = {
+  "miner-boost": "Miner Boost",
+  "smelter-boost": "Smelter Boost",
+};
+
+function getModuleDisplayName(module: Module): string {
+  return `${MODULE_TYPE_LABELS[module.type]} Tier ${module.tier}`;
+}
+
+function getModuleTierBadge(module: Module): string {
+  return `T${module.tier}`;
+}
+
+interface ModuleSlotSectionProps {
+  assetId: string;
+  equippedModule: Module | null;
+  freeModules: Module[];
+  dispatch: React.Dispatch<GameAction>;
+}
+
+const ModuleSlotSection: React.FC<ModuleSlotSectionProps> = ({
+  assetId,
+  equippedModule,
+  freeModules,
+  dispatch,
+}) => (
+  <div
+    data-testid="auto-smelter-module-slot"
+    style={{
+      display: "grid",
+      gap: 8,
+      borderTop: "1px solid rgba(255,255,255,0.12)",
+      paddingTop: 10,
+      marginTop: 2,
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <strong>⚗️ Modul-Slot</strong>
+      {!equippedModule && (
+        <span style={{ fontSize: 12, color: "#9ca3af" }}>[Leer]</span>
+      )}
+    </div>
+
+    {equippedModule ? (
+      <>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+          }}
+        >
+          <span>{getModuleDisplayName(equippedModule)}</span>
+          <strong>{getModuleTierBadge(equippedModule)} ✓ Aktiv</strong>
+        </div>
+        <button
+          className="fi-btn fi-btn-sm"
+          onClick={() =>
+            dispatch({ type: "REMOVE_MODULE", moduleId: equippedModule.id })
+          }
+        >
+          Herausnehmen
+        </button>
+      </>
+    ) : freeModules.length === 0 ? (
+      <div style={{ fontSize: 12, color: "#9ca3af" }}>
+        Keine Module verfügbar — im Modul-Labor craften
+      </div>
+    ) : (
+      <div style={{ display: "grid", gap: 6 }}>
+        <span style={{ fontSize: 12, color: "#9ca3af" }}>
+          Verfügbare Module:
+        </span>
+        {freeModules.map((module) => (
+          <div
+            key={module.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+            }}
+          >
+            <span>{getModuleDisplayName(module)}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <strong>{getModuleTierBadge(module)}</strong>
+              <button
+                className="fi-btn fi-btn-sm"
+                onClick={() =>
+                  dispatch({
+                    type: "PLACE_MODULE",
+                    moduleId: module.id,
+                    assetId,
+                  })
+                }
+              >
+                Einsetzen
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
   ({ state, dispatch }) => {
@@ -64,6 +185,8 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
 
     const isBoosted = !!smelterAsset.boosted;
     const boostFactor = isBoosted ? AUTO_SMELTER_BOOST_MULTIPLIER : 1;
+    const equippedModule = getEquippedModule(state, smelterId);
+    const freeSmelterModules = getFreeModulesForType(state, "smelter-boost");
     const throughputPerMinute = smelter.throughputEvents.length;
     const currentEnergyPerSec =
       (smelter.status === "PROCESSING"
@@ -327,6 +450,12 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
               ⚠ {blockReason}
             </div>
           )}
+          <ModuleSlotSection
+            assetId={smelterId}
+            equippedModule={equippedModule}
+            freeModules={freeSmelterModules}
+            dispatch={dispatch}
+          />
         </div>
 
         <div style={{ marginTop: 10 }}>

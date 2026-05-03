@@ -6,6 +6,7 @@ import {
   SMELTING_RECIPES,
   getSmeltingRecipe,
 } from "../../../../simulation/recipes";
+import { getAutoSmelterTickInterval } from "../../../../simulation/smelting-utils";
 import { getCraftingSourceInventory } from "../../../../crafting/crafting-sources";
 import {
   decideAutoSmelterTickEntryEligibility,
@@ -22,6 +23,7 @@ import { resolveBuildingSource } from "../../../building-source";
 import { addResources } from "../../../inventory-ops";
 import { getBoostMultiplier } from "../../../helpers/machine-priority";
 import { areAutoSmelterEntriesEqual } from "../../../helpers/smelter-equality";
+import { getEquippedModule } from "../../../selectors/module-selectors";
 import {
   applySourceInventory,
   getLiveLogisticsState,
@@ -82,6 +84,7 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
 
     const { smelterAsset, selectedRecipe } = entryDecision;
     const nextSmelter = { ...smelterState };
+  const equippedModule = getEquippedModule(state, smelterId);
 
     const source = resolveBuildingSource(getLiveLogisticsState(ctx), smelterId);
     let sourceInv = getCraftingSourceInventory(
@@ -255,7 +258,10 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
         inputItem: selectedRecipe.inputItem as ConveyorItem,
         outputItem: selectedRecipe.outputItem as ConveyorItem,
         progressMs: 0,
-        durationMs: Math.max(1, selectedRecipe.processingTime * 1000),
+        durationMs: getAutoSmelterTickInterval(
+          selectedRecipe.processingTime * 1000,
+          equippedModule,
+        ),
       };
       nextSmelter.lastRecipeInput = selectedRecipe.inputItem;
       nextSmelter.lastRecipeOutput = selectedRecipe.outputItem;
@@ -266,8 +272,21 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
     // oder — bei Unterstrom — wurde oben bereits per `continue` komplett gestoppt.
     if (nextSmelter.processing) {
       const smelterBoost = getBoostMultiplier(smelterAsset);
+      const processingRecipe = getSmeltingRecipe(
+        nextSmelter.processing.inputItem,
+      );
+      const baseDurationMs = Math.max(
+        1,
+        (processingRecipe?.processingTime ?? selectedRecipe.processingTime) *
+          1000,
+      );
+      const durationMs = getAutoSmelterTickInterval(
+        baseDurationMs,
+        equippedModule,
+      );
       nextSmelter.processing = {
         ...nextSmelter.processing,
+        durationMs,
         progressMs:
           nextSmelter.processing.progressMs + LOGISTICS_TICK_MS * smelterBoost,
       };

@@ -13,7 +13,9 @@
 import type { ModuleType } from "../modules/module.types";
 
 type ModuleTier = 1 | 2 | 3;
-type YieldEffect = { readonly yieldMultiplier: number };
+type MinerYieldEffect = { readonly yieldMultiplier: number };
+type SmelterSpeedEffect = { readonly speedMultiplier: number };
+type ModuleEffect = MinerYieldEffect | SmelterSpeedEffect;
 
 /** Footprint side length in cells (Module Lab is 2×2). */
 export const MODULE_LAB_SIZE = { w: 2, h: 2 } as const;
@@ -27,10 +29,12 @@ export const MODULE_EFFECTS = {
     2: { yieldMultiplier: 1.25 },
     3: { yieldMultiplier: 1.5 },
   },
-} as const satisfies Record<
-  Extract<ModuleType, "miner-boost">,
-  Record<ModuleTier, YieldEffect>
->;
+  "smelter-boost": {
+    1: { speedMultiplier: 1.1 },
+    2: { speedMultiplier: 1.25 },
+    3: { speedMultiplier: 1.5 },
+  },
+} as const satisfies Record<ModuleType, Record<ModuleTier, ModuleEffect>>;
 
 export interface ModuleLabRecipe {
   readonly id: string;
