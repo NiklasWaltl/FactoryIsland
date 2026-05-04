@@ -65,7 +65,7 @@ main.factory.tsx
             ├─ useReducer(gameReducer | gameReducerWithInvariants)
             │     state: GameState  •  dispatch: (GameAction) => void
             ├─ useGameTicks(state, dispatch)
-            │    └─ 12 independent setInterval hooks → dispatch({type: "X_TICK"})
+            │    └─ 12 independent setInterval hooks → dispatch periodic actions (mostly "*_TICK")
             ├─ localStorage save (alle 10 s + beforeunload)
             ├─ HMR-State-Restore (DEV)
             ├─ Grid (Phaser-Host + React-Overlays)
@@ -78,7 +78,7 @@ All mutations run through `dispatch`. Phaser is read-only via `state` snapshots.
 
 In the current runtime, `dispatch` is triggered from four source groups:
 
-- **Tick hooks** (`entry/use-game-ticks.ts`) dispatch all periodic `*_TICK` actions.
+- **Tick hooks** (`entry/use-game-ticks.ts`) dispatch all periodic actions (mostly `*_TICK`).
 - **Pointer/UI interactions** (Grid, Panels, Menus) dispatch building, machine, and panel actions.
 - **Keyboard input** (`entry/FactoryApp.tsx`) dispatches hotbar/build/panel actions (`SET_ACTIVE_SLOT`, `TOGGLE_BUILD_MODE`, `CLOSE_PANEL`).
 - **DEV debug actions** (`DebugPanel`) dispatch `DEBUG_SET_STATE` for controlled state mocking/reset.
@@ -97,7 +97,7 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 
 | Tick | Interval (ms) | Action | Trigger | Handler | Primary state writes |
 |---|---|---|---|---|---|
-| Sapling Growth | 1000 | `GROW_SAPLINGS` | always | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
+| Sapling Growth | 1000 | `GROW_SAPLINGS` | interval always; dispatch only when ready saplings exist | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
 | Natural Spawn | 60 000 | `NATURAL_SPAWN` | always | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
 | Smithy | 100 | `SMITHY_TICK` | only when `smithy.processing` | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `smithy` |
 | Manual Assembler | 100 | `MANUAL_ASSEMBLER_TICK` | only when `manualAssembler.processing` | [`manual-assembler-actions.ts`](./store/action-handlers/manual-assembler-actions.ts) | `manualAssembler`, source inventory, `notifications` |
@@ -106,11 +106,11 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 | Energy Net | 2000 | `ENERGY_NET_TICK` | always | inline `switch` → [`energy-net-tick.ts`](./store/energy/energy-net-tick.ts) | `battery.stored`, `poweredMachineIds`, `machinePowerRatio` |
 | Logistics | 500 | `LOGISTICS_TICK` | always | dispatch-chain guard → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `autoAssemblers`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
 | Crafting Jobs | 500 | `JOB_TICK` | only when pending jobs OR active keep-stock targets | [`crafting-queue-actions`](./store/action-handlers/crafting-queue-actions/) | `crafting`, `network`, physical inventories, `keepStockByWorkbench` |
-| Drones | 500 | `DRONE_TICK` | always | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
+| Drones | 500 | `DRONE_TICK` | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
 | Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
 | Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
 
-Constants in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts), [`constants/moduleLabConstants.ts`](./constants/moduleLabConstants.ts).
+Most intervals use constants in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts), and [`constants/moduleLabConstants.ts`](./constants/moduleLabConstants.ts). Sapling readiness scanning (1000ms) and notification cleanup (500ms) are currently inline literals in [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts).
 
 **Consequence of nondeterminism:** Tick logic must be sufficiently commutative. Race conditions are tolerated because each tick performs a complete reducer pass and no intermediate states are shared across ticks.
 
@@ -221,7 +221,8 @@ Service hubs are tiered and persisted through `serviceHubs[hubId]`:
 - Runtime upgrade marker: `pendingUpgrade` holds outstanding resource demand while an upgrade is in flight.
 - Action entry: `UPGRADE_HUB` (`game-actions.ts`) does **not** immediately drain warehouses; it creates a construction-style demand.
 - Construction integration: `building-site.ts` writes the pending demand into `constructionSites[hubId]` (construction debt).
-- Finalization: drone construction deliveries resolve debt; when complete, hub upgrade finalization promotes to Tier 2, clears `pendingUpgrade`, and updates hub capabilities.
+- Finalization path A: drone construction deliveries resolve site debt; when complete, the deposit flow finalizes Tier 2, clears `pendingUpgrade`, and updates hub capabilities.
+- Finalization path B: if a pending upgrade is satisfied via hub inventory state, the same drone deposit flow finalizes Tier 2 through the hub-upgrade satisfaction check.
 
 ### Conveyor Route State
 

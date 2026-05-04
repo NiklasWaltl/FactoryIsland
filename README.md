@@ -106,7 +106,7 @@ Game state is saved to `localStorage` under the key `factory-island-save`:
 
 - Auto-save every **10 seconds** and on `beforeunload`
 - Save codec is **whitelist-based** (only known fields are serialized)
-- Migration system supports saves up to **version 28**
+- Migration system supports saves up to **version 29**
 - In DEV mode: HMR state snapshot is preserved across hot reloads
 
 ## Features
@@ -129,7 +129,7 @@ All game data is defined in central registries:
 |----------|----------|
 | Item Registry | All items with IDs, names, icons, stack sizes |
 | Building Registry | All buildings with build-menu categories and properties |
-| Recipe Tables | Workbench, Smelting, Manual Assembler, and Module Lab recipes |
+| Recipe Tables | Workbench, Smelting, Manual Assembler, Auto Assembler V1 (`src/game/simulation/recipes/`) and Module Lab recipes (`src/game/constants/moduleLabConstants.ts`) |
 
 ## Testing
 
@@ -153,7 +153,7 @@ yarn test:silent   # Run without verbose output
 
 ```bash
 yarn lint    # ESLint with React, React Hooks, TypeScript, Prettier, unused-imports rules
-yarn format  # Format all files with Prettier
+yarn format  # Run ESLint --fix (Prettier is enforced via eslint-plugin-prettier)
 ```
 
 Active ESLint rules include `no-console` and `react/jsx-no-literals`.
@@ -164,9 +164,9 @@ Three GitHub Actions workflows are configured:
 
 | Workflow | Trigger | Steps |
 |----------|---------|-------|
-| PR CI | Pull Request | Frozen install → typecheck → tests → lint |
-| Standalone Deploy | Manual | Build → upload `dist-factory/` as artifact |
-| Codex PR Review | Pull Request | Automated code review via Codex |
+| CI | Pull Request (to `main`) | Frozen install → typecheck → tests → lint |
+| Factory Island standalone deploy | Push to `main` (path-filtered) + manual dispatch | Build → upload `dist-factory/` as artifact |
+| Perform a code review when a pull request is created | Pull Request (`opened`) | Automated code review via Codex |
 
 > Note: S3 deployment is scaffolded in the deploy workflow but currently commented out.
 
@@ -178,9 +178,12 @@ See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues and fixes.
 
 See [AGENTS.md](AGENTS.md) for AI coding agent guidelines.
 
-- [`docs/SYSTEM_REGISTRY.md`](./docs/SYSTEM_REGISTRY.md) – Central system and module registry
-- [`docs/TYPES.md`](./docs/TYPES.md) – Shared TypeScript type documentation
-- Subsystem READMEs under `src/game/buildings/`, `src/game/logistics/`, `src/game/modules/`
+- [`SYSTEM_REGISTRY.md`](SYSTEM_REGISTRY.md) – Central system and module registry
+- [`src/game/TYPES.md`](src/game/TYPES.md) – Shared TypeScript type documentation
+- Subsystem READMEs:
+  - [`src/game/crafting/README.md`](src/game/crafting/README.md)
+  - [`src/game/simulation/README.md`](src/game/simulation/README.md)
+  - [`src/game/store/action-handlers/logistics-tick/README.md`](src/game/store/action-handlers/logistics-tick/README.md)
 
 ---
 
@@ -194,7 +197,7 @@ See [AGENTS.md](AGENTS.md) for AI coding agent guidelines.
 | `yarn test` | Run tests | `jest.config.js` |
 | `yarn test:silent` | Run tests without verbose output | `jest.config.js` |
 | `yarn lint` | Lint source files | ESLint |
-| `yarn format` | Format all source files with Prettier | `.prettierrc.json` |
+| `yarn format` | Run ESLint auto-fixes (`eslint --fix`), including Prettier checks | `.eslintrc.js` + `.prettierrc.json` |
 | `yarn prepare` | Husky setup (runs automatically after install) | `package.json` |
 | `yarn tsc -p tsconfig.factory.json --noEmit` | Typecheck without emitting files (used in CI) | `tsconfig.factory.json` |
 
