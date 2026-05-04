@@ -1,5 +1,5 @@
 ---
-applyTo: "logistics-tick/**"
+applyTo: "**/logistics-tick/README.md"
 ---
 
 # Documentation Review: logistics-tick/README.md
