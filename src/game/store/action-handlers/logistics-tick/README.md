@@ -7,6 +7,109 @@
 
 ---
 
+## Public API
+
+Signatur des Orchestrators:
+
+```ts
+function handleLogisticsTickAction(
+  state: GameState,
+  deps: LogisticsTickIoDeps,
+): GameState
+```
+
+Beispiel-Aufruf inkl. `deps`-Struktur:
+
+```ts
+import { handleLogisticsTickAction } from "../logistics-tick";
+import type { LogisticsTickIoDeps } from "../logistics-tick";
+import type { GameState } from "../../types";
+
+declare const state: GameState;
+
+const deps: LogisticsTickIoDeps = {
+  addNotification(notifications, resource, amount) {
+    // Minimalbeispiel: Eintrag anhängen (Produktivcode kann Batching nutzen).
+    return [
+      ...notifications,
+      {
+        id: `notif-${Date.now()}`,
+        resource,
+        displayName: resource,
+        amount,
+        expiresAt: Date.now() + 3000,
+        kind: "success",
+      },
+    ];
+  },
+  addAutoDelivery(log, sourceType, sourceId, resource, warehouseId) {
+    return [
+      ...log,
+      {
+        id: `delivery-${Date.now()}`,
+        sourceType,
+        sourceId,
+        resource,
+        amount: 1,
+        warehouseId,
+        timestamp: Date.now(),
+      },
+    ];
+  },
+};
+
+const nextState = handleLogisticsTickAction(state, deps);
+```
+
+## Context-Helper
+
+Die folgenden Helper bilden die I/O- und Snapshot-Schnittstelle der Phasen:
+
+| Funktion | Parameter (kurz) | Wirkung |
+|---|---|---|
+| `tryStoreInWarehouse(ctx, warehouseId, resource)` | `ctx`: Tick-Context, `warehouseId`: Ziel-Lager, `resource`: Item | Schreibt 1 Item in `newWarehouseInventoriesL` (kapazitätsgeprüft); gibt `true/false` zurück. |
+| `getLiveLogisticsState(ctx)` | `ctx`: Tick-Context | Liefert Snapshot mit bereits gepatchtem `inventory`/`warehouseInventories` für nachfolgende Decisions. |
+| `getSourceCapacity(ctx, liveState, source)` | `liveState`: aktueller Snapshot, `source`: `global`/`zone`/`warehouse` | Ermittelt pro Source-Typ die gültige Kapazitätsgrenze. |
+| `applySourceInventory(ctx, source, nextInv)` | `source`: Ziel-Source, `nextInv`: neues Inventory | Delegiert an `applyCraftingSourceInventory(...)` und schreibt in `newInvL` und/oder `newWarehouseInventoriesL`. |
+| `getMachinePowerRatio(ctx, assetId)` | `assetId`: Maschinen-ID | Liefert Verhältnis aus `state.machinePowerRatio` (Fallback `poweredSet`), auf `[0, 1]` geklemmt. |
+
+## Changed-Invariante & Caveat
+
+`ctx.changed = true` muss fuer **commit-relevante** Mutationen gesetzt werden, sonst wird der Commit in Phase 5 uebersprungen.
+
+Hinweis: Status-only Rewrites (z.B. in auto-smelter.ts/auto-assembler.ts) triggern das changed-Signal aktuell nicht explizit.
+
+Minimal-Beispiel fuer `runAutoAssemblerPhase(ctx)` mit den Pflichtfeldern:
+
+```ts
+import { runAutoAssemblerPhase } from "./phases/auto-assembler";
+import type { LogisticsTickContext } from "./context";
+import type { GameState } from "../../types";
+
+declare const state: GameState;
+declare const deps: LogisticsTickContext["deps"];
+
+const ctx: LogisticsTickContext = {
+  state,
+  deps,
+  poweredSet: new Set(state.poweredMachineIds ?? []),
+  newAutoMinersL: state.autoMiners,
+  newConveyorsL: state.conveyors,
+  newInvL: state.inventory,
+  newWarehouseInventoriesL: state.warehouseInventories,
+  newSmithyL: state.smithy,
+  newNotifsL: state.notifications,
+  newAutoDeliveryLogL: state.autoDeliveryLog,
+  newAutoSmeltersL: state.autoSmelters,
+  newAutoAssemblersL: state.autoAssemblers,
+  changed: false,
+};
+
+runAutoAssemblerPhase(ctx);
+```
+
+---
+
 ## Phasenreihenfolge (fix, sequenziell)
 
 | # | Phase | Datei | Zweck |
@@ -40,7 +143,7 @@ Die Reihenfolge entspricht 1:1 der Aufrufkette in `handleLogisticsTickAction`: n
   - delegiert an `applyCraftingSourceInventory(...)` und schreibt damit in `state.inventory` und/oder einen oder mehrere Einträge von `state.warehouseInventories`
   - Zone-Sources besitzen kein eigenes State-Feld — sie werden auf die Warehouse-Inventories der Zone aggregiert (siehe `resolveBuildingSource` und [`crafting/crafting-sources.ts`](../../../crafting/crafting-sources.ts))
 
-`ctx.changed = true` muss bei jeder beobachtbaren Mutation gesetzt werden, sonst wird der Phase-5-Commit übersprungen.
+Die `changed`-Invariante gilt hier fuer commit-relevante Mutationen (siehe **Changed-Invariante & Caveat**).
 
 ---
 
@@ -49,16 +152,16 @@ Die Reihenfolge entspricht 1:1 der Aufrufkette in `handleLogisticsTickAction`: n
 `runAutoAssemblerPhase(ctx)` ist strikt belt-only (kein Inventar-Fallback weder für Input noch für Output). Schreibt in:
 
 - **`state.autoAssemblers[assemblerId]`**:
-  - `status`: `"NO_POWER" | "MISCONFIGURED" | "PROCESSING" | "OUTPUT_BLOCKED" | "IDLE"` (Pending-Output-Status werden direkt in [`phases/auto-assembler.ts`](./phases/auto-assembler.ts) aus `decideAssemblerBeltOnlyOutput` abgeleitet, Non-Pending-Status über `decideAutoSmelterNonPendingStatus`)
+  - `status`: `"NO_POWER" | "MISCONFIGURED" | "PROCESSING" | "OUTPUT_BLOCKED" | "IDLE"` (`MISCONFIGURED` wird im Pending-Output-Kontext gesetzt, wenn `pendingOutput.length > 0` und `decideAssemblerBeltOnlyOutput(...)` `misconfigured` liefert; ohne Pending-Output greift die Non-Pending-Statusableitung über `decideAutoSmelterNonPendingStatus`)
   - `processing` (start/progress/finish-Übergang; `durationMs = recipe.processingTimeSec * 1000`, `progressMs += LOGISTICS_TICK_MS` ohne Boost-Multiplikator — V1 hat kein Overclocking)
   - `ironIngotBuffer` (numerischer Counter, kein Array; Pull 1 `ironIngot` pro Tick vom Input-Conveyor, hart gecappt auf `AUTO_ASSEMBLER_BUFFER_CAPACITY` aus [`constants/auto/auto-assembler.ts`](../../constants/auto/auto-assembler.ts); beim Batch-Start um `recipe.inputAmount` reduziert)
   - `pendingOutput` (Output-Queue; geleert beim belt-only Flush)
 - **`state.conveyors[*]`**:
   - **Pull** vom Input-Conveyor am Input-Tile von `getAutoSmelterIoCells(asset)` (entfernt 1 `ironIngot` aus `queue`, sofern Front-Item passt und Buffer-Kapazität gegeben)
-  - **Push** auf Output-Conveyor am Output-Tile (append, respektiert `CONVEYOR_TILE_CAPACITY`); bei vollem Output-Conveyor wird `OUTPUT_BLOCKED`, bei nicht-existierendem/falschem Output-Tile `MISCONFIGURED` gesetzt
+  - **Push** auf Output-Conveyor am Output-Tile (append, respektiert `CONVEYOR_TILE_CAPACITY`); bei vollem Output-Conveyor wird `OUTPUT_BLOCKED`, bei ungültigem Output-Tile wird im Pending-Output-Kontext `MISCONFIGURED` gesetzt
 - **Rezepte**: aus [`AutoAssemblerV1Recipes`](../../../simulation/recipes/AutoAssemblerV1Recipes.ts) via `getAutoAssemblerV1Recipe(selectedRecipe)` — fester V1-Satz, kein Recipe-Wechsel innerhalb dieser Phase.
 
-Auch hier muss `ctx.changed = true` bei jeder beobachtbaren Mutation gesetzt werden.
+Auch hier gilt die `changed`-Invariante fuer commit-relevante Mutationen (siehe **Changed-Invariante & Caveat**).
 
 ---
 
@@ -84,6 +187,14 @@ Auch hier muss `ctx.changed = true` bei jeder beobachtbaren Mutation gesetzt wer
 - **Auto-Assembler (V1)**: kein Overclocking, kein Boost-Multiplikator, keine Modul-Skalierung — `durationMs` ist fest aus der Rezeptdefinition, `progressMs += LOGISTICS_TICK_MS`.
 
 Helper-Quellen: [`helpers/machine-priority.ts`](../../helpers/machine-priority.ts) (`getBoostMultiplier`), [`selectors/module-selectors.ts`](../../selectors/module-selectors.ts) (`getEquippedModule`).
+
+---
+
+## DEV-only Verhalten
+
+- DEV-Verhalten ist durch `import.meta.env.DEV` gegatet; es aendert keine Laufzeitlogik der Tick-Entscheidungen.
+- In [`phases/auto-smelter.ts`](./phases/auto-smelter.ts) werden im DEV-Modus Input-Diagnose-Logs geschrieben (Input-Tile, Buffer-Stand, Mismatch/fehlendes Conveyor-Input).
+- Das Smelter-Rezept-Set (`SMELTING_RECIPES`) wird im DEV-Modus nur beim ersten Batch-Start einmalig geloggt (Module-Scope-Flag `_smelterRecipesLogged`).
 
 ---
 

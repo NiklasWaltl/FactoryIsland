@@ -1,7 +1,7 @@
 # `src/game` — Architecture
 
 > Architecture, runtime, and data-flow documentation. Current state. If conflicts arise, code is authoritative.
-> **Last verified:** 2026-05-01.
+> **Last verified:** 2026-05-04.
 
 ---
 
@@ -74,6 +74,23 @@ main.factory.tsx
 
 All mutations run through `dispatch`. Phaser is read-only via `state` snapshots. Tick order within a browser frame is **not guaranteed** — each tick is its own `setInterval`.
 
+### Dispatch Sources
+
+In the current runtime, `dispatch` is triggered from four source groups:
+
+- **Tick hooks** (`entry/use-game-ticks.ts`) dispatch all periodic `*_TICK` actions.
+- **Pointer/UI interactions** (Grid, Panels, Menus) dispatch building, machine, and panel actions.
+- **Keyboard input** (`entry/FactoryApp.tsx`) dispatches hotbar/build/panel actions (`SET_ACTIVE_SLOT`, `TOGGLE_BUILD_MODE`, `CLOSE_PANEL`).
+- **DEV debug actions** (`DebugPanel`) dispatch `DEBUG_SET_STATE` for controlled state mocking/reset.
+
+### DEV Scene Boot Path (DEV only)
+
+In DEV debug mode, scene boot can be URL-driven via `?scene=`:
+
+- `getDevSceneFromUrl()` resolves the scene id from the URL parameter.
+- `applyDevScene()` mutates the fresh initial snapshot before gameplay mounts.
+- `hasDevSceneUrlParam()` gates this path so normal save hydration remains default when no scene parameter is present.
+
 ---
 
 ## Tick Pipeline
@@ -131,6 +148,24 @@ UI and Phaser consume `state` exclusively as a prop / snapshot. Read-only aggreg
 **Canonical:** physical state is the source of truth; `network` is derived. Crafting jobs link to reservations through `job.reservationOwnerId`, and reservation entries store that value as `ownerId`.
 Detailed routing to inventory code: [/SYSTEM_REGISTRY.md §5.4](../../SYSTEM_REGISTRY.md).
 
+### Source-Precedence (Building Resource Resolution)
+
+When a building resolves its source for crafting/logistics reads and writes, precedence is:
+
+1. `buildingZoneIds` (if the assigned zone exists and has at least one warehouse)
+2. `buildingSourceWarehouseIds` (explicit per-building warehouse assignment)
+3. global fallback (`inventory`)
+
+This priority is implemented in `store/building-source.ts` via `resolveBuildingSource()`. For zone sources, mutations do not write directly into a single warehouse; they use `applyZoneDelta()` (via `crafting/crafting-sources.ts`) to distribute deltas across zone warehouses deterministically.
+
+### CollectionNode Claiming Semantics
+
+`collectionNodes` are claimable world drops. Concurrency between drones is coordinated through `reservedByDroneId`:
+
+- **Claim set:** task transition into `moving_to_collect` sets `reservedByDroneId = droneId`.
+- **Claim held:** while the drone is en route/collecting, candidate scoring and filtering treat this node as reserved.
+- **Claim release:** claim is cleared when collection finalizes, when assignment/transition aborts, or when node state is reset during load normalization.
+
 ---
 
 ## State Map
@@ -164,9 +199,29 @@ Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 
 `state.ship` is persisted and advanced by `SHIP_TICK`. Dock quests use the fixed Dock Warehouse inventory (`dock-warehouse`) and can reward coins, resources, module fragments, or complete modules.
 
+#### Fragment Trader
+
+The Fragment Trader is a ship-adjacent subsystem with dedicated UI + action flow:
+
+- `FragmentTraderPanel` is mounted via `openPanel === "fragment_trader"` in `entry/FactoryApp.tsx`.
+- `BUY_FRAGMENT` spends coins and writes one `module_fragment` item into Dock Warehouse storage.
+- `COLLECT_FRAGMENT` converts docked fragment items into persisted `moduleFragments`.
+
+This creates a two-step path (buy/deposit then collect/convert) rather than directly incrementing `moduleFragments` on purchase.
+
 ### Modules / Module Lab
 
 `moduleFragments`, `moduleInventory`, and `moduleLabJob` are persisted. The Module Lab consumes fragments, advances with `MODULE_LAB_TICK`, and writes completed module instances into `moduleInventory`; equipped modules are mirrored on `asset.moduleSlot`.
+
+### Service Hub Tiering / Upgrade Delivery
+
+Service hubs are tiered and persisted through `serviceHubs[hubId]`:
+
+- Tier model: `tier` is `1 | 2` (`types.ts`).
+- Runtime upgrade marker: `pendingUpgrade` holds outstanding resource demand while an upgrade is in flight.
+- Action entry: `UPGRADE_HUB` (`game-actions.ts`) does **not** immediately drain warehouses; it creates a construction-style demand.
+- Construction integration: `building-site.ts` writes the pending demand into `constructionSites[hubId]` (construction debt).
+- Finalization: drone construction deliveries resolve debt; when complete, hub upgrade finalization promotes to Tier 2, clears `pendingUpgrade`, and updates hub capabilities.
 
 ### Conveyor Route State
 
@@ -215,9 +270,9 @@ Grid/building constants have canonical homes under `constants/` and `store/const
 
 ### 4. Cluster handler chain instead of mega-switch
 
-`dispatchAction` in [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts) is the dispatch chain of `handleXAction(state, action, deps?) → GameState | null`. Each handler decides via the `HANDLED_ACTION_TYPES` set whether it is responsible; `null` = fallthrough. Remaining actions land in the inline `switch` at the end of this file. [`store/reducer.ts`](./store/reducer.ts) remains the thin public entry point.
+`dispatchAction` in [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts) is the dispatch chain of `handleXAction(state, action, deps?) → GameState | null`. Many clusters use explicit `HANDLED_ACTION_TYPES` guards; others use direct `switch(action.type)` guards inside the handler body (for example `machine-actions.ts`, `ship-actions.ts`, and `module-lab-actions.ts`). `null` = fallthrough. Remaining actions land in the inline `switch` at the end of this file. [`store/reducer.ts`](./store/reducer.ts) remains the thin public entry point.
 
-**Rationale:** Clusters are grouped by domain (crafting, drones, energy). A domain change touches only one cluster. Deps are injected to avoid ESM cycles with `reducer.ts`.
+**Rationale:** Clusters are grouped by domain (crafting, drones, energy). A domain change touches only one cluster. The mixed guard strategy keeps each cluster locally readable while preserving a single top-level dispatch chain. Deps are injected to avoid ESM cycles with `reducer.ts`.
 
 ### 5. Physical inventory layers + reservation layer coexist
 
@@ -259,6 +314,27 @@ No global tick orchestrator — every `setInterval` runs independently.
 | **HMR** | Hot Module Replacement. In DEV, state is mirrored on `window.__FI_HMR_STATE__` via `debug/hmrState.ts`. |
 | **Construction Site** | Building that still has outstanding resource debt. Drones deliver. |
 | **DroneRole** | `auto | construction | supply` — affects only task scoring; role changes mutate only `drone.role` and do **not** cancel running tasks. |
+
+---
+
+## Appendix — Build & Tooling
+
+### Entry HTML + Vite wiring
+
+- `index.factory.html` is the browser entry document and mounts `src/game/entry/main.factory.tsx`.
+- `vite.factory.config.ts` is the canonical Vite config for this game entry.
+- The `factory-html-fallback` dev middleware rewrites `/` to `index.factory.html`.
+- Build output targets `dist-factory/`; Phaser is split into a dedicated manual chunk.
+
+### Standard scripts (`package.json`)
+
+- `yarn dev` — run Vite dev server with `vite.factory.config.ts`.
+- `yarn build` — run TypeScript project build (`tsconfig.factory.json`) and Vite production build.
+- `yarn preview` — preview the production bundle.
+- `yarn test` — run Jest tests.
+- `yarn lint` — run ESLint across `.ts/.tsx` sources.
+
+This appendix is intentionally short and architecture-focused; operational details remain in root-level setup docs.
 
 ---
 

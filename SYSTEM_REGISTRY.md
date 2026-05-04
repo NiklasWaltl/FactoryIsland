@@ -223,10 +223,11 @@ Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/
 
 - **State:** `ShipState` is persisted in `state.ship`.
 - **Key actions:** `SHIP_TICK`, `SHIP_DOCK`, `SHIP_DEPART`, `SHIP_RETURN`.
-- **UI:** [ShipStatusBar.tsx](src/game/ui/hud/ShipStatusBar.tsx), [DockWarehousePanel.tsx](src/game/ui/panels/DockWarehousePanel.tsx).
+- **UI:** [ShipStatusBar.tsx](src/game/ui/hud/ShipStatusBar.tsx), [DockWarehousePanel.tsx](src/game/ui/panels/DockWarehousePanel.tsx) (consumes reward preview via `getExpectedRewardRange`).
 - **Coupling:** Dock Warehouse is coupled to ship state; reward flow yields module fragments and complete modules.
 - **Save risk:** ship state must be included in save codec and migration.
-- **Key files:** [ship-types.ts](src/game/store/types/ship-types.ts), [ship-actions.ts](src/game/store/action-handlers/ship-actions.ts).
+- **Normalization:** QuestHistory/Departure normalization via save migration ([ship-types.ts:46](src/game/store/types/ship-types.ts#L46), [save-migrations.ts:721](src/game/simulation/save-migrations.ts#L721)).
+- **Key files:** [ship-types.ts](src/game/store/types/ship-types.ts), [ship-actions.ts](src/game/store/action-handlers/ship-actions.ts), [ship-balance.ts](src/game/ship/ship-balance.ts) (balancing/routing), [quest-registry.ts](src/game/ship/quest-registry.ts) (quest-history filter), [reward-table.ts](src/game/ship/reward-table.ts) (reward preview API).
 
 ### 5.10 Modules / Module Lab System
 
