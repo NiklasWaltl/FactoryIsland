@@ -1,3 +1,7 @@
+---
+applyTo: "**/TYPES.md"
+---
+
 #codebase
 
 Analysiere die Dokumentationsdatei `TYPES.md` und vergleiche ihren Inhalt mit dem aktuellen TypeScript-Code im gesamten Projekt.

@@ -1,3 +1,7 @@
+---
+applyTo: "**/README.md"
+---
+
 #codebase
 
 Prüfe, ob die Datei `README.md` noch zum aktuellen Stand der Codebasis passt.
