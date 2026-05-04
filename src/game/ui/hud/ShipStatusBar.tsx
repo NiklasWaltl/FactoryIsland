@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
+import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
 
 interface ShipStatusBarProps {
   state: GameState;
@@ -26,7 +27,7 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
 
     const ship = state.ship;
     const now = Date.now();
-    const departureAt = ship.departureAt ?? ship.departsAt;
+    const departureAt = ship.departureAt;
 
     let statusText: string;
     let statusColor: string;
@@ -59,6 +60,21 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
     }
 
     const quest = ship.activeQuest ?? ship.nextQuest;
+    const dockInventory = state.warehouseInventories[DOCK_WAREHOUSE_ID];
+    const dockQuestProgress =
+      ship.status === "docked" && ship.activeQuest
+        ? (() => {
+            const required = ship.activeQuest.amount;
+            const deliveredRaw = dockInventory
+              ? ((dockInventory[
+                  ship.activeQuest.itemId as keyof typeof dockInventory
+                ] as number) ?? 0)
+              : 0;
+            const delivered = Math.min(required, Math.max(0, deliveredRaw));
+            const pct = required > 0 ? Math.round((delivered / required) * 100) : 0;
+            return { delivered, required, pct };
+          })()
+        : null;
 
     return (
       <div
@@ -86,8 +102,20 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
           <span style={{ color: "#9ca3af" }}>{countdown}</span>
         )}
         {quest && (
-          <span style={{ color: "#c4b5fd", borderLeft: "1px solid rgba(255,255,255,0.15)", paddingLeft: 12 }}>
+          <span
+            style={{
+              color: "#c4b5fd",
+              borderLeft: "1px solid rgba(255,255,255,0.15)",
+              paddingLeft: 12,
+            }}
+          >
             📋 {quest.label} ×{quest.amount}
+            {dockQuestProgress && (
+              <span style={{ marginLeft: 8, color: "#facc15" }}>
+                Fortschritt: {dockQuestProgress.delivered}/
+                {dockQuestProgress.required} ({dockQuestProgress.pct}%)
+              </span>
+            )}
           </span>
         )}
       </div>

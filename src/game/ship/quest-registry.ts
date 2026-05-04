@@ -1,51 +1,37 @@
 import type { ShipQuest } from "../store/types/ship-types";
+import { SHIP_DEFAULT_QUEST_PHASE, SHIP_QUEST_POOLS } from "./ship-balance";
 
-const PHASE_1_QUESTS: ShipQuest[] = [
-  { itemId: "wood",       amount: 30, label: "Holz",         phase: 1 },
-  { itemId: "stone",      amount: 25, label: "Stein",        phase: 1 },
-  { itemId: "ironIngot",  amount: 10, label: "Eisenbarren",  phase: 1 },
-  { itemId: "wood",       amount: 50, label: "Holz",         phase: 1 },
-  { itemId: "stone",      amount: 40, label: "Stein",        phase: 1 },
-  { itemId: "ironIngot",  amount: 15, label: "Eisenbarren",  phase: 1 },
-];
+const QUEST_POOLS = SHIP_QUEST_POOLS;
+export const SHIP_QUEST_HISTORY_SIZE = 5;
 
-const PHASE_2_QUESTS: ShipQuest[] = [
-  { itemId: "metalPlate",    amount: 8,  label: "Metallplatte",    phase: 2 },
-  { itemId: "gear",          amount: 8,  label: "Zahnrad",         phase: 2 },
-  { itemId: "copperIngot",   amount: 12, label: "Kupferbarren",    phase: 2 },
-  { itemId: "metalPlate",    amount: 12, label: "Metallplatte",    phase: 2 },
-  { itemId: "gear",          amount: 12, label: "Zahnrad",         phase: 2 },
-];
-
-const PHASE_3_QUESTS: ShipQuest[] = [
-  { itemId: "metalPlate",    amount: 20, label: "Metallplatte",    phase: 3 },
-  { itemId: "gear",          amount: 20, label: "Zahnrad",         phase: 3 },
-  { itemId: "copperIngot",   amount: 25, label: "Kupferbarren",    phase: 3 },
-  { itemId: "ironIngot",     amount: 30, label: "Eisenbarren",     phase: 3 },
-];
-
-// TODO: Phase 4-5 quests — unlocked with ship loop progression
-const PHASE_4_QUESTS: ShipQuest[] = [];
-
-// TODO: Phase 4-5 quests — unlocked with ship loop progression
-const PHASE_5_QUESTS: ShipQuest[] = [];
-
-const QUEST_POOLS: Record<number, ShipQuest[]> = {
-  1: PHASE_1_QUESTS,
-  2: PHASE_2_QUESTS,
-  3: PHASE_3_QUESTS,
-  4: PHASE_4_QUESTS,
-  5: PHASE_5_QUESTS,
-};
+export function getQuestId(
+  quest: Pick<ShipQuest, "phase" | "itemId" | "amount">,
+): string {
+  return `${quest.phase}:${quest.itemId}:${quest.amount}`;
+}
 
 /**
  * Draw a random quest from the pool for the given phase.
  * Falls back to phase 1 if the phase pool is empty.
  */
-export function drawQuest(phase: number): ShipQuest {
+export function drawQuest(
+  phase: number,
+  recentQuestIds: readonly string[] = [],
+): ShipQuest {
   const pool = QUEST_POOLS[phase];
-  const effective = pool && pool.length > 0 ? pool : PHASE_1_QUESTS;
-  return effective[Math.floor(Math.random() * effective.length)];
+  const fallbackPool = QUEST_POOLS[SHIP_DEFAULT_QUEST_PHASE];
+  const effective = pool && pool.length > 0 ? pool : fallbackPool;
+
+  const blocked = new Set(
+    recentQuestIds.filter((id): id is string => typeof id === "string"),
+  );
+  const candidates =
+    blocked.size > 0
+      ? effective.filter((quest) => !blocked.has(getQuestId(quest)))
+      : effective;
+  const source = candidates.length > 0 ? candidates : effective;
+
+  return source[Math.floor(Math.random() * source.length)];
 }
 
 export { QUEST_POOLS };

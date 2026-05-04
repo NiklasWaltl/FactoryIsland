@@ -4,13 +4,48 @@ import {
   type GameAction,
   type GameState,
 } from "../../store/reducer";
-import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
+import {
+  applyDockWarehouseLayout,
+  DOCK_WAREHOUSE_ID,
+} from "../../store/bootstrap/apply-dock-warehouse-layout";
 import {
   drawShipReward,
+  getExpectedRewardRange,
   getAdjustedShipRewardWeights,
+  SHIP_REWARD_TABLE,
   SHIP_REWARD_WEIGHTS,
 } from "../../ship/reward-table";
 import { MODULE_FRAGMENT_ITEM_ID } from "../../ship/ship-constants";
+import type { ShipQuest, ShipState } from "../../store/types/ship-types";
+
+function freshShipState(): ShipState {
+  return {
+    status: "sailing",
+    activeQuest: null,
+    nextQuest: null,
+    questHistory: [],
+    dockedAt: null,
+    departureAt: null,
+    returnsAt: Date.now() + 30_000,
+    rewardPending: false,
+    lastReward: null,
+    questPhase: 1,
+    shipsSinceLastFragment: 0,
+    pityCounter: 0,
+    pendingMultiplier: 1,
+  };
+}
+
+function freshState(): GameState {
+  const base = createInitialState("release");
+  return applyDockWarehouseLayout({
+    ...base,
+    ship: freshShipState(),
+    moduleInventory: [],
+    moduleFragments: 0,
+    moduleLabJob: null,
+  });
+}
 
 function dispatch(state: GameState, ...actions: GameAction[]): GameState {
   let next = state;
@@ -19,7 +54,7 @@ function dispatch(state: GameState, ...actions: GameAction[]): GameState {
 }
 
 function withPendingShipReward(phase = 5, pityCounter = 0): GameState {
-  let state = dispatch(createInitialState("release"), { type: "SHIP_DOCK" });
+  let state = dispatch(freshState(), { type: "SHIP_DOCK" });
   const quest = state.ship.activeQuest!;
   state = {
     ...state,
@@ -73,6 +108,36 @@ describe("drawShipReward", () => {
   });
 });
 
+describe("getExpectedRewardRange", () => {
+  it("uses known weights to return the most likely reward range", () => {
+    const quest: ShipQuest = {
+      itemId: "wood",
+      amount: 30,
+      label: "Holz",
+      phase: 2,
+    };
+    const rewardTable = {
+      ...SHIP_REWARD_TABLE,
+      weights: {
+        coins: 1,
+        basic_resource: 100,
+        rare_resource: 1,
+        module_fragment: 1,
+        complete_module: 1,
+      },
+    };
+
+    expect(getExpectedRewardRange(quest, rewardTable)).toEqual({
+      min: 5,
+      max: 15,
+      likely: {
+        kind: "basic_resource",
+        label: "Rohstoffe",
+      },
+    });
+  });
+});
+
 describe("SHIP_RETURN rewards", () => {
   it("coins draw writes coins and leaves dock warehouse unchanged", () => {
     let state = withPendingShipReward();
@@ -117,7 +182,9 @@ describe("SHIP_RETURN rewards", () => {
 
     expect(state.ship.lastReward?.kind).toBe("complete_module");
     expect(state.moduleInventory).toHaveLength(moduleCountBefore + 1);
-    expect(state.moduleInventory[state.moduleInventory.length - 1]).toMatchObject({
+    expect(
+      state.moduleInventory[state.moduleInventory.length - 1],
+    ).toMatchObject({
       type: "miner-boost",
       tier: 1,
       equippedTo: null,

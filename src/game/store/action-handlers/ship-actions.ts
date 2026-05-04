@@ -1,13 +1,24 @@
 import type { GameAction } from "../game-actions";
 import type { GameState, Inventory } from "../types";
-import type { ShipState } from "../types/ship-types";
+import type { ShipQuest, ShipState } from "../types/ship-types";
 import type { Module } from "../../modules/module.types";
-import { drawQuest } from "../../ship/quest-registry";
+import {
+  drawQuest,
+  getQuestId,
+  SHIP_QUEST_HISTORY_SIZE,
+} from "../../ship/quest-registry";
 import { drawReward } from "../../ship/reward-table";
+import {
+  SHIP_DOCK_WAIT_MAX_MS,
+  SHIP_DOCK_WAIT_MIN_MS,
+  SHIP_PITY_TRACKING_MIN_PHASE,
+  SHIP_REWARD_QUALITY_THRESHOLDS,
+  SHIP_VOYAGE_MAX_MS,
+  SHIP_VOYAGE_MIN_MS,
+} from "../../ship/ship-balance";
 import {
   MODULE_FRAGMENT_ITEM_ID,
   SHIP_FRAGMENT_PITY_THRESHOLD,
-  SHIP_WAIT_DURATION_MS,
 } from "../../ship/ship-constants";
 import { DOCK_WAREHOUSE_ID } from "../bootstrap/apply-dock-warehouse-layout";
 import { addResources, createEmptyInventory } from "../inventory-ops";
@@ -25,16 +36,33 @@ const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
   "SHIP_RETURN",
 ]);
 
-/** Voyage duration range: 3–5 minutes in ms */
-const VOYAGE_MIN_MS = 3 * 60 * 1_000;
-const VOYAGE_MAX_MS = 5 * 60 * 1_000;
-
 function randomVoyageMs(): number {
-  return VOYAGE_MIN_MS + Math.random() * (VOYAGE_MAX_MS - VOYAGE_MIN_MS);
+  return (
+    SHIP_VOYAGE_MIN_MS +
+    Math.random() * (SHIP_VOYAGE_MAX_MS - SHIP_VOYAGE_MIN_MS)
+  );
 }
 
-function getDepartureAt(ship: ShipState): number | null {
-  return ship.departureAt ?? ship.departsAt ?? null;
+function randomDockWaitMs(): number {
+  return (
+    SHIP_DOCK_WAIT_MIN_MS +
+    Math.random() * (SHIP_DOCK_WAIT_MAX_MS - SHIP_DOCK_WAIT_MIN_MS)
+  );
+}
+
+function normalizeQuestHistory(raw: readonly string[] | undefined): string[] {
+  if (!Array.isArray(raw)) return [];
+  const filtered = raw.filter((id): id is string => typeof id === "string");
+  return filtered.slice(-SHIP_QUEST_HISTORY_SIZE);
+}
+
+function appendQuestHistory(
+  history: readonly string[] | undefined,
+  quest: ShipQuest | null,
+): string[] {
+  const current = normalizeQuestHistory(history);
+  if (!quest) return current;
+  return [...current, getQuestId(quest)].slice(-SHIP_QUEST_HISTORY_SIZE);
 }
 
 function getPityCounter(ship: ShipState): number {
@@ -50,7 +78,7 @@ function getUpdatedRewardCounters(
   const shipsSinceLastFragment = droppedFragmentLikeReward
     ? 0
     : ship.shipsSinceLastFragment + 1;
-  const tracksPity = ship.questPhase >= 5;
+  const tracksPity = ship.questPhase >= SHIP_PITY_TRACKING_MIN_PHASE;
   const pityCounter = droppedFragmentLikeReward
     ? 0
     : tracksPity
@@ -89,8 +117,8 @@ export function computeQualityMultiplier(
 ): 0 | 1 | 2 | 3 {
   if (required <= 0 || delivered <= 0) return 0;
   const pct = delivered / required;
-  if (pct >= 2.0) return 3;
-  if (pct >= 1.5) return 2;
+  if (pct >= SHIP_REWARD_QUALITY_THRESHOLDS.excellentRatio) return 3;
+  if (pct >= SHIP_REWARD_QUALITY_THRESHOLDS.goodRatio) return 2;
   return 1;
 }
 
@@ -110,14 +138,18 @@ export function handleShipAction(
         ship.returnsAt !== null &&
         now >= ship.returnsAt
       ) {
-        if (ship.rewardPending) {
+        if (ship.rewardPending || ship.pendingMultiplier === 0) {
           return handleShipReturn(state, now);
         }
         return handleShipDock(state, now);
       }
 
-      const departureAt = getDepartureAt(ship);
-      if (ship.status === "docked" && departureAt !== null && now >= departureAt) {
+      const departureAt = ship.departureAt;
+      if (
+        ship.status === "docked" &&
+        departureAt !== null &&
+        now >= departureAt
+      ) {
         return handleShipTimedDeparture(state, now);
       }
 
@@ -139,16 +171,18 @@ export function handleShipAction(
 }
 
 function handleShipDock(state: GameState, now: number): GameState {
-  const quest = drawQuest(state.ship.questPhase);
-  const nextQuest = drawQuest(state.ship.questPhase);
-  const departureAt = now + SHIP_WAIT_DURATION_MS;
+  const quest = drawQuest(state.ship.questPhase, state.ship.questHistory);
+  const nextQuest = drawQuest(state.ship.questPhase, [
+    ...state.ship.questHistory,
+    getQuestId(quest),
+  ]);
+  const departureAt = now + randomDockWaitMs();
   const updatedShip: ShipState = {
     ...state.ship,
     status: "docked",
     activeQuest: quest,
     nextQuest,
     dockedAt: now,
-    departsAt: departureAt,
     departureAt,
     returnsAt: null,
     rewardPending: false,
@@ -164,7 +198,6 @@ function handleShipTimedDeparture(state: GameState, now: number): GameState {
     activeQuest: null,
     nextQuest: null,
     dockedAt: null,
-    departsAt: null,
     departureAt: null,
     returnsAt: now + randomVoyageMs(),
     rewardPending: false,
@@ -193,6 +226,7 @@ function handleShipDepart(state: GameState, now: number): GameState {
   const required = quest?.amount ?? 0;
 
   const multiplier = computeQualityMultiplier(delivered, required);
+  const questHistory = appendQuestHistory(ship.questHistory, quest);
 
   const clearedInv = createEmptyInventory();
 
@@ -200,11 +234,11 @@ function handleShipDepart(state: GameState, now: number): GameState {
     ...ship,
     status: "sailing",
     dockedAt: null,
-    departsAt: null,
     departureAt: null,
     returnsAt: now + randomVoyageMs(),
     rewardPending: multiplier > 0,
     pendingMultiplier: multiplier,
+    questHistory,
   };
 
   return {
@@ -219,7 +253,27 @@ function handleShipDepart(state: GameState, now: number): GameState {
 
 function handleShipReturn(state: GameState, now: number): GameState {
   const ship = state.ship;
-  if (!ship.rewardPending || ship.pendingMultiplier === 0) {
+  if (ship.pendingMultiplier === 0) {
+    const counters = getUpdatedRewardCounters(ship, false);
+    return {
+      ...state,
+      ship: {
+        ...ship,
+        status: "sailing",
+        activeQuest: null,
+        nextQuest: null,
+        dockedAt: null,
+        departureAt: null,
+        returnsAt: now + randomVoyageMs(),
+        rewardPending: false,
+        lastReward: null,
+        pendingMultiplier: 1,
+        ...counters,
+      },
+    };
+  }
+
+  if (!ship.rewardPending) {
     return {
       ...state,
       ship: {
@@ -278,7 +332,6 @@ function handleShipReturn(state: GameState, now: number): GameState {
     activeQuest: null,
     nextQuest: null,
     dockedAt: null,
-    departsAt: null,
     departureAt: null,
     returnsAt: now + randomVoyageMs(),
     rewardPending: false,

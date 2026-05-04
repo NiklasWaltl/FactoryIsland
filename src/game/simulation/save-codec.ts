@@ -7,6 +7,7 @@ import type {
   ServiceHubEntry,
   ConstructionSite,
 } from "../store/types";
+import type { ShipState } from "../store/types/ship-types";
 import { GRID_H, GRID_W } from "../constants/grid";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
 import { cleanBuildingSourceIds } from "../buildings/warehouse/warehouse-assignment";
@@ -18,7 +19,6 @@ import {
   createDefaultHubTargetStock,
   createDefaultProtoHubTargetStock,
 } from "../store/constants/hub/hub-target-stock";
-import { createInitialShipState } from "../store/initial-state";
 import { applyDockWarehouseLayout } from "../store/bootstrap/apply-dock-warehouse-layout";
 import { cellKey } from "../store/utils/cell-key";
 import { createInitialState } from "../store/initial-state";
@@ -43,11 +43,53 @@ import {
 import { isRuntimeGameStateSnapshot } from "./save-legacy";
 import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
 
+function createFallbackShipState(): ShipState {
+  return {
+    status: "sailing",
+    activeQuest: null,
+    nextQuest: null,
+    questHistory: [],
+    dockedAt: null,
+    departureAt: null,
+    returnsAt: Date.now() + 30_000,
+    rewardPending: false,
+    lastReward: null,
+    questPhase: 1,
+    shipsSinceLastFragment: 0,
+    pityCounter: 0,
+    pendingMultiplier: 1,
+  };
+}
+
+function sanitizeShipSnapshot(raw: unknown): ShipState {
+  const fallback = createFallbackShipState();
+  if (!raw || typeof raw !== "object") return fallback;
+
+  const ship = raw as Record<string, unknown>;
+  const departureAt =
+    typeof ship.departureAt === "number" && Number.isFinite(ship.departureAt)
+      ? ship.departureAt
+      : typeof ship.departsAt === "number" && Number.isFinite(ship.departsAt)
+        ? ship.departsAt
+        : null;
+  const questHistory = Array.isArray(ship.questHistory)
+    ? ship.questHistory.filter((id): id is string => typeof id === "string")
+    : [];
+
+  return {
+    ...fallback,
+    ...(ship as Partial<ShipState>),
+    departureAt,
+    questHistory,
+  };
+}
+
 /**
  * Extract the persistable subset of runtime GameState and stamp it
  * with the current save version.
  */
 export function serializeState(state: GameState): SaveGameLatest {
+  const ship = sanitizeShipSnapshot((state as Partial<GameState>).ship);
   debugLog.general(
     `Save: ${state.network.reservations.length} reservations, ${state.crafting.jobs.length} jobs`,
   );
@@ -96,7 +138,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     recipeAutomationPolicies: state.recipeAutomationPolicies ?? {},
     splitterRouteState: state.splitterRouteState ?? {},
     splitterFilterState: state.splitterFilterState ?? {},
-    ship: state.ship,
+    ship,
   };
 }
 
@@ -284,7 +326,9 @@ export function deserializeState(save: SaveGameLatest): GameState {
     ),
     splitterRouteState: save.splitterRouteState ?? {},
     splitterFilterState: save.splitterFilterState ?? {},
-    ship: (save as any).ship ?? createInitialShipState(),
+    ship: sanitizeShipSnapshot(
+      (save as any).ship ?? (base as Partial<GameState>).ship,
+    ),
 
     connectedAssetIds: [],
     poweredMachineIds: [],

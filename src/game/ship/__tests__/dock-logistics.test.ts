@@ -2,10 +2,14 @@ import { getBuildingInputTargets } from "../../buildings/building-input-targets"
 import { selectDroneTask } from "../../drones/selection/select-drone-task-bindings";
 import { addToCollectionNodeAt } from "../../store/helpers/reducer-helpers";
 import { gameReducer, createInitialState } from "../../store/reducer";
-import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
+import {
+  applyDockWarehouseLayout,
+  DOCK_WAREHOUSE_ID,
+} from "../../store/bootstrap/apply-dock-warehouse-layout";
 import { createEmptyInventory } from "../../store/inventory-ops";
 import { getWarehouseInputCell } from "../../store/warehouse-input";
 import { cellKey } from "../../store/utils/cell-key";
+import type { ShipState } from "../../store/types/ship-types";
 import type {
   CollectableItemType,
   GameAction,
@@ -18,6 +22,33 @@ function dispatch(state: GameState, ...actions: GameAction[]): GameState {
   let next = state;
   for (const action of actions) next = gameReducer(next, action);
   return next;
+}
+
+function createShipReadyState(): GameState {
+  const base = createInitialState("release");
+  const ship: ShipState = {
+    status: "sailing",
+    activeQuest: null,
+    nextQuest: null,
+    questHistory: [],
+    dockedAt: null,
+    departureAt: null,
+    returnsAt: Date.now() + 30_000,
+    rewardPending: false,
+    lastReward: null,
+    questPhase: 1,
+    shipsSinceLastFragment: 0,
+    pityCounter: 0,
+    pendingMultiplier: 1,
+  };
+
+  return applyDockWarehouseLayout({
+    ...base,
+    ship,
+    moduleInventory: [],
+    moduleFragments: 0,
+    moduleLabJob: null,
+  });
 }
 
 function withDockedQuest(
@@ -33,7 +64,7 @@ function withDockedQuest(
       activeQuest: { itemId, amount, label: itemId, phase: 1 },
       nextQuest: null,
       dockedAt: 0,
-      departsAt: null,
+      departureAt: null,
       returnsAt: null,
       rewardPending: false,
       pendingMultiplier: 1,
@@ -124,7 +155,7 @@ function withGeneratorNeedingWood(state: GameState): GameState {
 
 describe("dock warehouse logistics integration", () => {
   it("accepts conveyor delivery on the dock warehouse input tile", () => {
-    const base = createInitialState("release");
+    const base = createShipReadyState();
     const dock = base.assets[DOCK_WAREHOUSE_ID];
     const input = getWarehouseInputCell(dock);
     const conveyorId = "dock-input-conveyor";
@@ -153,7 +184,7 @@ describe("dock warehouse logistics integration", () => {
 
   it("plans dock warehouse building_supply only while a matching quest is docked", () => {
     const docked = withCollectionNode(
-      withSilencedHubRestock(withDockedQuest(createInitialState("release"))),
+      withSilencedHubRestock(withDockedQuest(createShipReadyState())),
       "wood",
       10,
     );
@@ -171,7 +202,7 @@ describe("dock warehouse logistics integration", () => {
     });
 
     const sailing = withCollectionNode(
-      withSilencedHubRestock(createInitialState("release")),
+      withSilencedHubRestock(createShipReadyState()),
       "wood",
       10,
     );
@@ -186,7 +217,7 @@ describe("dock warehouse logistics integration", () => {
 
   it("does not source a dock quest delivery from the dock warehouse itself", () => {
     const state = withDockInventory(
-      withSilencedHubRestock(withDockedQuest(createInitialState("release"))),
+      withSilencedHubRestock(withDockedQuest(createShipReadyState())),
       { wood: 5 },
     );
 
@@ -197,10 +228,9 @@ describe("dock warehouse logistics integration", () => {
 
   it("uses the dock warehouse as a warehouse source for building_supply", () => {
     const state = withGeneratorNeedingWood(
-      withDockInventory(
-        withSilencedHubRestock(createInitialState("release")),
-        { wood: 10 },
-      ),
+      withDockInventory(withSilencedHubRestock(createShipReadyState()), {
+        wood: 10,
+      }),
     );
 
     const task = selectDroneTask(state);
@@ -224,7 +254,7 @@ describe("dock warehouse logistics integration", () => {
       height: 2,
     };
     const state: GameState = withDockInventory(
-      withSilencedHubRestock(createInitialState("release")),
+      withSilencedHubRestock(createShipReadyState()),
       { wood: 10 },
     );
     const withSite: GameState = {
@@ -247,7 +277,7 @@ describe("dock warehouse logistics integration", () => {
 
   it("does not create a reward when the dock warehouse departs empty", () => {
     const state = withDockInventory(
-      withDockedQuest(createInitialState("release")),
+      withDockedQuest(createShipReadyState()),
       createEmptyInventory(),
     );
 

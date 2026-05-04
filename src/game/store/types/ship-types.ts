@@ -8,8 +8,8 @@ export type RewardType =
   | "complete_module";
 
 export type ShipStatus =
-  | "sailing"    // ship is at sea, returning or on first approach
-  | "docked"     // ship is at the dock, quest visible, countdown running
+  | "sailing" // ship is at sea, returning or on first approach
+  | "docked" // ship is at the dock, quest visible, countdown running
   | "departing"; // ship has departed, quest being evaluated, reward pending
 
 export interface ShipQuest {
@@ -42,10 +42,10 @@ export interface ShipState {
   activeQuest: ShipQuest | null;
   /** Next quest already revealed to the player (set on SHIP_DOCK) */
   nextQuest: ShipQuest | null;
+  /** IDs of recently completed quests (oldest -> newest). */
+  questHistory: string[];
   /** Timestamp when the ship docked (ms) */
   dockedAt: number | null;
-  /** Timestamp when the ship will depart (ms) */
-  departsAt: number | null;
   /** Timestamp when the docked ship leaves without an explicit departure (ms) */
   departureAt: number | null;
   /** Timestamp when the ship will return from its voyage (ms) */

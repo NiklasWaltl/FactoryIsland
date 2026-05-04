@@ -32,10 +32,9 @@ function makeModule(module: Partial<Module> & Pick<Module, "id">): Module {
 }
 
 function makeV27Save(): unknown {
-  const current = serializeState(createInitialState("release")) as unknown as Record<
-    string,
-    unknown
-  >;
+  const current = serializeState(
+    createInitialState("release"),
+  ) as unknown as Record<string, unknown>;
   const currentAssets = current.assets as Record<string, PlacedAsset>;
   const assetsWithoutSlots = Object.fromEntries(
     Object.entries(currentAssets).map(([id, asset]) => {
@@ -57,7 +56,7 @@ describe("Save v27 → v28 moduleSlot migration", () => {
 
     expect(migrated).not.toBeNull();
     expect(migrated.version).toBe(CURRENT_SAVE_VERSION);
-    expect(CURRENT_SAVE_VERSION).toBe(28);
+    expect(CURRENT_SAVE_VERSION).toBe(29);
     for (const asset of Object.values(migrated.assets)) {
       expect(asset).toHaveProperty("moduleSlot", null);
     }
@@ -75,7 +74,11 @@ describe("Save v27 → v28 moduleSlot migration", () => {
       },
       autoMiners: {
         ...base.autoMiners,
-        [minerId]: { depositId: "iron-deposit-1", resource: "iron", progress: 0 },
+        [minerId]: {
+          depositId: "iron-deposit-1",
+          resource: "iron",
+          progress: 0,
+        },
       },
       moduleInventory: [makeModule({ id: moduleId })],
     };
@@ -91,8 +94,9 @@ describe("Save v27 → v28 moduleSlot migration", () => {
     const loaded = deserializeState(saved);
 
     expect(loaded.assets[minerId].moduleSlot).toBe(moduleId);
-    expect(loaded.moduleInventory.find((module) => module.id === moduleId)?.equippedTo).toBe(
-      minerId,
-    );
+    expect(
+      loaded.moduleInventory.find((module) => module.id === moduleId)
+        ?.equippedTo,
+    ).toBe(minerId);
   });
 });

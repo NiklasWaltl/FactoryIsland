@@ -22,10 +22,11 @@ import type {
   ModuleFragmentCount,
   ModuleLabJob,
 } from "../store/types";
-import type { ShipState } from "../store/types/ship-types";
+import type { ShipQuest, ShipState } from "../store/types/ship-types";
 import type { Module } from "../modules/module.types";
 import type { TileType } from "../world/tile-types";
 import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
+import { SHIP_QUEST_HISTORY_SIZE } from "../ship/quest-registry";
 import { GRID_H, GRID_W } from "../constants/grid";
 import { sanitizeTileMap } from "../world/tile-map-utils";
 import { createEmptyHubInventory } from "../buildings/service-hub/hub-upgrade-workflow";
@@ -40,7 +41,7 @@ import { debugLog } from "../debug/debugLogger";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 28;
+export const CURRENT_SAVE_VERSION = 29;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -228,8 +229,10 @@ export interface SaveGameV24 extends Omit<SaveGameV23, "version"> {
   moduleFragments: unknown;
 }
 
-export interface SaveGameV25
-  extends Omit<SaveGameV24, "version" | "moduleFragments"> {
+export interface SaveGameV25 extends Omit<
+  SaveGameV24,
+  "version" | "moduleFragments"
+> {
   version: 25;
   /** Unspent module fragments collected by the player. */
   moduleFragments: ModuleFragmentCount;
@@ -251,7 +254,13 @@ export interface SaveGameV28 extends Omit<SaveGameV27, "version"> {
   version: 28;
 }
 
-export type SaveGameLatest = SaveGameV28;
+export interface SaveGameV29 extends Omit<SaveGameV28, "version"> {
+  version: 29;
+  /** Ship state normalized to canonical departureAt + questHistory. */
+  ship: ShipState;
+}
+
+export type SaveGameLatest = SaveGameV29;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -294,9 +303,79 @@ function normalizePendingMultiplier(raw: unknown): 0 | 1 | 2 | 3 {
   return raw === 0 || raw === 1 || raw === 2 || raw === 3 ? raw : 1;
 }
 
+function isLegacyQuestShape(raw: Record<string, unknown>): boolean {
+  return (
+    typeof raw.id === "string" &&
+    typeof raw.type === "string" &&
+    Array.isArray(raw.requiredItems)
+  );
+}
+
+function normalizeShipQuest(
+  raw: unknown,
+  fallbackPhase: number,
+  field: "activeQuest" | "nextQuest",
+): ShipQuest | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw !== "object") {
+    debugLog.general(
+      `[save] Migration: ship.${field} is not an object; resetting to null.`,
+    );
+    return null;
+  }
+
+  const quest = raw as Record<string, unknown>;
+  if (isLegacyQuestShape(quest)) {
+    debugLog.general(
+      `[save] Migration: ship.${field} uses legacy fields id/type/requiredItems; resetting to null.`,
+    );
+    return null;
+  }
+
+  const itemId = quest.itemId;
+  const amount = quest.amount;
+  const label = quest.label;
+  const phase = normalizePositiveInteger(quest.phase, fallbackPhase);
+
+  if (
+    typeof itemId === "string" &&
+    typeof amount === "number" &&
+    Number.isFinite(amount) &&
+    amount > 0 &&
+    typeof label === "string" &&
+    label.length > 0
+  ) {
+    return {
+      itemId: itemId as ShipQuest["itemId"],
+      amount: Math.max(1, Math.floor(amount)),
+      label,
+      phase,
+    };
+  }
+
+  debugLog.general(
+    `[save] Migration: ship.${field} failed structure validation; resetting to null.`,
+  );
+  return null;
+}
+
+function normalizeQuestHistory(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const filtered = raw.filter((id): id is string => typeof id === "string");
+  return filtered.slice(-SHIP_QUEST_HISTORY_SIZE);
+}
+
 function normalizeShipState(raw: unknown): ShipState {
-  const ship = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const ship =
+    raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const departureAt = normalizeTimestamp(ship.departureAt ?? ship.departsAt);
+  const questPhase = normalizePositiveInteger(ship.questPhase, 1);
+  const activeQuest = normalizeShipQuest(
+    ship.activeQuest,
+    questPhase,
+    "activeQuest",
+  );
+  const nextQuest = normalizeShipQuest(ship.nextQuest, questPhase, "nextQuest");
   const shipsSinceLastFragment = normalizeNonNegativeInteger(
     ship.shipsSinceLastFragment,
   );
@@ -304,6 +383,7 @@ function normalizeShipState(raw: unknown): ShipState {
     ship.pityCounter,
     shipsSinceLastFragment,
   );
+  const questHistory = normalizeQuestHistory(ship.questHistory);
   const status =
     ship.status === "docked" ||
     ship.status === "departing" ||
@@ -313,16 +393,18 @@ function normalizeShipState(raw: unknown): ShipState {
 
   return {
     status,
-    activeQuest: (ship.activeQuest as ShipState["activeQuest"]) ?? null,
-    nextQuest: (ship.nextQuest as ShipState["nextQuest"]) ?? null,
+    activeQuest,
+    nextQuest,
+    questHistory,
     dockedAt: normalizeTimestamp(ship.dockedAt),
-    departsAt: departureAt,
     departureAt,
     returnsAt:
-      "returnsAt" in ship ? normalizeTimestamp(ship.returnsAt) : Date.now() + 30_000,
+      "returnsAt" in ship
+        ? normalizeTimestamp(ship.returnsAt)
+        : Date.now() + 30_000,
     rewardPending: ship.rewardPending === true,
     lastReward: (ship.lastReward as ShipState["lastReward"]) ?? null,
-    questPhase: normalizePositiveInteger(ship.questPhase, 1),
+    questPhase,
     shipsSinceLastFragment,
     pityCounter,
     pendingMultiplier: normalizePendingMultiplier(ship.pendingMultiplier),
@@ -599,7 +681,9 @@ function migrateV21ToV22(save: SaveGameV21): SaveGameV22 {
 }
 
 function migrateV22ToV23(save: SaveGameV22): SaveGameV23 {
-  const moduleInventory = Array.isArray((save as unknown as Partial<SaveGameV23>).moduleInventory)
+  const moduleInventory = Array.isArray(
+    (save as unknown as Partial<SaveGameV23>).moduleInventory,
+  )
     ? (save as unknown as Partial<SaveGameV23>).moduleInventory!
     : [];
   return { ...save, version: 23, moduleInventory };
@@ -634,6 +718,14 @@ function migrateV27ToV28(save: SaveGameV27): SaveGameV28 {
   return { ...save, version: 28, assets };
 }
 
+function migrateV28ToV29(save: SaveGameV28): SaveGameV29 {
+  return {
+    ...save,
+    version: 29,
+    ship: normalizeShipState((save as Partial<SaveGameV28>).ship),
+  };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   { from: 0, to: 1, migrate: migrateV0ToV1 },
   { from: 1, to: 2, migrate: migrateV1ToV2 },
@@ -663,6 +755,7 @@ const MIGRATIONS: MigrationStep[] = [
   { from: 25, to: 26, migrate: migrateV25ToV26 },
   { from: 26, to: 27, migrate: migrateV26ToV27 },
   { from: 27, to: 28, migrate: migrateV27ToV28 },
+  { from: 28, to: 29, migrate: migrateV28ToV29 },
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

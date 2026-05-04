@@ -3,18 +3,51 @@
 // ============================================================
 
 import { gameReducer, createInitialState } from "../../store/reducer";
-import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
+import {
+  applyDockWarehouseLayout,
+  DOCK_WAREHOUSE_ID,
+} from "../../store/bootstrap/apply-dock-warehouse-layout";
 import { computeQualityMultiplier } from "../../store/action-handlers/ship-actions";
-import { MODULE_FRAGMENT_ITEM_ID, SHIP_WAIT_DURATION_MS } from "../ship-constants";
+import {
+  MODULE_FRAGMENT_ITEM_ID,
+  SHIP_WAIT_DURATION_MS,
+} from "../ship-constants";
 import { drawReward } from "../reward-table";
+import type { ShipState } from "../../store/types/ship-types";
 
 // ---- helpers -------------------------------------------------------
 
 function freshState() {
-  return createInitialState("release");
+  const base = createInitialState("release");
+  const ship: ShipState = {
+    status: "sailing",
+    activeQuest: null,
+    nextQuest: null,
+    questHistory: [],
+    dockedAt: null,
+    departureAt: null,
+    returnsAt: Date.now() + 30_000,
+    rewardPending: false,
+    lastReward: null,
+    questPhase: 1,
+    shipsSinceLastFragment: 0,
+    pityCounter: 0,
+    pendingMultiplier: 1,
+  };
+
+  return applyDockWarehouseLayout({
+    ...base,
+    ship,
+    moduleInventory: [],
+    moduleFragments: 0,
+    moduleLabJob: null,
+  });
 }
 
-function dispatch(state: ReturnType<typeof freshState>, ...actions: Parameters<typeof gameReducer>[1][]) {
+function dispatch(
+  state: ReturnType<typeof freshState>,
+  ...actions: Parameters<typeof gameReducer>[1][]
+) {
   let s = state;
   for (const a of actions) {
     s = gameReducer(s, a);
@@ -65,10 +98,11 @@ describe("ship status transitions", () => {
     expect(state.ship.dockedAt!).toBeGreaterThanOrEqual(before);
     expect(state.ship.dockedAt!).toBeLessThanOrEqual(after);
 
-    expect(state.ship.departsAt).not.toBeNull();
     expect(state.ship.departureAt).not.toBeNull();
-    expect(state.ship.departsAt).toBe(state.ship.departureAt);
-    expect(state.ship.departureAt! - state.ship.dockedAt!).toBeCloseTo(SHIP_WAIT_DURATION_MS, -2);
+    expect(state.ship.departureAt! - state.ship.dockedAt!).toBeCloseTo(
+      SHIP_WAIT_DURATION_MS,
+      -2,
+    );
   });
 
   it("SHIP_DEPART → sailing, rewardPending true when cargo was delivered", () => {
@@ -279,18 +313,24 @@ describe("drawReward distribution over 1000 draws", () => {
   it("no category exceeds 70%", () => {
     const counts = runDraws(1, 1);
     for (const [kind, count] of Object.entries(counts)) {
-      expect(count / DRAWS).toBeLessThan(0.70),
-        `${kind} appeared ${count}/${DRAWS} times (>${0.70 * 100}%)`;
+      (expect(count / DRAWS).toBeLessThan(0.7),
+        `${kind} appeared ${count}/${DRAWS} times (>${0.7 * 100}%)`);
     }
   });
 
   it("no category is below 1%", () => {
     const counts = runDraws(1, 1);
-    const CATEGORIES = ["coins", "basic_resource", "rare_resource", "module_fragment", "complete_module"];
+    const CATEGORIES = [
+      "coins",
+      "basic_resource",
+      "rare_resource",
+      "module_fragment",
+      "complete_module",
+    ];
     for (const kind of CATEGORIES) {
       const count = counts[kind] ?? 0;
-      expect(count / DRAWS).toBeGreaterThanOrEqual(0.01),
-        `${kind} appeared ${count}/${DRAWS} times (<1%)`;
+      (expect(count / DRAWS).toBeGreaterThanOrEqual(0.01),
+        `${kind} appeared ${count}/${DRAWS} times (<1%)`);
     }
   });
 });
@@ -329,7 +369,9 @@ describe("shipsSinceLastFragment counter", () => {
       expect(state.ship.shipsSinceLastFragment).toBe(0);
       expect(state.moduleFragments).toBe(1);
       expect(
-        state.warehouseInventories[DOCK_WAREHOUSE_ID][MODULE_FRAGMENT_ITEM_ID] ?? 0,
+        state.warehouseInventories[DOCK_WAREHOUSE_ID][
+          MODULE_FRAGMENT_ITEM_ID
+        ] ?? 0,
       ).toBe(0);
     } finally {
       Math.random = origRandom;
