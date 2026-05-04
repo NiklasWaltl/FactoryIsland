@@ -12,10 +12,8 @@ Factory Island ist ein eigenstaendiges 2D-Fabrik-Aufbauspiel.
 
 ## Verbindliche Read-Order
 
-1. `.continue/prompts/project-context.md`
-2. [SYSTEM_REGISTRY.md](SYSTEM_REGISTRY.md)
-3. [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md) nur bei Runtime-/Datenflussfragen
-4. [src/game/TYPES.md](src/game/TYPES.md) nur bei Typfragen
+1. Einstieg: `.continue/prompts/project-context.md` zuerst lesen.
+2. Operative Reihenfolge danach: [SYSTEM_REGISTRY.md](SYSTEM_REGISTRY.md) -> [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md) -> [src/game/TYPES.md](src/game/TYPES.md) (bei Bedarf).
 
 Nutze dieses Dokument als Verhaltensregeln und verlinke fuer Details auf die obigen Quellen statt Inhalte zu duplizieren.
 
@@ -32,9 +30,9 @@ Nutze dieses Dokument als Verhaltensregeln und verlinke fuer Details auf die obi
 - Keine Spiellogik in UI-Komponenten.
 - React mutiert State nur via `dispatch`; Phaser ist read-only und dispatcht nicht.
 - Keine neuen Re-Export-Hubs ohne klaren Grund.
-- Rezepte nur unter `src/game/simulation/recipes/`.
+- Produktionsrezepte liegen unter `src/game/simulation/recipes/`. Ausnahme: Module-Lab-Rezepte liegen in `src/game/constants/moduleLabConstants.ts` und werden von `src/game/store/action-handlers/module-lab-actions.ts` und `src/game/ui/panels/ModulLabPanel.tsx` konsumiert.
 - Neue UI-Elemente unter `src/game/ui/**`; `BuildMenu.tsx` liegt unter `src/game/ui/menus/`.
-- Debug-Code nur hinter `import.meta.env.DEV`.
+- Reine DEV-Tools (Logging, Overlays, Dev-Panels) nur hinter `import.meta.env.DEV` oder `IS_DEV`. Diagnose-UI, die im Release-Build sichtbar sein soll (z. B. Stromnetz-Analyse im BuildMenu), als regulaeres Feature behandeln.
 
 ## Build-/Check-Standards
 
@@ -49,7 +47,7 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 ## Bekannte Stolperfallen
 
 - Alte Saves muessen ueber `normalizeLoadedState()` kompatibel bleiben.
-- Bei Groessenberechnungen nie direkt `asset.size` verwenden, sondern vorhandene Helper.
+- Fuer Footprint-Logik kein nacktes `asset.size` verwenden. Bevorzugt: zentrale Geometrie-Helper (`assetWidth`/`assetHeight`) oder das etablierte `width`/`height`-Fallback-Muster. Direkte `asset.size`-Nutzung ist nur in zentralen Helpern (`asset-geometry.ts`) erlaubt.
 - Rotierbare Maschinen brauchen korrekte `direction`-Logik.
 - Bei Build-Fehlern zuerst Konfigurations- und Importkette pruefen.
 - In dieser Windows-Umgebung ist `rg` ggf. nicht verfuegbar; nutze dann VS-Code-Suche oder `Select-String`.
@@ -58,4 +56,5 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 
 - Keine neuen npm-Abhaengigkeiten ohne Rueckfrage.
 - Keine stillen Fallbacks fuer fehlende Logik.
+- Bei jeder neuen persistierten `GameState`-Property muessen zwingend alle drei Pfade gepflegt werden: (1) Default-Wert in `initial-state`, (2) Serialisierung/Deserialisierung im Save-Codec, (3) Migration in `save-migrations.ts` (aktuelle Version: v29). Betrifft u. a.: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterRouteState`, `splitterFilterState`.
 - Keine Aenderung ohne anschliessende Verifikation.

@@ -97,7 +97,7 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 
 | Tick | Interval (ms) | Action | Trigger | Handler | Primary state writes |
 |---|---|---|---|---|---|
-| Sapling Growth | 1000 | `GROW_SAPLINGS` | interval always; dispatch only when ready saplings exist | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
+| Sapling Growth | 1000 (Polling) | GROW_SAPLINGS | Polling läuft immer; Dispatch nur bei reifen Saplings | growth-actions | assets, cellMap, saplingGrowAt |
 | Natural Spawn | 60 000 | `NATURAL_SPAWN` | always | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
 | Smithy | 100 | `SMITHY_TICK` | only when `smithy.processing` | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `smithy` |
 | Manual Assembler | 100 | `MANUAL_ASSEMBLER_TICK` | only when `manualAssembler.processing` | [`manual-assembler-actions.ts`](./store/action-handlers/manual-assembler-actions.ts) | `manualAssembler`, source inventory, `notifications` |
@@ -109,6 +109,8 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 | Drones | 500 | `DRONE_TICK` | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
 | Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
 | Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
+
+> Hinweis: Die 1000 ms sind die Polling-Frequenz. Die Reifezeit eines neu gespawnten Saplings wird über `SAPLING_GROW_MS` gesetzt (derzeit 30 000 ms).
 
 Most intervals use constants in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts), and [`constants/moduleLabConstants.ts`](./constants/moduleLabConstants.ts). Sapling readiness scanning (1000ms) and notification cleanup (500ms) are currently inline literals in [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts).
 
@@ -166,6 +168,8 @@ This priority is implemented in `store/building-source.ts` via `resolveBuildingS
 - **Claim held:** while the drone is en route/collecting, candidate scoring and filtering treat this node as reserved.
 - **Claim release:** claim is cleared when collection finalizes, when assignment/transition aborts, or when node state is reset during load normalization.
 
+Beim Laden werden Claims in beiden Pfaden auf `null` gesetzt: im Save-Codec sowie in den Save-Migrations, jeweils über `reservedByDroneId = null`.
+
 ---
 
 ## State Map
@@ -209,6 +213,9 @@ The Fragment Trader is a ship-adjacent subsystem with dedicated UI + action flow
 
 This creates a two-step path (buy/deposit then collect/convert) rather than directly incrementing `moduleFragments` on purchase.
 
+- `BUY_FRAGMENT` schreibt über `addDockWarehouseItem` ein `module_fragment` in das Dock-Warehouse-Inventar.
+- `COLLECT_FRAGMENT` konvertiert über `collectDockWarehouseFragment` Dock-Warehouse-Fragmente in den persistierten Zähler `moduleFragments`.
+
 ### Modules / Module Lab
 
 `moduleFragments`, `moduleInventory`, and `moduleLabJob` are persisted. The Module Lab consumes fragments, advances with `MODULE_LAB_TICK`, and writes completed module instances into `moduleInventory`; equipped modules are mirrored on `asset.moduleSlot`.
@@ -223,6 +230,8 @@ Service hubs are tiered and persisted through `serviceHubs[hubId]`:
 - Construction integration: `building-site.ts` writes the pending demand into `constructionSites[hubId]` (construction debt).
 - Finalization path A: drone construction deliveries resolve site debt; when complete, the deposit flow finalizes Tier 2, clears `pendingUpgrade`, and updates hub capabilities.
 - Finalization path B: if a pending upgrade is satisfied via hub inventory state, the same drone deposit flow finalizes Tier 2 through the hub-upgrade satisfaction check.
+- Finalisierungspfad A läuft über den Construction-Supply-Abschluss und ruft `finalizeHubTier2Upgrade` auf.
+- Finalisierungspfad B läuft nach Hub-Deposit über `isHubUpgradeDeliverySatisfied` und ruft danach `finalizeHubTier2Upgrade` auf.
 
 ### Conveyor Route State
 
@@ -292,6 +301,8 @@ Grid/building constants have canonical homes under `constants/` and `store/const
 No global tick orchestrator — every `setInterval` runs independently.
 
 **Rationale:** Simpler than a centralized scheduler. Race conditions are tolerable because each tick performs a complete reducer pass. (*UNCERTAIN:* Race safety per tick has not been formally verified.)
+
+Aktueller Stand: Die Laufzeit nutzt **12 unabhängige `setInterval`-Hooks**; es gibt keinen globalen Tick-Orchestrator.
 
 ---
 

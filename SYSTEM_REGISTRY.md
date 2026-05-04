@@ -1,7 +1,7 @@
 # SYSTEM_REGISTRY.md
 
 > AI-friendly navigation map for Factory Island. Current state, not target state.
-> Last verified: 2026-05-01.
+> Last verified: 2026-05-04.
 
 ---
 
@@ -271,7 +271,7 @@ Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/
 | **Reducer-Split** | [reducer.ts](src/game/store/reducer.ts), [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts) | Thin entry point and actual dispatch chain live in separate files |
 | **Phase-File-Explosion** | `crafting-queue-actions/phases/` | A change typically touches 3 files (index + phase + deps) |
 | **Save-Migrations** | [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Schema change without migration → hydration errors for existing saves |
-| **New persisted slices (save v28)** | [simulation/save-codec.ts](src/game/simulation/save-codec.ts), [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Current save version: 28. Includes `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterFilterState`, `splitterRouteState` |
+| **New persisted slices (save v29)** | [simulation/save-codec.ts](src/game/simulation/save-codec.ts), [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Current save version: 29. Includes `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship` (normalized in v29 migration), `splitterFilterState`, `splitterRouteState` |
 | **Energy Consumer Priority** | [power/energy-priority.ts](src/game/power/energy-priority.ts) | Ordering bugs → wrong `machinePowerRatio` |
 | **`GameState` is a Flat Interface** | [store/types.ts:378](src/game/store/types.ts#L378) | 62 top-level fields; logical slice separation is only conceptual. Notable fields: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `splitterRouteState`, `splitterFilterState`, `ship` |
 | **HMR-Restore** | [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) | DEV-only code; do not test in prod |
