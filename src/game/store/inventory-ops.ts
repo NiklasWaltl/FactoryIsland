@@ -62,7 +62,9 @@ export function addResources(
   return result as unknown as Inventory;
 }
 
-export function getEffectiveBuildInventory(state: GameState): Inventory {
+export function getEffectiveBuildInventory(
+  state: Pick<GameState, "inventory" | "warehouseInventories" | "serviceHubs">,
+): Inventory {
   const effective = { ...state.inventory } as Record<string, number>;
   for (const whInv of Object.values(state.warehouseInventories)) {
     for (const [key, amt] of Object.entries(whInv)) {

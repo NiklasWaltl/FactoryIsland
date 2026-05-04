@@ -7,7 +7,7 @@ import type {
 } from "../../store/types";
 
 function consumeBuildResources(
-  state: GameState,
+  state: Pick<GameState, "inventory" | "warehouseInventories" | "serviceHubs">,
   costs: Partial<Record<keyof Inventory, number>>,
 ): {
   inventory: Inventory;
@@ -81,7 +81,7 @@ function consumeBuildResources(
  * `null`/`undefined`/empty `costs` are treated as trivially satisfiable.
  */
 export function hasResourcesInPhysicalStorage(
-  state: GameState,
+  state: Pick<GameState, "inventory" | "warehouseInventories" | "serviceHubs">,
   costs?: Partial<Record<keyof Inventory, number>> | null,
 ): boolean {
   if (!costs) return true;

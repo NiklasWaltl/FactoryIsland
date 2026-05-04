@@ -42,7 +42,9 @@ export function getAvailableResource(
  * USE THIS for: HUD display, build-/craft-affordance UI, debug overlays.
  * DO NOT mutate the result - write to the underlying physical stores instead.
  */
-export function selectGlobalInventoryView(state: GameState): Inventory {
+export function selectGlobalInventoryView(
+  state: Pick<GameState, "inventory" | "warehouseInventories" | "serviceHubs">,
+): Inventory {
   const nextInputs: GlobalInventoryInputs = {
     inventory: state.inventory,
     warehouseInventories: state.warehouseInventories,

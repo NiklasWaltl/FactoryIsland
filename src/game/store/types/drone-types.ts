@@ -1,4 +1,4 @@
-import type { CollectableItemType } from "../types";
+import type { CollectableItemType } from "./item-types";
 
 // ---- Drone Roles ----
 /**

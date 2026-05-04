@@ -1,9 +1,10 @@
 ﻿import React from "react";
-import type { GameState, BuildingType } from "../../store/types";
+import type { BuildingType } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
+import type { HotbarStateSlice } from "../../store/types/ui-slice-types";
 
 interface HotbarProps {
-  state: GameState;
+  state: HotbarStateSlice;
   dispatch: React.Dispatch<GameAction>;
 }
 

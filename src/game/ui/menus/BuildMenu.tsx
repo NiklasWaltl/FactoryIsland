@@ -2,9 +2,9 @@ import React from "react";
 import type {
   BuildingType,
   FloorTileType,
-  GameState,
   Inventory,
 } from "../../store/types";
+import type { BuildUIStateSlice } from "../../store/types/ui-slice-types";
 import type { GameAction } from "../../store/game-actions";
 import {
   BUILDING_COSTS,
@@ -39,7 +39,7 @@ import {
 } from "../../assets/sprites/sprites";
 
 interface BuildMenuProps {
-  state: GameState;
+  state: BuildUIStateSlice;
   dispatch: React.Dispatch<GameAction>;
 }
 

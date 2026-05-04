@@ -17,6 +17,7 @@ import type {
 import type { ItemId } from "../items/types";
 import type { TileType } from "../world/tile-types";
 import type { Module, ModuleType } from "../modules/module.types";
+import type { CollectableItemType } from "./types/item-types";
 import type { StarterDroneState } from "./types/drone-types";
 import type { KeepStockByWorkbench } from "./types/crafting-types";
 import type {
@@ -27,6 +28,7 @@ import type {
 import type { ShipState } from "./types/ship-types";
 
 export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
+export type { CollectableItemType } from "./types/item-types";
 export type { ShipStatus, ShipQuest, ShipReward, ShipState } from "./types/ship-types";
 export type {
   DroneRole,
@@ -282,8 +284,6 @@ export interface AutoDeliveryEntry {
  * their tile until picked up by a drone / service hub.
  * They are NOT part of warehouse / central inventory bookkeeping.
  */
-export type CollectableItemType = "wood" | "stone" | "iron" | "copper";
-
 export interface CollectionNode {
   id: string;
   itemType: CollectableItemType;

@@ -1,6 +1,6 @@
 import React from "react";
-import type { GameState } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
+import type { MapShopStateSlice } from "../../store/types/ui-slice-types";
 import { MAP_SHOP_ITEMS } from "../../store/constants/ui/shop";
 import {
   RESOURCE_EMOJIS,
@@ -8,7 +8,7 @@ import {
 } from "../../store/constants/resources";
 
 interface MapShopPanelProps {
-  state: GameState;
+  state: MapShopStateSlice;
   dispatch: React.Dispatch<GameAction>;
 }
 
@@ -25,7 +25,7 @@ export const MapShopPanel: React.FC<MapShopPanelProps> = React.memo(
         <h3 className="fi-panel-section-title">🛠️ Werkzeuge</h3>
         <div className="fi-shop-list">
           {MAP_SHOP_ITEMS.map((item) => {
-            const canAfford = state.inventory.coins >= item.costCoins;
+            const canAfford = state.coins >= item.costCoins;
             return (
               <div key={item.key} className="fi-shop-item">
                 <div className="fi-shop-item-icon">{item.emoji}</div>
@@ -56,7 +56,7 @@ export const MapShopPanel: React.FC<MapShopPanelProps> = React.memo(
         </p>
 
         <p style={{ color: "#888", fontSize: 12, marginTop: 12 }}>
-          Du hast {RESOURCE_EMOJIS.coins} {state.inventory.coins} Coins
+          Du hast {RESOURCE_EMOJIS.coins} {state.coins} Coins
         </p>
       </div>
     );

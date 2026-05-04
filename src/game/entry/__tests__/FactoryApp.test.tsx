@@ -74,7 +74,11 @@ jest.mock("../../ui/hud/AutoDeliveryFeed", () => ({
 }));
 
 jest.mock("../../ui/hud/ResourceBar", () => ({
-  ResourceBar: ({
+  ResourceBar: () => null,
+}));
+
+jest.mock("../../ui/hud/ProductionStatusFeed", () => ({
+  ProductionStatusFeed: ({
     state,
   }: {
     state: { crafting: { jobs: Array<{ status: string }> } };

@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useRef,
+  useMemo,
 } from "react";
 import {
   gameReducer,
@@ -11,6 +12,14 @@ import {
 } from "../store/reducer";
 import { createInitialState } from "../store/initial-state";
 import type { GameMode, GameState } from "../store/types";
+import type {
+  BuildUIStateSlice,
+  HotbarStateSlice,
+  HudStateSlice,
+  MapShopStateSlice,
+  ShipStatusSlice,
+} from "../store/types/ui-slice-types";
+import { DOCK_WAREHOUSE_ID } from "../store/bootstrap/apply-dock-warehouse-layout";
 import { serializeState, loadAndHydrate } from "../simulation/save";
 import {
   applyDevScene,
@@ -251,17 +260,84 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
 
   useGameTicks(state, dispatch);
 
+  const hudSlice = useMemo<HudStateSlice>(
+    () => ({
+      mode: state.mode,
+      warehousesPlaced: state.warehousesPlaced,
+      inventory: state.inventory,
+      warehouseInventories: state.warehouseInventories,
+      serviceHubs: state.serviceHubs,
+      moduleFragments: state.moduleFragments,
+    }),
+    [
+      state.mode,
+      state.warehousesPlaced,
+      state.inventory,
+      state.warehouseInventories,
+      state.serviceHubs,
+      state.moduleFragments,
+    ],
+  );
+
+  const buildUiSlice = useMemo<BuildUIStateSlice>(
+    () => ({
+      buildMode: state.buildMode,
+      selectedBuildingType: state.selectedBuildingType,
+      selectedFloorTile: state.selectedFloorTile,
+      placedBuildings: state.placedBuildings,
+      warehousesPlaced: state.warehousesPlaced,
+      energyDebugOverlay: state.energyDebugOverlay,
+      serviceHubs: state.serviceHubs,
+      collectionNodes: state.collectionNodes,
+      inventory: state.inventory,
+      warehouseInventories: state.warehouseInventories,
+    }),
+    [
+      state.buildMode,
+      state.selectedBuildingType,
+      state.selectedFloorTile,
+      state.placedBuildings,
+      state.warehousesPlaced,
+      state.energyDebugOverlay,
+      state.serviceHubs,
+      state.collectionNodes,
+      state.inventory,
+      state.warehouseInventories,
+    ],
+  );
+
+  const hotbarSlice = useMemo<HotbarStateSlice>(
+    () => ({
+      hotbarSlots: state.hotbarSlots,
+      activeSlot: state.activeSlot,
+    }),
+    [state.hotbarSlots, state.activeSlot],
+  );
+
+  const shipStatusSlice = useMemo<ShipStatusSlice>(
+    () => ({
+      ship: state.ship,
+      dockInventory: state.warehouseInventories[DOCK_WAREHOUSE_ID],
+    }),
+    [state.ship, state.warehouseInventories],
+  );
+
+  const mapShopSlice = useMemo<MapShopStateSlice>(
+    () => ({ coins: state.inventory.coins }),
+    [state.inventory.coins],
+  );
+
   return (
     <>
       <Grid state={state} dispatch={dispatch} />
-      <ResourceBar state={state} />
-      <ShipStatusBar state={state} dispatch={dispatch} />
+      <ResourceBar state={hudSlice} />
+      <ShipStatusBar state={shipStatusSlice} />
       <Notifications notifications={state.notifications} />
       <AutoDeliveryFeed log={state.autoDeliveryLog} />
       <ProductionStatusFeed state={state} />
 
       {state.openPanel === "map_shop" && (
-        <MapShopPanel state={state} dispatch={dispatch} />
+        <MapShopPanel state={mapShopSlice} dispatch={dispatch} />
       )}
       {state.openPanel === "warehouse" && (
         <WarehousePanel state={state} dispatch={dispatch} />
@@ -309,7 +385,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
         <ModulLabPanel state={state} dispatch={dispatch} />
       )}
 
-      <Hotbar state={state} dispatch={dispatch} />
+      <Hotbar state={hotbarSlice} dispatch={dispatch} />
 
       {/* Build Mode toggle button */}
       <button
@@ -321,7 +397,9 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       </button>
 
       {/* Build Menu overlay */}
-      {state.buildMode && <BuildMenu state={state} dispatch={dispatch} />}
+      {buildUiSlice.buildMode && (
+        <BuildMenu state={buildUiSlice} dispatch={dispatch} />
+      )}
 
       {IS_DEV && state.mode === "debug" && (
         <>

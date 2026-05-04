@@ -1,12 +1,12 @@
 ﻿import React from "react";
 import { RESOURCE_EMOJIS } from "../../store/constants/resources";
-import type { GameState, Inventory } from "../../store/types";
+import type { Inventory } from "../../store/types";
+import type { HudStateSlice } from "../../store/types/ui-slice-types";
 import { getCapacityPerResource } from "../../store/warehouse-capacity";
 import { selectGlobalInventoryView } from "../../store/helpers/inventory-queries";
-import { ModuleFragmentCounter } from "./ModuleFragmentCounter";
 
 interface ResourceBarProps {
-  state: GameState;
+  state: HudStateSlice;
 }
 
 /** Resources shown in the compact HUD — excludes tools and building items. */
@@ -25,6 +25,7 @@ export const ResourceBar: React.FC<ResourceBarProps> = React.memo(
     const capLabel = cap === Infinity ? "∞" : String(cap);
     // Phase 1: HUD reads the derived view so warehouse + hub stocks are visible.
     const inventoryView = selectGlobalInventoryView(state);
+    const fragmentCount = state.moduleFragments;
 
     return (
       <div className="fi-resource-bar">
@@ -59,7 +60,15 @@ export const ResourceBar: React.FC<ResourceBarProps> = React.memo(
           );
         })}
 
-        <ModuleFragmentCounter state={state} />
+        {fragmentCount > 0 && (
+          <div
+            className="fi-resource-item fi-resource-item--module-fragments"
+            title="Modul-Fragmente"
+          >
+            <span>{"⚙️"}</span>
+            <strong>{`×${fragmentCount}`}</strong>
+          </div>
+        )}
       </div>
     );
   },

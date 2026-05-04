@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import type { GameState } from "../../store/types";
-import type { GameAction } from "../../store/game-actions";
+import type { ShipStatusSlice } from "../../store/types/ui-slice-types";
 import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
 
 interface ShipStatusBarProps {
-  state: GameState;
-  dispatch: React.Dispatch<GameAction>;
+  state: ShipStatusSlice;
 }
 
 function formatCountdown(ms: number): string {
@@ -60,7 +59,12 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
     }
 
     const quest = ship.activeQuest ?? ship.nextQuest;
-    const dockInventory = state.warehouseInventories[DOCK_WAREHOUSE_ID];
+    const dockInventory =
+      state.dockInventory ??
+      (
+        state as ShipStatusSlice &
+          Partial<Pick<GameState, "warehouseInventories">>
+      ).warehouseInventories?.[DOCK_WAREHOUSE_ID];
     const dockQuestProgress =
       ship.status === "docked" && ship.activeQuest
         ? (() => {

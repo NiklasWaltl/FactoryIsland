@@ -284,7 +284,11 @@ store/types/drone-types.ts
   ↑ imported by: store/types.ts, drones/candidates/types.ts
 ```
 
-In the verified excerpt, no circular type dependencies exist between these modules.
+In the verified excerpt, a direct type-only circular dependency exists between
+store/types.ts and store/types/drone-types.ts:
+types.ts imports StarterDroneState, while drone-types.ts imports CollectableItemType.
+This is currently type-only (import type), so it does not create a runtime ESM cycle.
+Resolution tracked: extract CollectableItemType to a shared base types file (Option A).
 
 ---
 
