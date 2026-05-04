@@ -16,7 +16,6 @@ import type {
 } from "../crafting/policies";
 import type { ItemId } from "../items/types";
 import type { TileType } from "../world/tile-types";
-import type { Module, ModuleType } from "../modules/module.types";
 import type { CollectableItemType } from "./types/item-types";
 import type { StarterDroneState } from "./types/drone-types";
 import type { KeepStockByWorkbench } from "./types/crafting-types";
@@ -26,6 +25,9 @@ import type {
   AutoAssemblerEntry,
 } from "./types/conveyor-types";
 import type { ShipState } from "./types/ship-types";
+import type { ModuleState } from "./types/module-state";
+import type { ZoneSourceState } from "./types/zone-source-state";
+import type { PowerState } from "./types/power-state";
 
 export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
 export type { CollectableItemType } from "./types/item-types";
@@ -53,10 +55,15 @@ export type {
   AutoAssemblerStatus,
   AutoAssemblerEntry,
 } from "./types/conveyor-types";
+export type {
+  ModuleFragmentCount,
+  ModuleLabJob,
+  ModuleState,
+} from "./types/module-state";
+export type { ProductionZone, ZoneSourceState } from "./types/zone-source-state";
+export type { BatteryState, GeneratorState, PowerState } from "./types/power-state";
 
 export type GameMode = "release" | "debug";
-
-export type ModuleFragmentCount = number;
 
 export type AssetType =
   | "tree"
@@ -221,29 +228,6 @@ export type UIPanel =
   | "module_lab"
   | null;
 
-// ---- Battery ----
-export interface BatteryState {
-  stored: number;
-  capacity: number;
-}
-
-// ---- Generator ----
-export interface GeneratorState {
-  /** Wood currently in the fuel slot (local input buffer, capped at GENERATOR_MAX_FUEL) */
-  fuel: number;
-  /** Fractional charge progress within the current wood unit (0–1) */
-  progress: number;
-  /** Whether the generator is actively burning */
-  running: boolean;
-  /**
-   * Wood the player has explicitly requested but that has not yet been delivered.
-   * Drones only refill the generator while this counter is positive (no auto-refill).
-   * Decremented as wood is deposited; reset implicitly when the generator is rebuilt.
-   * Optional for save backward compatibility (treated as 0 when absent).
-   */
-  requestedRefill?: number;
-}
-
 // ---- Energy Network ----
 // NOTE: There is no central energy pool. Batteries are the sole energy storage.
 // This interface is kept only as documentation of the removed concept.
@@ -340,41 +324,6 @@ export interface ServiceHubEntry {
   pendingUpgrade?: Partial<Record<CollectableItemType, number>>;
 }
 
-/** A production zone groups warehouses and crafting buildings into a shared local resource pool. */
-export interface ProductionZone {
-  id: string;
-  name: string;
-}
-
-// ---- Module Lab ----
-
-/**
- * The single in-flight module crafting job at the Module Lab.
- * Only one job may exist at a time across all labs (the lab is non-stackable).
- * Time is tracked in wall-clock ms (Date.now), not engine ticks, mirroring
- * how the smithy/manual-assembler progress fields work today.
- */
-export interface ModuleLabJob {
-  /** Recipe id from MODULE_FRAGMENT_RECIPES. */
-  recipeId: string;
-  /** Output module type. */
-  moduleType: ModuleType;
-  /** Output tier. */
-  tier: 1 | 2 | 3;
-  /** Fragments consumed up-front when the job started (3 / 5 / 8). */
-  fragmentsRequired: number;
-  /** Date.now() at job start. */
-  startedAt: number;
-  /** Total job duration in ms. */
-  durationMs: number;
-  /**
-   * Lifecycle state:
-   *  - "crafting": still ticking down
-   *  - "done":     ready to be collected via COLLECT_MODULE
-   */
-  status: "crafting" | "done";
-}
-
 export interface GameState {
   mode: GameMode;
   assets: Record<string, PlacedAsset>;
@@ -386,11 +335,11 @@ export interface GameState {
    *  target is configured. Use getCapacityPerResource(state) for the per-resource cap. */
   inventory: Inventory;
   /** Owned module instances from the fragment trader. Persisted. */
-  moduleInventory: Module[];
+  moduleInventory: ModuleState["moduleInventory"];
   /** Unspent module fragments collected by the player. Persisted. */
-  moduleFragments: ModuleFragmentCount;
+  moduleFragments: ModuleState["moduleFragments"];
   /** Single in-flight Module Lab crafting job (max 1 across all labs). Persisted. */
-  moduleLabJob: ModuleLabJob | null;
+  moduleLabJob: ModuleState["moduleLabJob"];
   purchasedBuildings: BuildingType[];
   placedBuildings: BuildingType[];
   warehousesPurchased: number;
@@ -402,19 +351,19 @@ export interface GameState {
   warehouseInventories: Record<string, Inventory>;
   /** ID of the warehouse whose panel is currently open */
   selectedWarehouseId: string | null;
-  cablesPlaced: number;
-  powerPolesPlaced: number;
+  cablesPlaced: PowerState["cablesPlaced"];
+  powerPolesPlaced: PowerState["powerPolesPlaced"];
   /** ID of the power pole whose panel is currently open */
   selectedPowerPoleId: string | null;
   hotbarSlots: HotbarSlot[];
   activeSlot: number;
   smithy: SmithyState;
-  generators: Record<string, GeneratorState>;
-  battery: BatteryState;
+  generators: PowerState["generators"];
+  battery: PowerState["battery"];
   /** Asset IDs currently reachable from a generator via cables */
-  connectedAssetIds: string[];
+  connectedAssetIds: PowerState["connectedAssetIds"];
   /** Connected consumer machine IDs that actually received energy in the latest net tick */
-  poweredMachineIds: string[];
+  poweredMachineIds: PowerState["poweredMachineIds"];
   openPanel: UIPanel;
   notifications: GameNotification[];
   saplingGrowAt: Record<string, number>;
@@ -452,18 +401,18 @@ export interface GameState {
   /** Manual assembler production state */
   manualAssembler: ManualAssemblerState;
   /** Per-machine power ratio in [0,1] from the latest ENERGY_NET_TICK */
-  machinePowerRatio: Record<string, number>;
+  machinePowerRatio: PowerState["machinePowerRatio"];
   /** Whether the energy debug overlay is visible */
-  energyDebugOverlay: boolean;
+  energyDebugOverlay: PowerState["energyDebugOverlay"];
   /** Log of items automatically delivered into warehouses by auto-devices (auto_miner, conveyor, …) */
   autoDeliveryLog: AutoDeliveryEntry[];
   /** Per-building warehouse source assignment (buildingId → warehouseId). Missing key = global. Persisted.
    *  Legacy: superseded by zone assignments when a building has a zone. */
-  buildingSourceWarehouseIds: Record<string, string>;
+  buildingSourceWarehouseIds: ZoneSourceState["buildingSourceWarehouseIds"];
   /** Production zones: zoneId → zone metadata. Persisted. */
-  productionZones: Record<string, ProductionZone>;
+  productionZones: ZoneSourceState["productionZones"];
   /** Per-building zone assignment: buildingId → zoneId. Includes warehouses and crafting buildings. Persisted. */
-  buildingZoneIds: Record<string, string>;
+  buildingZoneIds: ZoneSourceState["buildingZoneIds"];
   /** ID of the workbench / smithy / assembler whose panel is currently open. Transient. */
   selectedCraftingBuildingId: string | null;
   /**
