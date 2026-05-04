@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*.md"
+applyTo: ".github/instructions/**"
 ---
 
 # Docs Review – Basis-Instruktion
