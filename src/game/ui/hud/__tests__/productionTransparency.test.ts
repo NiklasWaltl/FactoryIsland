@@ -56,6 +56,43 @@ function buildState(overrides?: Partial<Inventory>): GameState {
 }
 
 describe("productionTransparency", () => {
+  it("reuses the snapshot when unrelated state slices change", () => {
+    const state = buildState({ wood: 20, wood_pickaxe: 0 });
+
+    const first = buildProductionTransparency(state);
+    const second = buildProductionTransparency({
+      ...state,
+      notifications: [
+        ...state.notifications,
+        {
+          id: "n-cache",
+          resource: "wood",
+          displayName: "wood",
+          amount: 1,
+          expiresAt: Date.now() + 1000,
+        },
+      ],
+    });
+
+    expect(second).toBe(first);
+  });
+
+  it("rebuilds the snapshot when relevant slices change", () => {
+    const state = buildState({ wood: 20, wood_pickaxe: 0 });
+
+    const first = buildProductionTransparency(state);
+    const next = gameReducer(state, {
+      type: "JOB_ENQUEUE",
+      recipeId: "wood_pickaxe",
+      workbenchId: WB,
+      source: "player",
+      priority: "high",
+    });
+    const second = buildProductionTransparency(next);
+
+    expect(second).not.toBe(first);
+  });
+
   it("shows construction entries", () => {
     let state = buildState({ wood: 0 });
     state = {

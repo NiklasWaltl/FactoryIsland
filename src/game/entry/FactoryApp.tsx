@@ -8,8 +8,8 @@ import React, {
 import {
   gameReducer,
   gameReducerWithInvariants,
-  createInitialState,
 } from "../store/reducer";
+import { createInitialState } from "../store/initial-state";
 import type { GameMode, GameState } from "../store/types";
 import { serializeState, loadAndHydrate } from "../simulation/save";
 import {

@@ -1,4 +1,6 @@
 import { GRID_H, GRID_W } from "../../constants/grid";
+import { ALL_ITEM_IDS } from "../../items/registry";
+import type { ItemId } from "../../items/types";
 import { areZonesTransportCompatible } from "../../logistics/conveyor-zone";
 import type { CraftingJob } from "../../crafting/types";
 import { CONVEYOR_TILE_CAPACITY } from "../conveyor/constants";
@@ -19,7 +21,6 @@ import {
   getConveyorMergerInputSide,
   getConveyorSplitterOutputCell,
   isValidConveyorSplitterInput,
-  SPLITTER_OUTPUT_SIDE_PRIORITY,
 } from "./conveyor-geometry";
 import {
   type SplitterRouteState,
@@ -30,6 +31,92 @@ import {
   getSplitterFilter,
   type SplitterFilterState,
 } from "../slices/splitter-filter-state";
+
+export type TileId = string;
+export type ZoneId = string;
+export type WorkbenchJob = CraftingJob;
+
+/**
+ * Per-LOGISTICS_TICK lookup bundle for conveyor routing decisions.
+ *
+ * The index is rebuilt once from the immutable tick-start GameState and then
+ * shared by all conveyor target checks in that tick. Warehouse and workbench
+ * routing therefore performs Map/Set lookups instead of scanning every asset
+ * or job for each belt item. `null`/global zones remain implicit and are not
+ * stored in `zoneCompatLookup`; they are compatible with every zone.
+ */
+export interface ConveyorRoutingIndex {
+  /** Item id -> warehouse input tile ids that can physically receive that item. */
+  readonly warehouseInputTilesByItemId: Map<ItemId, Set<TileId>>;
+  /** Input item id -> active, non-terminal workbench jobs that require it. */
+  readonly activeWorkbenchJobsByInputItem: Map<ItemId, WorkbenchJob[]>;
+  /** Zone id -> compatible zone ids for belt handoff and destination checks. */
+  readonly zoneCompatLookup: Map<ZoneId, Set<ZoneId>>;
+  /** Resolves indexed warehouse input tiles back to their warehouse asset id. */
+  readonly warehouseIdByInputTileId: Map<TileId, string>;
+}
+
+export function buildConveyorRoutingIndex(
+  state: GameState,
+): ConveyorRoutingIndex {
+  const warehouseInputTilesByItemId = new Map<ItemId, Set<TileId>>();
+  const activeWorkbenchJobsByInputItem = new Map<ItemId, WorkbenchJob[]>();
+  const zoneCompatLookup = new Map<ZoneId, Set<ZoneId>>();
+  const warehouseIdByInputTileId = new Map<TileId, string>();
+
+  for (const itemId of ALL_ITEM_IDS) {
+    warehouseInputTilesByItemId.set(itemId, new Set<TileId>());
+  }
+
+  for (const asset of Object.values(state.assets)) {
+    if (!isWarehouseStorageAsset(asset)) continue;
+
+    const inputTileId = cellKey(
+      asset.x,
+      asset.y + assetHeight(asset),
+    ) as TileId;
+    warehouseIdByInputTileId.set(inputTileId, asset.id);
+
+    for (const itemId of ALL_ITEM_IDS) {
+      warehouseInputTilesByItemId.get(itemId)?.add(inputTileId);
+    }
+  }
+
+  for (const job of state.crafting?.jobs ?? []) {
+    if (job.status === "done" || job.status === "cancelled") continue;
+
+    for (const ingredient of job.ingredients) {
+      const jobsForItem = activeWorkbenchJobsByInputItem.get(ingredient.itemId);
+      if (jobsForItem) {
+        jobsForItem.push(job);
+      } else {
+        activeWorkbenchJobsByInputItem.set(ingredient.itemId, [job]);
+      }
+    }
+  }
+
+  const zoneIds = new Set<ZoneId>(Object.keys(state.productionZones));
+  for (const zoneId of Object.values(state.buildingZoneIds)) {
+    zoneIds.add(zoneId);
+  }
+
+  for (const fromZone of zoneIds) {
+    const compatibleZones = new Set<ZoneId>();
+    for (const toZone of zoneIds) {
+      if (areZonesTransportCompatible(fromZone, toZone)) {
+        compatibleZones.add(toZone);
+      }
+    }
+    zoneCompatLookup.set(fromZone, compatibleZones);
+  }
+
+  return {
+    warehouseInputTilesByItemId,
+    activeWorkbenchJobsByInputItem,
+    zoneCompatLookup,
+    warehouseIdByInputTileId,
+  };
+}
 
 export type ConveyorTickEligibilityDecision =
   | { kind: "blocked" }
@@ -254,27 +341,36 @@ export interface DecideConveyorTargetSelectionInput<TSource = unknown> {
   splitterRouteState?: SplitterRouteState;
   /** Optional override for persisted per-splitter output filters. */
   splitterFilterState?: SplitterFilterState;
+  /** Precomputed per-tick routing lookup. Omitted callers keep legacy API compatibility. */
+  routingIndex?: ConveyorRoutingIndex;
 }
 
 export const decideConveyorTargetSelection = <TSource>(
   input: DecideConveyorTargetSelectionInput<TSource>,
 ): ConveyorTargetDecision => {
+  const routingIndex =
+    input.routingIndex ?? buildConveyorRoutingIndex(input.state);
   const convZone = input.state.buildingZoneIds[input.convId] ?? null;
   const itemKey = input.currentItem as keyof Inventory;
   const warehouseCapacity = input.getWarehouseCapacity(input.state.mode);
 
   // Priority 1: conveyor stands directly on a warehouse input tile.
-  for (const wAsset of Object.values(input.state.assets)) {
-    if (!isWarehouseStorageAsset(wAsset)) continue;
-    if (
-      input.convAsset.x === wAsset.x &&
-      input.convAsset.y === wAsset.y + assetHeight(wAsset)
-    ) {
-      const whZone = input.state.buildingZoneIds[wAsset.id] ?? null;
-      const whInv = input.warehouseInventories[wAsset.id];
+  const convTileId = cellKey(input.convAsset.x, input.convAsset.y) as TileId;
+  const warehouseInputTiles = routingIndex.warehouseInputTilesByItemId.get(
+    input.currentItem,
+  );
+  const warehouseInputTargetId = warehouseInputTiles?.has(convTileId)
+    ? (routingIndex.warehouseIdByInputTileId.get(convTileId) ?? null)
+    : null;
+  if (warehouseInputTargetId) {
+    const wAsset = input.state.assets[warehouseInputTargetId];
+    if (isWarehouseStorageAsset(wAsset)) {
+      const whZone =
+        input.state.buildingZoneIds[warehouseInputTargetId] ?? null;
+      const whInv = input.warehouseInventories[warehouseInputTargetId];
       const warehouseInputEligibility = classifyConveyorTargetEligibility([
         {
-          condition: areZonesTransportCompatible(convZone, whZone),
+          condition: areIndexedZonesCompatible(routingIndex, convZone, whZone),
           blockReason: "warehouse_input_tile_zone_incompatible",
         },
         {
@@ -290,14 +386,14 @@ export const decideConveyorTargetSelection = <TSource>(
         return {
           kind: "blocked",
           targetType: "warehouse_input_tile",
-          targetId: wAsset.id,
+          targetId: warehouseInputTargetId,
           blockReason: warehouseInputEligibility.blockReason,
         };
       }
       return {
         kind: "target",
         targetType: "warehouse_input_tile",
-        targetId: wAsset.id,
+        targetId: warehouseInputTargetId,
       };
     }
   }
@@ -331,7 +427,8 @@ export const decideConveyorTargetSelection = <TSource>(
       const nextTileZone = nextAssetId
         ? (input.state.buildingZoneIds[nextAssetId] ?? null)
         : null;
-      const beltToNextZoneOk = areZonesTransportCompatible(
+      const beltToNextZoneOk = areIndexedZonesCompatible(
+        routingIndex,
         convZone,
         nextTileZone,
       );
@@ -382,7 +479,11 @@ export const decideConveyorTargetSelection = <TSource>(
     const nextConv = input.conveyors[peerId];
     const nextQueue = nextConv?.queue ?? [];
     const peerZone = input.state.buildingZoneIds[peerId] ?? null;
-    const beltToPeerZoneOk = areZonesTransportCompatible(convZone, peerZone);
+    const beltToPeerZoneOk = areIndexedZonesCompatible(
+      routingIndex,
+      convZone,
+      peerZone,
+    );
     const peerEligibility = classifyConveyorTargetEligibility([
       {
         condition: !input.movedThisTick.has(peerId),
@@ -438,7 +539,11 @@ export const decideConveyorTargetSelection = <TSource>(
   const nextTileZone = nextAssetId
     ? (input.state.buildingZoneIds[nextAssetId] ?? null)
     : null;
-  const beltToNextZoneOk = areZonesTransportCompatible(convZone, nextTileZone);
+  const beltToNextZoneOk = areIndexedZonesCompatible(
+    routingIndex,
+    convZone,
+    nextTileZone,
+  );
 
   if (nextBeltCompatible) {
     const nextConveyorId = nextAssetId;
@@ -508,7 +613,7 @@ export const decideConveyorTargetSelection = <TSource>(
     const whInv = input.warehouseInventories[nextAsset.id];
     const adjacentWarehouseEligibility = classifyConveyorTargetEligibility([
       {
-        condition: areZonesTransportCompatible(convZone, adjWhZone),
+        condition: areIndexedZonesCompatible(routingIndex, convZone, adjWhZone),
         blockReason: "adjacent_warehouse_zone_incompatible",
       },
       {
@@ -536,12 +641,9 @@ export const decideConveyorTargetSelection = <TSource>(
   }
 
   if (nextAsset?.type === "workbench") {
-    const activeJobForWb = (input.state.crafting?.jobs ?? []).find(
-      (j) =>
-        j.workbenchId === nextAsset.id &&
-        j.status !== "done" &&
-        j.status !== "cancelled",
-    );
+    const activeJobForWb = (
+      routingIndex.activeWorkbenchJobsByInputItem.get(input.currentItem) ?? []
+    ).find((job) => job.workbenchId === nextAsset.id);
     const workbenchJobEligibility = classifyConveyorTargetEligibility([
       {
         condition: !!activeJobForWb,
@@ -559,7 +661,7 @@ export const decideConveyorTargetSelection = <TSource>(
     const wbZone = input.state.buildingZoneIds[nextAsset.id] ?? null;
     const workbenchZoneEligibility = classifyConveyorTargetEligibility([
       {
-        condition: areZonesTransportCompatible(convZone, wbZone),
+        condition: areIndexedZonesCompatible(routingIndex, convZone, wbZone),
         blockReason: "workbench_zone_incompatible",
       },
     ]);
@@ -606,7 +708,11 @@ export const decideConveyorTargetSelection = <TSource>(
     const oreKey = input.currentItem === "iron" ? "iron" : "copper";
     const smithyEligibility = classifyConveyorTargetEligibility([
       {
-        condition: areZonesTransportCompatible(convZone, smithyZone),
+        condition: areIndexedZonesCompatible(
+          routingIndex,
+          convZone,
+          smithyZone,
+        ),
         blockReason: "smithy_zone_incompatible",
       },
       {
@@ -614,7 +720,8 @@ export const decideConveyorTargetSelection = <TSource>(
         blockReason: "smithy_item_not_supported",
       },
       {
-        condition: !smithyItemSupported || (input.smithy as any)[oreKey] < 50,
+        condition:
+          !smithyItemSupported || getSmithyOreAmount(input.smithy, oreKey) < 50,
         blockReason: "smithy_full",
       },
     ]);
@@ -639,6 +746,22 @@ export const decideConveyorTargetSelection = <TSource>(
 
 function cellKey(x: number, y: number): string {
   return `${x},${y}`;
+}
+
+function areIndexedZonesCompatible(
+  routingIndex: ConveyorRoutingIndex,
+  fromZone: string | null,
+  toZone: string | null,
+): boolean {
+  if (!fromZone || !toZone) return true;
+  return routingIndex.zoneCompatLookup.get(fromZone)?.has(toZone) ?? false;
+}
+
+function getSmithyOreAmount(
+  smithy: SmithyState,
+  oreKey: "iron" | "copper",
+): number {
+  return oreKey === "iron" ? smithy.iron : smithy.copper;
 }
 
 function assetHeight(asset: Pick<PlacedAsset, "height" | "size">): number {

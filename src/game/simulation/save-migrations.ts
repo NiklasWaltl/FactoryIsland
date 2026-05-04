@@ -280,8 +280,31 @@ export function clampGeneratorFuel(
 type MigrationStep = {
   from: number;
   to: number;
-  migrate: (save: any) => any;
+  migrate: (save: unknown) => unknown;
 };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function step<TIn, TOut>(
+  from: number,
+  to: number,
+  fn: (save: TIn) => TOut,
+): MigrationStep {
+  return {
+    from,
+    to,
+    migrate: (save: unknown) => {
+      if (!isPlainObject(save)) {
+        throw new Error(
+          `[save] Migration v${from}->v${to}: expected object, got ${typeof save}`,
+        );
+      }
+      return fn(save as TIn);
+    },
+  };
+}
 
 function normalizeNonNegativeInteger(raw: unknown, fallback = 0): number {
   return typeof raw === "number" && Number.isFinite(raw)
@@ -727,35 +750,35 @@ function migrateV28ToV29(save: SaveGameV28): SaveGameV29 {
 }
 
 const MIGRATIONS: MigrationStep[] = [
-  { from: 0, to: 1, migrate: migrateV0ToV1 },
-  { from: 1, to: 2, migrate: migrateV1ToV2 },
-  { from: 2, to: 3, migrate: migrateV2ToV3 },
-  { from: 3, to: 4, migrate: migrateV3ToV4 },
-  { from: 4, to: 5, migrate: migrateV4ToV5 },
-  { from: 5, to: 6, migrate: migrateV5ToV6 },
-  { from: 6, to: 7, migrate: migrateV6ToV7 },
-  { from: 7, to: 8, migrate: migrateV7ToV8 },
-  { from: 8, to: 9, migrate: migrateV8ToV9 },
-  { from: 9, to: 10, migrate: migrateV9ToV10 },
-  { from: 10, to: 11, migrate: migrateV10ToV11 },
-  { from: 11, to: 12, migrate: migrateV11ToV12 },
-  { from: 12, to: 13, migrate: migrateV12ToV13 },
-  { from: 13, to: 14, migrate: migrateV13ToV14 },
-  { from: 14, to: 15, migrate: migrateV14ToV15 },
-  { from: 15, to: 16, migrate: migrateV15ToV16 },
-  { from: 16, to: 17, migrate: migrateV16ToV17 },
-  { from: 17, to: 18, migrate: migrateV17ToV18 },
-  { from: 18, to: 19, migrate: migrateV18ToV19 },
-  { from: 19, to: 20, migrate: migrateV19ToV20 },
-  { from: 20, to: 21, migrate: migrateV20ToV21 },
-  { from: 21, to: 22, migrate: migrateV21ToV22 },
-  { from: 22, to: 23, migrate: migrateV22ToV23 },
-  { from: 23, to: 24, migrate: migrateV23ToV24 },
-  { from: 24, to: 25, migrate: migrateV24ToV25 },
-  { from: 25, to: 26, migrate: migrateV25ToV26 },
-  { from: 26, to: 27, migrate: migrateV26ToV27 },
-  { from: 27, to: 28, migrate: migrateV27ToV28 },
-  { from: 28, to: 29, migrate: migrateV28ToV29 },
+  step(0, 1, migrateV0ToV1),
+  step(1, 2, migrateV1ToV2),
+  step(2, 3, migrateV2ToV3),
+  step(3, 4, migrateV3ToV4),
+  step(4, 5, migrateV4ToV5),
+  step(5, 6, migrateV5ToV6),
+  step(6, 7, migrateV6ToV7),
+  step(7, 8, migrateV7ToV8),
+  step(8, 9, migrateV8ToV9),
+  step(9, 10, migrateV9ToV10),
+  step(10, 11, migrateV10ToV11),
+  step(11, 12, migrateV11ToV12),
+  step(12, 13, migrateV12ToV13),
+  step(13, 14, migrateV13ToV14),
+  step(14, 15, migrateV14ToV15),
+  step(15, 16, migrateV15ToV16),
+  step(16, 17, migrateV16ToV17),
+  step(17, 18, migrateV17ToV18),
+  step(18, 19, migrateV18ToV19),
+  step(19, 20, migrateV19ToV20),
+  step(20, 21, migrateV20ToV21),
+  step(21, 22, migrateV21ToV22),
+  step(22, 23, migrateV22ToV23),
+  step(23, 24, migrateV23ToV24),
+  step(24, 25, migrateV24ToV25),
+  step(25, 26, migrateV25ToV26),
+  step(26, 27, migrateV26ToV27),
+  step(27, 28, migrateV27ToV28),
+  step(28, 29, migrateV28ToV29),
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {
@@ -774,7 +797,7 @@ export function migrateSave(raw: unknown): SaveGameLatest | null {
     return null;
   }
 
-  let save: any = data;
+  let save: unknown = data;
   for (const step of MIGRATIONS) {
     if (version === step.from) {
       save = step.migrate(save);

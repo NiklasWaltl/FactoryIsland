@@ -39,7 +39,7 @@ import type {
 import {
   KEEP_STOCK_MAX_TARGET,
   KEEP_STOCK_OPEN_JOB_CAP,
-} from "../../store/reducer";
+} from "../../store/constants/keep-stock";
 import { isUnderConstruction } from "../../store/helpers/asset-status";
 import { resolveBuildingSource } from "../../store/building-source";
 import { toCraftingJobInventorySource } from "../../store/crafting/crafting-source-adapters";
@@ -89,6 +89,69 @@ export interface ProductionTransparencySnapshot {
   readonly jobs: readonly ProductionJobStatusRow[];
   readonly keepStock: readonly KeepStockStatusRow[];
 }
+
+interface ProductionTransparencyInputRefs {
+  readonly craftingJobs: GameState["crafting"]["jobs"];
+  readonly keepStockByWorkbench: GameState["keepStockByWorkbench"];
+  readonly recipeAutomationPolicies: GameState["recipeAutomationPolicies"];
+  readonly constructionSites: GameState["constructionSites"];
+  readonly drones: GameState["drones"];
+  readonly assets: GameState["assets"];
+  readonly inventory: GameState["inventory"];
+  readonly warehouseInventories: GameState["warehouseInventories"];
+  readonly serviceHubs: GameState["serviceHubs"];
+  readonly network: GameState["network"];
+  readonly buildingZoneIds: GameState["buildingZoneIds"];
+  readonly buildingSourceWarehouseIds: GameState["buildingSourceWarehouseIds"];
+  readonly productionZones: GameState["productionZones"];
+}
+
+function getProductionTransparencyInputRefs(
+  state: GameState,
+): ProductionTransparencyInputRefs {
+  return {
+    craftingJobs: state.crafting.jobs,
+    keepStockByWorkbench: state.keepStockByWorkbench,
+    recipeAutomationPolicies: state.recipeAutomationPolicies,
+    constructionSites: state.constructionSites,
+    drones: state.drones,
+    assets: state.assets,
+    inventory: state.inventory,
+    warehouseInventories: state.warehouseInventories,
+    serviceHubs: state.serviceHubs,
+    network: state.network,
+    buildingZoneIds: state.buildingZoneIds,
+    buildingSourceWarehouseIds: state.buildingSourceWarehouseIds,
+    productionZones: state.productionZones,
+  };
+}
+
+function hasSameProductionTransparencyInputRefs(
+  left: ProductionTransparencyInputRefs | null,
+  right: ProductionTransparencyInputRefs,
+): boolean {
+  if (!left) return false;
+  return (
+    left.craftingJobs === right.craftingJobs &&
+    left.keepStockByWorkbench === right.keepStockByWorkbench &&
+    left.recipeAutomationPolicies === right.recipeAutomationPolicies &&
+    left.constructionSites === right.constructionSites &&
+    left.drones === right.drones &&
+    left.assets === right.assets &&
+    left.inventory === right.inventory &&
+    left.warehouseInventories === right.warehouseInventories &&
+    left.serviceHubs === right.serviceHubs &&
+    left.network === right.network &&
+    left.buildingZoneIds === right.buildingZoneIds &&
+    left.buildingSourceWarehouseIds === right.buildingSourceWarehouseIds &&
+    left.productionZones === right.productionZones
+  );
+}
+
+let lastProductionTransparencyInputs: ProductionTransparencyInputRefs | null =
+  null;
+let lastProductionTransparencySnapshot: ProductionTransparencySnapshot | null =
+  null;
 
 // Shared evaluator deps — read-only mirror of the values the reducer
 // passes into the planning workflow. Kept locally so this UI module
@@ -393,7 +456,23 @@ function getKeepStockRows(state: GameState): KeepStockStatusRow[] {
 export function buildProductionTransparency(
   state: GameState,
 ): ProductionTransparencySnapshot {
+  const nextInputs = getProductionTransparencyInputRefs(state);
+  if (
+    hasSameProductionTransparencyInputRefs(
+      lastProductionTransparencyInputs,
+      nextInputs,
+    ) &&
+    lastProductionTransparencySnapshot
+  ) {
+    return lastProductionTransparencySnapshot;
+  }
+
   const jobs = [...getCraftingJobRows(state), ...getConstructionRows(state)];
   const keepStock = getKeepStockRows(state);
-  return { jobs, keepStock };
+  const snapshot = { jobs, keepStock };
+
+  lastProductionTransparencyInputs = nextInputs;
+  lastProductionTransparencySnapshot = snapshot;
+
+  return snapshot;
 }

@@ -114,4 +114,45 @@ describe("selectBuildMenuInventoryView", () => {
     expect(view.wood).toBe(0);
     expect(hasResources(view, { wood: 5 })).toBe(false);
   });
+
+  it("reuses the cached view when non-input slices change", () => {
+    const state = withHub(
+      withDrop(bareState(), "drop-1", "wood", 5),
+      "hub-1",
+      { wood: 2 },
+    );
+
+    const first = selectBuildMenuInventoryView(state);
+    const second = selectBuildMenuInventoryView({
+      ...state,
+      buildMode: !state.buildMode,
+    });
+
+    expect(second).toBe(first);
+  });
+
+  it("recomputes when collection nodes change", () => {
+    const state = withDrop(bareState(), "drop-1", "wood", 5);
+
+    const first = selectBuildMenuInventoryView(state);
+    const second = selectBuildMenuInventoryView({
+      ...state,
+      collectionNodes: {
+        ...state.collectionNodes,
+        "drop-2": {
+          id: "drop-2",
+          itemType: "stone",
+          amount: 1,
+          tileX: 1,
+          tileY: 1,
+          collectable: true,
+          createdAt: 0,
+          reservedByDroneId: null,
+        },
+      },
+    });
+
+    expect(second).not.toBe(first);
+    expect(second.stone).toBe(1);
+  });
 });

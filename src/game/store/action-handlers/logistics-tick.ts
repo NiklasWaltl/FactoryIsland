@@ -20,6 +20,7 @@
 // ============================================================
 
 import type { GameState } from "../types";
+import { buildConveyorRoutingIndex } from "../decisions/conveyor-decisions";
 import {
   type LogisticsTickIoDeps,
   type LogisticsTickContext,
@@ -51,6 +52,7 @@ export function handleLogisticsTickAction(
   deps: LogisticsTickIoDeps,
 ): GameState {
   // Phase 0: Snapshot powered machines and initialize mutable working set.
+  const conveyorRoutingIndex = buildConveyorRoutingIndex(state);
   const ctx: LogisticsTickContext = {
     state,
     deps,
@@ -79,7 +81,7 @@ export function handleLogisticsTickAction(
   // Phase 2: Auto-miner production and output routing.
   runAutoMinerPhase(ctx);
   // Phase 3: Conveyor movement, transport matching, and destination handoff.
-  runConveyorPhase(ctx);
+  runConveyorPhase(ctx, conveyorRoutingIndex);
   // Phase 4: Auto-smelter belt input, processing, and output flush/status update.
   runAutoSmelterPhase(ctx);
   // Phase 5: Auto-assembler (belt-only I/O, fixed V1 recipes).

@@ -5,6 +5,23 @@ import {
 } from "../inventory-ops";
 import type { CollectableItemType, GameState, Inventory } from "../types";
 
+interface GlobalInventoryInputs {
+  readonly inventory: GameState["inventory"];
+  readonly warehouseInventories: GameState["warehouseInventories"];
+  readonly serviceHubs: GameState["serviceHubs"];
+}
+
+interface BuildMenuInventoryInputs {
+  readonly serviceHubs: GameState["serviceHubs"];
+  readonly collectionNodes: GameState["collectionNodes"];
+}
+
+let lastGlobalInventoryInputs: GlobalInventoryInputs | null = null;
+let lastGlobalInventoryView: Inventory | null = null;
+
+let lastBuildMenuInventoryInputs: BuildMenuInventoryInputs | null = null;
+let lastBuildMenuInventoryView: Inventory | null = null;
+
 /** Read the available amount of a single resource from the global pool. */
 export function getAvailableResource(
   state: { inventory: Inventory },
@@ -26,7 +43,27 @@ export function getAvailableResource(
  * DO NOT mutate the result - write to the underlying physical stores instead.
  */
 export function selectGlobalInventoryView(state: GameState): Inventory {
-  return getEffectiveBuildInventory(state);
+  const nextInputs: GlobalInventoryInputs = {
+    inventory: state.inventory,
+    warehouseInventories: state.warehouseInventories,
+    serviceHubs: state.serviceHubs,
+  };
+
+  if (
+    lastGlobalInventoryInputs &&
+    lastGlobalInventoryView &&
+    lastGlobalInventoryInputs.inventory === nextInputs.inventory &&
+    lastGlobalInventoryInputs.warehouseInventories ===
+      nextInputs.warehouseInventories &&
+    lastGlobalInventoryInputs.serviceHubs === nextInputs.serviceHubs
+  ) {
+    return lastGlobalInventoryView;
+  }
+
+  const nextView = getEffectiveBuildInventory(state);
+  lastGlobalInventoryInputs = nextInputs;
+  lastGlobalInventoryView = nextView;
+  return nextView;
 }
 
 /**
@@ -42,6 +79,20 @@ export function selectGlobalInventoryView(state: GameState): Inventory {
 export function selectBuildMenuInventoryView(
   state: Pick<GameState, "serviceHubs" | "collectionNodes">,
 ): Inventory {
+  const nextInputs: BuildMenuInventoryInputs = {
+    serviceHubs: state.serviceHubs,
+    collectionNodes: state.collectionNodes,
+  };
+
+  if (
+    lastBuildMenuInventoryInputs &&
+    lastBuildMenuInventoryView &&
+    lastBuildMenuInventoryInputs.serviceHubs === nextInputs.serviceHubs &&
+    lastBuildMenuInventoryInputs.collectionNodes === nextInputs.collectionNodes
+  ) {
+    return lastBuildMenuInventoryView;
+  }
+
   const effective = createEmptyInventory();
 
   for (const hub of Object.values(state.serviceHubs)) {
@@ -56,6 +107,9 @@ export function selectBuildMenuInventoryView(
     effective[node.itemType] =
       (effective[node.itemType] as number) + node.amount;
   }
+
+  lastBuildMenuInventoryInputs = nextInputs;
+  lastBuildMenuInventoryView = effective;
 
   return effective;
 }

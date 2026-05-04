@@ -16,9 +16,14 @@ export type {
   ConveyorTargetType,
   ConveyorNoTargetReason,
   ConveyorTickEligibilityDecision,
+  ConveyorRoutingIndex,
   DecideConveyorTargetSelectionInput,
+  TileId,
+  WorkbenchJob,
+  ZoneId,
 } from "../conveyor/conveyor-routing";
 export {
+  buildConveyorRoutingIndex,
   classifyConveyorTargetEligibility,
   decideConveyorTargetSelection,
   decideConveyorTickEligibility,

@@ -15,7 +15,7 @@ import {
   getActiveResources,
   getMaxDrones,
 } from "../../store/selectors/hub-tier-selectors";
-import { getHubDrones } from "../../store/reducer";
+import { getHubDrones } from "../../store/helpers/drone-helpers";
 import { HUB_UPGRADE_COST } from "../../store/constants/hub/hub-upgrade-cost";
 import { hasResourcesInPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 

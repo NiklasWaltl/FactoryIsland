@@ -5,6 +5,7 @@ import {
   decideConveyorTargetSelection,
   shouldDeferRightMergerInputToLeft,
 } from "../../../decisions/conveyor-decisions";
+import type { ConveyorRoutingIndex } from "../../../decisions/conveyor-decisions";
 import type { CraftingSource } from "../../../types";
 import type { ConveyorItem, Inventory, PlacedAsset } from "../../../types";
 import { resolveBuildingSource } from "../../../building-source";
@@ -23,7 +24,10 @@ import {
 // ------------------------------------------------------------
 // Phase 3: Conveyor movement, transport matching, destination handoff.
 // ------------------------------------------------------------
-export function runConveyorPhase(ctx: LogisticsTickContext): void {
+export function runConveyorPhase(
+  ctx: LogisticsTickContext,
+  routingIndex: ConveyorRoutingIndex,
+): void {
   const { state, deps } = ctx;
   const movedThisTick = new Set<string>();
 
@@ -57,6 +61,7 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
       getSourceCapacity: (live, source) => getSourceCapacity(ctx, live, source),
       getWarehouseCapacity,
       splitterFilterState: state.splitterFilterState,
+      routingIndex,
     });
   };
 
@@ -126,10 +131,10 @@ export function runConveyorPhase(ctx: LogisticsTickContext): void {
     activeQueue: ConveyorItem[],
     oreKey: "iron" | "copper",
   ): void => {
-    ctx.newSmithyL = {
-      ...ctx.newSmithyL,
-      [oreKey]: (ctx.newSmithyL as any)[oreKey] + 1,
-    };
+    ctx.newSmithyL =
+      oreKey === "iron"
+        ? { ...ctx.newSmithyL, iron: ctx.newSmithyL.iron + 1 }
+        : { ...ctx.newSmithyL, copper: ctx.newSmithyL.copper + 1 };
     dequeueConveyorFrontItemAndMarkChanged(convId, activeQueue);
   };
 

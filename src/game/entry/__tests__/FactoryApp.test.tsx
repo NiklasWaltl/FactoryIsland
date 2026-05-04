@@ -3,8 +3,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { CRAFTING_TICK_MS } from "../../store/constants/timing/timing";
 import FactoryGame from "../FactoryApp";
 
-jest.mock("../../store/reducer", () => {
-  const actual = jest.requireActual("../../store/reducer");
+jest.mock("../../store/initial-state", () => {
+  const actual = jest.requireActual("../../store/initial-state");
 
   function buildQueuedWorkbenchState() {
     const base = actual.createInitialState("release");

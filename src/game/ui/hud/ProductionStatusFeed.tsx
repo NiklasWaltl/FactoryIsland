@@ -25,9 +25,27 @@ const STATUS_LABEL: Record<string, string> = {
 export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
   React.memo(({ state }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const snapshot = useMemo(() => buildProductionTransparency(state), [state]);
-    const relevantKeepStock = snapshot.keepStock.filter(
-      (row) => row.decision !== "satisfied" || row.pendingAmount > 0,
+    const snapshot = useMemo(() => buildProductionTransparency(state), [
+      state.crafting.jobs,
+      state.keepStockByWorkbench,
+      state.recipeAutomationPolicies,
+      state.constructionSites,
+      state.drones,
+      state.assets,
+      state.inventory,
+      state.warehouseInventories,
+      state.serviceHubs,
+      state.network,
+      state.buildingZoneIds,
+      state.buildingSourceWarehouseIds,
+      state.productionZones,
+    ]);
+    const relevantKeepStock = useMemo(
+      () =>
+        snapshot.keepStock.filter(
+          (row) => row.decision !== "satisfied" || row.pendingAmount > 0,
+        ),
+      [snapshot.keepStock],
     );
 
     if (snapshot.jobs.length === 0 && relevantKeepStock.length === 0)

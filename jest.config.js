@@ -13,7 +13,10 @@ module.exports = {
   testEnvironment: "jsdom",
 
   // Ignore shared test helper files that live alongside tests
-  testPathIgnorePatterns: ["/node_modules/", "/__tests__/test-utils\\.ts$"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/__tests__/(test-utils|test-helpers)\\.ts$",
+  ],
 
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {

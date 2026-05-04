@@ -10,7 +10,7 @@ import type {
 } from "../store/types";
 import type { TileType } from "../world/tile-types";
 import { getStartModulePosition } from "../store/bootstrap/start-module-position";
-import { KEEP_STOCK_MAX_TARGET } from "../store/reducer";
+import { KEEP_STOCK_MAX_TARGET } from "../store/constants/keep-stock";
 import type { NetworkSlice, Reservation } from "../inventory/reservationTypes";
 import { createEmptyNetworkSlice } from "../inventory/reservationTypes";
 import type {

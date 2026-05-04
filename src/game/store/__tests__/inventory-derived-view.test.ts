@@ -98,6 +98,61 @@ describe("selectGlobalInventoryView – derived read-only inventory", () => {
     selectGlobalInventoryView(s);
     expect(s.inventory).toEqual(before);
   });
+
+  it("reuses the cached view when only unrelated slices change", () => {
+    const s = withWarehouse(
+      {
+        ...createInitialState("release"),
+        inventory: addResources(emptyInv(), { wood: 1 }),
+      },
+      "wh-A",
+      { wood: 5 },
+    );
+
+    const first = selectGlobalInventoryView(s);
+    const second = selectGlobalInventoryView({
+      ...s,
+      notifications: [
+        ...s.notifications,
+        {
+          id: "n-global-cache",
+          resource: "wood",
+          displayName: "wood",
+          amount: 1,
+          expiresAt: Date.now() + 1000,
+        },
+      ],
+    });
+
+    expect(second).toBe(first);
+  });
+
+  it("recomputes the view when inventory inputs change", () => {
+    const s = withWarehouse(
+      {
+        ...createInitialState("release"),
+        inventory: addResources(emptyInv(), { wood: 1 }),
+      },
+      "wh-A",
+      { wood: 5 },
+    );
+
+    const first = selectGlobalInventoryView(s);
+    const next = {
+      ...s,
+      warehouseInventories: {
+        ...s.warehouseInventories,
+        "wh-A": {
+          ...s.warehouseInventories["wh-A"],
+          wood: s.warehouseInventories["wh-A"].wood + 1,
+        },
+      },
+    };
+    const second = selectGlobalInventoryView(next);
+
+    expect(second).not.toBe(first);
+    expect(second.wood).toBe(first.wood + 1);
+  });
 });
 
 describe("DEBUG_MOCK_RESOURCES – fills physical storage", () => {
