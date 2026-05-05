@@ -46,7 +46,7 @@
 
 ## 🏗️ Store & Core State
 
-**Sources:** [`store/types.ts`](./store/types.ts), [`store/types/drone-types.ts`](./store/types/drone-types.ts), [`store/types/crafting-types.ts`](./store/types/crafting-types.ts), [`store/types/conveyor-types.ts`](./store/types/conveyor-types.ts)
+**Sources:** [`store/types.ts`](./store/types.ts), [`store/types/drone-types.ts`](./store/types/drone-types.ts), [`store/types/crafting-types.ts`](./store/types/crafting-types.ts), [`store/types/conveyor-types.ts`](./store/types/conveyor-types.ts), [`store/types/module-state.ts`](./store/types/module-state.ts), [`store/types/power-state.ts`](./store/types/power-state.ts), [`store/types/zone-source-state.ts`](./store/types/zone-source-state.ts)
 
 | Type | Description |
 |------|-------------|
@@ -85,6 +85,27 @@
 | `GeneratorState` | Fuel slot + burn progress, `running: boolean`, optional drone refill counter `requestedRefill?: number` |
 | `AutoDeliveryEntry` | Auto-delivery log entry: `{ id, sourceType, sourceId, resource, amount, warehouseId, timestamp }` |
 | `GameNotification` | Transient HUD notification: `id`, resource, displayName, amount, `expiresAt`, optional `kind?` |
+
+### ModuleState
+
+Exported from [`store/types/module-state.ts`](./store/types/module-state.ts).
+Fields: `moduleInventory`, `moduleFragments`, `moduleLabJob`.
+Central in `GameState` via `moduleInventory`, `moduleFragments`, and `moduleLabJob`.
+
+### PowerState
+
+Exported from [`store/types/power-state.ts`](./store/types/power-state.ts).
+Aggregates battery/generator state and power-network fields (`connectedAssetIds`,
+`poweredMachineIds`, `machinePowerRatio`, `energyDebugOverlay`, `cablesPlaced`,
+`powerPolesPlaced`).
+Referenced by `GameState` field types across the energy slice.
+
+### ZoneSourceState
+
+Exported from [`store/types/zone-source-state.ts`](./store/types/zone-source-state.ts).
+Holds the zone/source assignment map around `ProductionZone` via
+`buildingSourceWarehouseIds`, `productionZones`, and `buildingZoneIds`.
+Referenced by `GameState` for building-to-warehouse and building-to-zone relations.
 
 ---
 
