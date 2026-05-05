@@ -10,7 +10,7 @@ import {
   collectDroneTaskCandidates,
 } from "./select-drone-task-candidates";
 import type { SelectDroneTaskDeps } from "./select-drone-task-types";
-import { selectStarterDrone } from "../../store/selectors/drone-selectors";
+import { requireStarterDrone } from "../utils/drone-state-helpers";
 
 export type {
   NearbyWarehouseDispatchCandidate,
@@ -85,8 +85,7 @@ export function selectDroneTask(
     };
   };
 
-  const drone = droneOverride ?? selectStarterDrone(state);
-  if (!drone) return null;
+  const drone = droneOverride ?? requireStarterDrone(state);
   const role: DroneRole = drone.role ?? "auto";
 
   const {

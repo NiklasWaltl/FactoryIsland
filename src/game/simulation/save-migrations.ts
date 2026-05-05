@@ -38,6 +38,7 @@ import type { CraftingQueueState } from "../crafting/types";
 import { createEmptyCraftingQueue } from "../crafting/types";
 import { type RecipeAutomationPolicyMap } from "../crafting/policies";
 import { debugLog } from "../debug/debugLogger";
+import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
@@ -581,14 +582,20 @@ function migrateV10ToV11(save: SaveGameV10): SaveGameV11 {
 function migrateV11ToV12(save: SaveGameV11): SaveGameV12 {
   const drones: Record<string, StarterDroneState> = {};
   if (save.starterDrone) {
-    const droneId = (save.starterDrone as any).droneId ?? "starter";
+    const droneId = (save.starterDrone as any).droneId ?? STARTER_DRONE_ID;
     drones[droneId] = {
       ...save.starterDrone,
       droneId,
       craftingJobId: (save.starterDrone as any).craftingJobId ?? null,
     } as StarterDroneState;
+    if (!drones[STARTER_DRONE_ID]) {
+      drones[STARTER_DRONE_ID] = {
+        ...drones[droneId],
+        droneId: STARTER_DRONE_ID,
+      };
+    }
   } else {
-    drones["starter"] = {
+    drones[STARTER_DRONE_ID] = {
       status: "idle",
       tileX: 39, // standard 80×50 grid center — no layout context available at this migration version
       tileY: 24,
@@ -599,10 +606,15 @@ function migrateV11ToV12(save: SaveGameV11): SaveGameV12 {
       currentTaskType: null,
       deliveryTargetId: null,
       craftingJobId: null,
-      droneId: "starter",
+      droneId: STARTER_DRONE_ID,
     };
   }
-  return { ...save, version: 12, drones };
+  return {
+    ...save,
+    version: 12,
+    drones,
+    starterDrone: drones[STARTER_DRONE_ID],
+  };
 }
 
 function migrateV12ToV13(save: SaveGameV12): SaveGameV13 {
@@ -620,7 +632,15 @@ function migrateV12ToV13(save: SaveGameV12): SaveGameV13 {
         craftingJobId: (save.starterDrone as any).craftingJobId ?? null,
       } as StarterDroneState)
     : save.starterDrone;
-  return { ...save, version: 13, drones, starterDrone };
+  if (!drones[STARTER_DRONE_ID] && starterDrone) {
+    drones[STARTER_DRONE_ID] = starterDrone;
+  }
+  return {
+    ...save,
+    version: 13,
+    drones,
+    starterDrone: drones[STARTER_DRONE_ID],
+  };
 }
 
 function migrateV13ToV14(save: SaveGameV13): SaveGameV14 {

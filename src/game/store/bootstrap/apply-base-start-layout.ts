@@ -20,6 +20,7 @@ import { createDefaultProtoHubTargetStock } from "../constants/hub/hub-target-st
 import { createEmptyInventory } from "../inventory-ops";
 import type { GameState, PlacedAsset, StarterDroneState } from "../types";
 import { cellKey } from "../utils/cell-key";
+import { selectStarterDrone } from "../../drones/utils/drone-state-helpers";
 
 export function applyBaseStartLayout(state: GameState): GameState {
   if (hasRequiredBaseStartLayout(state)) return state;
@@ -44,7 +45,7 @@ export function applyBaseStartLayout(state: GameState): GameState {
   }
 
   const starterDrone = createDockedStarterDrone(
-    state.drones.starter ?? state.starterDrone,
+    selectStarterDrone(state),
     layout.starterDroneHubId,
     hubAsset.x,
     hubAsset.y,
@@ -140,13 +141,13 @@ function assertBaseStartCellsFree(
 }
 
 function createDockedStarterDrone(
-  starterDrone: StarterDroneState,
+  starterDrone: StarterDroneState | undefined,
   hubId: string,
   tileX: number,
   tileY: number,
 ): StarterDroneState {
   return {
-    ...starterDrone,
+    ...(starterDrone ?? {}),
     hubId,
     tileX,
     tileY,
@@ -157,7 +158,7 @@ function createDockedStarterDrone(
     currentTaskType: null,
     deliveryTargetId: null,
     craftingJobId: null,
-    droneId: starterDrone.droneId ?? "starter",
+    droneId: starterDrone?.droneId ?? "starter",
   };
 }
 

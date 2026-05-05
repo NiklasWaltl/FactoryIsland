@@ -1,5 +1,17 @@
 import type { GameState, StarterDroneState } from "../../store/types";
 
+export function selectStarterDrone(
+  state: GameState,
+): StarterDroneState | undefined {
+  return state.drones?.["starter"] ?? state.starterDrone;
+}
+
+export function requireStarterDrone(state: GameState): StarterDroneState {
+  const drone = selectStarterDrone(state);
+  if (!drone) throw new Error("[drone] starterDrone not found in state");
+  return drone;
+}
+
 /** Keep drones record and starterDrone in sync (backward compat). */
 export function syncDrones(state: GameState): GameState {
   if (!state.drones || state.drones["starter"] === undefined) return state;

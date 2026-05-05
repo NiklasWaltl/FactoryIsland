@@ -19,12 +19,10 @@ import { reassignBuildingSourceIds } from "../../../buildings/warehouse/warehous
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import {
   applyDroneUpdate,
+  selectStarterDrone,
   syncDrones,
 } from "../../../drones/utils/drone-state-helpers";
-import {
-  selectStarterDrone,
-  STARTER_DRONE_ID,
-} from "../../selectors/drone-selectors";
+import { STARTER_DRONE_ID } from "../../selectors/drone-selectors";
 import { clearModulesEquippedToAny } from "../module-compat";
 import {
   type BuildingPlacementIoDeps,
@@ -391,7 +389,7 @@ export function executeGenericRemoveAsset(
     };
   } else if (bTypeR === "service_hub") {
     // Release the drone: fall back to start module delivery
-    const starterDrone = selectStarterDrone(syncDrones(state));
+    const starterDrone = selectStarterDrone(state);
     const shouldResetStarterDrone = starterDrone?.hubId === assetId;
     // Transfer hub inventory back into global inventory
     const hubEntry = state.serviceHubs[assetId];

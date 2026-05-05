@@ -43,6 +43,7 @@ import {
 import { isRuntimeGameStateSnapshot } from "./save-legacy";
 import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
 import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
+import { selectStarterDrone } from "../drones/utils/drone-state-helpers";
 
 function createFallbackShipState(): ShipState {
   return {
@@ -91,6 +92,7 @@ function sanitizeShipSnapshot(raw: unknown): ShipState {
  */
 export function serializeState(state: GameState): SaveGameLatest {
   const ship = sanitizeShipSnapshot((state as Partial<GameState>).ship);
+  const starterDrone = selectStarterDrone(state) ?? state.starterDrone;
   debugLog.general(
     `Save: ${state.network.reservations.length} reservations, ${state.crafting.jobs.length} jobs`,
   );
@@ -129,7 +131,7 @@ export function serializeState(state: GameState): SaveGameLatest {
     productionZones: state.productionZones,
     buildingZoneIds: state.buildingZoneIds,
     collectionNodes: state.collectionNodes,
-    starterDrone: state.starterDrone,
+    starterDrone,
     serviceHubs: state.serviceHubs,
     constructionSites: state.constructionSites,
     drones: state.drones,
@@ -509,7 +511,20 @@ export function deserializeState(save: SaveGameLatest): GameState {
     );
   }
 
-  return applyDockWarehouseLayout(partial);
+  const finalState = applyDockWarehouseLayout(partial);
+
+  // Phase 3: Master-Sync beim Load.
+  // drones["starter"] ist kanonisch; starterDrone wird daraus abgeleitet.
+  if (finalState.drones[STARTER_DRONE_ID]) {
+    finalState.starterDrone = finalState.drones[STARTER_DRONE_ID];
+  } else if (finalState.starterDrone) {
+    finalState.drones = {
+      ...finalState.drones,
+      [STARTER_DRONE_ID]: finalState.starterDrone,
+    };
+  }
+
+  return finalState;
 }
 
 /**
