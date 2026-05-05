@@ -151,6 +151,9 @@ const DECONSTRUCT_OVERLAY_STROKE_COLOR = 0xff6a00;
 const DECONSTRUCT_OVERLAY_STROKE_ALPHA = 0.95;
 const DECONSTRUCT_OVERLAY_FILL_COLOR = 0xff8a00;
 const DECONSTRUCT_OVERLAY_FILL_ALPHA = 0.14;
+const DECONSTRUCT_OVERLAY_PULSE_ALPHA = 0.42;
+const DECONSTRUCT_OVERLAY_PULSE_DURATION_MS = 520;
+const REDUCED_MOTION_MEDIA_QUERY = "(prefers-reduced-motion: reduce)";
 
 const COIN_AWARD_MIN_PARTICLES = 8;
 const COIN_AWARD_MAX_PARTICLES = 12;
@@ -167,6 +170,14 @@ const HUD_COIN_BUMP_RADIUS_PX = 8;
 const HUD_COIN_BUMP_SCALE = 1.3;
 const HUD_COIN_BUMP_DURATION_MS = 200;
 
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia(REDUCED_MOTION_MEDIA_QUERY).matches
+  );
+}
+
 /** World scene - renders terrain tiles, stone floor, assets, drops, and drones. */
 class WorldScene extends Phaser.Scene {
   /** Terrain graphics layer rendered below all other world objects. */
@@ -179,6 +190,8 @@ class WorldScene extends Phaser.Scene {
   private floorFirstGid = 0;
   /** Static world assets currently rendered by Phaser. */
   private staticAssetNodes = new Map<string, Phaser.GameObjects.Container>();
+  /** Running deconstruct overlay pulse tweens keyed by asset id. */
+  private deconstructOverlayTweens = new Map<string, Phaser.Tweens.Tween>();
   /** Collection node drop markers (manual harvests). */
   private collectionNodeContainers = new Map<
     string,
@@ -248,8 +261,14 @@ class WorldScene extends Phaser.Scene {
     this.tileRenderer = new TileRenderer(this, CELL_PX);
     this.setWorldBounds(GRID_W, GRID_H);
 
-    this.events.once("shutdown", () => this.destroyTileRenderer());
-    this.events.once("destroy", () => this.destroyTileRenderer());
+    this.events.once("shutdown", () => {
+      this.destroyTileRenderer();
+      this.stopAllDeconstructOverlayPulses();
+    });
+    this.events.once("destroy", () => {
+      this.destroyTileRenderer();
+      this.stopAllDeconstructOverlayPulses();
+    });
 
     this.events.on(TILE_MAP_EVENT, (data: TileMapData) => {
       this.applyTileMap(data);
@@ -357,6 +376,7 @@ class WorldScene extends Phaser.Scene {
 
     for (const [id, container] of this.staticAssetNodes.entries()) {
       if (nextIds.has(id)) continue;
+      this.stopDeconstructOverlayPulse(id);
       container.destroy(true);
       this.staticAssetNodes.delete(id);
     }
@@ -449,7 +469,52 @@ class WorldScene extends Phaser.Scene {
         DECONSTRUCT_OVERLAY_STROKE_ALPHA,
       );
       statusOverlay.strokeRect(overlayX, overlayY, overlayWidth, overlayHeight);
+      this.ensureDeconstructOverlayPulse(asset.id, statusOverlay);
+    } else {
+      this.stopDeconstructOverlayPulse(asset.id, statusOverlay);
     }
+  }
+
+  private ensureDeconstructOverlayPulse(
+    assetId: string,
+    statusOverlay: Phaser.GameObjects.Graphics,
+  ): void {
+    if (prefersReducedMotion()) {
+      this.stopDeconstructOverlayPulse(assetId, statusOverlay);
+      return;
+    }
+
+    if (this.deconstructOverlayTweens.has(assetId)) return;
+
+    statusOverlay.setAlpha(1);
+    const tween = this.tweens.add({
+      targets: statusOverlay,
+      alpha: DECONSTRUCT_OVERLAY_PULSE_ALPHA,
+      duration: DECONSTRUCT_OVERLAY_PULSE_DURATION_MS,
+      ease: "Sine.easeInOut",
+      yoyo: true,
+      repeat: -1,
+    });
+    this.deconstructOverlayTweens.set(assetId, tween);
+  }
+
+  private stopDeconstructOverlayPulse(
+    assetId: string,
+    statusOverlay?: Phaser.GameObjects.Graphics,
+  ): void {
+    const tween = this.deconstructOverlayTweens.get(assetId);
+    if (tween) {
+      tween.stop();
+      this.deconstructOverlayTweens.delete(assetId);
+    }
+    statusOverlay?.setAlpha(1);
+  }
+
+  private stopAllDeconstructOverlayPulses(): void {
+    for (const tween of this.deconstructOverlayTweens.values()) {
+      tween.stop();
+    }
+    this.deconstructOverlayTweens.clear();
   }
 
   private applyCollectionNodes(data: CollectionNodeSnapshot[]): void {
