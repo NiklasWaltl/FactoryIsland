@@ -259,6 +259,16 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 | `CraftingError` | Error payload with kind, message, optional job/recipe/workbench ids |
 | `CraftingAction` | Discriminated union for `JOB_*` actions plus `CRAFT_REQUEST_WITH_PREREQUISITES` |
 
+### Recipe Automation Policies
+
+**Sources:** [`crafting/policies/policies.ts`](./crafting/policies/policies.ts), [`store/types.ts`](./store/types.ts)
+
+`RecipeAutomationPolicyEntry` (`policies.ts`): per-recipe policy entry
+(`autoCraftAllowed?`, `keepInStockAllowed?`, `manualOnly?`).
+
+`RecipeAutomationPolicyMap`: map of recipe id to `RecipeAutomationPolicyEntry`;
+used in `GameState.recipeAutomationPolicies` and re-exported via `store/types.ts`.
+
 ---
 
 ## 🔒 Inventory / Reservations – Extended
