@@ -1,10 +1,11 @@
 import type { AssetType, DroneStatus, GameState } from "../types";
 
-export type DeconstructQueueStatus = "open" | "reserved" | "active";
+export type DeconstructQueueStatus = "waiting" | "active";
 
 export interface DeconstructRequestQueueRow {
   readonly assetId: string;
   readonly assetType: AssetType;
+  readonly deconstructRequestSeq: number | null;
   readonly x: number;
   readonly y: number;
   readonly queueStatus: DeconstructQueueStatus;
@@ -56,10 +57,7 @@ function buildAssignedDeconstructDroneMap(
 function toQueueStatus(
   assignedDrone: AssignedDeconstructDrone | undefined,
 ): DeconstructQueueStatus {
-  if (!assignedDrone) return "open";
-  return assignedDrone.droneStatus === "moving_to_collect"
-    ? "reserved"
-    : "active";
+  return assignedDrone ? "active" : "waiting";
 }
 
 export function getDeconstructRequestQueueRows(
@@ -74,6 +72,7 @@ export function getDeconstructRequestQueueRows(
       return {
         assetId: asset.id,
         assetType: asset.type,
+        deconstructRequestSeq: asset.deconstructRequestSeq ?? null,
         x: asset.x,
         y: asset.y,
         queueStatus: toQueueStatus(assignedDrone),
@@ -84,8 +83,8 @@ export function getDeconstructRequestQueueRows(
     });
 
   rows.sort((left, right) => {
-    const leftOrder = left.tickOrderIndex ?? Number.MAX_SAFE_INTEGER;
-    const rightOrder = right.tickOrderIndex ?? Number.MAX_SAFE_INTEGER;
+    const leftOrder = left.deconstructRequestSeq ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = right.deconstructRequestSeq ?? Number.MAX_SAFE_INTEGER;
     if (leftOrder !== rightOrder) return leftOrder - rightOrder;
     return left.assetId.localeCompare(right.assetId);
   });

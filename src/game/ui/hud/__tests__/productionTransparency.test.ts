@@ -151,7 +151,7 @@ describe("productionTransparency", () => {
     expect(row?.targetLabel).toContain("hub-up");
   });
 
-  it("shows deconstruct requests with open/reserved/active status", () => {
+  it("shows deconstruct requests with waiting/active status in request sequence order", () => {
     let state = buildState({ wood: 0 });
 
     const starterReserved = {
@@ -187,6 +187,7 @@ describe("productionTransparency", () => {
           y: 8,
           size: 1,
           status: "deconstructing",
+          deconstructRequestSeq: 3,
         },
         "dec-reserved": {
           id: "dec-reserved",
@@ -195,6 +196,7 @@ describe("productionTransparency", () => {
           y: 8,
           size: 2,
           status: "deconstructing",
+          deconstructRequestSeq: 1,
         },
         "dec-active": {
           id: "dec-active",
@@ -203,6 +205,7 @@ describe("productionTransparency", () => {
           y: 8,
           size: 1,
           status: "deconstructing",
+          deconstructRequestSeq: 2,
         },
       },
       starterDrone: starterReserved,
@@ -224,17 +227,26 @@ describe("productionTransparency", () => {
       (entry) => entry.assetId === "dec-active",
     );
 
+    expect(snapshot.deconstructRequests.map((entry) => entry.assetId)).toEqual([
+      "dec-reserved",
+      "dec-active",
+      "dec-open",
+    ]);
+
     expect(open).toBeDefined();
-    expect(open?.queueStatus).toBe("open");
+    expect(open?.deconstructRequestSeq).toBe(3);
+    expect(open?.queueStatus).toBe("waiting");
     expect(open?.assignedDroneId).toBeUndefined();
     expect(open?.tickOrderIndex).toBeUndefined();
 
     expect(reserved).toBeDefined();
-    expect(reserved?.queueStatus).toBe("reserved");
+    expect(reserved?.deconstructRequestSeq).toBe(1);
+    expect(reserved?.queueStatus).toBe("active");
     expect(reserved?.assignedDroneId).toBe("starter");
     expect(reserved?.tickOrderIndex).toBe(1);
 
     expect(active).toBeDefined();
+    expect(active?.deconstructRequestSeq).toBe(2);
     expect(active?.queueStatus).toBe("active");
     expect(active?.assignedDroneId).toBe("drone-2");
     expect(active?.tickOrderIndex).toBe(2);

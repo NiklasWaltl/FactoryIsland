@@ -23,12 +23,6 @@ const STATUS_LABEL: Record<string, string> = {
   waiting: "waiting",
 };
 
-const DECONSTRUCT_QUEUE_STATUS_LABEL: Record<string, string> = {
-  open: "offen",
-  reserved: "reserviert",
-  active: "aktiv",
-};
-
 export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
   React.memo(({ state }) => {
     const [collapsed, setCollapsed] = useState(false);
@@ -54,13 +48,6 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
         ),
       [snapshot.keepStock],
     );
-
-    if (
-      snapshot.jobs.length === 0 &&
-      relevantKeepStock.length === 0 &&
-      snapshot.deconstructRequests.length === 0
-    )
-      return null;
 
     return (
       <div className="fi-production-status-feed">
@@ -143,69 +130,66 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
               </div>
             )}
 
-            {snapshot.deconstructRequests.length > 0 && (
-              <div className="fi-production-status-section">
-                <div className="fi-production-status-title">
-                  Deconstruct requests
-                </div>
-                <div className="fi-production-status-list">
-                  {snapshot.deconstructRequests.slice(0, 8).map((row) => {
-                    const assignedDrone = row.assignedDroneId
-                      ? state.drones[row.assignedDroneId]
-                      : null;
-                    const droneDetail = assignedDrone
-                      ? getDroneStatusDetail(state, assignedDrone)
-                      : null;
+            <div className="fi-production-status-section">
+              <div className="fi-production-status-title">Deconstruct Queue</div>
+              <div className="fi-production-status-list">
+                {snapshot.deconstructRequests.length === 0 && (
+                  <div className="fi-production-status-entry">
+                    <div className="fi-production-status-reason">
+                      - keine offenen Deconstruct-Requests -
+                    </div>
+                  </div>
+                )}
+                {snapshot.deconstructRequests.slice(0, 8).map((row) => {
+                  const assignedDrone = row.assignedDroneId
+                    ? state.drones[row.assignedDroneId]
+                    : null;
+                  const droneDetail = assignedDrone
+                    ? getDroneStatusDetail(state, assignedDrone)
+                    : null;
+                  const isActive = row.queueStatus === "active";
 
-                    return (
-                      <div
-                        key={row.assetId}
-                        className="fi-production-status-entry"
-                        style={
-                          row.queueStatus === "active"
-                            ? {
-                                borderColor: "rgba(255, 166, 77, 0.85)",
-                                background: "rgba(255, 166, 77, 0.15)",
-                              }
-                            : undefined
-                        }
-                      >
-                        <div className="fi-production-status-line">
-                          <span className="fi-production-status-badge">
-                            {row.assetType}
-                          </span>
-                          <span className="fi-production-status-status">
-                            {DECONSTRUCT_QUEUE_STATUS_LABEL[row.queueStatus] ??
-                              row.queueStatus}
-                          </span>
-                          {row.tickOrderIndex && (
-                            <span className="fi-production-status-priority">
-                              drone tick #{row.tickOrderIndex}
-                            </span>
-                          )}
-                        </div>
-                        <div className="fi-production-status-line fi-production-status-line--sub">
-                          <span>asset: {row.assetId}</span>
-                          <span>
-                            grid: ({row.x}, {row.y})
-                          </span>
-                        </div>
-                        {row.assignedDroneId ? (
-                          <div className="fi-production-status-reason">
-                            drone: {row.assignedDroneId}
-                            {droneDetail ? ` (${droneDetail.label})` : ""}
-                          </div>
-                        ) : (
-                          <div className="fi-production-status-reason">
-                            noch keinem deconstruct drone zugewiesen
-                          </div>
-                        )}
+                  return (
+                    <div
+                      key={row.assetId}
+                      className="fi-production-status-entry"
+                      style={
+                        isActive
+                          ? {
+                              borderColor: "rgba(255, 166, 77, 0.85)",
+                              background: "rgba(255, 166, 77, 0.15)",
+                              fontWeight: 700,
+                            }
+                          : undefined
+                      }
+                    >
+                      <div className="fi-production-status-line">
+                        <span className="fi-production-status-badge">
+                          {row.assetType}
+                        </span>
+                        <span className="fi-production-status-priority">
+                          seq #{row.deconstructRequestSeq ?? "?"}
+                        </span>
+                        <span className="fi-production-status-status">
+                          {isActive ? "> active" : "waiting"}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="fi-production-status-line fi-production-status-line--sub">
+                        <span>asset: {row.assetId}</span>
+                        <span>
+                          grid: ({row.x}, {row.y})
+                        </span>
+                      </div>
+                      <div className="fi-production-status-reason">
+                        {row.assignedDroneId
+                          ? `drone: ${row.assignedDroneId}${droneDetail ? ` (${droneDetail.label})` : ""}`
+                          : "wartet auf deconstruct drone assignment"}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>

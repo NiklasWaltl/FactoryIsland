@@ -85,5 +85,9 @@ export function gatherDeconstructCandidates(
     );
   }
 
+  candidates.sort(
+    (a, b) => (a.deconstructRequestSeq ?? 0) - (b.deconstructRequestSeq ?? 0),
+  );
+
   return candidates;
 }
