@@ -81,14 +81,14 @@ In the current runtime, `dispatch` is triggered from four source groups:
 - **Tick hooks** (`entry/use-game-ticks.ts`) dispatch all periodic actions (mostly `*_TICK`).
 - **Pointer/UI interactions** (Grid, Panels, Menus) dispatch building, machine, and panel actions.
 - **Keyboard input** (`entry/FactoryApp.tsx`) dispatches hotbar/build/panel actions (`SET_ACTIVE_SLOT`, `TOGGLE_BUILD_MODE`, `CLOSE_PANEL`).
-- **DEV debug actions** (`DebugPanel`) dispatch `DEBUG_SET_STATE` for controlled state mocking/reset.
+- **DEV debug callbacks** (`DebugPanel`) trigger `onMock` / `onResetState`; `FactoryApp` dispatches `DEBUG_SET_STATE` for controlled state mocking/reset.
 
 ### DEV Scene Boot Path (DEV only)
 
 In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 
 - `getDevSceneFromUrl()` resolves the scene id from the URL parameter.
-- `applyDevScene()` mutates the fresh initial snapshot before gameplay mounts.
+- `applyDevScene()` returns a new state via `buildSceneState(...)` before gameplay mounts.
 - `hasDevSceneUrlParam()` gates this path so normal save hydration remains default when no scene parameter is present.
 
 ---
@@ -109,6 +109,8 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 | Drones | 500 | `DRONE_TICK` | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
 | Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
 | Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
+
+There is no separate `AUTO_ASSEMBLER_TICK` action. Auto-assembler processing runs as Phase 4 (`runAutoAssemblerPhase`) inside `LOGISTICS_TICK`.
 
 `autoDeliveryLog` ist transiente UI-Telemetrie und wird **nicht persistiert**.
 Einträge entstehen bei jeder Auto-Delivery (Auto-Miner, Conveyor-Transfer).
@@ -207,10 +209,18 @@ Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 
 ## Current Runtime Domains Not Shown In The Old Core Loop
 
+### Cell Interaction & Build/Floor Entry Path
+
+- `CLICK_CELL` is the central grid interaction entry and is handled by `handleClickCellAction`.
+- Build-mode selection (`TOGGLE_BUILD_MODE`, `SELECT_BUILD_BUILDING`, `SELECT_BUILD_FLOOR_TILE`) is handled by `build-mode-actions`.
+- Floor placement uses its own action path (`BUILD_PLACE_FLOOR_TILE` -> `handleFloorPlacementAction`).
+- Building placement/removal remains separate (`BUILD_PLACE_BUILDING`, `BUILD_REMOVE_ASSET`) via `building-placement`.
+- All four paths are wired in `dispatchAction` (`store/game-reducer-dispatch.ts`) as separate reducer clusters.
+
 ### Production Zones
 
 Production Zones bilden einen eigenen Reducer-Cluster
-(`game-reducer-dispatch.ts:40/76`) und beeinflussen direkt die
+(`store/game-reducer-dispatch.ts`, `handleZoneAction`) und beeinflussen direkt die
 Build-/Crafting-Source-Auflösung.
 
 Source-Precedence: Zone → explizites Warehouse → global.
@@ -219,7 +229,7 @@ deterministisch auf die zugehörigen Zone-Warehouses verteilt
 (`production-zone-mutation.ts`, `production-zone-aggregation.ts`).
 
 Die Routing- und Source-Logik liest Zone-Zugehörigkeit über
-`building-source.ts:6`.
+`resolveBuildingSource()` in `store/building-source.ts`.
 
 ### Ship / Dock Quest System
 
@@ -267,11 +277,11 @@ Drone-Deposits (`deposit-construction.ts`) reduzieren schrittweise die `remainin
 Schuld. Bei vollständiger Lieferung wird der Site-Eintrag entfernt und abhängige
 Runtime-Daten (z. B. `connectedAssetIds`) werden recomputed.
 
-Relevante Dateien: `place-building.ts:70/82`, `deposit-construction.ts:15/44`.
+Relevante Dateien: `store/action-handlers/building-placement/place-building.ts`, `drones/execution/drone-finalization/depositing/deposit-construction.ts`.
 
 ### Conveyor Route State
 
-`conveyorUndergroundPeers`, `splitterRouteState`, and `splitterFilterState` are persisted logistics state. Splitter-Routing (`conveyor-routing.ts:403/425/453`) arbeitet nach folgendem Schema:
+`conveyorUndergroundPeers`, `splitterRouteState`, and `splitterFilterState` are persisted logistics state. Splitter-Routing in `store/conveyor/conveyor-routing.ts` arbeitet nach folgendem Schema:
 1. **Filter-Prüfung**: Vor der Side-Auswahl werden optionale Output-Filter
   pro Output-Seite geprüft.
 2. **Round-Robin**: Über `lastSide` wird die nächste Ausgabe-Seite im

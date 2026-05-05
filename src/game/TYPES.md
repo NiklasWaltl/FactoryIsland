@@ -53,7 +53,8 @@
 | Type | Description |
 |------|-------------|
 | `GameState` | Root state object — all runtime data (assets, inventory, drones, crafting, energy, UI), including `tileMap`, `moduleInventory`, `moduleFragments`, `moduleLabJob`, `autoAssemblers`, `conveyorUndergroundPeers`, `splitterRouteState`, `splitterFilterState`, `ship`, `selectedAutoAssemblerId`, `selectedSplitterId` |
-| `PlacedAsset` | Building or resource node on the grid: `{ id, type, x, y, size, width?, height?, fixed?, direction?, priority?, boosted?, moduleSlot?, isDockWarehouse? }` |
+| `PlacedAsset` | Building or resource node on the grid: `{ id, type, x, y, size, width?, height?, fixed?, direction?, priority?, boosted?, moduleSlot?, isDockWarehouse?, status?, deconstructRequestSeq? }` |
+| `AssetStatus` | Runtime marker for asset lifecycle states: `"deconstructing"` |
 | `AssetType` | Union of all grid entities: trees, buildings, conveyors, service hubs, etc. |
 | `BuildingType` | Subset of `AssetType` — buildable/managed building asset subset; includes fixed/special buildings such as `dock_warehouse` |
 | `FloorTileType` | Placeable floor layer union: `"stone_floor" \| "grass_block"` |
@@ -64,8 +65,8 @@
 | `GameMode` | `"release" \| "debug"` — controls infinite warehouse + drop-rate overrides |
 | `CollectableItemType` | `"wood" \| "stone" \| "iron" \| "copper"` — physically collectable by drones |
 | `CollectionNode` | World-dropped resource pile with `itemType`, `amount`, `tileX`, `tileY`, `collectable`, `createdAt`, and `reservedByDroneId: string \| null` |
-| `DroneTaskType` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply"` |
-| `StarterDroneState` | Runtime state of a drone: `{ status, tileX, tileY, targetNodeId, cargo, ticksRemaining, hubId, currentTaskType, deliveryTargetId, craftingJobId, droneId, role? }` |
+| `DroneTaskType` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply" \| "deconstruct"` |
+| `StarterDroneState` | Runtime state of a drone: `{ status, tileX, tileY, targetNodeId, cargo, ticksRemaining, hubId, currentTaskType, deliveryTargetId, craftingJobId, droneId, role?, deconstructRefund? }` |
 | `DroneRole` | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter |
 | `DroneStatus` | `idle` \| `moving_to_collect` \| `collecting` \| `moving_to_dropoff` \| `depositing` \| `returning_to_dock` |
 | `ServiceHubInventory` | Hub-local stock map: `Record<CollectableItemType, number>` |
@@ -168,10 +169,11 @@ Referenced by `GameState` for building-to-warehouse and building-to-zone relatio
 | `DroneRole` | `store/types/drone-types.ts` | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter |
 | `DroneStatus` | `store/types/drone-types.ts` | `idle` \| `moving_to_collect` \| `collecting` \| `moving_to_dropoff` \| `depositing` \| `returning_to_dock` |
 | `DroneCargoItem` | `store/types/drone-types.ts` | Drone cargo payload: `{ itemType: CollectableItemType, amount }` |
-| `StarterDroneState` | `store/types/drone-types.ts` | Runtime state of a drone: `status`, `tileX`, `tileY`, `targetNodeId`, `cargo`, `ticksRemaining`, `hubId`, `currentTaskType`, `deliveryTargetId`, `craftingJobId`, `droneId`, optional `role?` |
-| `DroneTaskType` | `store/types/drone-types.ts` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply"` |
+| `StarterDroneState` | `store/types/drone-types.ts` | Runtime state of a drone: `status`, `tileX`, `tileY`, `targetNodeId`, `cargo`, `ticksRemaining`, `hubId`, `currentTaskType`, `deliveryTargetId`, `craftingJobId`, `droneId`, optional `role?`, optional `deconstructRefund?` |
+| `DroneTaskType` | `store/types/drone-types.ts` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply" \| "deconstruct"` |
 | `DroneSelectionCandidate` | `candidates/types.ts` | Scored task option: taskType, nodeId, deliveryTargetId, score, bonus breakdown |
 | `CandidateBonuses` | `candidates/candidate-builder.ts` | Optional: role, sticky, urgency, demand, spread |
+| `CandidateMetadata` | `candidates/candidate-builder.ts` | Optional candidate metadata passed into score construction (currently `deconstructRequestSeq?`) |
 
 `StarterDroneState` schema:
 
@@ -189,6 +191,7 @@ interface StarterDroneState {
   craftingJobId: string | null;
   droneId: string;
   role?: DroneRole;
+  deconstructRefund?: Partial<Record<CollectableItemType, number>> | null;
 }
 ```
 

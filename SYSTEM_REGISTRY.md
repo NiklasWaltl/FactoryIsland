@@ -122,7 +122,7 @@ When a task is named:
 ### 5.3 Drones
 
 - **Task selection:** [drones/selection/select-drone-task.ts](src/game/drones/selection/select-drone-task.ts) — scoring-based.
-- **Task types:** `construction_supply`, `hub_restock`, `hub_dispatch`, `workbench_delivery`, `building_supply` ([store/types.ts](src/game/store/types.ts)).
+- **Task types:** `construction_supply`, `hub_restock`, `hub_dispatch`, `workbench_delivery`, `building_supply`, `deconstruct` ([store/types.ts](src/game/store/types.ts)).
 - **Roles:** `auto | construction | supply` — affect ONLY scoring (bonus); no hard filter. Role changes do NOT cancel running tasks.
 - **Sync trap:** `starterDrone` ↔ `drones[id]` — duplicated state, kept via `syncDrones` ([drones/utils/drone-state-helpers.ts](src/game/drones/utils/drone-state-helpers.ts)). UNCERTAIN: migration path toward consolidation is not documented.
 - **FSM:** `DroneStatus` (idle / moving_to_collect / collecting / moving_to_dropoff / …).
@@ -158,7 +158,7 @@ When a task is named:
 
 | Tick | ms | Condition | Handler |
 |---|---|---|---|
-| `GROW_SAPLINGS` | 1000 | always | growth-actions |
+| `GROW_SAPLINGS` | 1000 | always polling, conditional dispatch (`readyIds.length > 0`) | growth-actions |
 | `SMITHY_TICK` | 100 | only when processing | machine-actions |
 | `MANUAL_ASSEMBLER_TICK` | 100 | only when processing | manual-assembler-actions |
 | `MODULE_LAB_TICK` | 500 | active module lab job | module-lab-actions |
