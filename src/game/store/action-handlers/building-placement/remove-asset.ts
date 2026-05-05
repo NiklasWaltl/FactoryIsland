@@ -10,10 +10,12 @@ import type {
   UIPanel,
 } from "../../types";
 import { BUILDING_COSTS } from "../../constants/buildings/index";
+import { COLLECTABLE_KEYS } from "../../constants/resources";
 import { ASSET_LABELS } from "../../constants/ui/assets";
 import { cellKey } from "../../utils/cell-key";
 import { addResources } from "../../inventory-ops";
 import { removeAsset } from "../../asset-mutation";
+import { getDeconstructRefundForBuildingType } from "../../../constants/deconstruct-refund";
 import { reassignBuildingSourceIds } from "../../../buildings/warehouse/warehouse-assignment";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import { clearModulesEquippedToAny } from "../module-compat";
@@ -37,21 +39,31 @@ type RemoveAssetEligibilityDecision =
         | "fixed_asset";
     };
 
+export type DeconstructRefundMap = Partial<Record<CollectableItemType, number>>;
+
 function isRemovableBuildingType(
   type: PlacedAsset["type"],
 ): type is BuildingType {
   return type in BUILDING_COSTS;
 }
 
-function decideRemoveAssetEligibility(input: {
+export function decideRemoveAssetEligibility(input: {
   buildMode: boolean;
   activeHotbarToolKind: string | null | undefined;
   assets: Record<string, PlacedAsset>;
   assetId: string;
+  ignoreRemoveToolCheck?: boolean;
 }): RemoveAssetEligibilityDecision {
-  const { buildMode, activeHotbarToolKind, assets, assetId } = input;
+  const {
+    buildMode,
+    activeHotbarToolKind,
+    assets,
+    assetId,
+    ignoreRemoveToolCheck = false,
+  } = input;
 
-  const removeToolActive = buildMode || activeHotbarToolKind === "building";
+  const removeToolActive =
+    ignoreRemoveToolCheck || buildMode || activeHotbarToolKind === "building";
   if (!removeToolActive) {
     return { kind: "blocked", blockReason: "remove_tool_inactive" };
   }
@@ -77,19 +89,14 @@ function decideRemoveAssetEligibility(input: {
 }
 
 function deriveInitialRemovalRefundMap(input: {
-  costs: Partial<Record<keyof Inventory, number>>;
+  buildingType: BuildingType;
   isStillConstructionSite: boolean;
 }): Partial<Record<keyof Inventory, number>> {
-  const { costs, isStillConstructionSite } = input;
+  const { buildingType, isStillConstructionSite } = input;
   const refundMap: Partial<Record<keyof Inventory, number>> = {};
 
   if (!isStillConstructionSite) {
-    for (const [res, amt] of Object.entries(costs)) {
-      refundMap[res as keyof Inventory] = Math.max(
-        1,
-        Math.floor((amt ?? 0) / 3),
-      );
-    }
+    return getDeconstructRefundForBuildingType(buildingType);
   }
 
   return refundMap;
@@ -116,37 +123,85 @@ function deriveDeliveredRefundForConstructionSite(input: {
   return deliveredRefund;
 }
 
-export function handleRemoveAssetAction(
+function addCollectableRefund(
+  target: DeconstructRefundMap,
+  source: Partial<Record<keyof Inventory, number>>,
+): DeconstructRefundMap {
+  let changed = false;
+  const next = { ...target };
+  for (const [resource, amount] of Object.entries(source)) {
+    if (!COLLECTABLE_KEYS.has(resource)) continue;
+    if ((amount ?? 0) <= 0) continue;
+    const key = resource as CollectableItemType;
+    next[key] = (next[key] ?? 0) + (amount ?? 0);
+    changed = true;
+  }
+  return changed ? next : target;
+}
+
+export interface ExecuteGenericRemoveAssetOptions {
+  /**
+   * When false, computes refund but does not write it to global inventory.
+   * Useful for drone deconstruction where refund is deposited via drone finalizer.
+   */
+  applyRefundToInventory?: boolean;
+  /**
+   * When true, bypasses build-tool/build-mode gate while preserving all other checks.
+   */
+  ignoreRemoveToolCheck?: boolean;
+  /** Logger used for debug invariant logs and action traces. */
+  debugLog?: BuildingPlacementIoDeps["debugLog"];
+  /** Action label used only for DEV invariant warnings. */
+  actionLabel?: string;
+}
+
+const NOOP_BUILDING_DEBUG_LOG: BuildingPlacementIoDeps["debugLog"] = {
+  building: () => {},
+};
+
+export function executeGenericRemoveAsset(
   state: GameState,
-  action: Extract<GameAction, { type: "BUILD_REMOVE_ASSET" }>,
-  deps: BuildingPlacementIoDeps,
-): GameState {
-  const { debugLog } = deps;
+  assetId: string,
+  options: ExecuteGenericRemoveAssetOptions = {},
+): { nextState: GameState; refund: DeconstructRefundMap } {
+  const {
+    applyRefundToInventory = true,
+    ignoreRemoveToolCheck = false,
+    debugLog = NOOP_BUILDING_DEBUG_LOG,
+    actionLabel = "BUILD_REMOVE_ASSET",
+  } = options;
 
   const activeHotbarSlot = state.hotbarSlots[state.activeSlot];
   const removeEligibilityDecision = decideRemoveAssetEligibility({
     buildMode: state.buildMode,
     activeHotbarToolKind: activeHotbarSlot?.toolKind,
     assets: state.assets,
-    assetId: action.assetId,
+    assetId,
+    ignoreRemoveToolCheck,
   });
-  if (removeEligibilityDecision.kind === "blocked") return state;
+  if (removeEligibilityDecision.kind === "blocked") {
+    return { nextState: state, refund: {} };
+  }
 
   const { targetAsset, buildingType: bTypeR } = removeEligibilityDecision;
 
-  debugLog.building(
-    `[BuildMode] Removed ${ASSET_LABELS[targetAsset.type]} at (${targetAsset.x},${targetAsset.y}) – ~1/3 refund`,
-  );
+  if (applyRefundToInventory) {
+    debugLog.building(
+      `[BuildMode] Removed ${ASSET_LABELS[targetAsset.type]} at (${targetAsset.x},${targetAsset.y}) – ~1/3 refund`,
+    );
+  } else {
+    debugLog.building(
+      `[Drone] Deconstructed ${ASSET_LABELS[targetAsset.type]} at (${targetAsset.x},${targetAsset.y})`,
+    );
+  }
 
   const ugPeer =
     bTypeR === "conveyor_underground_in" ||
     bTypeR === "conveyor_underground_out"
-      ? state.conveyorUndergroundPeers[action.assetId]
+      ? state.conveyorUndergroundPeers[assetId]
       : undefined;
   const stripAssetIds =
-    ugPeer && state.assets[ugPeer]
-      ? [action.assetId, ugPeer]
-      : [action.assetId];
+    ugPeer && state.assets[ugPeer] ? [assetId, ugPeer] : [assetId];
 
   let working: GameState = state;
   for (const sid of stripAssetIds) {
@@ -160,22 +215,25 @@ export function handleRemoveAssetAction(
   };
 
   let newInvR = state.inventory;
+  let refund = {} as DeconstructRefundMap;
   for (const sid of stripAssetIds) {
     const sidType = state.assets[sid]?.type as BuildingType | undefined;
     if (!sidType) continue;
-    const costsSid = BUILDING_COSTS[sidType];
     const wasSite = !!state.constructionSites?.[sid];
     const refundMapSid = deriveInitialRemovalRefundMap({
-      costs: costsSid,
+      buildingType: sidType,
       isStillConstructionSite: wasSite,
     });
-    newInvR = addResources(newInvR, refundMapSid);
+    if (applyRefundToInventory) {
+      newInvR = addResources(newInvR, refundMapSid);
+    }
+    refund = addCollectableRefund(refund, refundMapSid);
   }
 
   let partialRemove: GameState;
   if (bTypeR === "warehouse") {
     const newWarehouseInventories = { ...state.warehouseInventories };
-    delete newWarehouseInventories[action.assetId];
+    delete newWarehouseInventories[assetId];
     // Reassign affected building→warehouse mappings to nearest remaining warehouse (or drop → global)
     const stateForReassign: GameState = {
       ...state,
@@ -184,7 +242,7 @@ export function handleRemoveAssetAction(
     const reassignedSources = reassignBuildingSourceIds(
       state.buildingSourceWarehouseIds,
       stateForReassign,
-      action.assetId,
+      assetId,
     );
     partialRemove = {
       ...state,
@@ -195,7 +253,7 @@ export function handleRemoveAssetAction(
       warehouseInventories: newWarehouseInventories,
       buildingSourceWarehouseIds: reassignedSources,
       selectedWarehouseId:
-        state.selectedWarehouseId === action.assetId
+        state.selectedWarehouseId === assetId
           ? null
           : state.selectedWarehouseId,
       openPanel: null as UIPanel,
@@ -218,9 +276,9 @@ export function handleRemoveAssetAction(
       selectedPowerPoleId: null,
     };
   } else if (bTypeR === "auto_miner") {
-    const minerState = state.autoMiners[action.assetId];
+    const minerState = state.autoMiners[assetId];
     const newAutoMiners = { ...state.autoMiners };
-    delete newAutoMiners[action.assetId];
+    delete newAutoMiners[assetId];
     // Restore deposit cell in cellMap
     const restoredCellMap = minerState
       ? {
@@ -265,14 +323,14 @@ export function handleRemoveAssetAction(
     };
   } else if (bTypeR === "generator") {
     const newGenerators = { ...state.generators };
-    delete newGenerators[action.assetId];
+    delete newGenerators[assetId];
     partialRemove = {
       ...state,
       ...removedB,
       inventory: newInvR,
       generators: newGenerators,
       selectedGeneratorId:
-        state.selectedGeneratorId === action.assetId
+        state.selectedGeneratorId === assetId
           ? null
           : state.selectedGeneratorId,
       openPanel: null as UIPanel,
@@ -294,14 +352,14 @@ export function handleRemoveAssetAction(
     };
   } else if (bTypeR === "auto_smelter") {
     const newAutoSmelters = { ...state.autoSmelters };
-    delete newAutoSmelters[action.assetId];
+    delete newAutoSmelters[assetId];
     partialRemove = {
       ...state,
       ...removedB,
       inventory: newInvR,
       autoSmelters: newAutoSmelters,
       selectedAutoSmelterId:
-        state.selectedAutoSmelterId === action.assetId
+        state.selectedAutoSmelterId === assetId
           ? null
           : state.selectedAutoSmelterId,
       placedBuildings: state.placedBuildings.filter((b) => b !== bTypeR),
@@ -310,14 +368,14 @@ export function handleRemoveAssetAction(
     };
   } else if (bTypeR === "auto_assembler") {
     const newAutoAssemblers = { ...state.autoAssemblers };
-    delete newAutoAssemblers[action.assetId];
+    delete newAutoAssemblers[assetId];
     partialRemove = {
       ...state,
       ...removedB,
       inventory: newInvR,
       autoAssemblers: newAutoAssemblers,
       selectedAutoAssemblerId:
-        state.selectedAutoAssemblerId === action.assetId
+        state.selectedAutoAssemblerId === assetId
           ? null
           : state.selectedAutoAssemblerId,
       placedBuildings: state.placedBuildings.filter((b) => b !== bTypeR),
@@ -327,7 +385,7 @@ export function handleRemoveAssetAction(
   } else if (bTypeR === "service_hub") {
     // Release the drone: fall back to start module delivery
     const droneAfterRemoval =
-      state.starterDrone.hubId === action.assetId
+      state.starterDrone.hubId === assetId
         ? {
             ...state.starterDrone,
             hubId: null,
@@ -342,12 +400,11 @@ export function handleRemoveAssetAction(
           }
         : state.starterDrone;
     // Transfer hub inventory back into global inventory
-    const hubEntry = state.serviceHubs[action.assetId];
+    const hubEntry = state.serviceHubs[assetId];
     const invAfterHubRemoval = hubEntry
       ? addResources(newInvR, hubEntry.inventory)
       : newInvR;
-    const { [action.assetId]: _hubRemoved, ...remainingHubs } =
-      state.serviceHubs;
+    const { [assetId]: _hubRemoved, ...remainingHubs } = state.serviceHubs;
     partialRemove = {
       ...state,
       ...removedB,
@@ -384,10 +441,10 @@ export function handleRemoveAssetAction(
         totalCost,
         remaining: site.remaining,
       });
-      const invAfterSiteRefund = addResources(
-        partialRemove.inventory,
-        deliveredRefund,
-      );
+      refund = addCollectableRefund(refund, deliveredRefund);
+      const invAfterSiteRefund = applyRefundToInventory
+        ? addResources(partialRemove.inventory, deliveredRefund)
+        : partialRemove.inventory;
       const { [sid]: _site, ...restSites } = partialRemove.constructionSites;
       partialRemove = {
         ...partialRemove,
@@ -423,6 +480,17 @@ export function handleRemoveAssetAction(
     ...partialRemove,
     connectedAssetIds: computeConnectedAssetIds(partialRemove),
   };
-  logPlacementInvariantWarnings(nextState, action.type, debugLog);
-  return nextState;
+  logPlacementInvariantWarnings(nextState, actionLabel, debugLog);
+
+  return { nextState, refund };
+}
+
+export function handleRemoveAssetAction(
+  state: GameState,
+  action: Extract<GameAction, { type: "BUILD_REMOVE_ASSET" }>,
+  deps: BuildingPlacementIoDeps,
+): GameState {
+  return executeGenericRemoveAsset(state, action.assetId, {
+    debugLog: deps.debugLog,
+  }).nextState;
 }

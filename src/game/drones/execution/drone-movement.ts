@@ -5,7 +5,6 @@ import {
 } from "../../store/constants/drone/drone-config";
 import type { GameState, StarterDroneState } from "../../store/types";
 import {
-  droneTravelTicks,
   moveDroneToward,
   nudgeAwayFromDrones,
 } from "../movement/drone-movement";
@@ -27,9 +26,58 @@ export function handleMovingToCollectStatus(
   state: GameState,
   droneId: string,
   drone: StarterDroneState,
-  deps: DroneMovementDeps,
+  _deps: DroneMovementDeps,
 ): GameState {
   const rem = drone.ticksRemaining - 1;
+
+  if (drone.currentTaskType === "deconstruct" && drone.targetNodeId) {
+    const targetAsset = state.assets[drone.targetNodeId];
+    if (!targetAsset || targetAsset.status !== "deconstructing") {
+      return applyDroneUpdate(state, droneId, {
+        ...drone,
+        status: "idle",
+        targetNodeId: null,
+        cargo: null,
+        ticksRemaining: 0,
+        currentTaskType: null,
+        deliveryTargetId: null,
+        craftingJobId: null,
+        deconstructRefund: null,
+      });
+    }
+
+    if (rem > 0) {
+      const { x: nextX, y: nextY } = moveDroneToward(
+        drone.tileX,
+        drone.tileY,
+        targetAsset.x,
+        targetAsset.y,
+        DRONE_SPEED_TILES_PER_TICK,
+      );
+      const { x: sepX, y: sepY } = nudgeAwayFromDrones(
+        nextX,
+        nextY,
+        targetAsset.x,
+        targetAsset.y,
+        state.drones,
+        drone.droneId,
+      );
+      return applyDroneUpdate(state, droneId, {
+        ...drone,
+        tileX: sepX,
+        tileY: sepY,
+        ticksRemaining: rem,
+      });
+    }
+
+    return applyDroneUpdate(state, droneId, {
+      ...drone,
+      tileX: targetAsset.x,
+      tileY: targetAsset.y,
+      status: "collecting",
+      ticksRemaining: DRONE_COLLECT_TICKS,
+    });
+  }
 
   const workbenchTask = parseWorkbenchTaskNodeId(drone.targetNodeId);
 

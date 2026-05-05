@@ -60,6 +60,31 @@ export function handleIdleStatus(
     return currentState;
   }
 
+  if (task.taskType === "deconstruct") {
+    const targetAsset = currentState.assets[task.nodeId];
+    if (!targetAsset || targetAsset.status !== "deconstructing") {
+      return currentState;
+    }
+    debugLog.building(
+      `[Drone] deconstruct: flying to ${task.nodeId} (${targetAsset.type})`,
+    );
+    return applyDroneUpdate(currentState, droneId, {
+      ...drone,
+      status: "moving_to_collect",
+      targetNodeId: task.nodeId,
+      currentTaskType: "deconstruct",
+      deliveryTargetId: task.deliveryTargetId || task.nodeId,
+      craftingJobId: null,
+      deconstructRefund: null,
+      ticksRemaining: droneTravelTicks(
+        drone.tileX,
+        drone.tileY,
+        targetAsset.x,
+        targetAsset.y,
+      ),
+    });
+  }
+
   // hub_dispatch: drone flies to hub OR warehouse to pick up resources directly
   // from inventory. No collectionNode involvement - navigate to source asset position.
   // Source is encoded in the synthetic nodeId prefix: "hub:" or "wh:".

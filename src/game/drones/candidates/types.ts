@@ -10,6 +10,8 @@ export type DroneSelectionCandidate = {
   taskType: DroneTaskType;
   nodeId: string;
   deliveryTargetId: string;
+  /** Present for deconstruct candidates to preserve request FIFO order. */
+  deconstructRequestSeq?: number;
   score: number;
   _roleBonus: number;
   _stickyBonus: number;

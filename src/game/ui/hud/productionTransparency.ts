@@ -43,6 +43,10 @@ import {
 import { isUnderConstruction } from "../../store/helpers/asset-status";
 import { resolveBuildingSource } from "../../store/building-source";
 import { toCraftingJobInventorySource } from "../../store/crafting/crafting-source-adapters";
+import {
+  getDeconstructRequestQueueRows,
+  type DeconstructRequestQueueRow,
+} from "../../store/selectors/deconstruct-request-queue";
 import { getWorkbenchRecipe } from "../../simulation/recipes";
 import { computeIngredientLines } from "../panels/helpers";
 
@@ -88,6 +92,7 @@ export interface KeepStockStatusRow {
 export interface ProductionTransparencySnapshot {
   readonly jobs: readonly ProductionJobStatusRow[];
   readonly keepStock: readonly KeepStockStatusRow[];
+  readonly deconstructRequests: readonly DeconstructRequestQueueRow[];
 }
 
 interface ProductionTransparencyInputRefs {
@@ -469,7 +474,8 @@ export function buildProductionTransparency(
 
   const jobs = [...getCraftingJobRows(state), ...getConstructionRows(state)];
   const keepStock = getKeepStockRows(state);
-  const snapshot = { jobs, keepStock };
+  const deconstructRequests = getDeconstructRequestQueueRows(state);
+  const snapshot = { jobs, keepStock, deconstructRequests };
 
   lastProductionTransparencyInputs = nextInputs;
   lastProductionTransparencySnapshot = snapshot;

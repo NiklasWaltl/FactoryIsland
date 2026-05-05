@@ -1,8 +1,8 @@
 import type {
   GameState,
+  CollectableItemType,
   Inventory,
   PlacedAsset,
-  CollectionNode,
   StarterDroneState,
   DroneRole,
   KeepStockTargetEntry,
@@ -332,13 +332,32 @@ const VALID_DRONE_STATUSES = new Set([
   "returning_to_dock",
 ]);
 
+const DECONSTRUCT_REFUND_KEYS = ["wood", "stone", "iron", "copper"] as const;
+
+function sanitizeDeconstructRefundPayload(
+  raw: unknown,
+): Partial<Record<CollectableItemType, number>> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const candidate = raw as Record<string, unknown>;
+  const cleaned: Partial<Record<CollectableItemType, number>> = {};
+  for (const key of DECONSTRUCT_REFUND_KEYS) {
+    const value = candidate[key];
+    if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+      continue;
+    }
+    cleaned[key] = value;
+  }
+  return Object.keys(cleaned).length > 0 ? cleaned : null;
+}
+
 export function sanitizeStarterDrone(
   raw: StarterDroneState | undefined | null,
   tileMap?: TileType[][],
 ): StarterDroneState {
-  const pos = tileMap !== undefined
-    ? getStartModulePosition({ assets: {}, tileMap })
-    : { x: 39, y: 24 }; // legacy fallback: tileMap not available at normalization time (standard 80×50 grid center)
+  const pos =
+    tileMap !== undefined
+      ? getStartModulePosition({ assets: {}, tileMap })
+      : { x: 39, y: 24 }; // legacy fallback: tileMap not available at normalization time (standard 80×50 grid center)
   const fallback: StarterDroneState = {
     status: "idle",
     tileX: pos.x,
@@ -351,6 +370,7 @@ export function sanitizeStarterDrone(
     deliveryTargetId: null,
     craftingJobId: null,
     droneId: "starter",
+    deconstructRefund: null,
   };
 
   if (!raw || typeof raw !== "object") return fallback;
@@ -379,6 +399,9 @@ export function sanitizeStarterDrone(
       : typeof (raw as any).craftingJobId === "string"
         ? (raw as any).craftingJobId
         : null,
+    deconstructRefund: needsReset
+      ? null
+      : sanitizeDeconstructRefundPayload((raw as any).deconstructRefund),
     droneId:
       typeof (raw as any).droneId === "string"
         ? (raw as any).droneId

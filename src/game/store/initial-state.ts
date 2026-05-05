@@ -61,6 +61,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     deliveryTargetId: null,
     craftingJobId: null,
     droneId: "starter",
+    deconstructRefund: null,
   };
 
   const state: GameState = {

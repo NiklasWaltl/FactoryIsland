@@ -179,10 +179,17 @@ export function useGridInput(
       const gy = Math.floor(wy / CELL_PX);
       if (gx >= 0 && gx < GRID_W && gy >= 0 && gy < GRID_H) {
         const assetId = state.cellMap[cellKey(gx, gy)];
-        if (assetId) dispatch({ type: "BUILD_REMOVE_ASSET", assetId });
+        if (assetId) {
+          const targetAsset = state.assets[assetId];
+          if (targetAsset?.status === "deconstructing") {
+            dispatch({ type: "CANCEL_DECONSTRUCT_ASSET", assetId });
+          } else {
+            dispatch({ type: "REQUEST_DECONSTRUCT_ASSET", assetId });
+          }
+        }
       }
     },
-    [cam, zoom, state.buildMode, state.cellMap, dispatch],
+    [cam, zoom, state.buildMode, state.cellMap, state.assets, dispatch],
   );
 
   useEffect(() => {

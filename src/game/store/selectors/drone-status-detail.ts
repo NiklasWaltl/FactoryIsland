@@ -63,6 +63,14 @@ export function getDroneStatusDetail(
     case "idle":
       return { label: "Bereit" };
     case "moving_to_collect": {
+      if (drone.currentTaskType === "deconstruct") {
+        return {
+          label: "Unterwegs zum Abbau",
+          taskGoal: drone.deliveryTargetId
+            ? `Ziel ${drone.deliveryTargetId}`
+            : undefined,
+        };
+      }
       // hub_dispatch: en route to hub to pick up stock
       if (
         drone.currentTaskType === "hub_dispatch" &&
@@ -113,6 +121,9 @@ export function getDroneStatusDetail(
       };
     }
     case "collecting":
+      if (drone.currentTaskType === "deconstruct") {
+        return { label: "Baut Gebäude ab…" };
+      }
       if (
         drone.currentTaskType === "workbench_delivery" &&
         parseWorkbenchTaskNodeId(drone.targetNodeId)?.kind === "input"
@@ -125,6 +136,11 @@ export function getDroneStatusDetail(
         return { label: "Entnimmt Hub-Lager…" };
       return { label: "Sammelt ein…" };
     case "moving_to_dropoff":
+      if (drone.currentTaskType === "deconstruct") {
+        return {
+          label: "Bringt Abbauressourcen zurück",
+        };
+      }
       if (
         drone.currentTaskType === "workbench_delivery" &&
         parseWorkbenchTaskNodeId(drone.targetNodeId)?.kind === "input"
@@ -155,6 +171,9 @@ export function getDroneStatusDetail(
           : undefined,
       };
     case "depositing":
+      if (drone.currentTaskType === "deconstruct") {
+        return { label: "Lagert Abbauressourcen ein…" };
+      }
       return { label: "Liefert ab…" };
     default:
       return { label: String(drone.status) };

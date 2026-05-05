@@ -7,6 +7,7 @@ import type { DroneTaskType } from "../../../store/types";
  */
 export const DRONE_TASK_BASE_SCORE: Record<DroneTaskType, number> = {
   construction_supply: 1000,
+  deconstruct: 900,
   hub_dispatch: 500,
   workbench_delivery: 300,
   building_supply: 200,

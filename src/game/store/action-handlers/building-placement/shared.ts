@@ -6,10 +6,16 @@ import {
 } from "../../utils/asset-guards";
 import type { GameNotification, GameState } from "../../types";
 
-export type HandledActionType = "BUILD_PLACE_BUILDING" | "BUILD_REMOVE_ASSET";
+export type HandledActionType =
+  | "BUILD_PLACE_BUILDING"
+  | "REQUEST_DECONSTRUCT_ASSET"
+  | "CANCEL_DECONSTRUCT_ASSET"
+  | "BUILD_REMOVE_ASSET";
 
 export const HANDLED_ACTION_TYPES = new Set<string>([
   "BUILD_PLACE_BUILDING",
+  "REQUEST_DECONSTRUCT_ASSET",
+  "CANCEL_DECONSTRUCT_ASSET",
   "BUILD_REMOVE_ASSET",
 ]);
 

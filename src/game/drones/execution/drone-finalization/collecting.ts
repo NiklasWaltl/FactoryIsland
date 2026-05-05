@@ -26,6 +26,7 @@ import {
   parseWorkbenchTaskNodeId,
 } from "../../../store/workbench/workbench-task-utils";
 import { commitWorkbenchInputReservation } from "../../../store/workbench/workbench-input-pickup";
+import { executeGenericRemoveAsset } from "../../../store/action-handlers/building-placement/remove-asset";
 import { resolveDroneDropoff } from "../resolve-drone-dropoff";
 import type { DroneFinalizationDeps } from "./types";
 
@@ -40,6 +41,90 @@ export function handleCollectingStatus(
   const rem = drone.ticksRemaining - 1;
   if (rem > 0)
     return applyDroneUpdate(state, droneId, { ...drone, ticksRemaining: rem });
+
+  if (drone.currentTaskType === "deconstruct") {
+    const targetId = drone.deliveryTargetId ?? drone.targetNodeId;
+    if (!targetId) {
+      return applyDroneUpdate(state, droneId, {
+        ...drone,
+        status: "idle",
+        targetNodeId: null,
+        cargo: null,
+        ticksRemaining: 0,
+        currentTaskType: null,
+        deliveryTargetId: null,
+        craftingJobId: null,
+        deconstructRefund: null,
+      });
+    }
+
+    const targetAsset = state.assets[targetId];
+    if (!targetAsset || targetAsset.status !== "deconstructing") {
+      return applyDroneUpdate(state, droneId, {
+        ...drone,
+        status: "idle",
+        targetNodeId: null,
+        cargo: null,
+        ticksRemaining: 0,
+        currentTaskType: null,
+        deliveryTargetId: null,
+        craftingJobId: null,
+        deconstructRefund: null,
+      });
+    }
+
+    const removalResult = executeGenericRemoveAsset(state, targetId, {
+      applyRefundToInventory: false,
+      ignoreRemoveToolCheck: true,
+      debugLog,
+      actionLabel: "REQUEST_DECONSTRUCT_ASSET",
+    });
+    const droneAfterRemoval = removalResult.nextState.drones[droneId] ?? drone;
+    const hasRefund = Object.values(removalResult.refund).some(
+      (value) => (value ?? 0) > 0,
+    );
+    if (!hasRefund) {
+      return applyDroneUpdate(removalResult.nextState, droneId, {
+        ...droneAfterRemoval,
+        status: "idle",
+        targetNodeId: null,
+        cargo: null,
+        ticksRemaining: 0,
+        currentTaskType: null,
+        deliveryTargetId: null,
+        craftingJobId: null,
+        deconstructRefund: null,
+      });
+    }
+
+    const movingDrone: StarterDroneState = {
+      ...droneAfterRemoval,
+      status: "moving_to_dropoff",
+      targetNodeId: null,
+      cargo: null,
+      currentTaskType: "deconstruct",
+      deliveryTargetId: null,
+      craftingJobId: null,
+      deconstructRefund: removalResult.refund,
+      ticksRemaining: 0,
+    };
+    const dropoff = resolveDroneDropoff(
+      movingDrone,
+      removalResult.nextState.assets,
+      removalResult.nextState.serviceHubs,
+      removalResult.nextState.warehouseInventories,
+      removalResult.nextState.crafting,
+    );
+    return applyDroneUpdate(removalResult.nextState, droneId, {
+      ...movingDrone,
+      ticksRemaining: droneTravelTicks(
+        droneAfterRemoval.tileX,
+        droneAfterRemoval.tileY,
+        dropoff.x,
+        dropoff.y,
+      ),
+    });
+  }
 
   const workbenchTask = parseWorkbenchTaskNodeId(drone.targetNodeId);
 

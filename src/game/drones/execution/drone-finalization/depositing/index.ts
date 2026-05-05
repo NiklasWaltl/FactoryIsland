@@ -13,6 +13,7 @@ import { decideDepositingTaskRoute } from "../../../utils/drone-utils";
 import type { WorkbenchInputTask } from "../../workbench-finalizers";
 import type { DroneFinalizationDeps } from "../types";
 import { depositConstruction } from "./deposit-construction";
+import { depositDeconstructRefund } from "./deposit-deconstruct";
 import { depositFallback } from "./deposit-fallback";
 import { depositGenerator } from "./deposit-generator";
 import { depositShipDock } from "./deposit-ship-dock";
@@ -36,12 +37,17 @@ export function handleDepositingStatus(
     currentTaskType: null,
     deliveryTargetId: null,
     craftingJobId: null,
+    deconstructRefund: null,
   };
   const workbenchTask = parseWorkbenchTaskNodeId(drone.targetNodeId);
+  const hasDeconstructRefund =
+    !!drone.deconstructRefund &&
+    Object.values(drone.deconstructRefund).some((value) => (value ?? 0) > 0);
   const depositingTaskRoute = decideDepositingTaskRoute({
     currentTaskType: drone.currentTaskType,
     workbenchTaskKind: workbenchTask?.kind,
     hasCargo: !!drone.cargo,
+    hasDeconstructRefund,
     deliveryTargetId: drone.deliveryTargetId,
   });
   if (depositingTaskRoute.kind === "workbench_input") {
@@ -60,6 +66,14 @@ export function handleDepositingStatus(
       idleDrone,
     );
   }
+  if (depositingTaskRoute.kind === "deconstruct_refund") {
+    return depositDeconstructRefund(state, droneId, {
+      drone,
+      idleDrone,
+      deconstructRefund: drone.deconstructRefund ?? {},
+      deps,
+    });
+  }
   if (depositingTaskRoute.kind === "no_cargo") {
     return applyDroneUpdate(state, droneId, {
       ...drone,
@@ -68,6 +82,7 @@ export function handleDepositingStatus(
       currentTaskType: null,
       deliveryTargetId: null,
       craftingJobId: null,
+      deconstructRefund: null,
     });
   }
 

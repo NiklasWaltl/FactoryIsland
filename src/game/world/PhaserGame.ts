@@ -87,6 +87,7 @@ export interface StaticAssetSnapshot {
   height: 1 | 2;
   direction?: Direction;
   isUnderConstruction?: boolean;
+  isDeconstructing?: boolean;
 }
 
 export interface CollectionNodeSnapshot {
@@ -145,6 +146,11 @@ const DIRECTION_ROTATION: Record<Direction, number> = {
   south: 90,
   west: 180,
 };
+
+const DECONSTRUCT_OVERLAY_STROKE_COLOR = 0xff6a00;
+const DECONSTRUCT_OVERLAY_STROKE_ALPHA = 0.95;
+const DECONSTRUCT_OVERLAY_FILL_COLOR = 0xff8a00;
+const DECONSTRUCT_OVERLAY_FILL_ALPHA = 0.14;
 
 const COIN_AWARD_MIN_PARTICLES = 8;
 const COIN_AWARD_MAX_PARTICLES = 12;
@@ -364,6 +370,7 @@ class WorldScene extends Phaser.Scene {
     const image = this.add
       .image(0, 0, `asset:${asset.type}`)
       .setOrigin(0.5, 0.5);
+    const statusOverlay = this.add.graphics();
     const label = this.add.text(0, 0, ASSET_LABELS[asset.type], {
       fontFamily: "Arial",
       fontSize: "9px",
@@ -373,9 +380,10 @@ class WorldScene extends Phaser.Scene {
     });
 
     image.name = "sprite";
+    statusOverlay.name = "status-overlay";
     label.name = "label";
 
-    container.add([image, label]);
+    container.add([image, statusOverlay, label]);
     container.setDepth(2);
     return container;
   }
@@ -388,6 +396,9 @@ class WorldScene extends Phaser.Scene {
     const worldWidth = asset.width * CELL_PX;
     const worldHeight = asset.height * CELL_PX;
     const image = container.getByName("sprite") as Phaser.GameObjects.Image;
+    const statusOverlay = container.getByName(
+      "status-overlay",
+    ) as Phaser.GameObjects.Graphics;
     const label = container.getByName("label") as Phaser.GameObjects.Text;
 
     container.setPosition(asset.x * CELL_PX, asset.y * CELL_PX);
@@ -420,6 +431,25 @@ class WorldScene extends Phaser.Scene {
 
     // Construction site visual: reduced opacity
     image.setAlpha(asset.isUnderConstruction ? 0.45 : 1);
+
+    statusOverlay.clear();
+    if (asset.isDeconstructing) {
+      const overlayX = 2;
+      const overlayY = 2;
+      const overlayWidth = Math.max(4, worldWidth - 4);
+      const overlayHeight = Math.max(4, worldHeight - 20);
+      statusOverlay.fillStyle(
+        DECONSTRUCT_OVERLAY_FILL_COLOR,
+        DECONSTRUCT_OVERLAY_FILL_ALPHA,
+      );
+      statusOverlay.fillRect(overlayX, overlayY, overlayWidth, overlayHeight);
+      statusOverlay.lineStyle(
+        2,
+        DECONSTRUCT_OVERLAY_STROKE_COLOR,
+        DECONSTRUCT_OVERLAY_STROKE_ALPHA,
+      );
+      statusOverlay.strokeRect(overlayX, overlayY, overlayWidth, overlayHeight);
+    }
   }
 
   private applyCollectionNodes(data: CollectionNodeSnapshot[]): void {

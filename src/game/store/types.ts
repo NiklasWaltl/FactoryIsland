@@ -31,7 +31,12 @@ import type { PowerState } from "./types/power-state";
 
 export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
 export type { CollectableItemType } from "./types/item-types";
-export type { ShipStatus, ShipQuest, ShipReward, ShipState } from "./types/ship-types";
+export type {
+  ShipStatus,
+  ShipQuest,
+  ShipReward,
+  ShipState,
+} from "./types/ship-types";
 export type {
   DroneRole,
   DroneStatus,
@@ -60,8 +65,15 @@ export type {
   ModuleLabJob,
   ModuleState,
 } from "./types/module-state";
-export type { ProductionZone, ZoneSourceState } from "./types/zone-source-state";
-export type { BatteryState, GeneratorState, PowerState } from "./types/power-state";
+export type {
+  ProductionZone,
+  ZoneSourceState,
+} from "./types/zone-source-state";
+export type {
+  BatteryState,
+  GeneratorState,
+  PowerState,
+} from "./types/power-state";
 
 export type GameMode = "release" | "debug";
 
@@ -123,6 +135,8 @@ export type FloorTileType = "stone_floor" | "grass_block";
 
 export type MachinePriority = 1 | 2 | 3 | 4 | 5;
 
+export type AssetStatus = "deconstructing";
+
 export interface PlacedAsset {
   id: string;
   type: AssetType;
@@ -145,6 +159,10 @@ export interface PlacedAsset {
   moduleSlot?: string | null;
   /** Marks this warehouse as the ship's dock warehouse. Only one may exist. */
   isDockWarehouse?: boolean;
+  /** Runtime marker for a pending drone deconstruction request. */
+  status?: AssetStatus;
+  /** Monotonic sequence to preserve FIFO order across multiple deconstruct requests. */
+  deconstructRequestSeq?: number;
 }
 
 /**

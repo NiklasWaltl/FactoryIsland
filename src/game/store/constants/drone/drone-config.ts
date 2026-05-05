@@ -68,6 +68,7 @@ export const DRONE_SPREAD_PENALTY_PER_DRONE = 5;
 /** Base priority scores for drone task types. */
 export const DRONE_TASK_BASE_SCORE: Record<DroneTaskType, number> = {
   construction_supply: 1000,
+  deconstruct: 900,
   hub_dispatch: 500,
   workbench_delivery: 300,
   building_supply: 200,

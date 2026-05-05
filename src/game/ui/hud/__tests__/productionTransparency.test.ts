@@ -151,6 +151,95 @@ describe("productionTransparency", () => {
     expect(row?.targetLabel).toContain("hub-up");
   });
 
+  it("shows deconstruct requests with open/reserved/active status", () => {
+    let state = buildState({ wood: 0 });
+
+    const starterReserved = {
+      ...state.drones.starter,
+      status: "moving_to_collect" as const,
+      currentTaskType: "deconstruct" as const,
+      targetNodeId: "dec-reserved",
+      deliveryTargetId: "dec-reserved",
+      ticksRemaining: 3,
+      cargo: null,
+      deconstructRefund: null,
+    };
+    const droneActive = {
+      ...state.drones.starter,
+      droneId: "drone-2",
+      status: "collecting" as const,
+      currentTaskType: "deconstruct" as const,
+      targetNodeId: "dec-active",
+      deliveryTargetId: "dec-active",
+      ticksRemaining: 2,
+      cargo: null,
+      deconstructRefund: null,
+    };
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        "dec-open": {
+          id: "dec-open",
+          type: "workbench",
+          x: 18,
+          y: 8,
+          size: 1,
+          status: "deconstructing",
+        },
+        "dec-reserved": {
+          id: "dec-reserved",
+          type: "warehouse",
+          x: 20,
+          y: 8,
+          size: 2,
+          status: "deconstructing",
+        },
+        "dec-active": {
+          id: "dec-active",
+          type: "smithy",
+          x: 22,
+          y: 8,
+          size: 1,
+          status: "deconstructing",
+        },
+      },
+      starterDrone: starterReserved,
+      drones: {
+        ...state.drones,
+        starter: starterReserved,
+        "drone-2": droneActive,
+      },
+    };
+
+    const snapshot = buildProductionTransparency(state);
+    const open = snapshot.deconstructRequests.find(
+      (entry) => entry.assetId === "dec-open",
+    );
+    const reserved = snapshot.deconstructRequests.find(
+      (entry) => entry.assetId === "dec-reserved",
+    );
+    const active = snapshot.deconstructRequests.find(
+      (entry) => entry.assetId === "dec-active",
+    );
+
+    expect(open).toBeDefined();
+    expect(open?.queueStatus).toBe("open");
+    expect(open?.assignedDroneId).toBeUndefined();
+    expect(open?.tickOrderIndex).toBeUndefined();
+
+    expect(reserved).toBeDefined();
+    expect(reserved?.queueStatus).toBe("reserved");
+    expect(reserved?.assignedDroneId).toBe("starter");
+    expect(reserved?.tickOrderIndex).toBe(1);
+
+    expect(active).toBeDefined();
+    expect(active?.queueStatus).toBe("active");
+    expect(active?.assignedDroneId).toBe("drone-2");
+    expect(active?.tickOrderIndex).toBe(2);
+  });
+
   it("shows keep-in-stock target rows", () => {
     let state = buildState({ wood: 20, wood_pickaxe: 0 });
     state = gameReducer(state, {

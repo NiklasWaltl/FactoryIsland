@@ -3,10 +3,7 @@ import type {
   CollectableItemType,
   DroneTaskType,
   GameState,
-  Inventory,
   PlacedAsset,
-  ServiceHubEntry,
-  StarterDroneState,
 } from "../../store/types";
 import type { WorkbenchInputTask } from "../execution/workbench-finalizers";
 
@@ -177,6 +174,7 @@ export function decideInventorySourceTravelTarget(input: {
 export type DepositingTaskRoute =
   | { kind: "workbench_input" }
   | { kind: "workbench_output" }
+  | { kind: "deconstruct_refund" }
   | { kind: "no_cargo" }
   | { kind: "building_supply_target"; targetId: string }
   | { kind: "construction_supply_target"; targetId: string }
@@ -186,10 +184,16 @@ export function decideDepositingTaskRoute(input: {
   currentTaskType: DroneTaskType | null;
   workbenchTaskKind?: WorkbenchTaskNodeId["kind"];
   hasCargo: boolean;
+  hasDeconstructRefund: boolean;
   deliveryTargetId?: string | null;
 }): DepositingTaskRoute {
-  const { currentTaskType, workbenchTaskKind, hasCargo, deliveryTargetId } =
-    input;
+  const {
+    currentTaskType,
+    workbenchTaskKind,
+    hasCargo,
+    hasDeconstructRefund,
+    deliveryTargetId,
+  } = input;
 
   if (
     currentTaskType === "workbench_delivery" &&
@@ -199,6 +203,9 @@ export function decideDepositingTaskRoute(input: {
   }
   if (currentTaskType === "workbench_delivery") {
     return { kind: "workbench_output" };
+  }
+  if (currentTaskType === "deconstruct" && hasDeconstructRefund) {
+    return { kind: "deconstruct_refund" };
   }
   if (!hasCargo) {
     return { kind: "no_cargo" };

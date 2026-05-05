@@ -4,6 +4,7 @@ import type {
   GameState,
   StarterDroneState,
 } from "../../store/types";
+import { gatherDeconstructCandidates } from "../candidates/deconstruct-candidates";
 import { gatherWarehouseBuildingSupplyCandidates } from "../candidates/building-supply-warehouse-source-candidates";
 import { gatherConstructionSupplyCandidates } from "../candidates/construction-supply-candidates";
 import { gatherGroundBuildingSupplyCandidates } from "../candidates/ground-building-supply-candidates";
@@ -58,6 +59,19 @@ export function collectDroneTaskCandidates(input: {
   } = input;
 
   const candidates: DroneSelectionCandidate[] = [];
+
+  candidates.push(
+    ...gatherDeconstructCandidates(
+      state,
+      drone,
+      {
+        stickyBonus: DRONE_STICKY_BONUS,
+      },
+      {
+        scoreDroneTask,
+      },
+    ),
+  );
 
   candidates.push(
     ...gatherConstructionSupplyCandidates(

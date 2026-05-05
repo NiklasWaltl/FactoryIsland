@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import type { GameState } from "../../store/types";
+import { getDroneStatusDetail } from "../../store/selectors/drone-status-detail";
 import { buildProductionTransparency } from "./productionTransparency";
 
 interface ProductionStatusFeedProps {
@@ -20,6 +21,12 @@ const STATUS_LABEL: Record<string, string> = {
   crafting: "crafting",
   delivering: "delivering",
   waiting: "waiting",
+};
+
+const DECONSTRUCT_QUEUE_STATUS_LABEL: Record<string, string> = {
+  open: "offen",
+  reserved: "reserviert",
+  active: "aktiv",
 };
 
 export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
@@ -48,7 +55,11 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
       [snapshot.keepStock],
     );
 
-    if (snapshot.jobs.length === 0 && relevantKeepStock.length === 0)
+    if (
+      snapshot.jobs.length === 0 &&
+      relevantKeepStock.length === 0 &&
+      snapshot.deconstructRequests.length === 0
+    )
       return null;
 
     return (
@@ -128,6 +139,70 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {snapshot.deconstructRequests.length > 0 && (
+              <div className="fi-production-status-section">
+                <div className="fi-production-status-title">
+                  Deconstruct requests
+                </div>
+                <div className="fi-production-status-list">
+                  {snapshot.deconstructRequests.slice(0, 8).map((row) => {
+                    const assignedDrone = row.assignedDroneId
+                      ? state.drones[row.assignedDroneId]
+                      : null;
+                    const droneDetail = assignedDrone
+                      ? getDroneStatusDetail(state, assignedDrone)
+                      : null;
+
+                    return (
+                      <div
+                        key={row.assetId}
+                        className="fi-production-status-entry"
+                        style={
+                          row.queueStatus === "active"
+                            ? {
+                                borderColor: "rgba(255, 166, 77, 0.85)",
+                                background: "rgba(255, 166, 77, 0.15)",
+                              }
+                            : undefined
+                        }
+                      >
+                        <div className="fi-production-status-line">
+                          <span className="fi-production-status-badge">
+                            {row.assetType}
+                          </span>
+                          <span className="fi-production-status-status">
+                            {DECONSTRUCT_QUEUE_STATUS_LABEL[row.queueStatus] ??
+                              row.queueStatus}
+                          </span>
+                          {row.tickOrderIndex && (
+                            <span className="fi-production-status-priority">
+                              drone tick #{row.tickOrderIndex}
+                            </span>
+                          )}
+                        </div>
+                        <div className="fi-production-status-line fi-production-status-line--sub">
+                          <span>asset: {row.assetId}</span>
+                          <span>
+                            grid: ({row.x}, {row.y})
+                          </span>
+                        </div>
+                        {row.assignedDroneId ? (
+                          <div className="fi-production-status-reason">
+                            drone: {row.assignedDroneId}
+                            {droneDetail ? ` (${droneDetail.label})` : ""}
+                          </div>
+                        ) : (
+                          <div className="fi-production-status-reason">
+                            noch keinem deconstruct drone zugewiesen
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

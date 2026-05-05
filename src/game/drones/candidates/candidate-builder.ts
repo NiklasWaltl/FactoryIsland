@@ -9,17 +9,23 @@ export interface CandidateBonuses {
   spread?: number;
 }
 
+export interface CandidateMetadata {
+  deconstructRequestSeq?: number;
+}
+
 export function buildScoredCandidate(
   taskType: DroneTaskType,
   nodeId: string,
   deliveryTargetId: string,
   score: number,
   bonuses: CandidateBonuses,
+  metadata: CandidateMetadata = {},
 ): DroneSelectionCandidate {
   return {
     taskType,
     nodeId,
     deliveryTargetId,
+    deconstructRequestSeq: metadata.deconstructRequestSeq,
     score,
     _roleBonus: bonuses.role ?? 0,
     _stickyBonus: bonuses.sticky ?? 0,

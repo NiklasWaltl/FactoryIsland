@@ -83,7 +83,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
   const staticAssetsSignature = phaserStaticAssets
     .map(
       (asset) =>
-        `${asset.id}|${asset.type}|${asset.x}|${asset.y}|${asset.width}|${asset.height}|${asset.direction ?? ""}|${asset.isUnderConstruction ? 1 : 0}`,
+        `${asset.id}|${asset.type}|${asset.x}|${asset.y}|${asset.width}|${asset.height}|${asset.direction ?? ""}|${asset.isUnderConstruction ? 1 : 0}|${asset.isDeconstructing ? 1 : 0}`,
     )
     .join(";");
   const stableStaticAssets = useMemo(

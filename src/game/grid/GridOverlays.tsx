@@ -132,6 +132,7 @@ export function buildWorldOverlayData({
         height: ah,
         direction: asset.direction,
         isUnderConstruction: underConstruction,
+        isDeconstructing: asset.status === "deconstructing",
       });
 
       if (isPowerPole) {

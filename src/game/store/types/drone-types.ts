@@ -68,6 +68,8 @@ export interface StarterDroneState {
    * Defaults to "auto" when absent (backward compatible with older saves).
    */
   role?: DroneRole;
+  /** Pending deconstruction refund payload to deposit at hub/global after teardown. */
+  deconstructRefund?: Partial<Record<CollectableItemType, number>> | null;
 }
 
 // ---- Drone Tasks ----
@@ -81,4 +83,5 @@ export type DroneTaskType =
   | "hub_restock"
   | "hub_dispatch"
   | "workbench_delivery"
-  | "building_supply";
+  | "building_supply"
+  | "deconstruct";

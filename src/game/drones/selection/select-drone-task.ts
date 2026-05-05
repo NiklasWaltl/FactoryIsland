@@ -45,9 +45,30 @@ export function selectDroneTask(
       return { selected: null };
     }
 
+    // Deconstruct requests are processed in FIFO order: smaller sequence means older request.
+    const compareDeconstructRequestOrder = (
+      left: DroneSelectionCandidate,
+      right: DroneSelectionCandidate,
+    ): number => {
+      if (left.taskType !== "deconstruct" || right.taskType !== "deconstruct") {
+        return 0;
+      }
+
+      const leftSeq = left.deconstructRequestSeq ?? Number.MAX_SAFE_INTEGER;
+      const rightSeq = right.deconstructRequestSeq ?? Number.MAX_SAFE_INTEGER;
+      if (leftSeq === rightSeq) return 0;
+      return leftSeq - rightSeq;
+    };
+
     const rankedCandidates = [...candidates].sort(
-      (left, right) =>
-        right.score - left.score || left.nodeId.localeCompare(right.nodeId),
+      (left, right) => {
+        const deconstructRequestOrder = compareDeconstructRequestOrder(
+          left,
+          right,
+        );
+        if (deconstructRequestOrder !== 0) return deconstructRequestOrder;
+        return right.score - left.score || left.nodeId.localeCompare(right.nodeId);
+      },
     );
 
     return {

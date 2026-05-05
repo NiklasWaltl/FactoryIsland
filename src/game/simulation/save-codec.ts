@@ -214,7 +214,12 @@ export function deserializeState(save: SaveGameLatest): GameState {
         d = { ...d, hubId: null };
       }
       if (d.deliveryTargetId && !save.assets[d.deliveryTargetId]) {
-        d = { ...d, deliveryTargetId: null, currentTaskType: null };
+        d = {
+          ...d,
+          deliveryTargetId: null,
+          currentTaskType: null,
+          deconstructRefund: null,
+        };
       }
       if (!d.hubId) {
         const existingHubId =
@@ -250,7 +255,12 @@ export function deserializeState(save: SaveGameLatest): GameState {
         let d = sanitizeStarterDrone(rawDrone, save.tileMap);
         if (d.hubId && !save.assets[d.hubId]) d = { ...d, hubId: null };
         if (d.deliveryTargetId && !save.assets[d.deliveryTargetId]) {
-          d = { ...d, deliveryTargetId: null, currentTaskType: null };
+          d = {
+            ...d,
+            deliveryTargetId: null,
+            currentTaskType: null,
+            deconstructRefund: null,
+          };
         }
         if (!d.hubId) {
           const existingHubId =

@@ -89,6 +89,8 @@ export type GameAction =
       direction?: Direction;
     }
   | { type: "BUILD_PLACE_FLOOR_TILE"; x: number; y: number }
+  | { type: "REQUEST_DECONSTRUCT_ASSET"; assetId: string }
+  | { type: "CANCEL_DECONSTRUCT_ASSET"; assetId: string }
   | { type: "BUILD_REMOVE_ASSET"; assetId: string }
   | { type: "LOGISTICS_TICK" }
   | { type: "TOGGLE_ENERGY_DEBUG" }

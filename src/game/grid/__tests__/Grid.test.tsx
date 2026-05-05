@@ -2,6 +2,7 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Grid } from "../Grid";
 import type { StaticAssetSnapshot } from "../../world/PhaserGame";
+import { gameReducer } from "../../store/reducer";
 import { createInitialState } from "../../store/initial-state";
 import type { GameState } from "../../store/types";
 
@@ -33,6 +34,15 @@ function createGridState(): GameState {
     ...base,
     assets: {
       ...base.assets,
+      "grid-belt": {
+        id: "grid-belt",
+        type: "conveyor",
+        x: 30,
+        y: 20,
+        size: 1,
+        direction: "east",
+        status: "deconstructing",
+      },
       "grid-site": {
         id: "grid-site",
         type: "workbench",
@@ -50,6 +60,7 @@ function createGridState(): GameState {
         size: 2,
         width: 2,
         height: 2,
+        status: "deconstructing",
       },
     },
     constructionSites: {
@@ -117,6 +128,11 @@ describe("Grid construction rendering", () => {
     expect(phaserHostProps!.staticAssets).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          id: "grid-belt",
+          type: "conveyor",
+          isDeconstructing: true,
+        }),
+        expect.objectContaining({
           id: "grid-site",
           type: "workbench",
           isUnderConstruction: true,
@@ -124,9 +140,37 @@ describe("Grid construction rendering", () => {
         expect.objectContaining({
           id: "grid-hub",
           type: "service_hub",
+          isDeconstructing: true,
         }),
       ]),
     );
+  });
+
+  it("clears deconstruct marker in Phaser snapshots after cancel action", () => {
+    const state = { ...createGridState(), buildMode: true };
+
+    act(() => {
+      root.render(<Grid state={state} dispatch={jest.fn()} />);
+    });
+
+    expect(
+      phaserHostProps!.staticAssets.find((asset) => asset.id === "grid-hub")
+        ?.isDeconstructing,
+    ).toBe(true);
+
+    const cancelled = gameReducer(state, {
+      type: "CANCEL_DECONSTRUCT_ASSET",
+      assetId: "grid-hub",
+    });
+
+    act(() => {
+      root.render(<Grid state={cancelled} dispatch={jest.fn()} />);
+    });
+
+    expect(
+      phaserHostProps!.staticAssets.find((asset) => asset.id === "grid-hub")
+        ?.isDeconstructing,
+    ).toBe(false);
   });
 
   it("updates Phaser snapshots when a construction site finishes", () => {
