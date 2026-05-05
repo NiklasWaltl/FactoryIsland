@@ -37,15 +37,19 @@ type RemoveAssetEligibilityDecision =
         | "fixed_asset";
     };
 
+function isRemovableBuildingType(
+  type: PlacedAsset["type"],
+): type is BuildingType {
+  return type in BUILDING_COSTS;
+}
+
 function decideRemoveAssetEligibility(input: {
   buildMode: boolean;
   activeHotbarToolKind: string | null | undefined;
   assets: Record<string, PlacedAsset>;
   assetId: string;
-  removableTypes: ReadonlySet<string>;
 }): RemoveAssetEligibilityDecision {
-  const { buildMode, activeHotbarToolKind, assets, assetId, removableTypes } =
-    input;
+  const { buildMode, activeHotbarToolKind, assets, assetId } = input;
 
   const removeToolActive = buildMode || activeHotbarToolKind === "building";
   if (!removeToolActive) {
@@ -57,7 +61,7 @@ function decideRemoveAssetEligibility(input: {
     return { kind: "blocked", blockReason: "asset_missing" };
   }
 
-  if (!removableTypes.has(targetAsset.type)) {
+  if (!isRemovableBuildingType(targetAsset.type)) {
     return { kind: "blocked", blockReason: "type_not_removable" };
   }
 
@@ -120,33 +124,11 @@ export function handleRemoveAssetAction(
   const { debugLog } = deps;
 
   const activeHotbarSlot = state.hotbarSlots[state.activeSlot];
-  // Only buildings can be removed via build mode; resources and map_shop are off-limits
-  const removableTypes = new Set<string>([
-    "workbench",
-    "warehouse",
-    "smithy",
-    "generator",
-    "cable",
-    "battery",
-    "power_pole",
-    "auto_miner",
-    "conveyor",
-    "conveyor_corner",
-    "conveyor_merger",
-    "conveyor_splitter",
-    "conveyor_underground_in",
-    "conveyor_underground_out",
-    "manual_assembler",
-    "auto_smelter",
-    "auto_assembler",
-    "service_hub",
-  ]);
   const removeEligibilityDecision = decideRemoveAssetEligibility({
     buildMode: state.buildMode,
     activeHotbarToolKind: activeHotbarSlot?.toolKind,
     assets: state.assets,
     assetId: action.assetId,
-    removableTypes,
   });
   if (removeEligibilityDecision.kind === "blocked") return state;
 

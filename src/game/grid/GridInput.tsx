@@ -8,16 +8,6 @@ import type { GameAction } from "../store/game-actions";
 const WORLD_W = GRID_W * CELL_PX;
 const WORLD_H = GRID_H * CELL_PX;
 
-const SKIP_CONFIRM_TYPES = new Set([
-  "cable",
-  "conveyor",
-  "conveyor_corner",
-  "conveyor_merger",
-  "conveyor_splitter",
-  "conveyor_underground_in",
-  "conveyor_underground_out",
-]);
-
 export interface UseGridInputResult {
   containerRef: React.RefObject<HTMLDivElement | null>;
   cam: { x: number; y: number };
@@ -25,8 +15,6 @@ export interface UseGridInputResult {
   dragging: boolean;
   hover: { x: number; y: number } | null;
   buildDirection: Direction;
-  pendingRemoveAssetId: string | null;
-  setPendingRemoveAssetId: React.Dispatch<React.SetStateAction<string | null>>;
   onMouseDown: (e: React.MouseEvent) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onGridMouseMove: (e: React.MouseEvent) => void;
@@ -47,9 +35,6 @@ export function useGridInput(
   const dragStart = useRef({ x: 0, y: 0, camX: 0, camY: 0 });
   const didDrag = useRef(false);
   const [buildDirection, setBuildDirection] = useState<Direction>("east");
-  const [pendingRemoveAssetId, setPendingRemoveAssetId] = useState<
-    string | null
-  >(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
 
   const clampCam = useCallback((cx: number, cy: number, z: number) => {
@@ -181,9 +166,7 @@ export function useGridInput(
 
   const onContextMenu = useCallback(
     (e: React.MouseEvent) => {
-      const slot = state.hotbarSlots[state.activeSlot];
-      const removeToolActive = state.buildMode || slot?.toolKind === "building";
-      if (!removeToolActive) return;
+      if (!state.buildMode) return;
       e.preventDefault();
       const el = containerRef.current;
       if (!el) return;
@@ -196,26 +179,10 @@ export function useGridInput(
       const gy = Math.floor(wy / CELL_PX);
       if (gx >= 0 && gx < GRID_W && gy >= 0 && gy < GRID_H) {
         const assetId = state.cellMap[cellKey(gx, gy)];
-        if (assetId) {
-          const asset = state.assets[assetId];
-          if (asset && SKIP_CONFIRM_TYPES.has(asset.type)) {
-            dispatch({ type: "BUILD_REMOVE_ASSET", assetId });
-          } else if (asset) {
-            setPendingRemoveAssetId(assetId);
-          }
-        }
+        if (assetId) dispatch({ type: "BUILD_REMOVE_ASSET", assetId });
       }
     },
-    [
-      cam,
-      zoom,
-      state.buildMode,
-      state.hotbarSlots,
-      state.activeSlot,
-      state.cellMap,
-      state.assets,
-      dispatch,
-    ],
+    [cam, zoom, state.buildMode, state.cellMap, dispatch],
   );
 
   useEffect(() => {
@@ -275,8 +242,6 @@ export function useGridInput(
     dragging,
     hover,
     buildDirection,
-    pendingRemoveAssetId,
-    setPendingRemoveAssetId,
     onMouseDown,
     onMouseMove,
     onGridMouseMove,
