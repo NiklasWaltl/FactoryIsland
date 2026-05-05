@@ -4,6 +4,8 @@
 > Public-API-Typen in `src/game/**`. Bewusst ausgeschlossen: lokale
 > React-Props, interne Action-Handler-Deps, Test-Helfertypen und
 > generierte `.d.ts`-Deklarationen.
+> UI-only Slice-Typen aus [`store/types/ui-slice-types.ts`](./store/types/ui-slice-types.ts)
+> sind in diesem Index bewusst out-of-scope.
 
 > Domain type knowledge. Quick reference for AI prompting.
 > **Last verified:** 2026-05-04.
