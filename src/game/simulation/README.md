@@ -38,16 +38,18 @@ GameState (runtime, hydratiert)
 
 | Datei | Zweck |
 |---|---|
-| [`save.ts`](./save.ts) | Top-Level Public API. |
+| [`save.ts`](./save.ts) | Stabile Top-Level Public-API-Fassade fuer Save/Load-Imports. |
 | [`save-codec.ts`](./save-codec.ts) | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields) + `loadAndHydrate` (one-stop Helper: parse → migrate → hydrate). |
 | [`save-migrations.ts`](./save-migrations.ts) | `CURRENT_SAVE_VERSION` (aktuell: 29), alle `SaveGameVN`-Interfaces (V1–V29), `migrateVNToVN+1`-Funktionen (V0→V29), Migrations-Chain + `clampGeneratorFuel` (pure Load-Guard für Generator-Fuel-Overflow). |
 | [`save-normalizer.ts`](./save-normalizer.ts) | `sanitizeXxx`-Funktionen: `sanitizeNetworkSlice`, `sanitizeCraftingQueue`, `sanitizeStarterDrone`, `sanitizeConveyorUndergroundPeers`, `sanitizeKeepStockByWorkbench`, `sanitizeRecipeAutomationPolicies` + `rebuildGlobalInventoryFromStorage` (re-derives `globalInventory` aus warehouse/hub-Slices). |
 | [`save-legacy.ts`](./save-legacy.ts) | V0 (pre-versioned) → V1 Sonderfall + Runtime-Snapshot-Detection. |
 | [`recipes/`](./recipes/) | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler / AutoAssemblerV1). Nicht persistenz-relevant. |
-| [`game.ts`](./game.ts) | Compatibility-Re-Export; leitet alle Importe an `../store/reducer` weiter. |
+| [`game.ts`](./game.ts) | Legacy-Compatibility-Shim (`export * from "../store/reducer"`); aktuell ohne interne Konsumenten in `src/**`. |
 | [`mining-utils.ts`](./mining-utils.ts) | Hilfsfunktionen für Auto-Miner-Tick (Yield-Multiplikator, etc.). |
 | [`smelting-utils.ts`](./smelting-utils.ts) | Hilfsfunktionen für Auto-Smelter-Tick (Speed-Multiplikator, Tick-Intervall, etc.). |
 | [`__tests__/`](./__tests__/) | Roundtrip-, Migrations- und Simulation-Unit-Tests (10 Test-Dateien). |
+
+**API-Grenze:** Neue Konsumenten sollten aus [`save.ts`](./save.ts) importieren. Direkte Importe aus [`save-codec.ts`](./save-codec.ts), [`save-migrations.ts`](./save-migrations.ts) oder [`save-normalizer.ts`](./save-normalizer.ts) sind primär fuer interne Implementierung und gezielte Tests gedacht.
 
 ---
 

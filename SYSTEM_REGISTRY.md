@@ -1,7 +1,7 @@
 # SYSTEM_REGISTRY.md
 
 > AI-friendly navigation map for Factory Island. Current state, not target state.
-> Last verified: 2026-05-04.
+> Last verified: 2026-05-05.
 
 ---
 
@@ -27,7 +27,8 @@ When a task is named:
 
 | Task | Primary Systems | Secondary Systems |
 |---|---|---|
-| New building | Building Placement, Reducer, UI-Panels | Inventory, Energy |
+| New building | Building Placement, Reducer, UI-Panels | Inventory, Energy, Construction Sites |
+| Construction-site / hub-upgrade flow | Construction Sites, Drones | Building Placement, Service Hubs, Energy |
 | New recipe | Crafting, Simulation/Recipes | Inventory, UI-Panels |
 | New UI panel | UI-Panels | Store, Selection-State |
 | New drone rule | Drones | Inventory, Tick-Pipeline |
@@ -74,14 +75,15 @@ When a task is named:
 | **Action-Handlers** | [src/game/store/action-handlers/](src/game/store/action-handlers/) | Cluster handler per action type | `state` + `deps` | slices via pure updates | Decisions, Helpers, Selectors | tick scheduling |
 | **Game-Actions Union** | [src/game/store/game-actions.ts](src/game/store/game-actions.ts) | Canonical `GameAction` discriminated union | — | — | item/recipe types | logic (types only) |
 | **Crafting** | [src/game/crafting/](src/game/crafting/) | Job lifecycle: queued→reserved→crafting→delivering→done | `crafting`, `network`, `inventory`, `warehouseInventories`, `serviceHubs`, `recipeAutomationPolicies` | `crafting`, `network`, `inventory`, `warehouseInventories`, `serviceHubs`, `keepStockByWorkbench`, `recipeAutomationPolicies` | Inventory, Items, Recipes | drone movement |
-| **Drones** | [src/game/drones/](src/game/drones/) | Task selection, movement, cargo FSM | `drones`, `assets`, `crafting`, inventories | `drones`, `starterDrone`, target inventories, `collectionNodes` | Decisions, Selectors | energy, crafting planning |
+| **Drones** | [src/game/drones/](src/game/drones/) | Task selection, movement, cargo FSM | `drones`, `assets`, `crafting`, inventories, `constructionSites` | `drones`, `starterDrone`, target inventories, `constructionSites`, `collectionNodes` | Decisions, Selectors | energy, crafting planning |
 | **Inventory / Reservations** | [src/game/inventory/](src/game/inventory/) | Logical holds on physical stock (`network`) | `inventory`, `warehouseInventories`, `serviceHubs`, `network` | `network` (reservations) | Items | physical movement |
 | **Items** | [src/game/items/](src/game/items/) | `ItemId` union, item registry, stack sizes | — | — | — | Recipes |
 | **Recipes** | [src/game/simulation/recipes/](src/game/simulation/recipes/) | Static recipe definitions per workbench type | — | — | Items | crafting lifecycle |
 | **Logistics-Tick** | [src/game/store/action-handlers/logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts) (+ `logistics-tick/`) | AutoMiner, Conveyor, AutoSmelter, AutoAssembler per 500ms | `assets`, inventories, `conveyors` | `inventory`, `warehouseInventories`, `autoMiners`, `autoSmelters`, `autoAssemblers`, `conveyors`, `smithy`, `notifications`, `autoDeliveryLog` | Decisions, Conveyor | drones, crafting |
 | **Energy / Power** | [src/game/store/energy/](src/game/store/energy/), [src/game/power/](src/game/power/) | network connectivity, consumer priority, generator burn | `assets`, `cellMap`, `constructionSites`, `generators`, `battery`, `connectedAssetIds`, active machine state | `poweredMachineIds`, `machinePowerRatio`, `generators`, `battery` | Decisions | Crafting, Logistics |
 | **Buildings** | [src/game/buildings/](src/game/buildings/), [src/game/store/constants/buildings/](src/game/store/constants/buildings/) | building definitions, input targets, service-hub/warehouse helpers | `assets`, `placedBuildings` | via reducer | Items | placement validation |
-| **Zones** | [src/game/zones/](src/game/zones/) | production-zone aggregation and cleanup | `productionZones`, `assets` | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | Decisions | crafting plan |
+| **Construction Sites** | [building-placement/](src/game/store/action-handlers/building-placement/), [building-site.ts](src/game/store/action-handlers/building-site.ts), [deposit-construction.ts](src/game/drones/execution/drone-finalization/depositing/deposit-construction.ts) | outstanding build/upgrade resource debt and drone completion | `constructionSites`, `serviceHubs`, `inventory`, `assets` | `constructionSites`, `inventory`, `connectedAssetIds`, `serviceHubs` | Building Placement, Drones, Energy | normal placement validation |
+| **Zones** | [src/game/zones/](src/game/zones/) | production-zone aggregation, cleanup, and source resolution | `productionZones`, `assets`, `buildingZoneIds`, `warehouseInventories` | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | Crafting sources, Decisions | crafting plan |
 | **Conveyor** | [src/game/store/conveyor/](src/game/store/conveyor/) | belt geometry, routing, underground pairing, splitter filter/route state | `conveyors`, `assets`, `splitterRouteState`, `splitterFilterState` | via Logistics-Tick, `SET_SPLITTER_FILTER` | — | item definition |
 | **Ship / Dock Quest System** | [src/game/ship/](src/game/ship/), [src/game/store/types/ship-types.ts](src/game/store/types/ship-types.ts), [src/game/store/action-handlers/ship-actions.ts](src/game/store/action-handlers/ship-actions.ts) | ship voyage, dock quests, rewards | `ship`, dock warehouse inventory | `ship`, `warehouseInventories`, rewards, module fragments | Dock Warehouse, Modules, Save | generic logistics |
 | **Modules / Module Lab System** | [src/game/modules/](src/game/modules/), [src/game/constants/moduleLabConstants.ts](src/game/constants/moduleLabConstants.ts), [src/game/store/action-handlers/module-lab-actions.ts](src/game/store/action-handlers/module-lab-actions.ts) | module inventory, fragments, lab crafting jobs | `moduleInventory`, `moduleFragments`, `moduleLabJob` | `moduleInventory`, `moduleFragments`, `moduleLabJob`, equipped module slots | Ship, UI, Save | normal workbench crafting |
@@ -136,7 +138,23 @@ When a task is named:
 
 **Canonical:** Physical inventory is the source of truth. `network` is only derived holds. Crafting reservations connect jobs and holds through `reservationOwnerId` on jobs and `ownerId` on reservation entries.
 
-### 5.5 Tick Pipeline
+### 5.5 Production Zones & Source Resolution
+
+- **Cluster:** [zone-actions.ts](src/game/store/action-handlers/zone-actions.ts) via [game-reducer-dispatch.ts](src/game/store/game-reducer-dispatch.ts).
+- **Source precedence:** [resolveBuildingSource](src/game/store/building-source.ts) resolves Zone -> explicit Warehouse -> global fallback.
+- **Zone inventory reads:** [production-zone-aggregation.ts](src/game/zones/production-zone-aggregation.ts) aggregates sorted zone warehouse IDs.
+- **Zone inventory writes:** [applyZoneDelta](src/game/zones/production-zone-mutation.ts) distributes aggregate deltas across zone warehouses deterministically; [crafting-sources.ts](src/game/crafting/crafting-sources.ts) routes zone source mutations through it.
+- **UI entry:** `ZoneSourceSelector` is embedded in crafting and auto-machine panels.
+
+### 5.6 Construction Sites
+
+- **State:** `constructionSites[assetId]` stores outstanding collectable resource debt for a building or hub upgrade.
+- **Regular building path:** [place-building.ts](src/game/store/action-handlers/building-placement/place-building.ts) creates construction sites for eligible `CONSTRUCTION_SITE_BUILDINGS` when a service hub exists.
+- **Hub upgrade path:** [building-site.ts](src/game/store/action-handlers/building-site.ts) handles `UPGRADE_HUB`, sets `serviceHubs[hubId].pendingUpgrade`, and creates matching construction debt.
+- **Drone delivery path:** [deposit-construction.ts](src/game/drones/execution/drone-finalization/depositing/deposit-construction.ts) reduces `remaining`, removes completed sites, returns overflow to global inventory, and recomputes `connectedAssetIds` on completion.
+- **Save risk:** `constructionSites` is persisted; old saves must still normalize through the save codec and migrations.
+
+### 5.7 Tick Pipeline
 
 | Tick | ms | Condition | Handler |
 |---|---|---|---|
@@ -157,7 +175,9 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
 
 **LOGISTICS_TICK internal phases:** AutoMiner → Conveyor → AutoSmelter → AutoAssembler. Phase 4: `runAutoAssemblerPhase` (see [logistics-tick.ts](src/game/store/action-handlers/logistics-tick.ts)). Commit write set includes `autoAssemblers`, `smithy`, and `autoDeliveryLog`.
 
-### 5.6 Energy Network
+`autoDeliveryLog` is transient UI telemetry. Auto-miner and conveyor warehouse deliveries append/batch entries; save hydration resets the log to `[]`.
+
+### 5.8 Energy Network
 
 - **Tick phases:** [store/energy/](src/game/store/energy/) — production, consumers (priority-sorted), distribution.
 - **Important paths:** [energy-tick-phases.ts](src/game/store/energy/energy-tick-phases.ts), [energy-priority.ts](src/game/power/energy-priority.ts).
@@ -166,12 +186,14 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
 - **Consumer priority:** `MachinePriority` 1..5 — smaller number = earlier power access (`1` = highest priority).
 - **Consumer filtering:** consumer phase includes active-processing checks for AutoSmelter and AutoAssembler.
 
-### 5.7 Action Clusters (most common entry points)
+### 5.9 Action Clusters (most common entry points)
 
 | Cluster | Path | Action Count / Representative Actions |
 |---|---|---|
 | Crafting | [crafting-queue-actions/](src/game/store/action-handlers/crafting-queue-actions/) | 13; `JOB_TICK`, `JOB_ENQUEUE`, `SET_KEEP_STOCK_TARGET`, `NETWORK_*` |
+| Zones | [zone-actions.ts](src/game/store/action-handlers/zone-actions.ts) | `CREATE_ZONE`, `DELETE_ZONE`, `SET_BUILDING_ZONE` |
 | Building Placement | [building-placement.ts](src/game/store/action-handlers/building-placement.ts) + [building-placement/](src/game/store/action-handlers/building-placement/) | 2; `BUILD_PLACE_BUILDING`, `BUILD_REMOVE_ASSET` |
+| Building Site | [building-site.ts](src/game/store/action-handlers/building-site.ts) | `SET_BUILDING_SOURCE`, `UPGRADE_HUB` |
 | Machines | [machine-actions.ts](src/game/store/action-handlers/machine-actions.ts) + [machine-actions/](src/game/store/action-handlers/machine-actions/) | many |
 | Machine Config | [machine-config.ts](src/game/store/action-handlers/machine-config.ts) | `SET_MACHINE_PRIORITY`, `SET_MACHINE_BOOST`, `SET_SPLITTER_FILTER` |
 | Auto Assembler | [auto-assembler-actions.ts](src/game/store/action-handlers/auto-assembler-actions.ts) | `AUTO_ASSEMBLER_SET_RECIPE` |
@@ -183,7 +205,7 @@ All tick intervals live in [entry/use-game-ticks.ts](src/game/entry/use-game-tic
 
 Table is representative, not exhaustive.
 
-### 5.8 UI Surfaces (Panels, HUD, Menus)
+### 5.10 UI Surfaces (Panels, HUD, Menus)
 
 | Component | Purpose |
 |---|---|
@@ -219,7 +241,7 @@ Table is representative, not exhaustive.
 
 Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/game/ui/menus/BuildMenu.tsx), [ModeSelect.tsx](src/game/ui/menus/ModeSelect.tsx).
 
-### 5.9 Ship / Dock Quest System
+### 5.11 Ship / Dock Quest System
 
 - **State:** `ShipState` is persisted in `state.ship`.
 - **Key actions:** `SHIP_TICK`, `SHIP_DOCK`, `SHIP_DEPART`, `SHIP_RETURN`.
@@ -229,7 +251,7 @@ Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/
 - **Normalization:** QuestHistory/Departure normalization via save migration ([ship-types.ts:46](src/game/store/types/ship-types.ts#L46), [save-migrations.ts:721](src/game/simulation/save-migrations.ts#L721)).
 - **Key files:** [ship-types.ts](src/game/store/types/ship-types.ts), [ship-actions.ts](src/game/store/action-handlers/ship-actions.ts), [ship-balance.ts](src/game/ship/ship-balance.ts) (balancing/routing), [quest-registry.ts](src/game/ship/quest-registry.ts) (quest-history filter), [reward-table.ts](src/game/ship/reward-table.ts) (reward preview API).
 
-### 5.10 Modules / Module Lab System
+### 5.12 Modules / Module Lab System
 
 - **State:** `moduleInventory`, `moduleFragments`, `moduleLabJob` are all persisted.
 - **Tick:** `MODULE_LAB_TICK` advances active module lab jobs.
@@ -238,21 +260,21 @@ Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/
 - **Recipe guidance:** [moduleLabConstants.ts](src/game/constants/moduleLabConstants.ts).
 - **Save checklist:** include `moduleInventory`, `moduleFragments`, and `moduleLabJob`.
 
-### 5.11 Bootstrap / Initial Fixed Layout
+### 5.13 Bootstrap / Initial Fixed Layout
 
 - Dock Warehouse is NOT a normal buildable; it is seeded via bootstrap.
 - Normalized through: [apply-dock-warehouse-layout.ts](src/game/store/bootstrap/apply-dock-warehouse-layout.ts), [registry.ts](src/game/store/constants/buildings/registry.ts), [initial-state.ts](src/game/store/initial-state.ts).
 - Tied to ship state initialization; must be preserved across migrations.
 
-### 5.12 Conveyor Splitter Filter / Route State
+### 5.14 Conveyor Splitter Filter / Route State
 
 - **Splitter State (persisted):** `splitterRouteState` stores round-robin routing per splitter.
 - **Splitter filters (persisted):** `splitterFilterState` stores item filter rules per splitter output side.
 - **Key action:** `SET_SPLITTER_FILTER`.
-- **Routing logic:** [conveyor-routing.ts](src/game/store/conveyor/conveyor-routing.ts).
+- **Routing logic:** [conveyor-routing.ts](src/game/store/conveyor/conveyor-routing.ts) checks output filters before side selection, alternates left/right using `lastSide`, updates `splitterRouteState` only on successful routing, and leaves the item on the input conveyor when both sides are blocked.
 - **UI:** [ConveyorSplitterPanel.tsx](src/game/ui/panels/ConveyorSplitterPanel.tsx).
 
-### 5.13 Dev Scenes (DEV only)
+### 5.15 Dev Scenes (DEV only)
 
 - **Scenes:** `debug`, `logistics`, `power`, `assembler`, `empty`.
 - **Selection:** URL `?scene=` parameter.
@@ -273,7 +295,7 @@ Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/
 | **Save-Migrations** | [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Schema change without migration → hydration errors for existing saves |
 | **New persisted slices (save v29)** | [simulation/save-codec.ts](src/game/simulation/save-codec.ts), [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts) | Current save version: 29. Includes `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship` (normalized in v29 migration), `splitterFilterState`, `splitterRouteState` |
 | **Energy Consumer Priority** | [power/energy-priority.ts](src/game/power/energy-priority.ts) | Ordering bugs → wrong `machinePowerRatio` |
-| **`GameState` is a Flat Interface** | [store/types.ts:378](src/game/store/types.ts#L378) | 62 top-level fields; logical slice separation is only conceptual. Notable fields: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `splitterRouteState`, `splitterFilterState`, `ship` |
+| **`GameState` is a Flat Interface** | [store/types.ts](src/game/store/types.ts) (`interface GameState`) | large top-level field set; logical slice separation is only conceptual. Notable fields: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `constructionSites`, `splitterRouteState`, `splitterFilterState`, `ship` |
 | **HMR-Restore** | [entry/FactoryApp.tsx](src/game/entry/FactoryApp.tsx) | DEV-only code; do not test in prod |
 
 ---
@@ -285,17 +307,18 @@ Key files: [FactoryApp.tsx](src/game/entry/FactoryApp.tsx), [BuildMenu.tsx](src/
 1. **Item ID** (if it has its own item): [items/registry.ts](src/game/items/registry.ts) + [items/types.ts](src/game/items/types.ts) if needed.
 2. **Building definition:** [src/game/store/constants/buildings/registry.ts](src/game/store/constants/buildings/registry.ts) (size, cost, power demand).
 3. **AssetType union:** extend in [store/types.ts](src/game/store/types.ts) (if this is a new asset type).
-4. **Initial state / slice:** if a dedicated slice is needed (e.g. analogous to `autoSmelters`), add it in [initial-state.ts](src/game/store/initial-state.ts) + `GameState`.
-5. **Placement validation:** account for it in [grid/placement-validation.ts](src/game/grid/placement-validation.ts).
-6. **Tick handler** (if processing): create a new cluster under [store/action-handlers/](src/game/store/action-handlers/), add the action to the union in [game-actions.ts](src/game/store/game-actions.ts), register `setInterval` in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts).
-7. **Sprite/render:** [src/game/world/PhaserGame.ts](src/game/world/PhaserGame.ts) + [assets/sprites/](src/game/assets/sprites/).
-8. **Build menu:** add the asset to `BUILD_CATEGORIES` in [registry.ts](src/game/store/constants/buildings/registry.ts).
-9. **UI panel:** new file in [ui/panels/](src/game/ui/panels/), extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts).
-10. **Panel routing:** register panel in `tryTogglePanelFromAsset` ([ui-panel-toggle.ts](src/game/store/helpers/ui-panel-toggle.ts)).
-11. **Factory route:** add the `state.openPanel === "xxx" && <XxxPanel … />` render route in [FactoryApp.tsx](src/game/entry/FactoryApp.tsx).
-12. **Selection state:** define any `selectedXxxId` field in `GameState` and reset it explicitly where needed.
-13. **Save migration:** if the slice is new → entry in [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts).
-14. **Integration test:** add a targeted placement/panel/save test for the new building path.
+4. **Construction-site eligibility:** if drone-built, account for `CONSTRUCTION_SITE_BUILDINGS`, collectable costs, and hub availability in [place-building.ts](src/game/store/action-handlers/building-placement/place-building.ts).
+5. **Initial state / slice:** if a dedicated slice is needed (e.g. analogous to `autoSmelters`), add it in [initial-state.ts](src/game/store/initial-state.ts) + `GameState`.
+6. **Placement validation:** account for it in [grid/placement-validation.ts](src/game/grid/placement-validation.ts).
+7. **Tick handler** (if processing): create a new cluster under [store/action-handlers/](src/game/store/action-handlers/), add the action to the union in [game-actions.ts](src/game/store/game-actions.ts), register `setInterval` in [entry/use-game-ticks.ts](src/game/entry/use-game-ticks.ts).
+8. **Sprite/render:** [src/game/world/PhaserGame.ts](src/game/world/PhaserGame.ts) + [assets/sprites/](src/game/assets/sprites/).
+9. **Build menu:** add the asset to `BUILD_CATEGORIES` in [registry.ts](src/game/store/constants/buildings/registry.ts).
+10. **UI panel:** new file in [ui/panels/](src/game/ui/panels/), extend the `UIPanel` union in [store/types.ts](src/game/store/types.ts).
+11. **Panel routing:** register panel in `tryTogglePanelFromAsset` ([ui-panel-toggle.ts](src/game/store/helpers/ui-panel-toggle.ts)).
+12. **Factory route:** add the `state.openPanel === "xxx" && <XxxPanel … />` render route in [FactoryApp.tsx](src/game/entry/FactoryApp.tsx).
+13. **Selection state:** define any `selectedXxxId` field in `GameState` and reset it explicitly where needed.
+14. **Save migration:** if the slice is new → entry in [simulation/save-migrations.ts](src/game/simulation/save-migrations.ts).
+15. **Integration test:** add a targeted placement/panel/save test for the new building path.
 
 ### 7.2 Add a New Recipe
 

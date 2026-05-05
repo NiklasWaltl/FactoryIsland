@@ -2,6 +2,8 @@
 
 Dieses Dokument richtet sich an KI-Coding-Agenten, die an diesem Repository arbeiten.
 
+Letzte Code-Pruefung: 2026-05-05.
+
 ## Projektziel
 
 Factory Island ist ein eigenstaendiges 2D-Fabrik-Aufbauspiel.
@@ -16,6 +18,7 @@ Factory Island ist ein eigenstaendiges 2D-Fabrik-Aufbauspiel.
 2. Operative Reihenfolge danach: [SYSTEM_REGISTRY.md](SYSTEM_REGISTRY.md) -> [src/game/ARCHITECTURE.md](src/game/ARCHITECTURE.md) -> [src/game/TYPES.md](src/game/TYPES.md) (bei Bedarf).
 
 Nutze dieses Dokument als Verhaltensregeln und verlinke fuer Details auf die obigen Quellen statt Inhalte zu duplizieren.
+Bei Arbeiten an Agenten-, Review- oder Doku-Instruktionen zusaetzlich die passende Datei unter `.github/instructions/*.instructions.md` laden.
 
 ## Arbeitsmodus
 
@@ -29,7 +32,9 @@ Nutze dieses Dokument als Verhaltensregeln und verlinke fuer Details auf die obi
 
 - Keine Spiellogik in UI-Komponenten.
 - React mutiert State nur via `dispatch`; Phaser ist read-only und dispatcht nicht.
+- React Compiler ist aktiv. React-Komponenten muessen render-pur bleiben: keine I/O-Zugriffe, keine `Date.now()`-/`Math.random()`-Logik und keine mutierenden Singletons im Renderpfad.
 - Keine neuen Re-Export-Hubs ohne klaren Grund.
+- Neue read-only Aggregationen fuer UI oder Drone-Logik als Selector unter `src/game/store/selectors/**` anlegen und direkt von dort importieren; keine neuen Kompatibilitaets-Barrels.
 - Produktionsrezepte liegen unter `src/game/simulation/recipes/`. Ausnahme: Module-Lab-Rezepte liegen in `src/game/constants/moduleLabConstants.ts` und werden von `src/game/store/action-handlers/module-lab-actions.ts` und `src/game/ui/panels/ModulLabPanel.tsx` konsumiert.
 - Neue UI-Elemente unter `src/game/ui/**`; `BuildMenu.tsx` liegt unter `src/game/ui/menus/`.
 - Reine DEV-Tools (Logging, Overlays, Dev-Panels) nur hinter `import.meta.env.DEV` oder `IS_DEV`. Diagnose-UI, die im Release-Build sichtbar sein soll (z. B. Stromnetz-Analyse im BuildMenu), als regulaeres Feature behandeln.
@@ -40,15 +45,17 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 
 - Dev: `yarn dev`
 - Build: `yarn build`
-- Typecheck: `yarn tsc -p tsconfig.factory.json --noEmit`
+- Typecheck: `yarn tsc -p tsconfig.factory.json --noEmit` (lokaler TypeScript-Binary, kein eigenes `package.json`-Script)
 - Tests: `yarn test`
 - Lint: `yarn lint`
 
 ## Bekannte Stolperfallen
 
 - Alte Saves muessen ueber `normalizeLoadedState()` kompatibel bleiben.
-- Fuer Footprint-Logik kein nacktes `asset.size` verwenden. Bevorzugt: zentrale Geometrie-Helper (`assetWidth`/`assetHeight`) oder das etablierte `width`/`height`-Fallback-Muster. Direkte `asset.size`-Nutzung ist nur in zentralen Helpern (`asset-geometry.ts`) erlaubt.
+- Fuer Footprint-Logik keine nackte `asset.size`-Annahme verwenden. Bevorzugt: zentrale Geometrie-Helper (`assetWidth`/`assetHeight`) oder das etablierte `width`/`height`-Fallback-Muster. Direkte `asset.size`-Nutzung nur in klar begruendeten Infrastrukturpfaden wie Geometrie-Helpern, Rendering, Connectivity, Routing oder Debug/Overlay belassen.
 - Rotierbare Maschinen brauchen korrekte `direction`-Logik.
+- `starterDrone` und `drones[id]` sind Legacy-dupliziert und muessen ueber `syncDrones` synchron bleiben.
+- Tick-Reihenfolge ist nicht garantiert; Tick-Logik muss race-tolerant sein.
 - Bei Build-Fehlern zuerst Konfigurations- und Importkette pruefen.
 - In dieser Windows-Umgebung ist `rg` ggf. nicht verfuegbar; nutze dann VS-Code-Suche oder `Select-String`.
 
@@ -56,5 +63,5 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 
 - Keine neuen npm-Abhaengigkeiten ohne Rueckfrage.
 - Keine stillen Fallbacks fuer fehlende Logik.
-- Bei jeder neuen persistierten `GameState`-Property muessen zwingend alle drei Pfade gepflegt werden: (1) Default-Wert in `initial-state`, (2) Serialisierung/Deserialisierung im Save-Codec, (3) Migration in `save-migrations.ts` (aktuelle Version: v29). Betrifft u. a.: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterRouteState`, `splitterFilterState`.
+- Bei jeder neuen persistierten `GameState`-Property muessen zwingend alle drei Pfade gepflegt werden: (1) Default-Wert in `initial-state`, (2) Serialisierung/Deserialisierung im Save-Codec, (3) Migration in `save-migrations.ts` (aktuelle Version: v29). Zusaetzlich `src/game/store/types.ts` und den Persistenzstatus in `src/game/ARCHITECTURE.md` pruefen. Betrifft u. a.: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterRouteState`, `splitterFilterState`.
 - Keine Aenderung ohne anschliessende Verifikation.

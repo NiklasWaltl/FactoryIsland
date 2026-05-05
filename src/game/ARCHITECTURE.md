@@ -110,6 +110,14 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 | Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
 | Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
 
+`autoDeliveryLog` ist transiente UI-Telemetrie und wird **nicht persistiert**.
+Einträge entstehen bei jeder Auto-Delivery (Auto-Miner, Conveyor-Transfer).
+Mehrere Einträge innerhalb eines Zeitfensters werden gebatcht; bei Erreichen
+eines konfigurierten Limits werden älteste Einträge rotiert (FIFO).
+Die React-Komponente liest das Log direkt aus dem Game-State
+(`FactoryApp.tsx:336`). Ziel ist ausschließlich UI-Feedback, keine
+Replay-Fähigkeit.
+
 > Hinweis: Die 1000 ms sind die Polling-Frequenz. Die Reifezeit eines neu gespawnten Saplings wird über `SAPLING_GROW_MS` gesetzt (derzeit 30 000 ms).
 
 Most intervals use constants in [`store/constants/timing/timing.ts`](./store/constants/timing/timing.ts), [`store/constants/energy/`](./store/constants/energy/), [`store/constants/timing/workbench-timing.ts`](./store/constants/timing/workbench-timing.ts), and [`constants/moduleLabConstants.ts`](./constants/moduleLabConstants.ts). Sapling readiness scanning (1000ms) and notification cleanup (500ms) are currently inline literals in [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts).
@@ -174,7 +182,7 @@ Beim Laden werden Claims in beiden Pfaden auf `null` gesetzt: im Save-Codec sowi
 
 ## State Map
 
-`GameState` is a single flat interface in [`store/types.ts:378`](./store/types.ts#L378). Logically, it decomposes into the following slices:
+`GameState` is a single flat interface in [`store/types.ts`](./store/types.ts) (Interface `GameState`). Logically, it decomposes into the following slices:
 
 | Slice (logical) | Fields | Persisted |
 |---|---|---|
@@ -198,6 +206,20 @@ Beim Laden werden Claims in beiden Pfaden auf `null` gesetzt: im Save-Codec sowi
 Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 
 ## Current Runtime Domains Not Shown In The Old Core Loop
+
+### Production Zones
+
+Production Zones bilden einen eigenen Reducer-Cluster
+(`game-reducer-dispatch.ts:40/76`) und beeinflussen direkt die
+Build-/Crafting-Source-Auflösung.
+
+Source-Precedence: Zone → explizites Warehouse → global.
+Inventaränderungen für Zone-Sources werden über `applyZoneDelta`
+deterministisch auf die zugehörigen Zone-Warehouses verteilt
+(`production-zone-mutation.ts`, `production-zone-aggregation.ts`).
+
+Die Routing- und Source-Logik liest Zone-Zugehörigkeit über
+`building-source.ts:6`.
 
 ### Ship / Dock Quest System
 
@@ -233,9 +255,33 @@ Service hubs are tiered and persisted through `serviceHubs[hubId]`:
 - Finalisierungspfad A läuft über den Construction-Supply-Abschluss und ruft `finalizeHubTier2Upgrade` auf.
 - Finalisierungspfad B läuft nach Hub-Deposit über `isHubUpgradeDeliverySatisfied` und ruft danach `finalizeHubTier2Upgrade` auf.
 
+### Construction Sites
+
+Construction Sites entstehen in zwei Pfaden:
+(a) Regulärer Building-Placement-Flow (`place-building.ts`): Beim Platzieren eines
+   Gebäudes wird eine Construction Site angelegt, die offene Materialschuld
+   in `constructionSites[assetId]` hält.
+(b) Hub-Upgrade-Flow (`UPGRADE_HUB`): Analog wird beim Hub-Upgrade eine Site erstellt.
+
+Drone-Deposits (`deposit-construction.ts`) reduzieren schrittweise die `remaining`-
+Schuld. Bei vollständiger Lieferung wird der Site-Eintrag entfernt und abhängige
+Runtime-Daten (z. B. `connectedAssetIds`) werden recomputed.
+
+Relevante Dateien: `place-building.ts:70/82`, `deposit-construction.ts:15/44`.
+
 ### Conveyor Route State
 
-`conveyorUndergroundPeers`, `splitterRouteState`, and `splitterFilterState` are persisted logistics state. Splitter route/filter updates live in the conveyor routing layer and `SET_SPLITTER_FILTER`.
+`conveyorUndergroundPeers`, `splitterRouteState`, and `splitterFilterState` are persisted logistics state. Splitter-Routing (`conveyor-routing.ts:403/425/453`) arbeitet nach folgendem Schema:
+1. **Filter-Prüfung**: Vor der Side-Auswahl werden optionale Output-Filter
+  pro Output-Seite geprüft.
+2. **Round-Robin**: Über `lastSide` wird die nächste Ausgabe-Seite im
+  Round-Robin-Verfahren gewählt.
+3. **State-Update**: Bei erfolgreichem Routing wird `splitterRouteState`
+  für den jeweiligen Splitter aktualisiert.
+4. **Fallback**: Schlägt das Routing fehl (Filter blockiert, kein Platz),
+  bleibt das Item auf dem Eingangs-Conveyor.
+
+`SET_SPLITTER_FILTER` persistiert die Filter-Konfiguration pro Seite.
 
 ### Bootstrap / Fixed Dock Warehouse
 

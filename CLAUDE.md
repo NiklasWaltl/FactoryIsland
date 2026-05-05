@@ -44,14 +44,15 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 - Typecheck: `yarn tsc -p tsconfig.factory.json --noEmit`
 - Tests: `yarn test`
 - Lint: `yarn lint`
+- Unter aktuellen Claude-Permissions zusaetzlich erlaubt (Diagnose/Checks): `npx tsc *`, `xargs grep *`, `npx vitest *`.
 
 ## Bekannte Stolperfallen
 
 - Alte Saves muessen ueber `normalizeLoadedState()` kompatibel bleiben.
-- Fuer Footprint-Logik kein nacktes `asset.size` verwenden. Bevorzugt: zentrale Geometrie-Helper (`assetWidth`/`assetHeight`) oder das etablierte `width`/`height`-Fallback-Muster. Direkte `asset.size`-Nutzung ist nur in zentralen Helpern (`asset-geometry.ts`) erlaubt.
+- Fuer Footprint-Logik in der Regel zentrale Geometrie-Helper (`assetWidth`/`assetHeight`) oder das etablierte `width`/`height`-Fallback-Muster nutzen. Direkte `asset.size`-Nutzung vermeiden und nur in klar begruendeten Pfaden (z. B. Rendering, Connectivity, Routing, Debug/Overlay oder bestehende Infrastruktur) belassen; wenn moeglich ueber Helper wie `asset-geometry.ts`.
 - Rotierbare Maschinen brauchen korrekte `direction`-Logik.
 - Bei Build-Fehlern zuerst Konfigurations- und Importkette pruefen.
-- In dieser Windows-Umgebung ist `rg` ggf. nicht verfuegbar; nutze dann VS-Code-Suche oder `Select-String`.
+- In dieser Windows-Umgebung ist `rg` ggf. nicht verfuegbar; unter aktuellen Claude-Permissions ist `rg` als Bash-Befehl zudem ggf. nicht freigeschaltet. Nutze dann VS-Code-Suche oder `Select-String` sowie erlaubte Alternativen wie `xargs grep *`.
 
 ## Guardrails
 
