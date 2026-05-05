@@ -19,6 +19,10 @@ import {
   hasRequiredBaseStartLayout,
 } from "../../world/base-start-layout";
 import { validateScene } from "./validate-scene";
+import {
+  requireStarterDrone,
+  STARTER_DRONE_ID,
+} from "../../store/selectors/drone-selectors";
 
 const CONVEYOR_TYPES = new Set([
   "conveyor",
@@ -97,8 +101,9 @@ const getClearBaseWorldState = (
 ): Partial<GameState> => {
   if (!scene.clearBaseWorld) return {};
 
+  const baseStarterDrone = requireStarterDrone(baseState);
   const starterDrone = {
-    ...baseState.starterDrone,
+    ...baseStarterDrone,
     status: "idle" as const,
     tileX: 0,
     tileY: 0,
@@ -115,7 +120,7 @@ const getClearBaseWorldState = (
     warehouseInventories: {},
     serviceHubs: {},
     starterDrone,
-    drones: { starter: starterDrone },
+    drones: { [STARTER_DRONE_ID]: starterDrone },
     generators: {},
     connectedAssetIds: [],
     poweredMachineIds: [],
@@ -237,7 +242,7 @@ const registerStarterDrone = (
     );
   }
 
-  const starterDrone = state.drones.starter;
+  const starterDrone = requireStarterDrone(state);
   const nextStarterDrone = {
     ...starterDrone,
     hubId: scene.starterDrone.hubId,
@@ -257,7 +262,7 @@ const registerStarterDrone = (
     starterDrone: nextStarterDrone,
     drones: {
       ...state.drones,
-      starter: nextStarterDrone,
+      [STARTER_DRONE_ID]: nextStarterDrone,
     },
   };
 };

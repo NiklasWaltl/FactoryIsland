@@ -20,6 +20,12 @@ import {
   withDrone,
 } from "./test-utils";
 import type { CollectableItemType, GameState } from "./test-utils";
+import { deserializeState, serializeState } from "../../simulation/save-codec";
+import {
+  requireStarterDrone,
+  selectStarterDrone,
+  STARTER_DRONE_ID,
+} from "../../store/selectors/drone-selectors";
 
 // ============================================================
 // Construction Site Tests
@@ -1015,6 +1021,7 @@ describe("Construction Sites – removal", () => {
     state = gameReducer(state, { type: "BUILD_REMOVE_ASSET", assetId: wbId! });
     expect(state.constructionSites[wbId!]).toBeUndefined();
     // Should have received partial refund for delivered resources
+    expect(state.starterDrone).toEqual(state.drones[STARTER_DRONE_ID]);
   });
 
   it("resets drone if it was delivering to the removed construction site", () => {
@@ -1063,6 +1070,101 @@ describe("Construction Sites – removal", () => {
     expect(state.starterDrone.status).toBe("idle");
     expect(state.starterDrone.deliveryTargetId).toBeNull();
     expect(state.starterDrone.currentTaskType).toBeNull();
+    expect(state.starterDrone).toEqual(state.drones[STARTER_DRONE_ID]);
+  });
+});
+
+describe("Starter Drone – sync guards", () => {
+  it("DRONE_TICK re-syncs diverged starterDrone and drones['starter']", () => {
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
+
+    const divergedState: GameState = {
+      ...hubState,
+      starterDrone: {
+        ...hubState.starterDrone,
+        status: "moving_to_dropoff",
+        currentTaskType: "construction_supply",
+        deliveryTargetId: "site-from-starter-field",
+        ticksRemaining: 2,
+      },
+      drones: {
+        ...hubState.drones,
+        [STARTER_DRONE_ID]: {
+          ...hubState.drones[STARTER_DRONE_ID],
+          status: "idle",
+          currentTaskType: null,
+          deliveryTargetId: null,
+          targetNodeId: null,
+          cargo: null,
+          ticksRemaining: 0,
+        },
+      },
+    };
+
+    expect(divergedState.starterDrone).not.toEqual(
+      divergedState.drones[STARTER_DRONE_ID],
+    );
+
+    const next = gameReducer(divergedState, { type: "DRONE_TICK" });
+
+    expect(next.starterDrone).toEqual(next.drones[STARTER_DRONE_ID]);
+  });
+
+  it("save/load uses drones['starter'] as master when starterDrone diverges", () => {
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
+
+    const divergedState: GameState = {
+      ...hubState,
+      starterDrone: {
+        ...hubState.starterDrone,
+        status: "moving_to_dropoff",
+        currentTaskType: "construction_supply",
+        deliveryTargetId: "starter-only-target",
+        ticksRemaining: 3,
+      },
+      drones: {
+        ...hubState.drones,
+        [STARTER_DRONE_ID]: {
+          ...hubState.drones[STARTER_DRONE_ID],
+          status: "idle",
+          currentTaskType: null,
+          deliveryTargetId: null,
+          targetNodeId: null,
+          cargo: null,
+          ticksRemaining: 0,
+        },
+      },
+    };
+
+    const save = serializeState(divergedState);
+    const loaded = deserializeState(save);
+
+    expect(loaded.drones[STARTER_DRONE_ID].status).toBe("idle");
+    expect(loaded.starterDrone.status).toBe(
+      loaded.drones[STARTER_DRONE_ID].status,
+    );
+    expect(loaded.starterDrone).toEqual(loaded.drones[STARTER_DRONE_ID]);
+  });
+
+  it("selectStarterDrone returns undefined when drones['starter'] is missing", () => {
+    const base = createInitialState("release");
+    const { [STARTER_DRONE_ID]: _missingStarter, ...dronesWithoutStarter } =
+      base.drones;
+    const stateWithoutStarter = {
+      ...base,
+      drones: dronesWithoutStarter,
+    };
+
+    expect(selectStarterDrone(stateWithoutStarter)).toBeUndefined();
+    expect(() => requireStarterDrone(stateWithoutStarter)).toThrow();
   });
 });
 

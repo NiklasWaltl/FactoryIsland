@@ -3,7 +3,6 @@ import type {
   BuildingType,
   CollectableItemType,
   DroneStatus,
-  DroneTaskType,
   GameState,
   Inventory,
   PlacedAsset,
@@ -18,6 +17,14 @@ import { removeAsset } from "../../asset-mutation";
 import { getDeconstructRefundForBuildingType } from "../../../constants/deconstruct-refund";
 import { reassignBuildingSourceIds } from "../../../buildings/warehouse/warehouse-assignment";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
+import {
+  applyDroneUpdate,
+  syncDrones,
+} from "../../../drones/utils/drone-state-helpers";
+import {
+  selectStarterDrone,
+  STARTER_DRONE_ID,
+} from "../../selectors/drone-selectors";
 import { clearModulesEquippedToAny } from "../module-compat";
 import {
   type BuildingPlacementIoDeps,
@@ -384,21 +391,8 @@ export function executeGenericRemoveAsset(
     };
   } else if (bTypeR === "service_hub") {
     // Release the drone: fall back to start module delivery
-    const droneAfterRemoval =
-      state.starterDrone.hubId === assetId
-        ? {
-            ...state.starterDrone,
-            hubId: null,
-            status: "idle" as DroneStatus,
-            targetNodeId: null,
-            cargo: null,
-            ticksRemaining: 0,
-            currentTaskType: null as DroneTaskType | null,
-            deliveryTargetId: null as string | null,
-            craftingJobId: null,
-            droneId: state.starterDrone.droneId,
-          }
-        : state.starterDrone;
+    const starterDrone = selectStarterDrone(syncDrones(state));
+    const shouldResetStarterDrone = starterDrone?.hubId === assetId;
     // Transfer hub inventory back into global inventory
     const hubEntry = state.serviceHubs[assetId];
     const invAfterHubRemoval = hubEntry
@@ -412,9 +406,21 @@ export function executeGenericRemoveAsset(
       placedBuildings: state.placedBuildings.filter((b) => b !== bTypeR),
       purchasedBuildings: state.purchasedBuildings.filter((b) => b !== bTypeR),
       openPanel: null as UIPanel,
-      starterDrone: droneAfterRemoval,
       serviceHubs: remainingHubs,
     };
+    if (shouldResetStarterDrone && starterDrone) {
+      partialRemove = applyDroneUpdate(partialRemove, STARTER_DRONE_ID, {
+        ...starterDrone,
+        hubId: null,
+        status: "idle" as DroneStatus,
+        targetNodeId: null,
+        cargo: null,
+        ticksRemaining: 0,
+        currentTaskType: null,
+        deliveryTargetId: null,
+        craftingJobId: null,
+      });
+    }
   } else {
     partialRemove = {
       ...state,
@@ -455,25 +461,24 @@ export function executeGenericRemoveAsset(
   }
   // If the drone was delivering to this removed asset, reset it
   const stripSet = new Set(stripAssetIds);
+  const starterDroneBeforeStrip = selectStarterDrone(syncDrones(state));
+  const starterDroneAfterStrip = selectStarterDrone(syncDrones(partialRemove));
   if (
-    state.starterDrone?.deliveryTargetId &&
-    stripSet.has(state.starterDrone.deliveryTargetId) &&
-    partialRemove.starterDrone.status !== "idle"
+    starterDroneBeforeStrip?.deliveryTargetId &&
+    stripSet.has(starterDroneBeforeStrip.deliveryTargetId) &&
+    starterDroneAfterStrip &&
+    starterDroneAfterStrip.status !== "idle"
   ) {
-    partialRemove = {
-      ...partialRemove,
-      starterDrone: {
-        ...partialRemove.starterDrone,
-        status: "idle" as DroneStatus,
-        targetNodeId: null,
-        cargo: null,
-        ticksRemaining: 0,
-        currentTaskType: null,
-        deliveryTargetId: null,
-        craftingJobId: null,
-        droneId: partialRemove.starterDrone.droneId,
-      },
-    };
+    partialRemove = applyDroneUpdate(partialRemove, STARTER_DRONE_ID, {
+      ...starterDroneAfterStrip,
+      status: "idle" as DroneStatus,
+      targetNodeId: null,
+      cargo: null,
+      ticksRemaining: 0,
+      currentTaskType: null,
+      deliveryTargetId: null,
+      craftingJobId: null,
+    });
   }
   partialRemove = clearModulesEquippedToAny(partialRemove, stripAssetIds);
   const nextState = {

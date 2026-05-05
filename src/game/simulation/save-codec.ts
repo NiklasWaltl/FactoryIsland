@@ -42,6 +42,7 @@ import {
 } from "./save-normalizer";
 import { isRuntimeGameStateSnapshot } from "./save-legacy";
 import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
+import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
 
 function createFallbackShipState(): ShipState {
   return {
@@ -360,6 +361,17 @@ export function deserializeState(save: SaveGameLatest): GameState {
     selectedCraftingBuildingId: null,
   };
 
+  // Backward compatibility guard: drones record is authoritative for starter data.
+  const starterDroneFromRecord = partial.drones[STARTER_DRONE_ID];
+  if (starterDroneFromRecord && partial.starterDrone) {
+    partial.starterDrone = starterDroneFromRecord;
+  } else if (partial.starterDrone && !starterDroneFromRecord) {
+    partial.drones = {
+      ...partial.drones,
+      [STARTER_DRONE_ID]: partial.starterDrone,
+    };
+  }
+
   const hasAnyHub = Object.values(partial.assets).some(
     (a) => a.type === "service_hub",
   );
@@ -413,11 +425,16 @@ export function deserializeState(save: SaveGameLatest): GameState {
             droneIds: [partial.starterDrone.droneId],
           },
         };
-        partial.starterDrone = {
+        const assignedStarterDrone = {
           ...partial.starterDrone,
           hubId,
           tileX: x,
           tileY: y,
+        };
+        partial.starterDrone = assignedStarterDrone;
+        partial.drones = {
+          ...partial.drones,
+          [STARTER_DRONE_ID]: assignedStarterDrone,
         };
         break;
       }
@@ -453,13 +470,23 @@ export function deserializeState(save: SaveGameLatest): GameState {
     return drone;
   };
 
-  partial.starterDrone = snapIdleDroneToDock(partial.starterDrone);
   partial.drones = Object.fromEntries(
     Object.entries(partial.drones).map(([id, drone]) => [
       id,
       snapIdleDroneToDock(drone),
     ]),
   );
+  const snappedStarterDrone = partial.drones[STARTER_DRONE_ID];
+  if (snappedStarterDrone) {
+    partial.starterDrone = snappedStarterDrone;
+  } else {
+    const fallbackStarterDrone = snapIdleDroneToDock(partial.starterDrone);
+    partial.starterDrone = fallbackStarterDrone;
+    partial.drones = {
+      ...partial.drones,
+      [STARTER_DRONE_ID]: fallbackStarterDrone,
+    };
+  }
 
   partial.inventory = rebuildGlobalInventoryFromStorage(partial);
   partial.connectedAssetIds = computeConnectedAssetIds(partial);

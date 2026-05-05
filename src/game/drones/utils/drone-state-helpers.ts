@@ -2,6 +2,7 @@ import type { GameState, StarterDroneState } from "../../store/types";
 
 /** Keep drones record and starterDrone in sync (backward compat). */
 export function syncDrones(state: GameState): GameState {
+  if (!state.drones || state.drones["starter"] === undefined) return state;
   if (state.drones["starter"] === state.starterDrone) return state;
   return { ...state, drones: { ...state.drones, starter: state.starterDrone } };
 }

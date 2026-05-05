@@ -6,6 +6,7 @@ import type {
   GameState,
   StarterDroneState,
 } from "../types";
+import { selectStarterDrone } from "../selectors/drone-selectors";
 
 export interface DroneAssignmentActionDeps {
   validateDroneHubAssignment(input: {
@@ -33,38 +34,41 @@ export function handleDroneAssignmentAction(
 ): GameState | null {
   switch (action.type) {
     case "ASSIGN_DRONE_TO_HUB": {
+      const workingState = deps.syncDrones(state);
       const { droneId, hubId } = action;
+      const starterDrone = selectStarterDrone(workingState);
+      if (!starterDrone) return state;
       const preflightDecision = deps.validateDroneHubAssignment({
         droneId,
         hubId,
-        hubs: state.serviceHubs,
-        assets: state.assets,
-        starterDrone: state.starterDrone,
-        drones: state.drones,
+        hubs: workingState.serviceHubs,
+        assets: workingState.assets,
+        starterDrone,
+        drones: workingState.drones,
       });
       if (!preflightDecision || !preflightDecision.valid) {
         if (preflightDecision?.reason === "hub_full") {
           return {
-            ...state,
+            ...workingState,
             notifications: deps.addErrorNotification(
-              state.notifications,
+              workingState.notifications,
               "Hub hat keine freien Drohnen-Slots.",
             ),
           };
         }
-        return state;
+        return workingState;
       }
 
-      const targetHub = state.serviceHubs[hubId]!;
+      const targetHub = workingState.serviceHubs[hubId]!;
 
       // Look up the drone - starterDrone is authoritative for "starter"; fall back to drones record
       const drone =
-        droneId === state.starterDrone.droneId
-          ? state.starterDrone
-          : (state.drones[droneId] as StarterDroneState);
+        droneId === starterDrone.droneId
+          ? starterDrone
+          : (workingState.drones[droneId] as StarterDroneState);
 
       // Remove drone from its old hub's droneIds
-      let newHubs = { ...state.serviceHubs };
+      let newHubs = { ...workingState.serviceHubs };
       const oldHubId = drone.hubId;
       if (oldHubId && oldHubId !== hubId && newHubs[oldHubId]) {
         newHubs = {
@@ -92,7 +96,7 @@ export function handleDroneAssignmentAction(
       };
 
       // Release any claimed collection node before resetting the drone
-      let newNodes = state.collectionNodes;
+      let newNodes = workingState.collectionNodes;
       if (
         drone.targetNodeId &&
         newNodes[drone.targetNodeId]?.reservedByDroneId === droneId
@@ -126,13 +130,13 @@ export function handleDroneAssignmentAction(
       );
 
       let newState: GameState = {
-        ...state,
+        ...workingState,
         serviceHubs: newHubs,
         collectionNodes: newNodes,
-        drones: { ...state.drones, [droneId]: assignedDrone },
+        drones: { ...workingState.drones, [droneId]: assignedDrone },
       };
       // Keep starterDrone in sync
-      if (droneId === state.starterDrone.droneId) {
+      if (droneId === starterDrone.droneId) {
         newState = { ...newState, starterDrone: assignedDrone };
       }
       return deps.syncDrones(newState);
