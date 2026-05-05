@@ -55,6 +55,10 @@ function startModuleCraft(state: GameState, recipeId: string): GameState {
 function moduleLabTick(state: GameState): GameState {
   const job = state.moduleLabJob;
   if (!job || job.status !== "crafting") return state;
+  const moduleLab = Object.values(state.assets).find(
+    (asset) => asset.type === "module_lab",
+  );
+  if (moduleLab?.status === "deconstructing") return state;
 
   if (Date.now() < job.startedAt + job.durationMs) return state;
 

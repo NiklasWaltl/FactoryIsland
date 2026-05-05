@@ -56,9 +56,13 @@ export function computeConnectedAssetIds(
   state: Pick<GameState, "assets" | "cellMap" | "constructionSites">,
 ): string[] {
   const underConstruction = state.constructionSites ?? {};
+  const isUnavailable = (asset: PlacedAsset): boolean =>
+    !!underConstruction[asset.id] || asset.status === "deconstructing";
 
   const allAssets = Object.values(state.assets);
-  const hasGenerator = allAssets.some((a) => a.type === "generator");
+  const hasGenerator = allAssets.some(
+    (a) => a.type === "generator" && !isUnavailable(a),
+  );
   if (!hasGenerator) return [];
 
   // ---- Phase 1: Cable BFS ----
@@ -80,7 +84,7 @@ export function computeConnectedAssetIds(
 
   // Seed from generators (skip under-construction)
   for (const asset of allAssets) {
-    if (asset.type === "generator" && !underConstruction[asset.id]) {
+    if (asset.type === "generator" && !isUnavailable(asset)) {
       cableConnected.add(asset.id);
       enqueueCable(asset);
     }
@@ -107,7 +111,7 @@ export function computeConnectedAssetIds(
           if (
             !nAsset ||
             !POWER_CABLE_CONDUCTOR_TYPES.has(nAsset.type) ||
-            underConstruction[nAssetId]
+            isUnavailable(nAsset)
           )
             continue;
           cableConnected.add(nAssetId);
@@ -128,8 +132,7 @@ export function computeConnectedAssetIds(
   while (poleQueue.length > 0) {
     const pole = poleQueue.shift()!;
     for (const candidate of allAssets) {
-      if (connected.has(candidate.id) || underConstruction[candidate.id])
-        continue;
+      if (connected.has(candidate.id) || isUnavailable(candidate)) continue;
       if (!POWER_POLE_RANGE_TYPES.has(candidate.type)) continue;
       if (!assetInPoleRange(pole, candidate, POWER_POLE_RANGE)) continue;
       connected.add(candidate.id);

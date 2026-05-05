@@ -27,7 +27,12 @@ export function getConnectedConsumerDrainEntries(
 ): Array<{ id: string; drain: number }> {
   return state.connectedAssetIds
     .map((id) => state.assets[id])
-    .filter((a): a is PlacedAsset => !!a && ENERGY_DRAIN[a.type] != null)
+    .filter(
+      (a): a is PlacedAsset =>
+        !!a &&
+        a.status !== "deconstructing" &&
+        ENERGY_DRAIN[a.type] != null,
+    )
     .map((asset) => {
       const baseDrain =
         asset.type === "auto_smelter"

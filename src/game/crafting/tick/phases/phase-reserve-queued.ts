@@ -32,6 +32,7 @@ export function reserveQueuedPhase(
   const phase2: CraftingJob[] = [...state.jobs];
 
   for (const job of queuedSorted) {
+    if (input.assets[job.workbenchId]?.status === "deconstructing") continue;
     const reserve = reserveQueuedJobIngredients(
       job,
       state.warehouseInventories,

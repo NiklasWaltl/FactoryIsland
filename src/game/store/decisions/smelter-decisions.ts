@@ -40,6 +40,9 @@ export const decideAutoSmelterTickEntryEligibility = (input: {
   if (!smelterAsset || smelterAsset.type !== "auto_smelter") {
     return { kind: "blocked", reason: "no_asset_or_type" };
   }
+  if (smelterAsset.status === "deconstructing") {
+    return { kind: "blocked", reason: "no_asset_or_type" };
+  }
 
   const powerRatio = getMachinePowerRatio(smelterId);
   if (powerRatio < 1) {
@@ -179,9 +182,10 @@ export const decideAutoSmelterInputBeltEligibility = (
     input.state.cellMap[cellKey(input.inputX, input.inputY)] ?? null;
   const inAsset = inAssetId ? input.state.assets[inAssetId] : null;
   if (
-    inAsset?.type !== "conveyor" &&
-    inAsset?.type !== "conveyor_corner" &&
-    inAsset?.type !== "conveyor_underground_out"
+    inAsset?.status === "deconstructing" ||
+    (inAsset?.type !== "conveyor" &&
+      inAsset?.type !== "conveyor_corner" &&
+      inAsset?.type !== "conveyor_underground_out")
   ) {
     return { kind: "blocked", blockReason: "input_tile_no_conveyor" };
   }
@@ -240,9 +244,10 @@ export const decideAutoSmelterOutputTarget = (
       input.state.cellMap[cellKey(input.outputX, input.outputY)] ?? null;
     const outAsset = outAssetId ? input.state.assets[outAssetId] : null;
     if (
-      outAsset?.type === "conveyor" ||
-      outAsset?.type === "conveyor_corner" ||
-      outAsset?.type === "conveyor_underground_in"
+      outAsset?.status !== "deconstructing" &&
+      (outAsset?.type === "conveyor" ||
+        outAsset?.type === "conveyor_corner" ||
+        outAsset?.type === "conveyor_underground_in")
     ) {
       const outQueue = input.conveyors[outAssetId]?.queue ?? [];
       if (outQueue.length < CONVEYOR_TILE_CAPACITY) {

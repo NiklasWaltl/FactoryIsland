@@ -46,9 +46,10 @@ function decideAssemblerBeltOnlyOutput(input: {
   const outAssetId = state.cellMap[cellKey(outputX, outputY)] ?? null;
   const outAsset = outAssetId ? state.assets[outAssetId] : null;
   if (
-    outAsset?.type !== "conveyor" &&
-    outAsset?.type !== "conveyor_corner" &&
-    outAsset?.type !== "conveyor_underground_in"
+    outAsset?.status === "deconstructing" ||
+    (outAsset?.type !== "conveyor" &&
+      outAsset?.type !== "conveyor_corner" &&
+      outAsset?.type !== "conveyor_underground_in")
   ) {
     return { kind: "misconfigured" };
   }
@@ -71,6 +72,7 @@ export function runAutoAssemblerPhase(ctx: LogisticsTickContext): void {
   )) {
     const asset = state.assets[assemblerId];
     if (!asset || asset.type !== "auto_assembler") continue;
+    if (asset.status === "deconstructing") continue;
 
     const powerRatio = getMachinePowerRatio(ctx, assemblerId);
     if (powerRatio < 1) {

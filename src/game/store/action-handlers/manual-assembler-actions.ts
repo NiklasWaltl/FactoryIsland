@@ -161,6 +161,12 @@ export function handleManualAssemblerAction(
     case "MANUAL_ASSEMBLER_TICK": {
       const m = state.manualAssembler;
       if (!m.processing || !m.recipe) return state;
+      if (
+        m.buildingId &&
+        state.assets[m.buildingId]?.status === "deconstructing"
+      ) {
+        return state;
+      }
       const recipe = getManualAssemblerRecipe(m.recipe);
       if (!recipe) {
         return {

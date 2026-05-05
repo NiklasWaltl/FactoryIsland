@@ -50,6 +50,7 @@ export function promoteReservedPhase(
       state.changed = true;
       continue;
     }
+    if (wb.status === "deconstructing") continue;
     if (!hasBufferedIngredients(job)) {
       if (import.meta.env.DEV) {
         debugLog.general(

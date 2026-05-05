@@ -6,6 +6,7 @@
 // ============================================================
 
 import { getEnergyProductionPerPeriod } from "../../power/energy-production";
+import { computeConnectedAssetIds } from "../../logistics/connectivity";
 import {
   AUTO_ASSEMBLER_IDLE_DRAIN_PER_PERIOD,
   AUTO_ASSEMBLER_PROCESSING_DRAIN_PER_PERIOD,
@@ -88,6 +89,7 @@ export function buildEnergyTickPhase1Snapshot(
   state: Pick<
     GameState,
     | "assets"
+    | "cellMap"
     | "connectedAssetIds"
     | "generators"
     | "autoSmelters"
@@ -96,10 +98,17 @@ export function buildEnergyTickPhase1Snapshot(
     | "battery"
   >,
 ): EnergyTickPhase1Result {
-  const production = getEnergyProductionPerPeriod(state);
-  const connectedConsumers = state.connectedAssetIds
+  const connectedAssetIds = computeConnectedAssetIds(state);
+  const energyState = { ...state, connectedAssetIds };
+  const production = getEnergyProductionPerPeriod(energyState);
+  const connectedConsumers = connectedAssetIds
     .map((id) => state.assets[id])
-    .filter((a): a is PlacedAsset => !!a && isEnergyConsumerType(a.type));
+    .filter(
+      (a): a is PlacedAsset =>
+        !!a &&
+        a.status !== "deconstructing" &&
+        isEnergyConsumerType(a.type),
+    );
 
   const prioritizedConsumers = connectedConsumers
     .map((asset, index) => ({
@@ -129,7 +138,8 @@ export function buildEnergyTickPhase1Snapshot(
     (a) => a.type === "battery",
   );
   const batteryConnected = batteryAsset
-    ? state.connectedAssetIds.includes(batteryAsset.id) &&
+    ? connectedAssetIds.includes(batteryAsset.id) &&
+      batteryAsset.status !== "deconstructing" &&
       !state.constructionSites[batteryAsset.id]
     : false;
 

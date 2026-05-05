@@ -13,6 +13,10 @@ export function progressCraftingPhase(
       phase1.push(job);
       continue;
     }
+    if (input.assets[job.workbenchId]?.status === "deconstructing") {
+      phase1.push(job);
+      continue;
+    }
     const nextProgress = job.progress + 1;
     if (nextProgress < job.processingTime) {
       phase1.push({ ...job, progress: nextProgress });

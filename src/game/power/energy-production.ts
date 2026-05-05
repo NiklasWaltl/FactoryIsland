@@ -15,13 +15,19 @@ export function getEnergyProductionPerPeriod(
   state: Pick<GameState, "assets" | "connectedAssetIds" | "generators">,
 ): number {
   const hasPole = state.connectedAssetIds.some(
-    (id) => state.assets[id]?.type === "power_pole",
+    (id) =>
+      state.assets[id]?.type === "power_pole" &&
+      state.assets[id]?.status !== "deconstructing",
   );
   if (!hasPole) return 0;
   const ticksPerPeriod = Math.round(ENERGY_NET_TICK_MS / GENERATOR_TICK_MS);
   const runningCount = state.connectedAssetIds.filter((id) => {
     const a = state.assets[id];
-    return a?.type === "generator" && state.generators[id]?.running;
+    return (
+      a?.type === "generator" &&
+      a.status !== "deconstructing" &&
+      state.generators[id]?.running
+    );
   }).length;
   return runningCount * ticksPerPeriod * GENERATOR_ENERGY_PER_TICK;
 }

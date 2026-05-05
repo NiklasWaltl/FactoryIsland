@@ -110,6 +110,7 @@ export function runSmithyLifecyclePhase(
       if (!smithyAsset) {
         return { ...state, smithy: { ...s, processing: false } };
       }
+      if (smithyAsset.status === "deconstructing") return state;
       if (deps.isUnderConstruction(state, smithyAsset.id)) {
         return { ...state, smithy: { ...s, processing: false } };
       }

@@ -22,6 +22,7 @@ export function runGeneratorTickPhase(ctx: GeneratorTickContext): GameState {
   const newGenerators = { ...state.generators };
   let changed = false;
   for (const id of Object.keys(newGenerators)) {
+    if (state.assets[id]?.status === "deconstructing") continue;
     if (deps.isUnderConstruction(state, id)) continue;
     const g = newGenerators[id];
     if (!g.running || g.fuel <= 0) {

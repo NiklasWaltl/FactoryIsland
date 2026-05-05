@@ -70,6 +70,7 @@ export function buildConveyorRoutingIndex(
 
   for (const asset of Object.values(state.assets)) {
     if (!isWarehouseStorageAsset(asset)) continue;
+    if (asset.status === "deconstructing") continue;
 
     const inputTileId = cellKey(
       asset.x,
@@ -84,6 +85,7 @@ export function buildConveyorRoutingIndex(
 
   for (const job of state.crafting?.jobs ?? []) {
     if (job.status === "done" || job.status === "cancelled") continue;
+    if (state.assets[job.workbenchId]?.status === "deconstructing") continue;
 
     for (const ingredient of job.ingredients) {
       const jobsForItem = activeWorkbenchJobsByInputItem.get(ingredient.itemId);
@@ -136,6 +138,7 @@ export const decideConveyorTickEligibility = (input: {
 
   const conveyorAsset = assets[conveyorId];
   if (!conveyorAsset) return { kind: "blocked" };
+  if (conveyorAsset.status === "deconstructing") return { kind: "blocked" };
 
   const isConnected = connectedAssetIds.includes(conveyorId);
   const isPowered = poweredSet.has(conveyorId);
@@ -276,7 +279,12 @@ export function shouldDeferRightMergerInputToLeft(input: {
   } = input;
 
   const mergerAsset = assets[targetMergerId];
-  if (!mergerAsset || mergerAsset.type !== "conveyor_merger") return false;
+  if (
+    !mergerAsset ||
+    mergerAsset.type !== "conveyor_merger" ||
+    mergerAsset.status === "deconstructing"
+  )
+    return false;
   if (getConveyorMergerInputSide(conveyorAsset, mergerAsset) !== "right")
     return false;
 
@@ -287,6 +295,7 @@ export function shouldDeferRightMergerInputToLeft(input: {
 
   const leftAsset = assets[leftInputId];
   if (!leftAsset) return false;
+  if (leftAsset.status === "deconstructing") return false;
 
   const leftQueue = conveyors[leftInputId]?.queue ?? [];
   const leftItem = leftQueue[0] ?? null;
@@ -364,7 +373,7 @@ export const decideConveyorTargetSelection = <TSource>(
     : null;
   if (warehouseInputTargetId) {
     const wAsset = input.state.assets[warehouseInputTargetId];
-    if (isWarehouseStorageAsset(wAsset)) {
+    if (isWarehouseStorageAsset(wAsset) && wAsset.status !== "deconstructing") {
       const whZone =
         input.state.buildingZoneIds[warehouseInputTargetId] ?? null;
       const whInv = input.warehouseInventories[warehouseInputTargetId];
@@ -419,6 +428,7 @@ export const decideConveyorTargetSelection = <TSource>(
       const nextAsset = nextAssetId ? input.state.assets[nextAssetId] : null;
       if (
         !nextAsset ||
+        nextAsset.status === "deconstructing" ||
         !canAssetReceiveFromConveyorSplitterOutput(input.convAsset, nextAsset)
       ) {
         continue;
@@ -473,7 +483,11 @@ export const decideConveyorTargetSelection = <TSource>(
       return { kind: "no_target", blockReason: "no_supported_target" };
     }
     const peerAsset = input.state.assets[peerId];
-    if (!peerAsset || peerAsset.type !== "conveyor_underground_out") {
+    if (
+      !peerAsset ||
+      peerAsset.type !== "conveyor_underground_out" ||
+      peerAsset.status === "deconstructing"
+    ) {
       return { kind: "no_target", blockReason: "no_supported_target" };
     }
     const nextConv = input.conveyors[peerId];
@@ -527,15 +541,16 @@ export const decideConveyorTargetSelection = <TSource>(
   const nextAsset = nextAssetId ? input.state.assets[nextAssetId] : null;
 
   const nextBeltCompatible =
-    nextAsset?.type === "conveyor_corner" ||
-    (nextAsset?.type === "conveyor" &&
-      (nextAsset.direction ?? "east") === dir) ||
-    (nextAsset?.type === "conveyor_underground_in" &&
-      (nextAsset.direction ?? "east") === dir) ||
-    (nextAsset?.type === "conveyor_merger" &&
-      getConveyorMergerInputSide(input.convAsset, nextAsset) !== null) ||
-    (nextAsset?.type === "conveyor_splitter" &&
-      isValidConveyorSplitterInput(input.convAsset, nextAsset));
+    nextAsset?.status !== "deconstructing" &&
+    (nextAsset?.type === "conveyor_corner" ||
+      (nextAsset?.type === "conveyor" &&
+        (nextAsset.direction ?? "east") === dir) ||
+      (nextAsset?.type === "conveyor_underground_in" &&
+        (nextAsset.direction ?? "east") === dir) ||
+      (nextAsset?.type === "conveyor_merger" &&
+        getConveyorMergerInputSide(input.convAsset, nextAsset) !== null) ||
+      (nextAsset?.type === "conveyor_splitter" &&
+        isValidConveyorSplitterInput(input.convAsset, nextAsset)));
   const nextTileZone = nextAssetId
     ? (input.state.buildingZoneIds[nextAssetId] ?? null)
     : null;
@@ -595,7 +610,11 @@ export const decideConveyorTargetSelection = <TSource>(
     };
   }
 
-  if (nextAsset && isWarehouseStorageAsset(nextAsset)) {
+  if (
+    nextAsset &&
+    isWarehouseStorageAsset(nextAsset) &&
+    nextAsset.status !== "deconstructing"
+  ) {
     if (
       !input.isValidWarehouseInput(
         input.convAsset.x,
@@ -640,7 +659,10 @@ export const decideConveyorTargetSelection = <TSource>(
     };
   }
 
-  if (nextAsset?.type === "workbench") {
+  if (
+    nextAsset?.type === "workbench" &&
+    nextAsset.status !== "deconstructing"
+  ) {
     const activeJobForWb = (
       routingIndex.activeWorkbenchJobsByInputItem.get(input.currentItem) ?? []
     ).find((job) => job.workbenchId === nextAsset.id);
@@ -701,7 +723,7 @@ export const decideConveyorTargetSelection = <TSource>(
     };
   }
 
-  if (nextAsset?.type === "smithy") {
+  if (nextAsset?.type === "smithy" && nextAsset.status !== "deconstructing") {
     const smithyZone = input.state.buildingZoneIds[nextAsset.id] ?? null;
     const smithyItemSupported =
       input.currentItem === "iron" || input.currentItem === "copper";

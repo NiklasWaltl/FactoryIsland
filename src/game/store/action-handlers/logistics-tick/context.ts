@@ -66,6 +66,8 @@ export function tryStoreInWarehouse(
   resource: ConveyorItem,
 ): boolean {
   const { state } = ctx;
+  if (state.assets[warehouseId]?.status === "deconstructing") return false;
+
   // Warehouse building must exist
   const whInv =
     ctx.newWarehouseInventoriesL === state.warehouseInventories

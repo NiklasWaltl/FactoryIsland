@@ -155,6 +155,9 @@ export function evaluateKeepStockTarget(
   if (deps.isUnderConstruction(state, cfg.workbenchId)) {
     return { kind: "skip", code: "underConstruction", targetAmount };
   }
+  if (workbench.status === "deconstructing") {
+    return { kind: "skip", code: "underConstruction", targetAmount };
+  }
 
   if (
     countOpenAutomationCraftingJobs(jobsSnapshot) >=

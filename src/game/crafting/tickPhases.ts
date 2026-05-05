@@ -73,6 +73,7 @@ export function applyExecutionTick(
       .filter(
         (asset) =>
           asset.type === "workbench" &&
+          asset.status !== "deconstructing" &&
           !deps.isUnderConstruction(state, asset.id),
       )
       .map((asset) => asset.id),
