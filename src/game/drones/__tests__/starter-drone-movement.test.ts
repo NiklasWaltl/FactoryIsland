@@ -32,9 +32,9 @@ describe("DRONE_TICK – collecting", () => {
   it("picks up min(DRONE_CAPACITY, nodeAmount) and removes empty node", () => {
     base = setupCollecting(3);
     const next = droneTick(base);
-    expect(next.starterDrone.status).toBe("moving_to_dropoff");
-    expect(next.starterDrone.cargo?.itemType).toBe("iron");
-    expect(next.starterDrone.cargo?.amount).toBe(3); // 3 < DRONE_CAPACITY
+    expect(next.drones.starter.status).toBe("moving_to_dropoff");
+    expect(next.drones.starter.cargo?.itemType).toBe("iron");
+    expect(next.drones.starter.cargo?.amount).toBe(3); // 3 < DRONE_CAPACITY
     expect(next.collectionNodes[nodeId]).toBeUndefined(); // node emptied → removed
   });
 
@@ -42,7 +42,7 @@ describe("DRONE_TICK – collecting", () => {
     const large = DRONE_CAPACITY + 4;
     base = setupCollecting(large);
     const next = droneTick(base);
-    expect(next.starterDrone.cargo?.amount).toBe(DRONE_CAPACITY);
+    expect(next.drones.starter.cargo?.amount).toBe(DRONE_CAPACITY);
     expect(next.collectionNodes[nodeId]?.amount).toBe(large - DRONE_CAPACITY);
   });
 
@@ -50,8 +50,8 @@ describe("DRONE_TICK – collecting", () => {
     base = setupCollecting(2);
     base = withDrone(base, { ticksRemaining: 3 });
     const next = droneTick(base);
-    expect(next.starterDrone.status).toBe("collecting");
-    expect(next.starterDrone.ticksRemaining).toBe(2);
+    expect(next.drones.starter.status).toBe("collecting");
+    expect(next.drones.starter.ticksRemaining).toBe(2);
   });
 });
 
@@ -69,18 +69,18 @@ describe("DRONE_TICK – moving_to_dropoff", () => {
 
   it("decrements ticksRemaining while > 1", () => {
     const next = droneTick(base);
-    expect(next.starterDrone.status).toBe("moving_to_dropoff");
-    expect(next.starterDrone.ticksRemaining).toBe(1);
+    expect(next.drones.starter.status).toBe("moving_to_dropoff");
+    expect(next.drones.starter.ticksRemaining).toBe(1);
   });
 
   it("transitions to depositing when ticks reach 0", () => {
     let state = droneTick(base);
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("depositing");
-    expect(state.starterDrone.ticksRemaining).toBe(DRONE_DEPOSIT_TICKS);
+    expect(state.drones.starter.status).toBe("depositing");
+    expect(state.drones.starter.ticksRemaining).toBe(DRONE_DEPOSIT_TICKS);
     // Position should update to dropoff (hub position)
-    expect(state.starterDrone.tileX).toBe(HUB_POS.x);
-    expect(state.starterDrone.tileY).toBe(HUB_POS.y);
+    expect(state.drones.starter.tileX).toBe(HUB_POS.x);
+    expect(state.drones.starter.tileY).toBe(HUB_POS.y);
   });
 });
 
@@ -92,7 +92,7 @@ describe("DRONE_TICK – depositing", () => {
   });
 
   it("adds cargo to inventory and returns to idle", () => {
-    const hubId = base.starterDrone.hubId!;
+    const hubId = base.drones.starter.hubId!;
     const hubWoodBefore = base.serviceHubs[hubId].inventory.wood;
     let state = withDrone(base, {
       status: "depositing",
@@ -100,8 +100,8 @@ describe("DRONE_TICK – depositing", () => {
       ticksRemaining: 1,
     });
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("idle");
-    expect(state.starterDrone.cargo).toBeNull();
+    expect(state.drones.starter.status).toBe("idle");
+    expect(state.drones.starter.cargo).toBeNull();
     expect(state.serviceHubs[hubId].inventory.wood).toBe(hubWoodBefore + 4);
   });
 
@@ -112,8 +112,8 @@ describe("DRONE_TICK – depositing", () => {
       ticksRemaining: 3,
     });
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("depositing");
-    expect(next.starterDrone.ticksRemaining).toBe(2);
+    expect(next.drones.starter.status).toBe("depositing");
+    expect(next.drones.starter.ticksRemaining).toBe(2);
   });
 
   it("handles missing cargo gracefully (returns to idle without crash)", () => {
@@ -123,14 +123,14 @@ describe("DRONE_TICK – depositing", () => {
       ticksRemaining: 1,
     });
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("idle");
+    expect(next.drones.starter.status).toBe("idle");
   });
 });
 
 describe("DRONE_TICK – full round trip", () => {
   it("completes a full collect→deposit cycle and increments inventory", () => {
     let state = createInitialState("release");
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     // Set copper target > 0 so drone will collect it
     state = gameReducer(state, {
       type: "SET_HUB_TARGET_STOCK",
@@ -143,7 +143,7 @@ describe("DRONE_TICK – full round trip", () => {
 
     // Drive state machine until idle again (max 100 ticks safeguard)
     let ticks = 0;
-    while (state.starterDrone.status !== "idle" || ticks === 0) {
+    while (state.drones.starter.status !== "idle" || ticks === 0) {
       state = droneTick(state);
       ticks++;
       if (ticks > 100) {
@@ -173,15 +173,15 @@ describe("DRONE_TICK – returning_to_dock", () => {
     // Move drone away from its dock.
     const state = withDrone(base, { tileX: 0, tileY: 0 });
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("returning_to_dock");
-    expect(next.starterDrone.ticksRemaining).toBeGreaterThan(0);
+    expect(next.drones.starter.status).toBe("returning_to_dock");
+    expect(next.drones.starter.ticksRemaining).toBeGreaterThan(0);
   });
 
   it("idle drone already at dock stays idle (same reference)", () => {
     // After ASSIGN_DRONE_TO_HUB, drone is snapped to the hub dock.
     const next = droneTick(base);
     // No nodes exist → no task → drone at dock → no state change
-    expect(next.starterDrone.status).toBe("idle");
+    expect(next.drones.starter.status).toBe("idle");
     expect(next).toBe(base); // same reference: no unnecessary re-render
   });
 
@@ -193,22 +193,22 @@ describe("DRONE_TICK – returning_to_dock", () => {
       ticksRemaining: 5,
     });
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("returning_to_dock");
-    const hubId = state.starterDrone.hubId!;
+    expect(next.drones.starter.status).toBe("returning_to_dock");
+    const hubId = state.drones.starter.hubId!;
     const hubAsset = state.assets[hubId];
     const distBefore = Math.max(
       Math.abs(0 - hubAsset.x),
       Math.abs(0 - hubAsset.y),
     );
     const distAfter = Math.max(
-      Math.abs(next.starterDrone.tileX - hubAsset.x),
-      Math.abs(next.starterDrone.tileY - hubAsset.y),
+      Math.abs(next.drones.starter.tileX - hubAsset.x),
+      Math.abs(next.drones.starter.tileY - hubAsset.y),
     );
     expect(distAfter).toBeLessThan(distBefore);
   });
 
   it("returning_to_dock snaps to dock and goes idle on arrival", () => {
-    const hubId = base.starterDrone.hubId!;
+    const hubId = base.drones.starter.hubId!;
     const hubAsset = base.assets[hubId];
     const state = withDrone(base, {
       tileX: hubAsset.x - 1,
@@ -217,9 +217,9 @@ describe("DRONE_TICK – returning_to_dock", () => {
       ticksRemaining: 1,
     });
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("idle");
-    expect(next.starterDrone.tileX).toBe(hubAsset.x);
-    expect(next.starterDrone.tileY).toBe(hubAsset.y);
+    expect(next.drones.starter.status).toBe("idle");
+    expect(next.drones.starter.tileX).toBe(hubAsset.x);
+    expect(next.drones.starter.tileY).toBe(hubAsset.y);
   });
 
   it("returning_to_dock aborts to collect when a task appears", () => {
@@ -231,8 +231,8 @@ describe("DRONE_TICK – returning_to_dock", () => {
     });
     const next = droneTick(state);
     // Task available → abort return, start collecting
-    expect(next.starterDrone.status).toBe("moving_to_collect");
-    expect(next.starterDrone.targetNodeId).toBeTruthy();
+    expect(next.drones.starter.status).toBe("moving_to_collect");
+    expect(next.drones.starter.targetNodeId).toBeTruthy();
   });
 
   it("returning_to_dock resets to idle when hub is gone", () => {
@@ -241,12 +241,12 @@ describe("DRONE_TICK – returning_to_dock", () => {
       { tileX: 2, tileY: 2, status: "returning_to_dock", ticksRemaining: 5 },
     );
     // Manually remove the hub asset to simulate hub-gone scenario
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     const { [hubId]: _asset, ...restAssets } = state.assets;
     const stateNoHub = { ...state, assets: restAssets };
     const next = droneTick(stateNoHub);
-    expect(next.starterDrone.status).toBe("idle");
-    expect(next.starterDrone.ticksRemaining).toBe(0);
+    expect(next.drones.starter.status).toBe("idle");
+    expect(next.drones.starter.ticksRemaining).toBe(0);
   });
 });
 
@@ -256,12 +256,12 @@ describe("DRONE_TICK – position interpolation during flight", () => {
     // Place node far away from drone start (grid center {x:39,y:24})
     state = addNode(state, "wood", 29, 24, 2);
     state = droneTick(state); // idle → moving_to_collect
-    expect(state.starterDrone.status).toBe("moving_to_collect");
-    const startX = state.starterDrone.tileX;
+    expect(state.drones.starter.status).toBe("moving_to_collect");
+    const startX = state.drones.starter.tileX;
     // Next tick should move drone toward node
     state = droneTick(state);
-    expect(state.starterDrone.tileX).not.toBe(startX);
-    expect(state.starterDrone.tileX).toBeLessThan(startX); // moving left toward node
+    expect(state.drones.starter.tileX).not.toBe(startX);
+    expect(state.drones.starter.tileX).toBeLessThan(startX); // moving left toward node
   });
 
   it("updates drone position during moving_to_dropoff", () => {
@@ -282,17 +282,20 @@ describe("DRONE_TICK – position interpolation during flight", () => {
       deliveryTargetId: hubId,
       currentTaskType: "hub_restock",
     });
-    const before = { x: state.starterDrone.tileX, y: state.starterDrone.tileY };
+    const before = {
+      x: state.drones.starter.tileX,
+      y: state.drones.starter.tileY,
+    };
     state = droneTick(state);
     // Drone should have moved closer to hub
-    expect(state.starterDrone.status).toBe("moving_to_dropoff");
+    expect(state.drones.starter.status).toBe("moving_to_dropoff");
     const distBefore = Math.max(
       Math.abs(before.x - hubAsset.x),
       Math.abs(before.y - hubAsset.y),
     );
     const distAfter = Math.max(
-      Math.abs(state.starterDrone.tileX - hubAsset.x),
-      Math.abs(state.starterDrone.tileY - hubAsset.y),
+      Math.abs(state.drones.starter.tileX - hubAsset.x),
+      Math.abs(state.drones.starter.tileY - hubAsset.y),
     );
     expect(distAfter).toBeLessThan(distBefore);
   });
@@ -316,25 +319,25 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
 
     // Drive to collecting → moving_to_dropoff
     let ticks = 0;
-    while (state.starterDrone.status !== "moving_to_dropoff" && ticks < 50) {
+    while (state.drones.starter.status !== "moving_to_dropoff" && ticks < 50) {
       state = droneTick(state);
       ticks++;
     }
-    expect(state.starterDrone.status).toBe("moving_to_dropoff");
-    expect(state.starterDrone.currentTaskType).toBe("hub_restock");
+    expect(state.drones.starter.status).toBe("moving_to_dropoff");
+    expect(state.drones.starter.currentTaskType).toBe("hub_restock");
 
     // Drive until depositing
-    while (state.starterDrone.status === "moving_to_dropoff") {
+    while (state.drones.starter.status === "moving_to_dropoff") {
       state = droneTick(state);
       ticks++;
       if (ticks > 100) throw new Error("Drone stuck in moving_to_dropoff");
     }
-    expect(state.starterDrone.status).toBe("depositing");
+    expect(state.drones.starter.status).toBe("depositing");
     // Drone should be at hub position, NOT at start module
-    expect(state.starterDrone.tileX).toBe(hubAsset.x);
-    expect(state.starterDrone.tileY).toBe(hubAsset.y);
+    expect(state.drones.starter.tileX).toBe(hubAsset.x);
+    expect(state.drones.starter.tileY).toBe(hubAsset.y);
     // Explicitly verify NOT at grid center (39,24)
-    expect(state.starterDrone.tileX).not.toBe(39);
+    expect(state.drones.starter.tileX).not.toBe(39);
   });
 
   it("hub_restock with null deliveryTargetId still flies to hub via hubId", () => {
@@ -356,10 +359,10 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
       currentTaskType: "hub_restock",
     });
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("depositing");
+    expect(state.drones.starter.status).toBe("depositing");
     // Must go to hub, NOT to trader
-    expect(state.starterDrone.tileX).toBe(hubAsset.x);
-    expect(state.starterDrone.tileY).toBe(hubAsset.y);
+    expect(state.drones.starter.tileX).toBe(hubAsset.x);
+    expect(state.drones.starter.tileY).toBe(hubAsset.y);
   });
 
   it("construction_supply: drone flies to construction site, not trader", () => {
@@ -400,13 +403,13 @@ describe("DRONE_TICK – dropoff target is hub, not trader", () => {
       currentTaskType: "construction_supply",
     });
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("depositing");
+    expect(state.drones.starter.status).toBe("depositing");
     // Must be at or adjacent to the construction site (per-drone delivery offset applied)
-    expect(state.starterDrone.tileX).toBeGreaterThanOrEqual(15);
-    expect(state.starterDrone.tileX).toBeLessThanOrEqual(16);
-    expect(state.starterDrone.tileY).toBeGreaterThanOrEqual(15);
-    expect(state.starterDrone.tileY).toBeLessThanOrEqual(16);
+    expect(state.drones.starter.tileX).toBeGreaterThanOrEqual(15);
+    expect(state.drones.starter.tileX).toBeLessThanOrEqual(16);
+    expect(state.drones.starter.tileY).toBeGreaterThanOrEqual(15);
+    expect(state.drones.starter.tileY).toBeLessThanOrEqual(16);
     // NOT at trader or hub
-    expect(state.starterDrone.tileX).not.toBe(39);
+    expect(state.drones.starter.tileX).not.toBe(39);
   });
 });

@@ -172,7 +172,7 @@ describe("applyMockToState / DEBUG_MOCK_DRONE_HUB_INVENTORY", () => {
       ...buildSceneState(debugSceneLayout, createInitialState("debug")),
       mode: "release" as const,
     };
-    const starterHubId = base.starterDrone.hubId;
+    const starterHubId = base.drones.starter.hubId;
 
     expect(starterHubId).not.toBeNull();
 

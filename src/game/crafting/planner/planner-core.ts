@@ -2,10 +2,7 @@ import type { WarehouseId } from "../../items/types";
 import { getWorkbenchRecipe } from "../../simulation/recipes";
 import type { Inventory, ServiceHubEntry } from "../../store/types";
 import type { RecipeId } from "../types";
-import type {
-  AutoCraftPlanError,
-  BuildAutoCraftPlanInput,
-} from "./planner";
+import type { AutoCraftPlanError, BuildAutoCraftPlanInput } from "./planner";
 import { createError } from "./planner-error-shaping";
 import {
   getOutputWarehouseId,

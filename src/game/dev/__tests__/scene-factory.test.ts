@@ -1,5 +1,8 @@
 import { createInitialState } from "../../store/initial-state";
-import { BASE_START_IDS, hasRequiredBaseStartLayout } from "../../world/base-start-layout";
+import {
+  BASE_START_IDS,
+  hasRequiredBaseStartLayout,
+} from "../../world/base-start-layout";
 import { applyDevScene, SCENES } from "../scene-factory";
 import { DEV_SCENE_IDS, DEV_SCENE_OPTIONS } from "../scene-types";
 
@@ -40,7 +43,9 @@ describe("scene-factory", () => {
     const assembler = applyDevScene(createInitialState("debug"), "assembler");
 
     expect(logistics.assets["logistics-warehouse-in"]?.type).toBe("warehouse");
-    expect(logistics.assets[BASE_START_IDS.serviceHub]?.type).toBe("service_hub");
+    expect(logistics.assets[BASE_START_IDS.serviceHub]?.type).toBe(
+      "service_hub",
+    );
     expect(power.assets).toEqual({});
     expect(assembler.assets["auto-assembler-debug"]?.type).toBe(
       "auto_assembler",
@@ -49,7 +54,9 @@ describe("scene-factory", () => {
 
   it("can build every registered DevSceneId", () => {
     for (const sceneId of DEV_SCENE_IDS) {
-      expect(() => applyDevScene(createInitialState("debug"), sceneId)).not.toThrow();
+      expect(() =>
+        applyDevScene(createInitialState("debug"), sceneId),
+      ).not.toThrow();
     }
   });
 });

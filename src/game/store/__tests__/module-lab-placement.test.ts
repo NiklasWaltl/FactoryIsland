@@ -74,7 +74,9 @@ describe("module_lab non-stackable placement guard", () => {
   const POS2 = { x: 30, y: 20 };
 
   it("allows the first module_lab placement", () => {
-    const base = withBuildMode(withBuildResources(createInitialState("release")));
+    const base = withBuildMode(
+      withBuildResources(createInitialState("release")),
+    );
     const after = placeBuilding(base, POS1);
 
     expect(after.placedBuildings.filter((b) => b === "module_lab").length).toBe(
@@ -83,7 +85,9 @@ describe("module_lab non-stackable placement guard", () => {
   });
 
   it("rejects a second module_lab placement — state unchanged beyond notification", () => {
-    const base = withBuildMode(withBuildResources(createInitialState("release")));
+    const base = withBuildMode(
+      withBuildResources(createInitialState("release")),
+    );
     const state1 = placeBuilding(base, POS1);
     const assetsBefore = { ...state1.assets };
     const inventoryBefore = { ...state1.inventory };
@@ -91,9 +95,9 @@ describe("module_lab non-stackable placement guard", () => {
     const state2 = placeBuilding(state1, POS2);
 
     // World state must not grow
-    expect(state2.placedBuildings.filter((b) => b === "module_lab").length).toBe(
-      1,
-    );
+    expect(
+      state2.placedBuildings.filter((b) => b === "module_lab").length,
+    ).toBe(1);
     expect(Object.keys(state2.assets)).toEqual(Object.keys(assetsBefore));
     // Resources must not be deducted again
     expect(state2.inventory.wood).toBe(inventoryBefore.wood);
@@ -102,7 +106,9 @@ describe("module_lab non-stackable placement guard", () => {
   });
 
   it("sets an error notification when second placement is rejected", () => {
-    const base = withBuildMode(withBuildResources(createInitialState("release")));
+    const base = withBuildMode(
+      withBuildResources(createInitialState("release")),
+    );
     const state1 = placeBuilding(base, POS1);
     const state2 = placeBuilding(state1, POS2);
 

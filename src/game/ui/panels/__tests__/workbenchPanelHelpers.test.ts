@@ -170,7 +170,7 @@ describe("workbenchPanelHelpers", () => {
 
     it("marks as available via hub fallback when warehouse is insufficient", () => {
       const base = baseState();
-      const hubId = base.starterDrone.hubId;
+      const hubId = base.drones.starter.hubId;
       expect(hubId).toBeTruthy();
       if (!hubId) return;
 
@@ -209,7 +209,7 @@ describe("workbenchPanelHelpers", () => {
 
     it("marks as reserved when fallback hub stock exists but is reserved", () => {
       const base = baseState();
-      const hubId = base.starterDrone.hubId;
+      const hubId = base.drones.starter.hubId;
       expect(hubId).toBeTruthy();
       if (!hubId) return;
 

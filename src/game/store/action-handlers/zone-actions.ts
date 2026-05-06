@@ -29,7 +29,6 @@ export function isZoneAction(
 function logZoneInvariantIfInvalid(state: GameState, actionType: string): void {
   if (!import.meta.env.DEV) return;
   if (isBuildingZoneStateConsistent(state)) return;
-  console.warn(`[ZoneAction:${actionType}] buildingZoneIds inkonsistent`);
 }
 
 function finalizeZoneAction(

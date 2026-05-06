@@ -104,3 +104,5 @@ export const Hotbar: React.FC<HotbarProps> = React.memo(
     );
   },
 );
+
+Hotbar.displayName = "Hotbar";

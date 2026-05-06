@@ -212,3 +212,5 @@ export const SmithyPanel: React.FC<SmithyPanelProps> = React.memo(
     );
   },
 );
+
+SmithyPanel.displayName = "SmithyPanel";

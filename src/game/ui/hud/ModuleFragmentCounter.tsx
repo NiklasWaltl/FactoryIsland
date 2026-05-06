@@ -21,3 +21,5 @@ export const ModuleFragmentCounter: React.FC<ModuleFragmentCounterProps> =
       </div>
     );
   });
+
+ModuleFragmentCounter.displayName = "ModuleFragmentCounter";

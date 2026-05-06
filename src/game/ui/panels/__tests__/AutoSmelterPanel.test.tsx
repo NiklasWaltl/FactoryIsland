@@ -16,9 +16,7 @@ import { AutoSmelterPanel } from "../AutoSmelterPanel";
 
 const SMELTER_ID = "smelter-1";
 
-function makeSmelterAsset(
-  overrides: Partial<PlacedAsset> = {},
-): PlacedAsset {
+function makeSmelterAsset(overrides: Partial<PlacedAsset> = {}): PlacedAsset {
   return {
     id: SMELTER_ID,
     type: "auto_smelter",
@@ -54,10 +52,12 @@ function makeModule(module: Partial<Module> & Pick<Module, "id">): Module {
   };
 }
 
-function buildState(input: {
-  modules?: Module[];
-  assetOverrides?: Partial<PlacedAsset>;
-} = {}): GameState {
+function buildState(
+  input: {
+    modules?: Module[];
+    assetOverrides?: Partial<PlacedAsset>;
+  } = {},
+): GameState {
   const base = createInitialState("release");
   return {
     ...base,
@@ -92,7 +92,10 @@ afterEach(() => {
   container.remove();
 });
 
-function renderPanel(state: GameState, dispatch: React.Dispatch<GameAction>): void {
+function renderPanel(
+  state: GameState,
+  dispatch: React.Dispatch<GameAction>,
+): void {
   act(() => {
     root.render(<AutoSmelterPanel state={state} dispatch={dispatch} />);
   });

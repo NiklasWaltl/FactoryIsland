@@ -15,9 +15,7 @@ export function normalizeModuleFragmentCount(
   let total = 0;
   for (const entry of raw) {
     if (!entry || typeof entry !== "object") continue;
-    total += normalizeModuleFragmentCount(
-      (entry as { count?: unknown }).count,
-    );
+    total += normalizeModuleFragmentCount((entry as { count?: unknown }).count);
   }
 
   return total;
@@ -34,9 +32,10 @@ export function addModuleFragments(
 export function getDockWarehouseFragmentCount(
   state: Pick<GameState, "warehouseInventories">,
 ): number {
-  return state.warehouseInventories[DOCK_WAREHOUSE_ID]?.[
-    MODULE_FRAGMENT_ITEM_ID
-  ] ?? 0;
+  return (
+    state.warehouseInventories[DOCK_WAREHOUSE_ID]?.[MODULE_FRAGMENT_ITEM_ID] ??
+    0
+  );
 }
 
 export function addDockWarehouseItem(

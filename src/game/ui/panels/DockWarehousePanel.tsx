@@ -243,3 +243,5 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
     );
   },
 );
+
+DockWarehousePanel.displayName = "DockWarehousePanel";

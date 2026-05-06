@@ -1,7 +1,9 @@
 import type { Module } from "../../modules/module.types";
 import { getSmelterSpeedMultiplier } from "../smelting-utils";
 
-function makeModule(module: Partial<Module> & Pick<Module, "type" | "tier">): Module {
+function makeModule(
+  module: Partial<Module> & Pick<Module, "type" | "tier">,
+): Module {
   return {
     id: "module-1",
     equippedTo: null,

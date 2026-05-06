@@ -35,7 +35,7 @@ describe("createBaseStartLayout", () => {
         }),
       ]),
     );
-    expect(layout.starterDroneHubId).toBe(BASE_START_IDS.serviceHub);
+    expect(layout.starterHubId).toBe(BASE_START_IDS.serviceHub);
   });
 
   it("keeps every starter asset footprint inside the start area", () => {

@@ -33,3 +33,5 @@ export const Notifications: React.FC<NotificationsProps> = React.memo(
     );
   },
 );
+
+Notifications.displayName = "Notifications";

@@ -63,12 +63,14 @@ describe("module selectors", () => {
       id: "equipped-miner",
       equippedTo: "miner-1",
     });
-    const freeSmelter = makeModule({ id: "free-smelter", type: "smelter-boost" });
-    const state = withAssetsAndModules([makeAutoMinerAsset("miner-1")], [
-      freeMiner,
-      equippedMiner,
-      freeSmelter,
-    ]);
+    const freeSmelter = makeModule({
+      id: "free-smelter",
+      type: "smelter-boost",
+    });
+    const state = withAssetsAndModules(
+      [makeAutoMinerAsset("miner-1")],
+      [freeMiner, equippedMiner, freeSmelter],
+    );
 
     expect(getFreeModulesForType(state, "miner-boost")).toEqual([freeMiner]);
   });

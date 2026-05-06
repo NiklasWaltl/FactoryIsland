@@ -37,9 +37,9 @@ describe("sanitizeTileMap", () => {
       ),
     ).toEqual(fallback);
 
-    expect(
-      sanitizeTileMap([["grass"]], fallbackRows, fallbackCols),
-    ).toEqual(fallback);
+    expect(sanitizeTileMap([["grass"]], fallbackRows, fallbackCols)).toEqual(
+      fallback,
+    );
   });
 
   it("falls back when a tile type is unknown", () => {

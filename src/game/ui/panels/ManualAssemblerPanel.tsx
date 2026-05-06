@@ -149,3 +149,5 @@ export const ManualAssemblerPanel: React.FC<ManualAssemblerPanelProps> =
       </div>
     );
   });
+
+ManualAssemblerPanel.displayName = "ManualAssemblerPanel";

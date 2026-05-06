@@ -2,7 +2,10 @@ import { getAutoSmelterIoCells } from "../../../store/asset-geometry";
 import { createInitialState } from "../../../store/initial-state";
 import { cellKey } from "../../../store/utils/cell-key";
 import { directionOffset } from "../../../store/utils/direction";
-import { getStartAreaBounds, isBoundsInsideBounds } from "../../../world/core-layout";
+import {
+  getStartAreaBounds,
+  isBoundsInsideBounds,
+} from "../../../world/core-layout";
 import {
   FIXED_RESOURCE_LAYOUT,
   getFixedResourceOriginByType,
@@ -67,9 +70,11 @@ describe("debugSceneLayout", () => {
     );
     const startArea = getStartAreaBounds(state.tileMap);
 
-    expect(debugSceneLayout.assets.some((asset) => asset.id === BASE_START_IDS.mapShop)).toBe(
-      false,
-    );
+    expect(
+      debugSceneLayout.assets.some(
+        (asset) => asset.id === BASE_START_IDS.mapShop,
+      ),
+    ).toBe(false);
     expect(state.assets[BASE_START_IDS.mapShop]).toMatchObject({
       type: "map_shop",
       fixed: true,
@@ -81,7 +86,7 @@ describe("debugSceneLayout", () => {
     expect(state.assets[BASE_START_IDS.warehouse]).toMatchObject({
       type: "warehouse",
     });
-    expect(state.starterDrone.hubId).toBe(BASE_START_IDS.serviceHub);
+    expect(state.drones.starter.hubId).toBe(BASE_START_IDS.serviceHub);
 
     for (const id of Object.values(BASE_START_IDS)) {
       const starterAsset = state.assets[id];

@@ -24,9 +24,9 @@ describe("DRONE_TICK – idle", () => {
   it("transitions to moving_to_collect when a node exists", () => {
     const state = addNode(base, "wood", 5, 5, 3);
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("moving_to_collect");
-    expect(next.starterDrone.targetNodeId).toBeTruthy();
-    expect(next.starterDrone.ticksRemaining).toBeGreaterThanOrEqual(1);
+    expect(next.drones.starter.status).toBe("moving_to_collect");
+    expect(next.drones.starter.targetNodeId).toBeTruthy();
+    expect(next.drones.starter.ticksRemaining).toBeGreaterThanOrEqual(1);
   });
 
   it("picks the nearest node by Chebyshev distance", () => {
@@ -37,7 +37,7 @@ describe("DRONE_TICK – idle", () => {
     const nodeIds1 = Object.keys(state.collectionNodes);
     state = addNode(state, "iron", far.x, far.y, 1);
     const next = droneTick(state);
-    expect(next.starterDrone.targetNodeId).toBe(nodeIds1[0]);
+    expect(next.drones.starter.targetNodeId).toBe(nodeIds1[0]);
   });
 });
 
@@ -59,16 +59,16 @@ describe("DRONE_TICK – moving_to_collect", () => {
 
   it("decrements ticksRemaining while > 1", () => {
     const next = droneTick(base);
-    expect(next.starterDrone.status).toBe("moving_to_collect");
-    expect(next.starterDrone.ticksRemaining).toBe(1);
+    expect(next.drones.starter.status).toBe("moving_to_collect");
+    expect(next.drones.starter.ticksRemaining).toBe(1);
   });
 
   it("transitions to collecting when ticksRemaining reaches 0", () => {
     // Tick it down to 1 first
     let state = droneTick(base);
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("collecting");
-    expect(state.starterDrone.ticksRemaining).toBe(DRONE_COLLECT_TICKS);
+    expect(state.drones.starter.status).toBe("collecting");
+    expect(state.drones.starter.ticksRemaining).toBe(DRONE_COLLECT_TICKS);
   });
 
   it("falls back to idle if target node was removed", () => {
@@ -83,8 +83,8 @@ describe("DRONE_TICK – moving_to_collect", () => {
       },
     );
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("idle");
-    expect(next.starterDrone.targetNodeId).toBeNull();
+    expect(next.drones.starter.status).toBe("idle");
+    expect(next.drones.starter.targetNodeId).toBeNull();
   });
 });
 
@@ -100,9 +100,9 @@ describe("Claim layer – node reservation on task start", () => {
     const nodeId = Object.keys(state.collectionNodes)[0];
     expect(state.collectionNodes[nodeId].reservedByDroneId).toBeNull();
     state = droneTick(state); // idle → moving_to_collect
-    expect(state.starterDrone.status).toBe("moving_to_collect");
+    expect(state.drones.starter.status).toBe("moving_to_collect");
     expect(state.collectionNodes[nodeId].reservedByDroneId).toBe(
-      state.starterDrone.droneId,
+      state.drones.starter.droneId,
     );
   });
 
@@ -123,9 +123,9 @@ describe("Claim layer – node reservation on task start", () => {
     // Add a second unclaimed node
     state = addNode(state, "stone", 7, 7, 2);
     state = droneTick(state); // idle → moving_to_collect
-    expect(state.starterDrone.status).toBe("moving_to_collect");
+    expect(state.drones.starter.status).toBe("moving_to_collect");
     // Must have targeted the unclaimed node, not the wood one
-    expect(state.starterDrone.targetNodeId).not.toBe(nodeId);
+    expect(state.drones.starter.targetNodeId).not.toBe(nodeId);
   });
 
   it("stays idle if all nodes are claimed by other drones", () => {
@@ -177,7 +177,7 @@ describe("Claim layer – reservation released on collection", () => {
       deliveryTargetId: null,
     });
     state = droneTick(state); // collecting → moving_to_dropoff
-    expect(state.starterDrone.status).toBe("moving_to_dropoff");
+    expect(state.drones.starter.status).toBe("moving_to_dropoff");
     // Node still exists (10 - DRONE_CAPACITY remain)
     const remaining = state.collectionNodes[nodeId];
     expect(remaining).toBeDefined();
@@ -199,7 +199,7 @@ describe("Claim layer – reservation released on collection", () => {
     const { [nodeId]: _removed, ...restNodes } = state.collectionNodes;
     state = { ...state, collectionNodes: restNodes };
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("idle");
+    expect(next.drones.starter.status).toBe("idle");
     // Node is gone; no stale reservation
     expect(
       Object.values(next.collectionNodes).some(
@@ -224,8 +224,8 @@ describe("Claim layer – reservation released on collection", () => {
     };
     // Drone is idle — selectDroneTask should still see its own claimed node
     const next = droneTick(state);
-    expect(next.starterDrone.status).toBe("moving_to_collect");
-    expect(next.starterDrone.targetNodeId).toBe(nodeId);
+    expect(next.drones.starter.status).toBe("moving_to_collect");
+    expect(next.drones.starter.targetNodeId).toBe(nodeId);
   });
 });
 
@@ -253,7 +253,7 @@ describe("DRONE_TICK – self-heal missing hub entry", () => {
     // The idle tick should self-heal the hub entry and pick up the task
     state = droneTick(state);
     expect(state.serviceHubs[hubId]).toBeDefined();
-    expect(state.starterDrone.status).toBe("moving_to_collect");
+    expect(state.drones.starter.status).toBe("moving_to_collect");
   });
 
   it("self-heals during deposit and deposits into hub (not global)", () => {

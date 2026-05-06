@@ -26,21 +26,24 @@ const STATUS_LABEL: Record<string, string> = {
 export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
   React.memo(({ state }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const snapshot = useMemo(() => buildProductionTransparency(state), [
-      state.crafting.jobs,
-      state.keepStockByWorkbench,
-      state.recipeAutomationPolicies,
-      state.constructionSites,
-      state.drones,
-      state.assets,
-      state.inventory,
-      state.warehouseInventories,
-      state.serviceHubs,
-      state.network,
-      state.buildingZoneIds,
-      state.buildingSourceWarehouseIds,
-      state.productionZones,
-    ]);
+    const snapshot = useMemo(
+      () => buildProductionTransparency(state),
+      [
+        state.crafting.jobs,
+        state.keepStockByWorkbench,
+        state.recipeAutomationPolicies,
+        state.constructionSites,
+        state.drones,
+        state.assets,
+        state.inventory,
+        state.warehouseInventories,
+        state.serviceHubs,
+        state.network,
+        state.buildingZoneIds,
+        state.buildingSourceWarehouseIds,
+        state.productionZones,
+      ],
+    );
     const relevantKeepStock = useMemo(
       () =>
         snapshot.keepStock.filter(
@@ -131,7 +134,9 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
             )}
 
             <div className="fi-production-status-section">
-              <div className="fi-production-status-title">Deconstruct Queue</div>
+              <div className="fi-production-status-title">
+                Deconstruct Queue
+              </div>
               <div className="fi-production-status-list">
                 {snapshot.deconstructRequests.length === 0 && (
                   <div className="fi-production-status-entry">
@@ -195,3 +200,5 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
       </div>
     );
   });
+
+ProductionStatusFeed.displayName = "ProductionStatusFeed";

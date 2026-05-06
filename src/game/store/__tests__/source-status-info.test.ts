@@ -7,7 +7,6 @@ import {
   GameState,
   GameAction,
   getSourceStatusInfo,
-  type SourceStatusInfo,
 } from "../reducer";
 
 // ---------------------------------------------------------------------------

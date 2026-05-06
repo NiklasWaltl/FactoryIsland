@@ -1,7 +1,7 @@
 // Miscellaneous helper functions and constants, extracted from reducer.ts.
 // No logic changes - moved verbatim.
 
-import type { GameState, Inventory } from "../types";
+import type { Inventory } from "../types";
 
 export { RESOURCE_1x1_DROP_AMOUNT } from "../constants/resources";
 export { getBoostMultiplier } from "./machine-priority";
@@ -17,6 +17,7 @@ export function devAssertInventoryNonNegative(
   if (!import.meta.env.DEV) return;
   for (const [key, val] of Object.entries(inv)) {
     if ((val as number) < 0) {
+      // eslint-disable-next-line no-console -- DEV invariant failure should be visible immediately.
       console.error(`[Invariant] ${label}: "${key}" is negative (${val})`);
     }
   }

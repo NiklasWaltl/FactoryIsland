@@ -34,6 +34,20 @@ module.exports = {
   },
   plugins: ["react", "@typescript-eslint", "unused-imports"],
   ignorePatterns: ["*.typegen.ts"],
+  overrides: [
+    {
+      files: ["**/*.tsx"],
+      rules: {
+        "react/prop-types": "off",
+      },
+    },
+    {
+      files: ["src/**/*.tsx"],
+      rules: {
+        "react/jsx-no-literals": "off",
+      },
+    },
+  ],
   rules: {
     "react/jsx-no-literals": "error",
     "no-console": "error",

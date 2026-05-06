@@ -59,6 +59,7 @@ function _log(category: LogCategory, message: string): void {
 
   const tag = `%c[DEBUG][${category}]`;
   const style = LOG_STYLES[category] ?? "color: #ccc";
+  // eslint-disable-next-line no-console -- intentional DEV-only bridge to the browser console.
   console.log(`${tag} %c${message}`, style, "color: inherit");
 
   _listeners.forEach((fn) => fn());

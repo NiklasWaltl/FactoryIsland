@@ -2,12 +2,12 @@
 // Drone tick action handler
 // ------------------------------------------------------------
 // Handles:     DRONE_TICK
-// Reads:       state.drones, state.starterDrone, state.assets,
+// Reads:       state.drones, starter drone selector, state.assets,
 //              state.serviceHubs, state.warehouseInventories,
 //              state.constructionSites, state.crafting,
 //              state.collectionNodes
 // Writes:      state.drones (movement / status / cargo),
-//              state.starterDrone, target inventories on
+//              target inventories on
 //              collect/deposit, state.crafting (input buffer +
 //              delivery transitions), state.collectionNodes
 // Depends on:  ./phases/drone-tick-phase, deps.tickOneDrone

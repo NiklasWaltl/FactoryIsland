@@ -16,9 +16,7 @@ import { AutoMinerPanel } from "../AutoMinerPanel";
 
 const MINER_ID = "miner-1";
 
-function makeAutoMinerAsset(
-  overrides: Partial<PlacedAsset> = {},
-): PlacedAsset {
+function makeAutoMinerAsset(overrides: Partial<PlacedAsset> = {}): PlacedAsset {
   return {
     id: MINER_ID,
     type: "auto_miner",
@@ -38,10 +36,12 @@ function makeModule(module: Partial<Module> & Pick<Module, "id">): Module {
   };
 }
 
-function buildState(input: {
-  modules?: Module[];
-  assetOverrides?: Partial<PlacedAsset>;
-} = {}): GameState {
+function buildState(
+  input: {
+    modules?: Module[];
+    assetOverrides?: Partial<PlacedAsset>;
+  } = {},
+): GameState {
   const base = createInitialState("release");
   return {
     ...base,
@@ -51,7 +51,11 @@ function buildState(input: {
     },
     autoMiners: {
       ...base.autoMiners,
-      [MINER_ID]: { depositId: "iron-deposit-1", resource: "iron", progress: 0 },
+      [MINER_ID]: {
+        depositId: "iron-deposit-1",
+        resource: "iron",
+        progress: 0,
+      },
     },
     connectedAssetIds: [...base.connectedAssetIds, MINER_ID],
     poweredMachineIds: [...base.poweredMachineIds, MINER_ID],
@@ -78,7 +82,10 @@ afterEach(() => {
   container.remove();
 });
 
-function renderPanel(state: GameState, dispatch: React.Dispatch<GameAction>): void {
+function renderPanel(
+  state: GameState,
+  dispatch: React.Dispatch<GameAction>,
+): void {
   act(() => {
     root.render(<AutoMinerPanel state={state} dispatch={dispatch} />);
   });

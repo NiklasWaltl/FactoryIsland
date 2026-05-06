@@ -41,7 +41,12 @@ describe("tile footprint utils", () => {
       isTileFootprintPlayable(tileMap, { row: 2, col: 0, width: 1, height: 2 }),
     ).toBe(false);
     expect(
-      isTileFootprintPlayable(tileMap, { row: -1, col: 0, width: 1, height: 1 }),
+      isTileFootprintPlayable(tileMap, {
+        row: -1,
+        col: 0,
+        width: 1,
+        height: 1,
+      }),
     ).toBe(false);
   });
 });

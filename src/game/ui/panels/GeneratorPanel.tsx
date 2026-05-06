@@ -350,3 +350,5 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
     );
   },
 );
+
+GeneratorPanel.displayName = "GeneratorPanel";

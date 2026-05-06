@@ -107,7 +107,7 @@ export interface SceneDefinition {
   readonly globalInventory?: Partial<Inventory>;
   readonly purchasedBuildings?: readonly BuildingType[];
   readonly placedBuildings?: readonly BuildingType[];
-  readonly starterDrone?: SceneStarterDroneDefinition;
+  readonly starter?: SceneStarterDroneDefinition;
   readonly resources?: readonly SceneResourceDefinition[];
   readonly assets: readonly SceneAssetDefinition[];
   readonly floorTiles?: readonly SceneFloorTileDefinition[];

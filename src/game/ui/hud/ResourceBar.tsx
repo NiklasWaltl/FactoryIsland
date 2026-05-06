@@ -73,3 +73,5 @@ export const ResourceBar: React.FC<ResourceBarProps> = React.memo(
     );
   },
 );
+
+ResourceBar.displayName = "ResourceBar";

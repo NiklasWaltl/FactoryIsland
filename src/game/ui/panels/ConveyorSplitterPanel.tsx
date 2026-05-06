@@ -181,3 +181,5 @@ export const ConveyorSplitterPanel: React.FC<ConveyorSplitterPanelProps> =
       </div>
     );
   });
+
+ConveyorSplitterPanel.displayName = "ConveyorSplitterPanel";

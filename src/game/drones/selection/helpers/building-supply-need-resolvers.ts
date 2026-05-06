@@ -23,8 +23,7 @@ function getDockWarehouseRawNeed(
 ): number | null {
   const asset = state.assets[assetId];
   if (!asset?.isDockWarehouse) return null;
-  const quest =
-    state.ship?.status === "docked" ? state.ship.activeQuest : null;
+  const quest = state.ship?.status === "docked" ? state.ship.activeQuest : null;
   if (!quest || quest.itemId !== itemType) return 0;
   const current = state.warehouseInventories?.[assetId]?.[itemType] ?? 0;
   return Math.max(0, quest.amount - current);

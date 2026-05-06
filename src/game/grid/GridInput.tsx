@@ -10,6 +10,7 @@ const WORLD_H = GRID_H * CELL_PX;
 
 export interface UseGridInputResult {
   containerRef: React.RefObject<HTMLDivElement | null>;
+  viewportSize: { width: number; height: number };
   cam: { x: number; y: number };
   zoom: number;
   dragging: boolean;
@@ -29,6 +30,7 @@ export function useGridInput(
   dispatch: React.Dispatch<GameAction>,
 ): UseGridInputResult {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [cam, setCam] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [dragging, setDragging] = useState(false);
@@ -51,6 +53,35 @@ export function useGridInput(
       y: Math.min(maxY, Math.max(minY, cy)),
     };
   }, []);
+
+  const updateViewportSize = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const nextSize = { width: el.clientWidth, height: el.clientHeight };
+    setViewportSize((prev) =>
+      prev.width === nextSize.width && prev.height === nextSize.height
+        ? prev
+        : nextSize,
+    );
+  }, []);
+
+  useEffect(() => {
+    updateViewportSize();
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(updateViewportSize);
+    observer?.observe(el);
+    window.addEventListener("resize", updateViewportSize);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateViewportSize);
+    };
+  }, [updateViewportSize]);
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -244,6 +275,7 @@ export function useGridInput(
 
   return {
     containerRef,
+    viewportSize,
     cam,
     zoom,
     dragging,

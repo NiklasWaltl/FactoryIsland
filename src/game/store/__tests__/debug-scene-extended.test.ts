@@ -140,9 +140,8 @@ describe("Debug-Scene Extended (Corner/Splitter/Underground/Assembler)", () => {
     expect(outputBelt?.type).toBe("conveyor");
 
     const [dx, dy] = directionOffset(outputBelt!.direction ?? "east");
-    const warehouseId = tickState.cellMap[
-      cellKey(outputBelt!.x + dx, outputBelt!.y + dy)
-    ];
+    const warehouseId =
+      tickState.cellMap[cellKey(outputBelt!.x + dx, outputBelt!.y + dy)];
     const outputWarehouse = tickState.assets[warehouseId];
     expect(outputWarehouse?.type).toBe("warehouse");
 

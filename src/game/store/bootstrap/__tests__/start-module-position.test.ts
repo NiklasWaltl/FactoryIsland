@@ -24,7 +24,9 @@ describe("getStartModulePosition", () => {
     const layout = createBaseStartLayout(state.tileMap);
     const expectedAnchor = getStartAreaAnchor(state.tileMap);
 
-    const assetsWithoutMapShop: Record<string, PlacedAsset> = { ...state.assets };
+    const assetsWithoutMapShop: Record<string, PlacedAsset> = {
+      ...state.assets,
+    };
     delete assetsWithoutMapShop[BASE_START_IDS.mapShop];
 
     const position = getStartModulePosition({

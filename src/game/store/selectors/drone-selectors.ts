@@ -16,7 +16,7 @@ export function requireStarterDrone(
   const drone = selectStarterDrone(state);
   if (!drone) {
     throw new Error(
-      "[selectStarterDrone] starterDrone not found in drones record",
+      "[selectStarterDrone] starter drone not found in drones record",
     );
   }
   return drone;

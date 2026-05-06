@@ -40,8 +40,8 @@ function buildState(opts?: {
     y: 1,
     size: 2,
   };
-  const starterDrone = {
-    ...base.starterDrone,
+  const starter = {
+    ...base.drones.starter,
     status: "idle" as const,
     tileX: 0,
     tileY: 0,
@@ -104,9 +104,8 @@ function buildState(opts?: {
           }
         : {},
     constructionSites: {},
-    starterDrone,
     drones: {
-      starter: starterDrone,
+      starter,
     },
   };
 }
@@ -237,7 +236,7 @@ describe("workbench input delivery", () => {
       const job = getJob(current);
       return (
         (job.inputBuffer?.find((stack) => stack.itemId === "wood")?.count ??
-          0) === 5 && current.starterDrone.status === "idle"
+          0) === 5 && current.drones.starter.status === "idle"
       );
     });
 
@@ -276,7 +275,8 @@ describe("workbench input delivery", () => {
         getJob(current).inputBuffer?.find((stack) => stack.itemId === "wood")
           ?.count ?? 0;
       return (
-        deliveredWood === requiredWood && current.starterDrone.status === "idle"
+        deliveredWood === requiredWood &&
+        current.drones.starter.status === "idle"
       );
     });
 
@@ -308,7 +308,8 @@ describe("workbench input delivery", () => {
         getJob(current).inputBuffer?.find((stack) => stack.itemId === "wood")
           ?.count ?? 0;
       return (
-        deliveredWood === requiredWood && current.starterDrone.status === "idle"
+        deliveredWood === requiredWood &&
+        current.drones.starter.status === "idle"
       );
     });
 
@@ -381,7 +382,7 @@ describe("workbench input delivery", () => {
       const job = getJob(current);
       return (
         (job.inputBuffer?.find((stack) => stack.itemId === "wood")?.count ??
-          0) === 5 && current.starterDrone.status === "idle"
+          0) === 5 && current.drones.starter.status === "idle"
       );
     });
 
@@ -401,7 +402,7 @@ describe("workbench input delivery", () => {
       const job = getJob(current);
       return (
         (job.inputBuffer?.find((stack) => stack.itemId === "wood")?.count ??
-          0) === 5 && current.starterDrone.status === "idle"
+          0) === 5 && current.drones.starter.status === "idle"
       );
     });
 
@@ -423,7 +424,7 @@ describe("workbench input delivery", () => {
       const job = getJob(current);
       return (
         (job.inputBuffer?.find((stack) => stack.itemId === "wood")?.count ??
-          0) === 5 && current.starterDrone.status === "idle"
+          0) === 5 && current.drones.starter.status === "idle"
       );
     });
 
@@ -441,7 +442,7 @@ describe("workbench input delivery", () => {
       const job = getJob(current);
       return (
         (job.inputBuffer?.find((stack) => stack.itemId === "wood")?.count ??
-          0) === 5 && current.starterDrone.status === "idle"
+          0) === 5 && current.drones.starter.status === "idle"
       );
     });
 
@@ -452,7 +453,7 @@ describe("workbench input delivery", () => {
       state,
       (current) =>
         getJob(current).status === "done" &&
-        current.starterDrone.status === "idle",
+        current.drones.starter.status === "idle",
       120,
     );
 

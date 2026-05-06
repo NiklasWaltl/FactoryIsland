@@ -9,9 +9,6 @@ export interface CraftWorkbenchContext {
 
 export function runCraftWorkbenchPhase(ctx: CraftWorkbenchContext): GameState {
   const { state } = ctx;
-  if (import.meta.env.DEV) {
-    console.warn("CRAFT_WORKBENCH deprecated - use queue");
-  }
   debugLog.general("CRAFT_WORKBENCH deprecated - use queue");
   return state;
 }

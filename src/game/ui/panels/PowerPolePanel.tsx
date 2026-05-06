@@ -141,3 +141,5 @@ export const PowerPolePanel: React.FC<PowerPolePanelProps> = React.memo(
     );
   },
 );
+
+PowerPolePanel.displayName = "PowerPolePanel";

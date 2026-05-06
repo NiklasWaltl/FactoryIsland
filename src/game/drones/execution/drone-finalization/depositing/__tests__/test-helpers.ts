@@ -35,8 +35,8 @@ export function createMockDeps(
 
 export function createMinimalState(): GameState {
   const base = createInitialState("release");
-  const starterDrone: StarterDroneState = {
-    ...base.starterDrone,
+  const starter: StarterDroneState = {
+    ...base.drones.starter,
     hubId: null,
   };
 
@@ -50,8 +50,7 @@ export function createMinimalState(): GameState {
     generators: {},
     connectedAssetIds: [],
     notifications: [],
-    starterDrone,
-    drones: { [starterDrone.droneId]: starterDrone },
+    drones: { [starter.droneId]: starter },
   };
 }
 
@@ -60,14 +59,13 @@ export function withDrone(
   patch: Partial<StarterDroneState>,
 ): { state: GameState; drone: StarterDroneState } {
   const drone: StarterDroneState = {
-    ...state.starterDrone,
+    ...state.drones.starter,
     ...patch,
   };
   return {
     drone,
     state: {
       ...state,
-      starterDrone: drone,
       drones: { ...state.drones, [drone.droneId]: drone },
     },
   };

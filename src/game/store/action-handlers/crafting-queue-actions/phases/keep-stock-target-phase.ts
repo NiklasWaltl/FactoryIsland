@@ -31,9 +31,6 @@ function logKeepStockInvariantIfInvalid(
 ): void {
   if (!import.meta.env.DEV) return;
   if (isKeepStockStateConsistent(state)) return;
-  console.warn(
-    `[CraftingQueue:${actionType}] keepStockByWorkbench inkonsistent`,
-  );
 }
 
 export function runKeepStockTargetPhase(

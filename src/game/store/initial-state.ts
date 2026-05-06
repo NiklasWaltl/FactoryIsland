@@ -49,7 +49,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
   const tileMap = generateIslandTileMap(GRID_H, GRID_W);
   const fixedResources = createFixedResourcePlacement(tileMap);
 
-  const starterDrone: StarterDroneState = {
+  const starter: StarterDroneState = {
     status: "idle",
     tileX: 0,
     tileY: 0,
@@ -130,8 +130,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     buildingZoneIds: {},
     selectedCraftingBuildingId: null,
     collectionNodes: {},
-    starterDrone,
-    drones: { starter: starterDrone },
+    drones: { starter },
     serviceHubs: {},
     constructionSites: {},
     network: createEmptyNetworkSlice(),

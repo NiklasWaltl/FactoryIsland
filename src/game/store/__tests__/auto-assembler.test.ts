@@ -80,7 +80,6 @@ function makeBaseState(overrides?: Partial<GameState>): GameState {
     buildingZoneIds: {},
     selectedCraftingBuildingId: null,
     collectionNodes: {},
-    starterDrone: createInitialState("release").starterDrone,
     drones: {},
     serviceHubs: {},
     constructionSites: {},

@@ -4,10 +4,7 @@
 // All illegal transitions must leave state unchanged (no-op).
 // ============================================================
 
-import {
-  gameReducer,
-  createInitialState,
-} from "../reducer";
+import { gameReducer, createInitialState } from "../reducer";
 import type { Module } from "../../modules/module.types";
 import { MODULE_FRAGMENT_RECIPES } from "../../constants/moduleLabConstants";
 import type { GameAction } from "../game-actions";
@@ -51,7 +48,9 @@ function withAssetsAndModules(
     },
     cellMap: {
       ...state.cellMap,
-      ...Object.fromEntries(assets.map((asset) => [`${asset.x},${asset.y}`, asset.id])),
+      ...Object.fromEntries(
+        assets.map((asset) => [`${asset.x},${asset.y}`, asset.id]),
+      ),
     },
     moduleInventory: modules,
   };
@@ -220,9 +219,11 @@ describe("module_lab reducer invariants", () => {
   });
 
   it("PLACE_MODULE: no-op when target asset does not exist", () => {
-    const state = withAssetsAndModules(createInitialState("release"), [], [
-      makeModule({ id: "module-1" }),
-    ]);
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [],
+      [makeModule({ id: "module-1" })],
+    );
 
     const after = tick(state, {
       type: "PLACE_MODULE",
@@ -246,18 +247,20 @@ describe("module_lab reducer invariants", () => {
       buildingId: "miner-1",
     });
 
-    expect(after.moduleInventory.find((m) => m.id === "module-1")?.equippedTo).toBe(
-      "miner-1",
-    );
-    expect(after.moduleInventory.filter((m) => m.equippedTo === "miner-1")).toHaveLength(
-      1,
-    );
+    expect(
+      after.moduleInventory.find((m) => m.id === "module-1")?.equippedTo,
+    ).toBe("miner-1");
+    expect(
+      after.moduleInventory.filter((m) => m.equippedTo === "miner-1"),
+    ).toHaveLength(1);
   });
 
   it("REMOVE_MODULE: no-op when module is not equipped", () => {
-    const state = withAssetsAndModules(createInitialState("release"), [], [
-      makeModule({ id: "module-1" }),
-    ]);
+    const state = withAssetsAndModules(
+      createInitialState("release"),
+      [],
+      [makeModule({ id: "module-1" })],
+    );
 
     const after = tick(state, { type: "REMOVE_MODULE", moduleId: "module-1" });
 

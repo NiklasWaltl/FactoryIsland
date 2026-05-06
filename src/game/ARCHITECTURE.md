@@ -106,7 +106,7 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 | Energy Net | 2000 | `ENERGY_NET_TICK` | always | inline `switch` → [`energy-net-tick.ts`](./store/energy/energy-net-tick.ts) | `battery.stored`, `poweredMachineIds`, `machinePowerRatio` |
 | Logistics | 500 | `LOGISTICS_TICK` | always | dispatch-chain guard → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `autoAssemblers`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
 | Crafting Jobs | 500 | `JOB_TICK` | only when pending jobs OR active keep-stock targets | [`crafting-queue-actions`](./store/action-handlers/crafting-queue-actions/) | `crafting`, `network`, physical inventories, `keepStockByWorkbench` |
-| Drones | 500 | `DRONE_TICK` | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, `starterDrone`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
+| Drones | 500 | `DRONE_TICK` | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
 | Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
 | Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
 
@@ -196,14 +196,14 @@ Beim Laden werden Claims in beiden Pfaden auf `null` gesetzt: im Save-Codec sowi
 | **Machines / Logistics** | `smithy`, `manualAssembler`, `autoMiners`, `autoSmelters`, `autoAssemblers`, `conveyors`, `conveyorUndergroundPeers`, `generators`, `battery` | yes |
 | **Conveyor Routing** | `splitterRouteState`, `splitterFilterState` | yes |
 | **Energy** | `connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio`, `energyDebugOverlay` | partial |
-| **Drones / Hubs** | `starterDrone`, `drones`, `constructionSites` | yes |
+| **Drones / Hubs** | `drones`, `constructionSites` | yes |
 | **Zones** | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | yes |
 | **Crafting** | `crafting`, `keepStockByWorkbench`, `recipeAutomationPolicies` | yes |
 | **Modules / Module Lab** | `moduleInventory`, `moduleFragments`, `moduleLabJob` | yes |
 | **Ship / Dock** | `ship` | yes |
 | **UI (transient)** | `openPanel`, `selectedWarehouseId`, `selectedPowerPoleId`, `selectedAutoMinerId`, `selectedAutoSmelterId`, `selectedAutoAssemblerId`, `selectedGeneratorId`, `selectedServiceHubId`, `selectedCraftingBuildingId`, `selectedSplitterId`, `notifications`, `autoDeliveryLog` | no |
 
-`starterDrone` and `drones[id]` are kept synchronized — legacy for backward compatibility. (*UNCERTAIN:* Migration path not documented; for `syncDrones`, see [`drones/utils/drone-state-helpers.ts`](./drones/utils/drone-state-helpers.ts).)
+The starter drone lives in `drones["starter"]`. `selectStarterDrone()` and `requireStarterDrone()` remain the stable read API; latest saves remove the old duplicated field via save migration v30.
 
 Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 

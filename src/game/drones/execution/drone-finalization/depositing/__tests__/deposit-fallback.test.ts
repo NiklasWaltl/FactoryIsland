@@ -29,7 +29,7 @@ function withHub(state: GameState, hubId: string): GameState {
         inventory: { ...emptyHubInventory, wood: 1 },
         targetStock: { ...emptyHubInventory },
         tier: 1,
-        droneIds: [state.starterDrone.droneId],
+        droneIds: [state.drones.starter.droneId],
       },
     },
   };
@@ -58,7 +58,7 @@ describe("depositFallback", () => {
       stone: 3,
     });
     expect(next.inventory.stone).toBe(state.inventory.stone);
-    expect(next.starterDrone).toMatchObject({ status: "idle", cargo: null });
+    expect(next.drones.starter).toMatchObject({ status: "idle", cargo: null });
   });
 
   it("self-heals a missing hub entry when the hub asset still exists", () => {
@@ -113,6 +113,6 @@ describe("depositFallback", () => {
 
     expect(next.inventory.copper).toBe(5);
     expect(next.serviceHubs).toEqual({});
-    expect(next.starterDrone).toMatchObject({ status: "idle", cargo: null });
+    expect(next.drones.starter).toMatchObject({ status: "idle", cargo: null });
   });
 });

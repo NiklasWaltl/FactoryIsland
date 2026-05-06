@@ -96,7 +96,11 @@ export function withDrone(
   state: GameState,
   patch: Partial<StarterDroneState>,
 ): GameState {
-  return { ...state, starterDrone: { ...state.starterDrone, ...patch } };
+  const starter = { ...state.drones.starter, ...patch };
+  return {
+    ...state,
+    drones: { ...state.drones, [starter.droneId]: starter },
+  };
 }
 
 export function addNode(
@@ -212,7 +216,7 @@ export function placeServiceHub(
   s = { ...s, constructionSites: restSites };
   s = gameReducer(s, {
     type: "ASSIGN_DRONE_TO_HUB",
-    droneId: s.starterDrone.droneId,
+    droneId: s.drones.starter.droneId,
     hubId,
   });
 

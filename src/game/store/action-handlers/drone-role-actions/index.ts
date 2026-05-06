@@ -2,10 +2,9 @@
 // Drone role action handler
 // ------------------------------------------------------------
 // Handles:     DRONE_SET_ROLE
-// Reads:       state.drones, state.starterDrone, state.serviceHubs
-// Writes:      state.drones[id].role, state.starterDrone (kept in
-//              sync via deps.syncDrones)
-// Depends on:  ./phases/drone-set-role-phase, deps.syncDrones
+// Reads:       state.drones, starter drone selector, state.serviceHubs
+// Writes:      state.drones[id].role
+// Depends on:  ./phases/drone-set-role-phase
 // Notes:       Role drives task-selection priorities — see
 //              ../../../drones/selection/select-drone-task.ts
 //              (`DRONE_ROLE_BONUS` is added per-candidate when the

@@ -18,9 +18,9 @@ import {
 } from "../../world/base-start-layout";
 import { createDefaultProtoHubTargetStock } from "../constants/hub/hub-target-stock";
 import { createEmptyInventory } from "../inventory-ops";
+import { selectStarterDrone } from "../selectors/drone-selectors";
 import type { GameState, PlacedAsset, StarterDroneState } from "../types";
 import { cellKey } from "../utils/cell-key";
-import { selectStarterDrone } from "../../drones/utils/drone-state-helpers";
 
 export function applyBaseStartLayout(state: GameState): GameState {
   if (hasRequiredBaseStartLayout(state)) return state;
@@ -39,14 +39,16 @@ export function applyBaseStartLayout(state: GameState): GameState {
     });
   }
 
-  const hubAsset = assets[layout.starterDroneHubId];
+  const hubAsset = assets[layout.starterHubId];
   if (!hubAsset) {
-    throw new Error("Base start layout was resolved but not applied to initial runtime state.");
+    throw new Error(
+      "Base start layout was resolved but not applied to initial runtime state.",
+    );
   }
 
-  const starterDrone = createDockedStarterDrone(
+  const starter = createDockedStarter(
     selectStarterDrone(state),
-    layout.starterDroneHubId,
+    layout.starterHubId,
     hubAsset.x,
     hubAsset.y,
   );
@@ -64,14 +66,13 @@ export function applyBaseStartLayout(state: GameState): GameState {
       [BASE_START_IDS.serviceHub]: {
         tier: 1,
         inventory: createEmptyHubInventory(),
-        droneIds: [starterDrone.droneId],
+        droneIds: [starter.droneId],
         targetStock: createDefaultProtoHubTargetStock(),
       },
     },
-    starterDrone,
     drones: {
       ...state.drones,
-      [starterDrone.droneId]: starterDrone,
+      [starter.droneId]: starter,
     },
   };
 
@@ -90,7 +91,9 @@ export function applyBaseStartLayout(state: GameState): GameState {
 }
 
 function assertNoPartialBaseStartLayout(state: GameState): void {
-  const existingIds = Object.values(BASE_START_IDS).filter((id) => state.assets[id]);
+  const existingIds = Object.values(BASE_START_IDS).filter(
+    (id) => state.assets[id],
+  );
   if (existingIds.length === 0) return;
   throw new Error(
     `Base start layout was resolved but not applied to initial runtime state: partial objects ${existingIds.join(", ")}`,
@@ -140,14 +143,14 @@ function assertBaseStartCellsFree(
   );
 }
 
-function createDockedStarterDrone(
-  starterDrone: StarterDroneState | undefined,
+function createDockedStarter(
+  starter: StarterDroneState | undefined,
   hubId: string,
   tileX: number,
   tileY: number,
 ): StarterDroneState {
   return {
-    ...(starterDrone ?? {}),
+    ...(starter ?? {}),
     hubId,
     tileX,
     tileY,
@@ -158,7 +161,7 @@ function createDockedStarterDrone(
     currentTaskType: null,
     deliveryTargetId: null,
     craftingJobId: null,
-    droneId: starterDrone?.droneId ?? "starter",
+    droneId: starter?.droneId ?? "starter",
   };
 }
 

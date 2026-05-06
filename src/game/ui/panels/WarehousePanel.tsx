@@ -438,3 +438,5 @@ export const WarehousePanel: React.FC<WarehousePanelProps> = React.memo(
     );
   },
 );
+
+WarehousePanel.displayName = "WarehousePanel";

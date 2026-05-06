@@ -11,5 +11,7 @@ export function getMinerYieldMultiplier(equippedModule: Module | null): number {
 export function getAutoMinerOutputAmount(
   equippedModule: Module | null,
 ): number {
-  return Math.floor(AUTO_MINER_BASE_OUTPUT * getMinerYieldMultiplier(equippedModule));
+  return Math.floor(
+    AUTO_MINER_BASE_OUTPUT * getMinerYieldMultiplier(equippedModule),
+  );
 }

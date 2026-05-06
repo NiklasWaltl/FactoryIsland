@@ -66,7 +66,6 @@ describe("ship coin rewards", () => {
   });
 });
 
-
 describe("spendCoins", () => {
   it("returns true and reduces coins when the balance can cover the amount", () => {
     const state = {

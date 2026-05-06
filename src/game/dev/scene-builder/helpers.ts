@@ -4,16 +4,9 @@ import type {
   SceneFloorTileDefinition,
   SceneResourceDefinition,
 } from "../scene-types";
-import type {
-  AssetType,
-  Direction,
-  FloorTileType,
-} from "../../store/types";
+import type { AssetType, Direction, FloorTileType } from "../../store/types";
 
-type SceneAssetOptions = Omit<
-  SceneAssetDefinition,
-  "id" | "type" | "x" | "y"
->;
+type SceneAssetOptions = Omit<SceneAssetDefinition, "id" | "type" | "x" | "y">;
 
 export const asset = (
   id: string,
@@ -155,8 +148,10 @@ export const resource = (
   resourceType: ResourceType,
   x: number,
   y: number,
-  options: Omit<SceneResourceDefinition, "id" | "resourceType" | "x" | "y"> =
-    {},
+  options: Omit<
+    SceneResourceDefinition,
+    "id" | "resourceType" | "x" | "y"
+  > = {},
 ): SceneResourceDefinition => ({ id, resourceType, x, y, ...options });
 
 export const floorRect = (

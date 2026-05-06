@@ -1,5 +1,9 @@
 import { cellKey, gameReducer } from "../../store/reducer";
-import type { GameState, PlacedAsset, StarterDroneState } from "../../store/types";
+import type {
+  GameState,
+  PlacedAsset,
+  StarterDroneState,
+} from "../../store/types";
 import * as assetMutation from "../../store/asset-mutation";
 import {
   createInitialState,
@@ -93,8 +97,8 @@ describe("Drone deconstruct workflow", () => {
       constructionSites: {},
     };
 
-    const starterDrone = {
-      ...state.starterDrone,
+    const starter = {
+      ...state.drones.starter,
       status: "idle",
       currentTaskType: null,
       targetNodeId: null,
@@ -104,16 +108,15 @@ describe("Drone deconstruct workflow", () => {
       ticksRemaining: 0,
     } as StarterDroneState;
     const secondDrone: StarterDroneState = {
-      ...starterDrone,
+      ...state.drones.starter,
       droneId: "deconstruct-second-drone",
-      tileX: starterDrone.tileX + 1,
-      tileY: starterDrone.tileY,
+      tileX: starter.tileX + 1,
+      tileY: starter.tileY,
     };
     state = {
       ...state,
-      starterDrone,
       drones: {
-        [starterDrone.droneId]: starterDrone,
+        [starter.droneId]: starter,
         [secondDrone.droneId]: secondDrone,
       },
     };
@@ -286,11 +289,10 @@ describe("Drone deconstruct workflow", () => {
     };
 
     let state = withPlacedAsset(withHub, conveyor, [[60, 36]]);
-    const detachedStarter = { ...state.starterDrone, hubId: null };
+    const detachedStarter = { ...state.drones.starter, hubId: null };
     state = {
       ...state,
       buildMode: true,
-      starterDrone: detachedStarter,
       drones: {
         ...state.drones,
         [detachedStarter.droneId]: detachedStarter,

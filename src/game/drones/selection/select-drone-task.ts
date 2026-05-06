@@ -61,16 +61,16 @@ export function selectDroneTask(
       return leftSeq - rightSeq;
     };
 
-    const rankedCandidates = [...candidates].sort(
-      (left, right) => {
-        const deconstructRequestOrder = compareDeconstructRequestOrder(
-          left,
-          right,
-        );
-        if (deconstructRequestOrder !== 0) return deconstructRequestOrder;
-        return right.score - left.score || left.nodeId.localeCompare(right.nodeId);
-      },
-    );
+    const rankedCandidates = [...candidates].sort((left, right) => {
+      const deconstructRequestOrder = compareDeconstructRequestOrder(
+        left,
+        right,
+      );
+      if (deconstructRequestOrder !== 0) return deconstructRequestOrder;
+      return (
+        right.score - left.score || left.nodeId.localeCompare(right.nodeId)
+      );
+    });
 
     return {
       selected: rankedCandidates[0] ?? null,
@@ -112,43 +112,6 @@ export function selectDroneTask(
   } = decideTopDroneCandidateSelection(candidates);
 
   if (!chosen) return null;
-
-  if (import.meta.env.DEV) {
-    console.debug(
-      `[DroneTask] drone=${drone.droneId} role=${role} chose ${chosen.taskType}` +
-        ` node=${chosen.nodeId} target=${chosen.deliveryTargetId}` +
-        ` score=${chosen.score}` +
-        ` (+role:${chosen._roleBonus} +sticky:${chosen._stickyBonus} +urgency:${chosen._urgencyBonus}` +
-        ` +demand:${chosen._demandBonus} spread:${chosen._spreadPenalty})` +
-        ` (from ${candidates.length} candidates)`,
-    );
-
-    if (
-      bestHubRestockCandidate &&
-      (chosen.taskType === "construction_supply" ||
-        chosen.taskType === "hub_dispatch")
-    ) {
-      console.debug(
-        `[DroneTaskPriority] drone=${drone.droneId} construction wins over hub_restock` +
-          ` chosen=${chosen.taskType}:${chosen.nodeId}->${chosen.deliveryTargetId}` +
-          ` chosenScore=${chosen.score}` +
-          ` hubNode=${bestHubRestockCandidate.nodeId}` +
-          ` hubScore=${bestHubRestockCandidate.score}` +
-          ` diff=${chosen.score - bestHubRestockCandidate.score}`,
-      );
-    } else if (
-      chosen.taskType === "hub_restock" &&
-      !bestConstructionCandidate
-    ) {
-      console.debug(
-        `[DroneTaskPriority] drone=${drone.droneId} hub_restock fallback` +
-          ` node=${chosen.nodeId}` +
-          ` target=${chosen.deliveryTargetId}` +
-          ` score=${chosen.score}` +
-          ` noConstructionCandidate=true`,
-      );
-    }
-  }
 
   return {
     taskType: chosen.taskType,

@@ -60,7 +60,12 @@ export class TileRenderer {
     this.layer.destroy();
   }
 
-  private drawWaterShimmer(row: number, col: number, x: number, y: number): void {
+  private drawWaterShimmer(
+    row: number,
+    col: number,
+    x: number,
+    y: number,
+  ): void {
     const offsetX = 12 + ((col * 17 + row * 7) % (this.tileSize - 24));
     const offsetY = 12 + ((row * 19 + col * 11) % (this.tileSize - 24));
     this.layer.fillStyle(WATER_SHIMMER_COLOR, WATER_SHIMMER_ALPHA);

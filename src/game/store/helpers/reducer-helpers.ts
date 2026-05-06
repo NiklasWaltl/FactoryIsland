@@ -50,6 +50,7 @@ export function consumeResources(
   for (const [key, amt] of Object.entries(costs)) {
     result[key] = (result[key] ?? 0) - (amt ?? 0);
     if (import.meta.env.DEV && result[key] < 0) {
+      // eslint-disable-next-line no-console -- DEV invariant failure should be visible immediately.
       console.warn(
         `[consumeResources] Negative value for "${key}": ${result[key]}. Missing hasResources() guard?`,
       );
@@ -165,8 +166,7 @@ export function addAutoDelivery(
 
 /**
  * Tick one drone (identified by droneId) through its state machine for one step.
- * Reads from state.drones[droneId]; writes back via applyDroneUpdate so that
- * state.starterDrone stays in sync for the "starter" drone.
+ * Reads from state.drones[droneId]; writes back via applyDroneUpdate.
  * All other game-state fields (collectionNodes, serviceHubs, …) are updated in place.
  */
 const TICK_ONE_DRONE_IO_DEPS: TickOneDroneIoDeps = {

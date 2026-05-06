@@ -75,7 +75,7 @@ When a task is named:
 | **Action-Handlers** | [src/game/store/action-handlers/](src/game/store/action-handlers/) | Cluster handler per action type | `state` + `deps` | slices via pure updates | Decisions, Helpers, Selectors | tick scheduling |
 | **Game-Actions Union** | [src/game/store/game-actions.ts](src/game/store/game-actions.ts) | Canonical `GameAction` discriminated union | — | — | item/recipe types | logic (types only) |
 | **Crafting** | [src/game/crafting/](src/game/crafting/) | Job lifecycle: queued→reserved→crafting→delivering→done | `crafting`, `network`, `inventory`, `warehouseInventories`, `serviceHubs`, `recipeAutomationPolicies` | `crafting`, `network`, `inventory`, `warehouseInventories`, `serviceHubs`, `keepStockByWorkbench`, `recipeAutomationPolicies` | Inventory, Items, Recipes | drone movement |
-| **Drones** | [src/game/drones/](src/game/drones/) | Task selection, movement, cargo FSM | `drones`, `assets`, `crafting`, inventories, `constructionSites` | `drones`, `starterDrone`, target inventories, `constructionSites`, `collectionNodes` | Decisions, Selectors | energy, crafting planning |
+| **Drones** | [src/game/drones/](src/game/drones/) | Task selection, movement, cargo FSM | `drones`, `assets`, `crafting`, inventories, `constructionSites` | `drones`, target inventories, `constructionSites`, `collectionNodes` | Decisions, Selectors | energy, crafting planning |
 | **Inventory / Reservations** | [src/game/inventory/](src/game/inventory/) | Logical holds on physical stock (`network`) | `inventory`, `warehouseInventories`, `serviceHubs`, `network` | `network` (reservations) | Items | physical movement |
 | **Items** | [src/game/items/](src/game/items/) | `ItemId` union, item registry, stack sizes | — | — | — | Recipes |
 | **Recipes** | [src/game/simulation/recipes/](src/game/simulation/recipes/) | Static recipe definitions per workbench type | — | — | Items | crafting lifecycle |
@@ -124,7 +124,7 @@ When a task is named:
 - **Task selection:** [drones/selection/select-drone-task.ts](src/game/drones/selection/select-drone-task.ts) — scoring-based.
 - **Task types:** `construction_supply`, `hub_restock`, `hub_dispatch`, `workbench_delivery`, `building_supply`, `deconstruct` ([store/types.ts](src/game/store/types.ts)).
 - **Roles:** `auto | construction | supply` — affect ONLY scoring (bonus); no hard filter. Role changes do NOT cancel running tasks.
-- **Sync trap:** `starterDrone` ↔ `drones[id]` — duplicated state, kept via `syncDrones` ([drones/utils/drone-state-helpers.ts](src/game/drones/utils/drone-state-helpers.ts)). UNCERTAIN: migration path toward consolidation is not documented.
+- **Starter drone source:** `drones["starter"]` is canonical. Use `selectStarterDrone()` / `requireStarterDrone()` for stable reads; `syncDrones` remains a no-op compatibility helper.
 - **FSM:** `DroneStatus` (idle / moving_to_collect / collecting / moving_to_dropoff / …).
 
 ### 5.4 Inventory Hierarchy (critical source of confusion)

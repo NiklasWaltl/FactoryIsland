@@ -59,7 +59,7 @@ function withDockAndHub(
         inventory: { ...emptyHubInventory },
         targetStock: { ...emptyHubInventory },
         tier: 1,
-        droneIds: [state.starterDrone.droneId],
+        droneIds: [state.drones.starter.droneId],
       },
     },
   };
@@ -82,7 +82,7 @@ describe("depositShipDock", () => {
         activeQuest: createWoodQuest(8),
       },
     };
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
 
     const outcome = depositShipDock(state, drone.droneId, {
       deliveryId: dockId,
@@ -95,7 +95,7 @@ describe("depositShipDock", () => {
     if (!outcome.handled) throw new Error("expected dock deposit");
     expect(outcome.nextState.warehouseInventories[dockId].wood).toBe(7);
     expect(outcome.nextState.inventory.wood).toBe(0);
-    expect(outcome.nextState.starterDrone).toMatchObject({
+    expect(outcome.nextState.drones.starter).toMatchObject({
       status: "idle",
       cargo: null,
       currentTaskType: null,

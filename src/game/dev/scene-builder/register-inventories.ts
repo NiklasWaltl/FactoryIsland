@@ -47,7 +47,8 @@ export const registerSceneInventories = (
         tier: definition.hubTier ?? 1,
         inventory: stacksToHubInventory(definition.inventory ?? []),
         droneIds: [...(definition.droneIds ?? [])],
-        targetStock: definition.targetStock ?? createDefaultProtoHubTargetStock(),
+        targetStock:
+          definition.targetStock ?? createDefaultProtoHubTargetStock(),
       };
     }
   }

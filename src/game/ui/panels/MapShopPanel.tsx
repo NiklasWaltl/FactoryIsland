@@ -2,10 +2,7 @@ import React from "react";
 import type { GameAction } from "../../store/game-actions";
 import type { MapShopStateSlice } from "../../store/types/ui-slice-types";
 import { MAP_SHOP_ITEMS } from "../../store/constants/ui/shop";
-import {
-  RESOURCE_EMOJIS,
-  RESOURCE_LABELS,
-} from "../../store/constants/resources";
+import { RESOURCE_EMOJIS } from "../../store/constants/resources";
 
 interface MapShopPanelProps {
   state: MapShopStateSlice;
@@ -62,3 +59,5 @@ export const MapShopPanel: React.FC<MapShopPanelProps> = React.memo(
     );
   },
 );
+
+MapShopPanel.displayName = "MapShopPanel";

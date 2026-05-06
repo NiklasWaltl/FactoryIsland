@@ -65,7 +65,7 @@ function withFallbackHub(state: GameState, hubId: string): GameState {
         inventory: { ...emptyHubInventory },
         targetStock: { ...emptyHubInventory },
         tier: 1,
-        droneIds: [state.starterDrone.droneId],
+        droneIds: [state.drones.starter.droneId],
       },
     },
   };
@@ -83,7 +83,7 @@ describe("depositGenerator", () => {
       generatorId,
       3,
     );
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
 
     const outcome = depositGenerator(state, drone.droneId, {
       deliveryId: generatorId,
@@ -99,7 +99,7 @@ describe("depositGenerator", () => {
       requestedRefill: 3,
     });
     expect(outcome.nextState.inventory.wood).toBe(0);
-    expect(outcome.nextState.starterDrone.cargo).toBeNull();
+    expect(outcome.nextState.drones.starter.cargo).toBeNull();
   });
 
   it("reports not_deposited when full and delegates to fallback", () => {
@@ -119,10 +119,10 @@ describe("depositGenerator", () => {
     );
     const directOutcome = depositGenerator(
       fullGeneratorState,
-      fullGeneratorState.starterDrone.droneId,
+      fullGeneratorState.drones.starter.droneId,
       {
         deliveryId: generatorId,
-        idleDrone: createIdleDrone(fullGeneratorState.starterDrone),
+        idleDrone: createIdleDrone(fullGeneratorState.drones.starter),
         cargo: { itemType: "wood", amount: 4 },
         deps,
       },

@@ -32,9 +32,7 @@ describe("DevSceneSelector", () => {
 
   it("renders nothing when only one scene option is visible", () => {
     act(() => {
-      root.render(
-        <DevSceneSelector mode="debug" isDev options={["debug"]} />,
-      );
+      root.render(<DevSceneSelector mode="debug" isDev options={["debug"]} />);
     });
 
     expect(container.textContent).toBe("");

@@ -4,7 +4,12 @@
 
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createInitialState, gameReducer, type GameAction, type GameState } from "../../../store/reducer";
+import {
+  createInitialState,
+  gameReducer,
+  type GameAction,
+  type GameState,
+} from "../../../store/reducer";
 import { MODULE_FRAGMENT_RECIPES } from "../../../constants/moduleLabConstants";
 import { ModulLabPanel } from "../ModulLabPanel";
 
@@ -157,9 +162,7 @@ describe("ModulLabPanel — 3d button state transitions", () => {
         dispatched.push(a);
         state = dispatch(state, a);
         // Re-render with updated state
-        render(
-          <ModulLabPanel state={state} dispatch={testDispatch} />,
-        );
+        render(<ModulLabPanel state={state} dispatch={testDispatch} />);
       };
 
       // Render initially (fragments tab)
@@ -179,7 +182,9 @@ describe("ModulLabPanel — 3d button state transitions", () => {
         craftBtn?.click();
       });
 
-      expect(dispatched.some((a) => a.type === "START_MODULE_CRAFT")).toBe(true);
+      expect(dispatched.some((a) => a.type === "START_MODULE_CRAFT")).toBe(
+        true,
+      );
       expect(state.moduleLabJob).not.toBeNull();
 
       // Advance time past duration and tick
@@ -324,7 +329,8 @@ describe("ModulLabPanel — 3d button state transitions", () => {
       act(() => {
         getButton("Aktiver Job")?.click();
       });
-      const firstCountdown = container.textContent?.match(/(\d+)s verbleibend/)?.[1];
+      const firstCountdown =
+        container.textContent?.match(/(\d+)s verbleibend/)?.[1];
       expect(firstCountdown).toBeDefined();
       const firstSecs = Number(firstCountdown);
 
@@ -342,7 +348,8 @@ describe("ModulLabPanel — 3d button state transitions", () => {
         getButton("Aktiver Job")?.click();
       });
 
-      const secondCountdown = container.textContent?.match(/(\d+)s verbleibend/)?.[1];
+      const secondCountdown =
+        container.textContent?.match(/(\d+)s verbleibend/)?.[1];
       const secondSecs = Number(secondCountdown);
 
       // Countdown must reflect actual elapsed time — at least 1s less

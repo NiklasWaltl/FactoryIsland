@@ -248,3 +248,5 @@ export const ZoneSourceSelector: React.FC<ZoneSourceSelectorProps> = React.memo(
     );
   },
 );
+
+ZoneSourceSelector.displayName = "ZoneSourceSelector";

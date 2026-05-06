@@ -12,8 +12,12 @@ import {
   getZoneItemCapacity,
   resolveBuildingSource,
   getCraftingSourceInventory,
+  applyCraftingSourceInventory,
   cleanBuildingZoneIds,
   hasStaleWarehouseAssignment,
+  addResources,
+  consumeResources,
+  hasResources,
 } from "../reducer";
 import { MAX_ZONES, WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 
@@ -381,10 +385,6 @@ describe("Production Zones — Consumption", () => {
     expect(sourceInv.iron).toBe(8);
 
     // Simulate consuming 10 wood and 5 iron
-    const {
-      consumeResources,
-      applyCraftingSourceInventory,
-    } = require("../reducer");
     const newInv = consumeResources(sourceInv, { wood: 10, iron: 5 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
@@ -416,7 +416,6 @@ describe("Production Zones — Consumption", () => {
     const agg = getCraftingSourceInventory(state, source);
     expect(agg.ironIngot).toBe(7);
 
-    const { hasResources } = require("../reducer");
     expect(hasResources(agg, { ironIngot: 5 })).toBe(true);
     // Neither warehouse alone has 5
     expect(hasResources(state.warehouseInventories.wh1, { ironIngot: 5 })).toBe(
@@ -453,10 +452,6 @@ describe("Production Zones — Output", () => {
     const source = resolveBuildingSource(state, "wb1");
     const sourceInv = getCraftingSourceInventory(state, source);
 
-    const {
-      addResources,
-      applyCraftingSourceInventory,
-    } = require("../reducer");
     const newInv = addResources(sourceInv, { ironIngot: 2 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
@@ -485,10 +480,6 @@ describe("Production Zones — Output", () => {
     const source = resolveBuildingSource(state, "wb1");
     const sourceInv = getCraftingSourceInventory(state, source);
 
-    const {
-      addResources,
-      applyCraftingSourceInventory,
-    } = require("../reducer");
     const newInv = addResources(sourceInv, { ironIngot: 3 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 
@@ -514,10 +505,6 @@ describe("Production Zones — Output", () => {
     const source = resolveBuildingSource(state, "wb1");
     const sourceInv = getCraftingSourceInventory(state, source);
 
-    const {
-      consumeResources,
-      applyCraftingSourceInventory,
-    } = require("../reducer");
     const newInv = consumeResources(sourceInv, { wood: 5 });
     const partial = applyCraftingSourceInventory(state, source, newInv);
 

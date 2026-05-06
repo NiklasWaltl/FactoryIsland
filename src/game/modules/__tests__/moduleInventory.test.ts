@@ -65,7 +65,8 @@ describe("moduleInventory", () => {
       ...serializeState(freshState()),
       moduleInventory: undefined,
     };
-    delete (saveWithoutModules as { moduleInventory?: unknown }).moduleInventory;
+    delete (saveWithoutModules as { moduleInventory?: unknown })
+      .moduleInventory;
 
     const hydrated = loadAndHydrate(saveWithoutModules, "release");
 

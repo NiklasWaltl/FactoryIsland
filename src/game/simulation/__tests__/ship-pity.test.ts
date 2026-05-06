@@ -103,7 +103,10 @@ describe("ship pity counter", () => {
         pityCounter: 17,
       },
     };
-    const currentSave = serializeState(state) as unknown as Record<string, unknown>;
+    const currentSave = serializeState(state) as unknown as Record<
+      string,
+      unknown
+    >;
     const v26Save = {
       ...currentSave,
       version: 26,

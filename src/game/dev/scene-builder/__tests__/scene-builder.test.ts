@@ -21,7 +21,7 @@ const scene: SceneDefinition = {
   clearBaseWorld: true,
   resetGlobalInventory: true,
   globalInventory: { coins: 1234 },
-  starterDrone: { hubId: "hub" },
+  starter: { hubId: "hub" },
   resources: [resource("iron-deposit", "iron_deposit", 20, 5)],
   assets: [
     serviceHub("hub", 4, 4, { droneIds: ["starter"] }),

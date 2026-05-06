@@ -105,3 +105,5 @@ export const AutoDeliveryFeed: React.FC<Props> = React.memo(({ log }) => {
     </div>
   );
 });
+
+AutoDeliveryFeed.displayName = "AutoDeliveryFeed";

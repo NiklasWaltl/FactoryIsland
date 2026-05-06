@@ -11,35 +11,49 @@ interface GridProps {
 
 export const Grid: React.FC<GridProps> = ({ state, dispatch }) => {
   const warnedUnmigratedTypesRef = useRef<Set<string>>(new Set());
-  const input = useGridInput(state, dispatch);
+  const {
+    containerRef,
+    viewportSize,
+    cam,
+    zoom,
+    dragging,
+    hover,
+    buildDirection,
+    onMouseDown,
+    onGridMouseMove,
+    onMouseUp,
+    onWheel,
+    onClick,
+    onContextMenu,
+  } = useGridInput(state, dispatch);
 
   return (
     <div
-      ref={input.containerRef}
+      ref={containerRef}
       className="fi-grid-container"
-      onMouseDown={input.onMouseDown}
-      onMouseMove={input.onGridMouseMove}
-      onMouseUp={input.onMouseUp}
-      onMouseLeave={input.onMouseUp}
-      onWheel={input.onWheel}
-      onClick={input.onClick}
-      onContextMenu={input.onContextMenu}
+      onMouseDown={onMouseDown}
+      onMouseMove={onGridMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+      onWheel={onWheel}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
       style={{
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        cursor: input.dragging ? "grabbing" : "grab",
+        cursor: dragging ? "grabbing" : "grab",
         background: "#1a3a1a",
       }}
     >
       <GridRenderer
         state={state}
-        containerRef={input.containerRef}
-        cam={input.cam}
-        zoom={input.zoom}
-        dragging={input.dragging}
-        hover={input.hover}
-        buildDirection={input.buildDirection}
+        viewportSize={viewportSize}
+        cam={cam}
+        zoom={zoom}
+        dragging={dragging}
+        hover={hover}
+        buildDirection={buildDirection}
         warnedUnmigratedTypesRef={warnedUnmigratedTypesRef}
       />
     </div>

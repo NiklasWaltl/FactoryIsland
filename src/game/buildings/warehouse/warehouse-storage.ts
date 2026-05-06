@@ -112,21 +112,11 @@ export function consumeFromPhysicalStorage(
     }
   | { ok: false } {
   if (!hasResourcesInPhysicalStorage(state, costs)) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        "[consumeFromPhysicalStorage] Insufficient physical stock for",
-        costs,
-      );
-    }
     return { ok: false };
   }
   const consumed = consumeBuildResources(state, costs);
   // hasResources guarantees remaining is empty; assert in DEV to catch logic drift.
   if (import.meta.env.DEV && Object.keys(consumed.remaining).length > 0) {
-    console.error(
-      "[consumeFromPhysicalStorage] remaining after pre-check:",
-      consumed.remaining,
-    );
     return { ok: false };
   }
   return {

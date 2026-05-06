@@ -36,7 +36,9 @@ export const DevSceneSelector: React.FC<DevSceneSelectorProps> = ({
   if (!isDev || mode !== "debug" || options.length <= 1) return null;
 
   const urlScene = getDevSceneFromUrl();
-  const currentScene = options.includes(urlScene) ? urlScene : DEFAULT_DEV_SCENE;
+  const currentScene = options.includes(urlScene)
+    ? urlScene
+    : DEFAULT_DEV_SCENE;
 
   const setScene = (scene: DevSceneId): void => {
     setDevSceneInUrl(scene, { reload: reloadOnChange });

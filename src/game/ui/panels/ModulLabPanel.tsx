@@ -30,25 +30,31 @@ function formatSeconds(ms: number): string {
   return `${Math.max(0, Math.ceil(ms / 1000))}s`;
 }
 
+function getRemainingModuleLabMs(
+  job: GameState["moduleLabJob"],
+  nowMs: number,
+): number {
+  if (!job || job.status === "done") return 0;
+  return job.startedAt + job.durationMs - nowMs;
+}
+
 export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
   ({ state, dispatch }) => {
     const [activeTab, setActiveTab] = useState<TabId>("fragments");
+    const [, forceUpdate] = useState(0);
 
     const fragments = selectModuleFragmentCount(state);
     const job = state.moduleLabJob;
     const modules = state.moduleInventory ?? [];
 
     // Re-render once a second so the active-job countdown updates without a tick.
-    const [, setNowTick] = useState(0);
     useEffect(() => {
       if (!job || job.status !== "crafting") return;
-      const id = setInterval(() => setNowTick((n) => n + 1), 250);
-      return () => clearInterval(id);
-    }, [job]);
+      const id = window.setInterval(() => forceUpdate((n) => n + 1), 250);
+      return () => window.clearInterval(id);
+    }, [job?.durationMs, job?.startedAt, job?.status]);
 
-    // Computed fresh each render — depends on Date.now() which can't be a memo dep.
-    // The setNowTick interval (above) forces re-renders while a job is crafting.
-    const remainingMs = job ? job.startedAt + job.durationMs - Date.now() : 0;
+    const remainingMs = getRemainingModuleLabMs(job, Date.now());
 
     const close = () => dispatch({ type: "CLOSE_PANEL" });
 
@@ -67,7 +73,11 @@ export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
           }}
         >
           <h2 style={{ margin: 0 }}>🧪 Modul-Labor</h2>
-          <button className="fi-btn fi-btn-sm" onClick={close} aria-label="Schließen">
+          <button
+            className="fi-btn fi-btn-sm"
+            onClick={close}
+            aria-label="Schließen"
+          >
             X
           </button>
         </div>
@@ -112,6 +122,8 @@ export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
   },
 );
 
+ModulLabPanel.displayName = "ModulLabPanel";
+
 interface TabButtonProps {
   active: boolean;
   onClick: () => void;
@@ -119,7 +131,12 @@ interface TabButtonProps {
   badge?: string;
 }
 
-const TabButton: React.FC<TabButtonProps> = ({ active, onClick, label, badge }) => (
+const TabButton: React.FC<TabButtonProps> = ({
+  active,
+  onClick,
+  label,
+  badge,
+}) => (
   <button
     onClick={onClick}
     className="fi-btn fi-btn-sm"
@@ -205,7 +222,7 @@ const JobTab: React.FC<JobTabProps> = ({ job, remainingMs, dispatch }) => {
   if (!job) {
     return (
       <div style={{ opacity: 0.6, fontStyle: "italic" }}>
-        Kein aktiver Job. Starte einen Craft im Tab „Fragmente".
+        Kein aktiver Job. Starte einen Craft im Tab Fragmente.
       </div>
     );
   }
@@ -273,7 +290,11 @@ interface ModulesTabProps {
   dispatch: React.Dispatch<GameAction>;
 }
 
-const ModulesTab: React.FC<ModulesTabProps> = ({ modules, state, dispatch }) => {
+const ModulesTab: React.FC<ModulesTabProps> = ({
+  modules,
+  state,
+  dispatch,
+}) => {
   if (modules.length === 0) {
     return (
       <div style={{ opacity: 0.6, fontStyle: "italic" }}>

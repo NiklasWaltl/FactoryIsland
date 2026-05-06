@@ -42,8 +42,11 @@ import {
 } from "./save-normalizer";
 import { isRuntimeGameStateSnapshot } from "./save-legacy";
 import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
-import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
-import { selectStarterDrone } from "../drones/utils/drone-state-helpers";
+import {
+  STARTER_DRONE_ID,
+  requireStarterDrone,
+  selectStarterDrone,
+} from "../store/selectors/drone-selectors";
 
 function createFallbackShipState(): ShipState {
   return {
@@ -92,7 +95,6 @@ function sanitizeShipSnapshot(raw: unknown): ShipState {
  */
 export function serializeState(state: GameState): SaveGameLatest {
   const ship = sanitizeShipSnapshot((state as Partial<GameState>).ship);
-  const starterDrone = selectStarterDrone(state) ?? state.starterDrone;
   debugLog.general(
     `Save: ${state.network.reservations.length} reservations, ${state.crafting.jobs.length} jobs`,
   );
@@ -131,7 +133,6 @@ export function serializeState(state: GameState): SaveGameLatest {
     productionZones: state.productionZones,
     buildingZoneIds: state.buildingZoneIds,
     collectionNodes: state.collectionNodes,
-    starterDrone,
     serviceHubs: state.serviceHubs,
     constructionSites: state.constructionSites,
     drones: state.drones,
@@ -208,47 +209,6 @@ export function deserializeState(save: SaveGameLatest): GameState {
         cleaned[id] = { ...node, reservedByDroneId: null };
       }
       return cleaned;
-    })(),
-
-    starterDrone: (() => {
-      const drone = sanitizeStarterDrone(save.starterDrone, save.tileMap);
-      let d = drone;
-      if (d.hubId && !save.assets[d.hubId]) {
-        d = { ...d, hubId: null };
-      }
-      if (d.deliveryTargetId && !save.assets[d.deliveryTargetId]) {
-        d = {
-          ...d,
-          deliveryTargetId: null,
-          currentTaskType: null,
-          deconstructRefund: null,
-        };
-      }
-      if (!d.hubId) {
-        const existingHubId =
-          Object.keys(save.assets).find(
-            (id) => save.assets[id]?.type === "service_hub",
-          ) ?? null;
-        if (existingHubId) {
-          d = { ...d, hubId: existingHubId };
-        }
-      }
-      if (d.status === "idle") {
-        if (d.hubId && save.assets[d.hubId]) {
-          d = {
-            ...d,
-            tileX: save.assets[d.hubId].x,
-            tileY: save.assets[d.hubId].y,
-          };
-        } else if (!d.hubId) {
-          const fallback = getStartModulePosition({
-            assets: save.assets,
-            tileMap: save.tileMap,
-          });
-          d = { ...d, tileX: fallback.x, tileY: fallback.y };
-        }
-      }
-      return d;
     })(),
 
     drones: (() => {
@@ -363,21 +323,13 @@ export function deserializeState(save: SaveGameLatest): GameState {
     selectedCraftingBuildingId: null,
   };
 
-  // Backward compatibility guard: drones record is authoritative for starter data.
-  const starterDroneFromRecord = partial.drones[STARTER_DRONE_ID];
-  if (starterDroneFromRecord && partial.starterDrone) {
-    partial.starterDrone = starterDroneFromRecord;
-  } else if (partial.starterDrone && !starterDroneFromRecord) {
-    partial.drones = {
-      ...partial.drones,
-      [STARTER_DRONE_ID]: partial.starterDrone,
-    };
-  }
+  requireStarterDrone(partial);
 
   const hasAnyHub = Object.values(partial.assets).some(
     (a) => a.type === "service_hub",
   );
   if (!hasAnyHub) {
+    const starter = requireStarterDrone(partial);
     // center of standard 80×50 grid — used as spatial search origin, not as drone home position
     const HUB_SEARCH_CENTER = { x: 39, y: 24 } as const;
     const candidates: { x: number; y: number; dist: number }[] = [];
@@ -424,33 +376,33 @@ export function deserializeState(save: SaveGameLatest): GameState {
             inventory: createEmptyHubInventory(),
             targetStock: createDefaultProtoHubTargetStock(),
             tier: 1,
-            droneIds: [partial.starterDrone.droneId],
+            droneIds: [starter.droneId],
           },
         };
-        const assignedStarterDrone = {
-          ...partial.starterDrone,
+        const assignedStarter = {
+          ...starter,
           hubId,
           tileX: x,
           tileY: y,
         };
-        partial.starterDrone = assignedStarterDrone;
         partial.drones = {
           ...partial.drones,
-          [STARTER_DRONE_ID]: assignedStarterDrone,
+          [STARTER_DRONE_ID]: assignedStarter,
         };
         break;
       }
     }
   }
 
-  if (partial.starterDrone.hubId) {
-    const dHub = partial.serviceHubs[partial.starterDrone.hubId];
-    if (dHub && !dHub.droneIds.includes(partial.starterDrone.droneId)) {
+  const starter = selectStarterDrone(partial);
+  if (starter?.hubId) {
+    const dHub = partial.serviceHubs[starter.hubId];
+    if (dHub && !dHub.droneIds.includes(starter.droneId)) {
       partial.serviceHubs = {
         ...partial.serviceHubs,
-        [partial.starterDrone.hubId]: {
+        [starter.hubId]: {
           ...dHub,
-          droneIds: [...dHub.droneIds, partial.starterDrone.droneId],
+          droneIds: [...dHub.droneIds, starter.droneId],
         },
       };
     }
@@ -478,17 +430,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
       snapIdleDroneToDock(drone),
     ]),
   );
-  const snappedStarterDrone = partial.drones[STARTER_DRONE_ID];
-  if (snappedStarterDrone) {
-    partial.starterDrone = snappedStarterDrone;
-  } else {
-    const fallbackStarterDrone = snapIdleDroneToDock(partial.starterDrone);
-    partial.starterDrone = fallbackStarterDrone;
-    partial.drones = {
-      ...partial.drones,
-      [STARTER_DRONE_ID]: fallbackStarterDrone,
-    };
-  }
+  requireStarterDrone(partial);
 
   partial.inventory = rebuildGlobalInventoryFromStorage(partial);
   partial.connectedAssetIds = computeConnectedAssetIds(partial);
@@ -512,17 +454,6 @@ export function deserializeState(save: SaveGameLatest): GameState {
   }
 
   const finalState = applyDockWarehouseLayout(partial);
-
-  // Phase 3: Master-Sync beim Load.
-  // drones["starter"] ist kanonisch; starterDrone wird daraus abgeleitet.
-  if (finalState.drones[STARTER_DRONE_ID]) {
-    finalState.starterDrone = finalState.drones[STARTER_DRONE_ID];
-  } else if (finalState.starterDrone) {
-    finalState.drones = {
-      ...finalState.drones,
-      [STARTER_DRONE_ID]: finalState.starterDrone,
-    };
-  }
 
   return finalState;
 }

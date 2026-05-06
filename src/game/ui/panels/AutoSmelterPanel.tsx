@@ -501,3 +501,5 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
     );
   },
 );
+
+AutoSmelterPanel.displayName = "AutoSmelterPanel";

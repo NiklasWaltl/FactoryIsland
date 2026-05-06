@@ -153,7 +153,7 @@ describe("WorkbenchPanel", () => {
   it("enables craft button when warehouse is empty but fallback hub has enough stock", () => {
     const dispatch = jest.fn<void, [GameAction]>();
     const base = buildState();
-    const hubId = base.starterDrone.hubId;
+    const hubId = base.drones.starter.hubId;
     expect(hubId).toBeTruthy();
     if (!hubId) return;
 

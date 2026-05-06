@@ -402,3 +402,5 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
     );
   },
 );
+
+AutoMinerPanel.displayName = "AutoMinerPanel";

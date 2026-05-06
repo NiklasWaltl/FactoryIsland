@@ -20,7 +20,6 @@ import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 import {
   applyDroneUpdate,
   selectStarterDrone,
-  syncDrones,
 } from "../../../drones/utils/drone-state-helpers";
 import { STARTER_DRONE_ID } from "../../selectors/drone-selectors";
 import { clearModulesEquippedToAny } from "../module-compat";
@@ -389,8 +388,8 @@ export function executeGenericRemoveAsset(
     };
   } else if (bTypeR === "service_hub") {
     // Release the drone: fall back to start module delivery
-    const starterDrone = selectStarterDrone(state);
-    const shouldResetStarterDrone = starterDrone?.hubId === assetId;
+    const starter = selectStarterDrone(state);
+    const shouldResetStarter = starter?.hubId === assetId;
     // Transfer hub inventory back into global inventory
     const hubEntry = state.serviceHubs[assetId];
     const invAfterHubRemoval = hubEntry
@@ -406,9 +405,9 @@ export function executeGenericRemoveAsset(
       openPanel: null as UIPanel,
       serviceHubs: remainingHubs,
     };
-    if (shouldResetStarterDrone && starterDrone) {
+    if (shouldResetStarter && starter) {
       partialRemove = applyDroneUpdate(partialRemove, STARTER_DRONE_ID, {
-        ...starterDrone,
+        ...starter,
         hubId: null,
         status: "idle" as DroneStatus,
         targetNodeId: null,
@@ -459,16 +458,16 @@ export function executeGenericRemoveAsset(
   }
   // If the drone was delivering to this removed asset, reset it
   const stripSet = new Set(stripAssetIds);
-  const starterDroneBeforeStrip = selectStarterDrone(syncDrones(state));
-  const starterDroneAfterStrip = selectStarterDrone(syncDrones(partialRemove));
+  const starterBeforeStrip = selectStarterDrone(state);
+  const starterAfterStrip = selectStarterDrone(partialRemove);
   if (
-    starterDroneBeforeStrip?.deliveryTargetId &&
-    stripSet.has(starterDroneBeforeStrip.deliveryTargetId) &&
-    starterDroneAfterStrip &&
-    starterDroneAfterStrip.status !== "idle"
+    starterBeforeStrip?.deliveryTargetId &&
+    stripSet.has(starterBeforeStrip.deliveryTargetId) &&
+    starterAfterStrip &&
+    starterAfterStrip.status !== "idle"
   ) {
     partialRemove = applyDroneUpdate(partialRemove, STARTER_DRONE_ID, {
-      ...starterDroneAfterStrip,
+      ...starterAfterStrip,
       status: "idle" as DroneStatus,
       targetNodeId: null,
       cargo: null,

@@ -1,7 +1,8 @@
 import React from "react";
 import { CELL_PX } from "../constants/grid";
 import { isUnderConstruction } from "../store/helpers/asset-status";
-import type { Direction, GameState } from "../store/types";
+import type { GameState } from "../store/types";
+import { debugLog } from "../debug/debugLogger";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import type { StaticAssetSnapshot } from "../world/PhaserGame";
 import { collectWarehouseMarkers } from "./grid-overlay-helpers";
@@ -381,7 +382,7 @@ export function buildWorldOverlayData({
       !warnedUnmigratedTypesRef.current.has(asset.type)
     ) {
       warnedUnmigratedTypesRef.current.add(asset.type);
-      console.warn(
+      debugLog.general(
         `[Grid] Unmigrated world asset type rendered via React exception fallback: ${asset.type}. ` +
           "Route this type through phaserStaticAssets to keep Phaser as world renderer.",
       );

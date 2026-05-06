@@ -150,3 +150,5 @@ export const BatteryPanel: React.FC<BatteryPanelProps> = React.memo(
     );
   },
 );
+
+BatteryPanel.displayName = "BatteryPanel";

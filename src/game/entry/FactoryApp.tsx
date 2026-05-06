@@ -6,10 +6,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import {
-  gameReducer,
-  gameReducerWithInvariants,
-} from "../store/reducer";
+import { gameReducer, gameReducerWithInvariants } from "../store/reducer";
 import { createInitialState } from "../store/initial-state";
 import type { GameMode, GameState } from "../store/types";
 import type {
@@ -167,10 +164,10 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
     },
   );
 
-  // Persist state for HMR on every change
+  // Keep latest state available to effects/event callbacks, and persist HMR snapshots in DEV.
   const stateRef = useRef(state);
-  stateRef.current = state;
   useEffect(() => {
+    stateRef.current = state;
     if (!IS_DEV) return;
     saveHmrState(state);
   }, [state]);
@@ -218,7 +215,10 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       if (!IS_DEV) return;
       if (action === "DEBUG_RESET_STATE") {
         debugLog.mock("Full state reset");
-        dispatch({ type: "DEBUG_SET_STATE", state: createFreshInitialState(mode) });
+        dispatch({
+          type: "DEBUG_SET_STATE",
+          state: createFreshInitialState(mode),
+        });
         return;
       }
       const newState = applyMockToState(stateRef.current, action);
@@ -434,7 +434,9 @@ export const FactoryGame: React.FC = () => {
         onReset={() => {
           try {
             localStorage.removeItem(SAVE_KEY);
-          } catch {}
+          } catch {
+            // Best-effort reset: browser storage can be unavailable or blocked.
+          }
         }}
       >
         <GameInner key={mode} mode={mode} />

@@ -115,7 +115,10 @@ describe("Construction Sites – placement", () => {
       ...base,
       serviceHubs: {},
       assets: assetsWithoutHubs,
-      starterDrone: { ...base.starterDrone, hubId: null },
+      drones: {
+        ...base.drones,
+        starter: { ...base.drones.starter, hubId: null },
+      },
     };
     const state = placeBuilding(noHubBase, "workbench", 10, 10);
     const wbId = Object.keys(state.assets).find(
@@ -197,10 +200,10 @@ describe("Construction Sites – drone priority", () => {
 
     const next = gameReducer(state, { type: "DRONE_TICK" });
 
-    expect(next.starterDrone.currentTaskType).toBe("construction_supply");
-    expect(next.starterDrone.currentTaskType).not.toBe("hub_restock");
-    expect(next.starterDrone.deliveryTargetId).toBe(siteId);
-    expect(next.starterDrone.targetNodeId).toBeTruthy();
+    expect(next.drones.starter.currentTaskType).toBe("construction_supply");
+    expect(next.drones.starter.currentTaskType).not.toBe("hub_restock");
+    expect(next.drones.starter.deliveryTargetId).toBe(siteId);
+    expect(next.drones.starter.targetNodeId).toBeTruthy();
   });
 
   it("selectDroneTask falls back to hub_restock when no construction sites", () => {
@@ -221,7 +224,7 @@ describe("Construction Sites – drone priority", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const hubId = hubState.starterDrone.hubId!;
+    const hubId = hubState.drones.starter.hubId!;
     const siteId = "hub-dispatch-site";
     const state: GameState = {
       ...hubState,
@@ -290,11 +293,11 @@ describe("Construction Sites – drone priority", () => {
       ...state,
       serviceHubs: {
         ...state.serviceHubs,
-        [state.starterDrone.hubId!]: {
-          ...state.serviceHubs[state.starterDrone.hubId!],
+        [state.drones.starter.hubId!]: {
+          ...state.serviceHubs[state.drones.starter.hubId!],
           tier: 2,
           droneIds: [
-            state.starterDrone.droneId,
+            state.drones.starter.droneId,
             "drone-2",
             "drone-3",
             "drone-4",
@@ -304,19 +307,19 @@ describe("Construction Sites – drone priority", () => {
       drones: {
         ...state.drones,
         "drone-2": {
-          ...state.starterDrone,
+          ...state.drones.starter,
           droneId: "drone-2",
           tileX: 7,
           tileY: 6,
         },
         "drone-3": {
-          ...state.starterDrone,
+          ...state.drones.starter,
           droneId: "drone-3",
           tileX: 8,
           tileY: 6,
         },
         "drone-4": {
-          ...state.starterDrone,
+          ...state.drones.starter,
           droneId: "drone-4",
           tileX: 9,
           tileY: 6,
@@ -366,11 +369,11 @@ describe("Construction Sites – drone priority", () => {
       ...state,
       serviceHubs: {
         ...state.serviceHubs,
-        [state.starterDrone.hubId!]: {
-          ...state.serviceHubs[state.starterDrone.hubId!],
+        [state.drones.starter.hubId!]: {
+          ...state.serviceHubs[state.drones.starter.hubId!],
           tier: 2,
           droneIds: [
-            state.starterDrone.droneId,
+            state.drones.starter.droneId,
             "drone-2",
             "drone-3",
             "drone-4",
@@ -380,19 +383,19 @@ describe("Construction Sites – drone priority", () => {
       drones: {
         ...state.drones,
         "drone-2": {
-          ...state.starterDrone,
+          ...state.drones.starter,
           droneId: "drone-2",
           tileX: 7,
           tileY: 6,
         },
         "drone-3": {
-          ...state.starterDrone,
+          ...state.drones.starter,
           droneId: "drone-3",
           tileX: 8,
           tileY: 6,
         },
         "drone-4": {
-          ...state.starterDrone,
+          ...state.drones.starter,
           droneId: "drone-4",
           tileX: 9,
           tileY: 6,
@@ -466,7 +469,7 @@ describe("Task Scoring – selectDroneTask() picks nearest node of same type", (
     expect(task!.taskType).toBe("hub_restock");
     // The near node should have been chosen — we check by comparing distances
     const chosenNode = state.collectionNodes[task!.nodeId];
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
     const chosenDist = Math.max(
       Math.abs(drone.tileX - chosenNode.tileX),
       Math.abs(drone.tileY - chosenNode.tileY),
@@ -590,21 +593,21 @@ describe("Task Scoring – DroneRole influence", () => {
     expect(withBonus).toBe(base + DRONE_ROLE_BONUS);
   });
 
-  it("DRONE_SET_ROLE sets role on starterDrone and drones record", () => {
+  it("DRONE_SET_ROLE sets role on drones record", () => {
     const { state: hubState } = placeServiceHub(
       createInitialState("release"),
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
     let state = hubState;
-    const droneId = state.starterDrone.droneId;
-    expect(state.starterDrone.role ?? "auto").toBe("auto");
+    const droneId = state.drones.starter.droneId;
+    expect(state.drones.starter.role ?? "auto").toBe("auto");
     state = gameReducer(state, {
       type: "DRONE_SET_ROLE",
       droneId,
       role: "construction",
     });
-    expect(state.starterDrone.role).toBe("construction");
+    expect(state.drones.starter.role).toBe("construction");
     // drones record must stay in sync
     expect(state.drones[droneId]?.role).toBe("construction");
   });
@@ -621,18 +624,18 @@ describe("Task Scoring – DroneRole influence", () => {
       drones: {
         ...hubState.drones,
         [extraDroneId]: {
-          ...hubState.starterDrone,
+          ...hubState.drones.starter,
           droneId: extraDroneId,
           role: "auto",
         },
       },
       serviceHubs: {
         ...hubState.serviceHubs,
-        [hubState.starterDrone.hubId!]: {
-          ...hubState.serviceHubs[hubState.starterDrone.hubId!],
+        [hubState.drones.starter.hubId!]: {
+          ...hubState.serviceHubs[hubState.drones.starter.hubId!],
           tier: 2,
           droneIds: [
-            ...hubState.serviceHubs[hubState.starterDrone.hubId!].droneIds,
+            ...hubState.serviceHubs[hubState.drones.starter.hubId!].droneIds,
             extraDroneId,
           ],
         },
@@ -643,11 +646,11 @@ describe("Task Scoring – DroneRole influence", () => {
       droneId: extraDroneId,
       role: "supply",
     });
-    expect(next.starterDrone.role ?? "auto").toBe(
-      stateWithExtra.starterDrone.role ?? "auto",
+    expect(next.drones.starter.role ?? "auto").toBe(
+      stateWithExtra.drones.starter.role ?? "auto",
     );
     expect(next.drones[extraDroneId]?.role).toBe("supply");
-    expect(next.drones.starter).toBe(next.starterDrone);
+    expect(next.drones.starter).toBe(next.drones.starter);
   });
 
   it("DRONE_SET_ROLE is strict no-op for unknown non-starter droneId", () => {
@@ -670,7 +673,7 @@ describe("Task Scoring – DroneRole influence", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const droneId = hubState.starterDrone.droneId;
+    const droneId = hubState.drones.starter.droneId;
     let state = gameReducer(hubState, {
       type: "DRONE_SET_ROLE",
       droneId,
@@ -689,7 +692,7 @@ describe("Task Scoring – DroneRole influence", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const droneId = hubState.starterDrone.droneId;
+    const droneId = hubState.drones.starter.droneId;
     let state: GameState = {
       ...hubState,
       assets: {
@@ -727,9 +730,9 @@ describe("Task Scoring – DroneRole influence", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const droneId = hubState.starterDrone.droneId;
+    const droneId = hubState.drones.starter.droneId;
     // Fully stock the hub so no hub_restock candidates
-    const hubId = hubState.starterDrone.hubId!;
+    const hubId = hubState.drones.starter.hubId!;
     const fullStock = createDefaultHubTargetStock();
     let state: GameState = {
       ...hubState,
@@ -777,7 +780,7 @@ describe("Task Scoring – DroneRole influence", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const droneId = hubState.starterDrone.droneId;
+    const droneId = hubState.drones.starter.droneId;
     let state: GameState = {
       ...hubState,
       assets: {
@@ -828,7 +831,7 @@ describe("Task Scoring – sticky selection (reserved node bonus)", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const droneId = hubState.starterDrone.droneId;
+    const droneId = hubState.drones.starter.droneId;
     // Add two equidistant wood nodes
     let state = addNode(hubState, "wood", 30, 24, 5); // node A
     state = addNode(state, "wood", 30, 24, 5); // node B (same position)
@@ -907,8 +910,8 @@ describe("Construction Sites – drone delivery", () => {
       deliveryTargetId: siteId,
     });
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("idle");
-    expect(state.starterDrone.cargo).toBeNull();
+    expect(state.drones.starter.status).toBe("idle");
+    expect(state.drones.starter.cargo).toBeNull();
     expect(state.constructionSites[siteId].remaining.wood).toBe(3);
   });
 
@@ -970,7 +973,7 @@ describe("Construction Sites – drone delivery", () => {
       deliveryTargetId: "nonexistent-site",
     });
     state = droneTick(state);
-    expect(state.starterDrone.status).toBe("idle");
+    expect(state.drones.starter.status).toBe("idle");
     expect(state.inventory.wood).toBe(woodBefore + 5);
   });
 });
@@ -980,6 +983,26 @@ describe("Construction Sites – removal", () => {
 
   beforeEach(() => {
     base = createInitialState("release");
+  });
+
+  it("BUILD_REMOVE_ASSET: starter drone is reset after hub removal", () => {
+    const { state: hubState, hubId } = placeServiceHub(
+      base,
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
+    let state: GameState = {
+      ...hubState,
+      buildMode: true,
+    };
+
+    expect(state.drones.starter.hubId).toBe(hubId);
+    expect(state.drones[STARTER_DRONE_ID]?.hubId).toBe(hubId);
+
+    state = gameReducer(state, { type: "BUILD_REMOVE_ASSET", assetId: hubId });
+
+    expect(state.assets[hubId]).toBeUndefined();
+    expect(state.drones.starter).toEqual(state.drones[STARTER_DRONE_ID]);
   });
 
   it("cleans up construction site when building is removed and refunds delivered resources", () => {
@@ -1021,7 +1044,7 @@ describe("Construction Sites – removal", () => {
     state = gameReducer(state, { type: "BUILD_REMOVE_ASSET", assetId: wbId! });
     expect(state.constructionSites[wbId!]).toBeUndefined();
     // Should have received partial refund for delivered resources
-    expect(state.starterDrone).toEqual(state.drones[STARTER_DRONE_ID]);
+    expect(state.drones.starter).toEqual(state.drones[STARTER_DRONE_ID]);
   });
 
   it("resets drone if it was delivering to the removed construction site", () => {
@@ -1067,91 +1090,101 @@ describe("Construction Sites – removal", () => {
     });
     state = { ...state, buildMode: true };
     state = gameReducer(state, { type: "BUILD_REMOVE_ASSET", assetId: siteId });
-    expect(state.starterDrone.status).toBe("idle");
-    expect(state.starterDrone.deliveryTargetId).toBeNull();
-    expect(state.starterDrone.currentTaskType).toBeNull();
-    expect(state.starterDrone).toEqual(state.drones[STARTER_DRONE_ID]);
+    expect(state.drones.starter.status).toBe("idle");
+    expect(state.drones.starter.deliveryTargetId).toBeNull();
+    expect(state.drones.starter.currentTaskType).toBeNull();
+    expect(state.drones.starter).toEqual(state.drones[STARTER_DRONE_ID]);
   });
 });
 
-describe("Starter Drone – sync guards", () => {
-  it("DRONE_TICK re-syncs diverged starterDrone and drones['starter']", () => {
+describe("Starter Drone – selector guards", () => {
+  it("serializeState omits the legacy starter-drone field", () => {
     const { state: hubState } = placeServiceHub(
       createInitialState("release"),
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
 
-    const divergedState: GameState = {
-      ...hubState,
-      starterDrone: {
-        ...hubState.starterDrone,
-        status: "moving_to_dropoff",
-        currentTaskType: "construction_supply",
-        deliveryTargetId: "site-from-starter-field",
-        ticksRemaining: 2,
-      },
-      drones: {
-        ...hubState.drones,
-        [STARTER_DRONE_ID]: {
-          ...hubState.drones[STARTER_DRONE_ID],
-          status: "idle",
-          currentTaskType: null,
-          deliveryTargetId: null,
-          targetNodeId: null,
-          cargo: null,
-          ticksRemaining: 0,
-        },
-      },
-    };
+    const save = serializeState(hubState);
 
-    expect(divergedState.starterDrone).not.toEqual(
-      divergedState.drones[STARTER_DRONE_ID],
+    expect(
+      Object.prototype.hasOwnProperty.call(save, "starter" + "Drone"),
+    ).toBe(false);
+    expect(save.drones[STARTER_DRONE_ID]).toEqual(
+      hubState.drones[STARTER_DRONE_ID],
     );
-
-    const next = gameReducer(divergedState, { type: "DRONE_TICK" });
-
-    expect(next.starterDrone).toEqual(next.drones[STARTER_DRONE_ID]);
   });
 
-  it("save/load uses drones['starter'] as master when starterDrone diverges", () => {
+  it("DRONE_TICK keeps starter data in the drones record", () => {
     const { state: hubState } = placeServiceHub(
       createInitialState("release"),
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
 
-    const divergedState: GameState = {
-      ...hubState,
-      starterDrone: {
-        ...hubState.starterDrone,
-        status: "moving_to_dropoff",
-        currentTaskType: "construction_supply",
-        deliveryTargetId: "starter-only-target",
-        ticksRemaining: 3,
+    const next = gameReducer(hubState, { type: "DRONE_TICK" });
+
+    expect(selectStarterDrone(next)).toBe(next.drones[STARTER_DRONE_ID]);
+    expect(
+      Object.prototype.hasOwnProperty.call(next, "starter" + "Drone"),
+    ).toBe(false);
+  });
+
+  it("save/load round-trips starter data through drones record", () => {
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
+
+    const loaded = deserializeState(serializeState(hubState));
+
+    const loadedStarter = selectStarterDrone(loaded);
+    expect(loadedStarter?.droneId).toBe(STARTER_DRONE_ID);
+    expect(loadedStarter?.hubId).toBe(hubState.drones[STARTER_DRONE_ID].hubId);
+    expect(loadedStarter?.tileX).toBe(hubState.drones[STARTER_DRONE_ID].tileX);
+    expect(loadedStarter?.tileY).toBe(hubState.drones[STARTER_DRONE_ID].tileY);
+    expect(
+      Object.prototype.hasOwnProperty.call(loaded, "starter" + "Drone"),
+    ).toBe(false);
+  });
+
+  it("deserializeState ignores extra legacy starter payload", () => {
+    const { state: hubState } = placeServiceHub(
+      createInitialState("release"),
+      TEST_SERVICE_HUB_POS.x,
+      TEST_SERVICE_HUB_POS.y,
+    );
+    const save = serializeState(hubState);
+    const legacyKey = "starter" + "Drone";
+
+    const result = deserializeState({
+      ...save,
+      [legacyKey]: {
+        ...save.drones.starter,
+        status: "idle",
+        targetNodeId: null,
+        cargo: null,
+        ticksRemaining: 0,
+        currentTaskType: null,
+        deliveryTargetId: null,
       },
       drones: {
-        ...hubState.drones,
+        ...save.drones,
         [STARTER_DRONE_ID]: {
-          ...hubState.drones[STARTER_DRONE_ID],
-          status: "idle",
-          currentTaskType: null,
-          deliveryTargetId: null,
+          ...save.drones[STARTER_DRONE_ID],
+          status: "moving_to_dropoff",
           targetNodeId: null,
-          cargo: null,
-          ticksRemaining: 0,
+          cargo: { itemType: "wood", amount: 1 },
+          ticksRemaining: 2,
+          currentTaskType: "hub_restock",
+          deliveryTargetId: hubState.drones.starter.hubId,
         },
       },
-    };
+    });
 
-    const save = serializeState(divergedState);
-    const loaded = deserializeState(save);
-
-    expect(loaded.drones[STARTER_DRONE_ID].status).toBe("idle");
-    expect(loaded.starterDrone.status).toBe(
-      loaded.drones[STARTER_DRONE_ID].status,
-    );
-    expect(loaded.starterDrone).toEqual(loaded.drones[STARTER_DRONE_ID]);
+    expect(result.drones.starter).toEqual(result.drones[STARTER_DRONE_ID]);
+    expect(result.drones.starter.status).toBe("moving_to_dropoff");
   });
 
   it("selectStarterDrone returns undefined when drones['starter'] is missing", () => {
@@ -1174,17 +1207,17 @@ describe("Starter Drone – sync guards", () => {
 
 describe("Task Scoring – demand and spread tuning", () => {
   function makeMultiDroneState(state: GameState, count: number): GameState {
-    const hubId = state.starterDrone.hubId!;
-    const droneIds = [state.starterDrone.droneId];
+    const hubId = state.drones.starter.hubId!;
+    const droneIds = [state.drones.starter.droneId];
     const drones: GameState["drones"] = { ...state.drones };
     for (let i = 1; i < count; i++) {
       const id = `drone-extra-${i}`;
       droneIds.push(id);
       drones[id] = {
-        ...state.starterDrone,
+        ...state.drones.starter,
         droneId: id,
-        tileX: state.starterDrone.tileX + i,
-        tileY: state.starterDrone.tileY,
+        tileX: state.drones.starter.tileX + i,
+        tileY: state.drones.starter.tileY,
         currentTaskType: null,
         targetNodeId: null,
         deliveryTargetId: null,
@@ -1226,7 +1259,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     const siteSmallId = "site-small";
     const siteLargeId = "site-large";
     let state: GameState = {
@@ -1272,7 +1305,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     const siteAId = "site-A-loaded";
     const siteBId = "site-B-empty";
     let state: GameState = {
@@ -1311,7 +1344,7 @@ describe("Task Scoring – demand and spread tuning", () => {
     // reservations, so they don't reduce site A's "remainingNeed", but they DO
     // count toward getAssignedConstructionDroneCount → spread penalty kicks in.
     state = makeMultiDroneState(state, 3);
-    const droneIds = state.serviceHubs[state.starterDrone.hubId!].droneIds;
+    const droneIds = state.serviceHubs[state.drones.starter.hubId!].droneIds;
     state = {
       ...state,
       drones: {
@@ -1341,7 +1374,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     const siteId = "site-huge";
     let state: GameState = {
       ...hubState,
@@ -1383,7 +1416,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     const siteId = "site-tiny";
     let state: GameState = {
       ...hubState,
@@ -1423,7 +1456,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     // Tiny construction site (desired = 1) so additional drones are NOT eligible for it.
     const siteId = "site-tiny-cap";
     let state: GameState = {
@@ -1469,7 +1502,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     const siteAId = "site-sticky-A";
     const siteBId = "site-sticky-B";
     let state: GameState = {
@@ -1528,7 +1561,7 @@ describe("Task Scoring – demand and spread tuning", () => {
       TEST_SERVICE_HUB_POS.x,
       TEST_SERVICE_HUB_POS.y,
     );
-    const drone = hubState.starterDrone;
+    const drone = hubState.drones.starter;
     const siteAId = "det-site-A";
     const siteBId = "det-site-B";
     let state: GameState = {

@@ -103,8 +103,8 @@ function withCollectionNode(
     collectionNodes: addToCollectionNodeAt(
       state.collectionNodes,
       itemType,
-      state.starterDrone.tileX,
-      state.starterDrone.tileY,
+      state.drones.starter.tileX,
+      state.drones.starter.tileY,
       amount,
     ),
   };
@@ -132,8 +132,8 @@ function withGeneratorNeedingWood(state: GameState): GameState {
   const generatorAsset: PlacedAsset = {
     id: generatorId,
     type: "generator",
-    x: state.starterDrone.tileX + 4,
-    y: state.starterDrone.tileY,
+    x: state.drones.starter.tileX + 4,
+    y: state.drones.starter.tileY,
     size: 2,
     width: 2,
     height: 2,

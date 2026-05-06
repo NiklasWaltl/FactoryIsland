@@ -208,7 +208,6 @@ describe("productionTransparency", () => {
           deconstructRequestSeq: 2,
         },
       },
-      starterDrone: starterReserved,
       drones: {
         ...state.drones,
         starter: starterReserved,

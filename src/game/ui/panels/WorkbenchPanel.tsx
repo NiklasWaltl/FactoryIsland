@@ -351,3 +351,5 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
     );
   },
 );
+
+WorkbenchPanel.displayName = "WorkbenchPanel";

@@ -135,8 +135,12 @@ describe("REQUEST_DECONSTRUCT_ASSET", () => {
       assetId: newerConveyor.id,
     });
 
-    expect(requestedBoth.assets[olderConveyor.id]?.deconstructRequestSeq).toBe(1);
-    expect(requestedBoth.assets[newerConveyor.id]?.deconstructRequestSeq).toBe(2);
+    expect(requestedBoth.assets[olderConveyor.id]?.deconstructRequestSeq).toBe(
+      1,
+    );
+    expect(requestedBoth.assets[newerConveyor.id]?.deconstructRequestSeq).toBe(
+      2,
+    );
   });
 
   it("marks a 1x1 building as deconstructing without immediate removal", () => {

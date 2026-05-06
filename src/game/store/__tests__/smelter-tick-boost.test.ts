@@ -51,10 +51,12 @@ function makeModule(module: Partial<Module> & Pick<Module, "id">): Module {
   };
 }
 
-function buildState(input: {
-  moduleSlot?: string | null;
-  modules?: Module[];
-} = {}): GameState {
+function buildState(
+  input: {
+    moduleSlot?: string | null;
+    modules?: Module[];
+  } = {},
+): GameState {
   const base = createInitialState("release");
   return {
     ...base,
@@ -90,7 +92,11 @@ describe("Auto-Smelter smelter-boost speed", () => {
   });
 
   it("uses a shorter Tier 1 processing interval", () => {
-    const module = makeModule({ id: "module-1", tier: 1, equippedTo: SMELTER_ID });
+    const module = makeModule({
+      id: "module-1",
+      tier: 1,
+      equippedTo: SMELTER_ID,
+    });
     const after = runLogisticsTick(
       buildState({ moduleSlot: module.id, modules: [module] }),
     );
@@ -104,7 +110,11 @@ describe("Auto-Smelter smelter-boost speed", () => {
   });
 
   it("falls back to the base interval after the module is removed", () => {
-    const module = makeModule({ id: "module-1", tier: 1, equippedTo: SMELTER_ID });
+    const module = makeModule({
+      id: "module-1",
+      tier: 1,
+      equippedTo: SMELTER_ID,
+    });
     const state = buildState({ moduleSlot: module.id, modules: [module] });
     const withoutModule = gameReducer(state, {
       type: "REMOVE_MODULE",
@@ -120,7 +130,11 @@ describe("Auto-Smelter smelter-boost speed", () => {
   });
 
   it("updates a running batch to the base interval on the next tick after removal", () => {
-    const module = makeModule({ id: "module-1", tier: 1, equippedTo: SMELTER_ID });
+    const module = makeModule({
+      id: "module-1",
+      tier: 1,
+      equippedTo: SMELTER_ID,
+    });
     const boosted = runLogisticsTick(
       buildState({ moduleSlot: module.id, modules: [module] }),
     );

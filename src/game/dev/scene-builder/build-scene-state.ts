@@ -47,12 +47,13 @@ export const buildSceneState = (
   const resolvedScene = resolveSceneDefinition(scene, baseState);
   validateScene(resolvedScene);
 
-  let placement: Pick<GameState, "assets" | "cellMap"> = resolvedScene.clearBaseWorld
-    ? { assets: {}, cellMap: {} }
-    : {
-        assets: { ...baseState.assets },
-        cellMap: { ...baseState.cellMap },
-      };
+  let placement: Pick<GameState, "assets" | "cellMap"> =
+    resolvedScene.clearBaseWorld
+      ? { assets: {}, cellMap: {} }
+      : {
+          assets: { ...baseState.assets },
+          cellMap: { ...baseState.cellMap },
+        };
 
   for (const resourceDefinition of resolvedScene.resources ?? []) {
     placement = placeSceneResource(placement, resourceDefinition);
@@ -102,7 +103,7 @@ const getClearBaseWorldState = (
   if (!scene.clearBaseWorld) return {};
 
   const baseStarterDrone = requireStarterDrone(baseState);
-  const starterDrone = {
+  const starter = {
     ...baseStarterDrone,
     status: "idle" as const,
     tileX: 0,
@@ -119,8 +120,7 @@ const getClearBaseWorldState = (
   return {
     warehouseInventories: {},
     serviceHubs: {},
-    starterDrone,
-    drones: { [STARTER_DRONE_ID]: starterDrone },
+    drones: { [STARTER_DRONE_ID]: starter },
     generators: {},
     connectedAssetIds: [],
     poweredMachineIds: [],
@@ -142,12 +142,13 @@ const resolveSceneDefinition = (
   baseState: GameState,
 ): SceneDefinition => {
   if (scene.baseStartLayout !== "include") return scene;
-  if (!scene.clearBaseWorld && hasRequiredBaseStartLayout(baseState)) return scene;
+  if (!scene.clearBaseWorld && hasRequiredBaseStartLayout(baseState))
+    return scene;
 
   const baseStart = createBaseStartLayout(baseState.tileMap);
   return {
     ...scene,
-    starterDrone: scene.starterDrone ?? { hubId: baseStart.starterDroneHubId },
+    starter: scene.starter ?? { hubId: baseStart.starterHubId },
     assets: [...baseStart.assets, ...scene.assets],
   };
 };
@@ -234,20 +235,20 @@ const registerStarterDrone = (
   state: GameState,
   scene: SceneDefinition,
 ): GameState => {
-  if (!scene.starterDrone) return state;
-  const hubAsset = state.assets[scene.starterDrone.hubId];
+  if (!scene.starter) return state;
+  const hubAsset = state.assets[scene.starter.hubId];
   if (!hubAsset) {
     throw new Error(
-      `Scene starter drone references missing hub '${scene.starterDrone.hubId}'.`,
+      `Scene starter drone references missing hub '${scene.starter.hubId}'.`,
     );
   }
 
-  const starterDrone = requireStarterDrone(state);
+  const starter = requireStarterDrone(state);
   const nextStarterDrone = {
-    ...starterDrone,
-    hubId: scene.starterDrone.hubId,
-    tileX: scene.starterDrone.tileX ?? hubAsset.x,
-    tileY: scene.starterDrone.tileY ?? hubAsset.y,
+    ...starter,
+    hubId: scene.starter.hubId,
+    tileX: scene.starter.tileX ?? hubAsset.x,
+    tileY: scene.starter.tileY ?? hubAsset.y,
     status: "idle" as const,
     targetNodeId: null,
     cargo: null,
@@ -259,7 +260,6 @@ const registerStarterDrone = (
 
   return {
     ...state,
-    starterDrone: nextStarterDrone,
     drones: {
       ...state.drones,
       [STARTER_DRONE_ID]: nextStarterDrone,

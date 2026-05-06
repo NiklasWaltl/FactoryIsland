@@ -7,7 +7,6 @@ import { directionOffset } from "../store/utils/direction";
 import { cellKey } from "../store/utils/cell-key";
 import { getWarehouseInputCell } from "../store/warehouse-input";
 import type { Direction, GameState, PlacedAsset } from "../store/types";
-import { POWER_POLE_RANGE } from "../store/constants/energy/power-pole";
 import { isConveyorPreviewBuildingType } from "../store/building-placement-preview";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import {

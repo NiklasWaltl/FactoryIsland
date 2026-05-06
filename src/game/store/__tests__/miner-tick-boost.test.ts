@@ -108,7 +108,11 @@ describe("Auto-Miner miner-boost output", () => {
   });
 
   it("produces floored Tier 1 miner-boost output", () => {
-    const module = makeModule({ id: "module-1", tier: 1, equippedTo: "miner-1" });
+    const module = makeModule({
+      id: "module-1",
+      tier: 1,
+      equippedTo: "miner-1",
+    });
     const state = buildState({
       miners: [
         { id: "miner-1", resource: "iron", x: 5, y: 5, moduleSlot: module.id },
@@ -122,7 +126,11 @@ describe("Auto-Miner miner-boost output", () => {
   });
 
   it("produces floored Tier 2 miner-boost output", () => {
-    const module = makeModule({ id: "module-1", tier: 2, equippedTo: "miner-1" });
+    const module = makeModule({
+      id: "module-1",
+      tier: 2,
+      equippedTo: "miner-1",
+    });
     const state = buildState({
       miners: [
         { id: "miner-1", resource: "iron", x: 5, y: 5, moduleSlot: module.id },
@@ -136,7 +144,11 @@ describe("Auto-Miner miner-boost output", () => {
   });
 
   it("falls back to base output after the module is removed", () => {
-    const module = makeModule({ id: "module-1", tier: 1, equippedTo: "miner-1" });
+    const module = makeModule({
+      id: "module-1",
+      tier: 1,
+      equippedTo: "miner-1",
+    });
     const state = buildState({
       miners: [
         { id: "miner-1", resource: "iron", x: 5, y: 5, moduleSlot: module.id },
@@ -155,7 +167,11 @@ describe("Auto-Miner miner-boost output", () => {
   });
 
   it("keeps adjacent miners independent when only one has a module", () => {
-    const module = makeModule({ id: "module-1", tier: 1, equippedTo: "miner-1" });
+    const module = makeModule({
+      id: "module-1",
+      tier: 1,
+      equippedTo: "miner-1",
+    });
     const state = buildState({
       miners: [
         { id: "miner-1", resource: "iron", x: 5, y: 5, moduleSlot: module.id },

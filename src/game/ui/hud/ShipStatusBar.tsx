@@ -75,7 +75,8 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
                 ] as number) ?? 0)
               : 0;
             const delivered = Math.min(required, Math.max(0, deliveredRaw));
-            const pct = required > 0 ? Math.round((delivered / required) * 100) : 0;
+            const pct =
+              required > 0 ? Math.round((delivered / required) * 100) : 0;
             return { delivered, required, pct };
           })()
         : null;
@@ -101,10 +102,10 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
           backdropFilter: "blur(4px)",
         }}
       >
-        <span style={{ color: statusColor, fontWeight: 600 }}>{statusText}</span>
-        {countdown && (
-          <span style={{ color: "#9ca3af" }}>{countdown}</span>
-        )}
+        <span style={{ color: statusColor, fontWeight: 600 }}>
+          {statusText}
+        </span>
+        {countdown && <span style={{ color: "#9ca3af" }}>{countdown}</span>}
         {quest && (
           <span
             style={{
@@ -126,3 +127,5 @@ export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
     );
   },
 );
+
+ShipStatusBar.displayName = "ShipStatusBar";

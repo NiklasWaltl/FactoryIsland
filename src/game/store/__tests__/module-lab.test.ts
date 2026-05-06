@@ -112,9 +112,8 @@ describe("Module Lab — fragment crafting", () => {
         ...state.warehouseInventories,
         [DOCK_WAREHOUSE_ID]: {
           ...dockInventory,
-          [MODULE_FRAGMENT_ITEM_ID]: (dockInventory[
-            MODULE_FRAGMENT_ITEM_ID
-          ] ?? 0) + 1,
+          [MODULE_FRAGMENT_ITEM_ID]:
+            (dockInventory[MODULE_FRAGMENT_ITEM_ID] ?? 0) + 1,
         },
       },
     };

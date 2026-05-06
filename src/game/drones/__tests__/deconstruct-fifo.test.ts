@@ -1,5 +1,9 @@
 import { createInitialState } from "../../store/initial-state";
-import type { GameState, PlacedAsset, StarterDroneState } from "../../store/types";
+import type {
+  GameState,
+  PlacedAsset,
+  StarterDroneState,
+} from "../../store/types";
 import { gatherDeconstructCandidates } from "../candidates/deconstruct-candidates";
 
 function withAssets(state: GameState, assets: PlacedAsset[]): GameState {
@@ -40,7 +44,10 @@ function makeDeconstructAsset(
 
 function gatherFor(
   state: Pick<GameState, "assets" | "drones">,
-  drone: Pick<StarterDroneState, "droneId" | "tileX" | "tileY" | "deliveryTargetId">,
+  drone: Pick<
+    StarterDroneState,
+    "droneId" | "tileX" | "tileY" | "deliveryTargetId"
+  >,
 ) {
   return gatherDeconstructCandidates(
     state,
@@ -60,13 +67,11 @@ describe("deconstruct FIFO candidate queue", () => {
     const third = makeDeconstructAsset("fifo-3", 22, 20, 3);
 
     const state = withAssets(base, [first, second, third]);
-    const candidates = gatherFor(state, state.starterDrone);
+    const candidates = gatherFor(state, state.drones.starter);
 
-    expect(candidates.map((candidate) => candidate.deconstructRequestSeq)).toEqual([
-      1,
-      2,
-      3,
-    ]);
+    expect(
+      candidates.map((candidate) => candidate.deconstructRequestSeq),
+    ).toEqual([1, 2, 3]);
   });
 
   it("does not return a candidate when target is already reserved by another deconstruct drone", () => {
@@ -75,7 +80,7 @@ describe("deconstruct FIFO candidate queue", () => {
     const withTarget = withAssets(base, [target]);
 
     const assignedDrone: StarterDroneState = {
-      ...withTarget.starterDrone,
+      ...withTarget.drones.starter,
       droneId: "assigned-drone",
       status: "moving_to_collect",
       currentTaskType: "deconstruct",
@@ -84,7 +89,7 @@ describe("deconstruct FIFO candidate queue", () => {
       ticksRemaining: 3,
     };
     const otherDrone: StarterDroneState = {
-      ...withTarget.starterDrone,
+      ...withTarget.drones.starter,
       droneId: "other-drone",
       status: "idle",
       currentTaskType: null,
@@ -127,20 +132,19 @@ describe("deconstruct FIFO candidate queue", () => {
       },
     };
 
-    const candidates = gatherFor(cancelledState, cancelledState.starterDrone);
+    const candidates = gatherFor(cancelledState, cancelledState.drones.starter);
 
-    expect(candidates.map((candidate) => candidate.deconstructRequestSeq)).toEqual([
-      1,
-      3,
-    ]);
-    expect(candidates.some((candidate) => candidate.deconstructRequestSeq === 2)).toBe(
-      false,
-    );
+    expect(
+      candidates.map((candidate) => candidate.deconstructRequestSeq),
+    ).toEqual([1, 3]);
+    expect(
+      candidates.some((candidate) => candidate.deconstructRequestSeq === 2),
+    ).toBe(false);
   });
 
   it("returns an empty array when no asset is deconstructing", () => {
     const base = createInitialState("release");
-    const candidates = gatherFor(base, base.starterDrone);
+    const candidates = gatherFor(base, base.drones.starter);
 
     expect(candidates).toEqual([]);
   });

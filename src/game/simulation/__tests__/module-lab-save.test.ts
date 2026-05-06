@@ -40,7 +40,9 @@ function withFragments(state: GameState, count: number): GameState {
  * Build a minimal v25-shaped save from a fresh initial state.
  * V25 has moduleFragments (number) but NO moduleLabJob field.
  */
-function makeV25Save(overrides: Partial<Record<string, unknown>> = {}): unknown {
+function makeV25Save(
+  overrides: Partial<Record<string, unknown>> = {},
+): unknown {
   const base = createInitialState("release");
   const v26 = serializeState(base) as unknown as Record<string, unknown>;
 

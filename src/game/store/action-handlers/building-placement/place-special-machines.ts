@@ -4,7 +4,6 @@ import type {
   Direction,
   GameState,
 } from "../../types";
-import { BUILDING_LABELS } from "../../constants/buildings/index";
 import {
   DEPOSIT_RESOURCE,
   DEPOSIT_TYPES,
@@ -188,14 +187,6 @@ export function placeAutoSmelterBranch(
     cellMap: state.cellMap,
     assets: state.assets,
   });
-  if (import.meta.env.DEV) {
-    console.log("[Smelter] Input-Tile:", connectorPreflight.ioCells.input);
-    console.log("[Smelter] Output-Tile:", connectorPreflight.ioCells.output);
-    console.log("[Smelter] Förderband erkannt:", connectorPreflight.beltFound, {
-      inputType: connectorPreflight.neighborTypes.inputType,
-      outputType: connectorPreflight.neighborTypes.outputType,
-    });
-  }
   if (connectorPreflight.ioOutOfBounds) {
     return {
       ...state,

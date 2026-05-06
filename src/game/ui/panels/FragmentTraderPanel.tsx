@@ -17,8 +17,8 @@ interface FragmentTraderPanelProps {
 
 const FEEDBACK_CLOSE_DELAY_MS = 1_500;
 
-export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.memo(
-  ({ state, dispatch }) => {
+export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> =
+  React.memo(({ state, dispatch }) => {
     const [purchaseConfirmed, setPurchaseConfirmed] = useState(false);
     const closeTimerRef = useRef<number | null>(null);
 
@@ -103,15 +103,18 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> = React.mem
 
         {shipsSinceLastFragment > 0 && !discountActive && (
           <p className="fi-fragment-trader-pity">
-            Pity: noch {remainingShipsForDiscount} Schiffe bis Rabattpreis {" "}
+            Pity: noch {remainingShipsForDiscount} Schiffe bis Rabattpreis{" "}
             {FRAGMENT_TRADER_PITY_COST} {RESOURCE_EMOJIS.coins}
           </p>
         )}
 
         {purchaseConfirmed && (
-          <div className="fi-fragment-trader-feedback">Fragment erhalten! ✓</div>
+          <div className="fi-fragment-trader-feedback">
+            Fragment erhalten! ✓
+          </div>
         )}
       </div>
     );
-  },
-);
+  });
+
+FragmentTraderPanel.displayName = "FragmentTraderPanel";

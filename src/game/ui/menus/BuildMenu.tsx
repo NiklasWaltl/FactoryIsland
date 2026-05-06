@@ -1,9 +1,5 @@
 import React from "react";
-import type {
-  BuildingType,
-  FloorTileType,
-  Inventory,
-} from "../../store/types";
+import type { BuildingType, FloorTileType, Inventory } from "../../store/types";
 import type { BuildUIStateSlice } from "../../store/types/ui-slice-types";
 import type { GameAction } from "../../store/game-actions";
 import {
@@ -197,11 +193,6 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
                     }
                     onClick={() => {
                       if (placed || !affordable) {
-                        if (import.meta.env.DEV && !placed && !affordable) {
-                          console.debug(
-                            `[BuildMenu] Blocked ${bType}: ${getBuildSourceDebugTitle(costs)}`,
-                          );
-                        }
                         return;
                       }
                       dispatch({
@@ -340,3 +331,5 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
     );
   },
 );
+
+BuildMenu.displayName = "BuildMenu";

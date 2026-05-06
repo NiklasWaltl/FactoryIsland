@@ -1,6 +1,6 @@
 import { getDroneDockOffset } from "../../drones/dock/drone-dock-geometry";
 import { getMaxDrones } from "../selectors/hub-tier-selectors";
-import type { GameState } from "../types";
+import type { GameState, StarterDroneState } from "../types";
 
 export type DroneHubAssignmentPreflightResult =
   | {
@@ -18,7 +18,7 @@ export function validateDroneHubAssignment(input: {
   hubId: string;
   hubs: GameState["serviceHubs"];
   assets: GameState["assets"];
-  starterDrone: GameState["starterDrone"];
+  starter: StarterDroneState;
   drones: GameState["drones"];
 }): DroneHubAssignmentPreflightResult {
   const targetHub = input.hubs[input.hubId];
@@ -28,8 +28,8 @@ export function validateDroneHubAssignment(input: {
   }
 
   const drone =
-    input.droneId === input.starterDrone.droneId
-      ? input.starterDrone
+    input.droneId === input.starter.droneId
+      ? input.starter
       : (input.drones[input.droneId] ?? null);
   if (!drone) {
     return { valid: false, reason: "drone_missing" };

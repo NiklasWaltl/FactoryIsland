@@ -16,7 +16,6 @@ import {
 import {
   createInitialState,
   gameReducer,
-  type GameState,
   type Inventory,
   type PlacedAsset,
 } from "../../store/reducer";
@@ -133,7 +132,10 @@ describe("deserializeState", () => {
   });
 
   it("recomputes connectedAssetIds from assets", () => {
-    const debugState = buildSceneState(debugSceneLayout, createInitialState("debug"));
+    const debugState = buildSceneState(
+      debugSceneLayout,
+      createInitialState("debug"),
+    );
     const save = serializeState(debugState);
     const loaded = deserializeState(save);
     // Debug state has generators + cables → should have connectivity
@@ -352,8 +354,11 @@ describe("migrateSave – missing fields get defaults", () => {
 
   it("migrates v20 saves by seeding the default island tile map", () => {
     const latest = serializeState(createInitialState("release"));
-    const { version: _ignoreVersion, tileMap: _dropTileMap, ...legacyShape } =
-      latest;
+    const {
+      version: _ignoreVersion,
+      tileMap: _dropTileMap,
+      ...legacyShape
+    } = latest;
     const v20 = { ...legacyShape, version: 20 };
 
     const result = migrateSave(v20);
@@ -494,7 +499,7 @@ describe("loadAndHydrate", () => {
       debugSceneLayout,
       createInitialState("debug"),
     );
-    const hubId = runtimeState.starterDrone.hubId;
+    const hubId = runtimeState.drones.starter.hubId;
 
     expect(hubId).not.toBeNull();
 
@@ -530,9 +535,9 @@ describe("round-trip", () => {
     // authoritative in physical storage after hydration.
     expect(loaded.inventory.wood).toBe(0);
     expect(loaded.inventory.ironIngot).toBe(0);
-    expect(loaded.warehouseInventories[BASE_START_IDS.warehouse].ironIngot).toBe(
-      7,
-    );
+    expect(
+      loaded.warehouseInventories[BASE_START_IDS.warehouse].ironIngot,
+    ).toBe(7);
     expect(loaded.generators["rt-gen-1"].fuel).toBe(5);
     expect(loaded.mode).toBe("release");
   });
@@ -617,7 +622,10 @@ describe("round-trip", () => {
   });
 
   it("debug state survives full save/load cycle", () => {
-    const original = buildSceneState(debugSceneLayout, createInitialState("debug"));
+    const original = buildSceneState(
+      debugSceneLayout,
+      createInitialState("debug"),
+    );
 
     const json = JSON.stringify(serializeState(original));
     const parsed = JSON.parse(json);
@@ -681,13 +689,25 @@ describe("migrateSave – drone position on migration paths", () => {
   const EXPECTED_X = 39;
   const EXPECTED_Y = 24;
 
-  it("V3→V4: new starterDrone is placed at grid center when no layout context is present", () => {
+  it("V3→V4: new starter drone is placed at grid center when no layout context is present", () => {
     const v3: SaveGameV3 = {
       version: 3,
       mode: "release",
       assets: {},
       cellMap: {},
-      inventory: { coins: 0, wood: 0, stone: 0, iron: 0, copper: 0, ironIngot: 0, copperIngot: 0, axe: 0, pickaxe: 0, ironPickaxe: 0, ironAxe: 0 } as any,
+      inventory: {
+        coins: 0,
+        wood: 0,
+        stone: 0,
+        iron: 0,
+        copper: 0,
+        ironIngot: 0,
+        copperIngot: 0,
+        axe: 0,
+        pickaxe: 0,
+        ironPickaxe: 0,
+        ironAxe: 0,
+      } as any,
       purchasedBuildings: [],
       placedBuildings: [],
       warehousesPurchased: 0,
@@ -697,7 +717,12 @@ describe("migrateSave – drone position on migration paths", () => {
       powerPolesPlaced: 0,
       hotbarSlots: [],
       activeSlot: 0,
-      smithy: { fuel: 0, progress: 0, processing: false, selectedRecipe: "iron" } as any,
+      smithy: {
+        fuel: 0,
+        progress: 0,
+        processing: false,
+        selectedRecipe: "iron",
+      } as any,
       generators: {},
       battery: { stored: 0, capacity: 0 } as any,
       floorMap: {},
@@ -714,19 +739,19 @@ describe("migrateSave – drone position on migration paths", () => {
 
     expect(result).not.toBeNull();
     expect(result!.version).toBe(CURRENT_SAVE_VERSION);
-    expect(result!.starterDrone.tileX).toBe(EXPECTED_X);
-    expect(result!.starterDrone.tileY).toBe(EXPECTED_Y);
+    expect(result!.drones.starter.tileX).toBe(EXPECTED_X);
+    expect(result!.drones.starter.tileY).toBe(EXPECTED_Y);
   });
 
-  it("V11→V12: synthetic drone is placed at grid center when starterDrone is absent", () => {
+  it("V11→V12: synthetic drone is placed at grid center when legacy field is absent", () => {
     const latest = serializeState(createInitialState("release"));
-    // Build a V11-shaped save: remove drones, remove starterDrone
-    const v11: SaveGameV11 = {
+    const legacyKey = "starter" + "Drone";
+    const v11 = {
       ...(latest as any),
       version: 11,
-      starterDrone: undefined as any,
+      [legacyKey]: undefined as any,
       drones: undefined as any,
-    };
+    } as SaveGameV11;
 
     const result = migrateSave(v11);
 

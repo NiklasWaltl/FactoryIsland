@@ -63,7 +63,7 @@ describe("depositConstruction", () => {
         stone: 2,
       },
     );
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
 
     const next = depositConstruction(state, drone.droneId, {
       deliveryId: siteId,
@@ -77,7 +77,7 @@ describe("depositConstruction", () => {
       stone: 2,
     });
     expect(next.inventory.wood).toBe(state.inventory.wood);
-    expect(next.starterDrone.cargo).toBeNull();
+    expect(next.drones.starter.cargo).toBeNull();
     expect(mockedComputeConnectedAssetIds).not.toHaveBeenCalled();
   });
 
@@ -92,7 +92,7 @@ describe("depositConstruction", () => {
         wood: 5,
       },
     );
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
 
     const next = depositConstruction(state, drone.droneId, {
       deliveryId: siteId,
@@ -122,12 +122,12 @@ describe("depositConstruction", () => {
           inventory: { ...emptyHubInventory, wood: 5 },
           targetStock: { ...emptyHubInventory },
           tier: 1,
-          droneIds: [stateWithSite.starterDrone.droneId],
+          droneIds: [stateWithSite.drones.starter.droneId],
           pendingUpgrade: { wood: 5 },
         },
       },
     };
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
 
     const next = depositConstruction(state, drone.droneId, {
       deliveryId: hubId,
@@ -165,7 +165,7 @@ describe("depositConstruction", () => {
         },
       },
     };
-    const drone = state.starterDrone;
+    const drone = state.drones.starter;
 
     const next = depositConstruction(state, drone.droneId, {
       deliveryId: hubId,

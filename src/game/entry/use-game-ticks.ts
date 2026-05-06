@@ -31,7 +31,10 @@ export function useGameTicks(
 
   // Sapling growth timer - uses ref to avoid stale closure + batch dispatch
   const saplingGrowAtRef = useRef(state.saplingGrowAt);
-  saplingGrowAtRef.current = state.saplingGrowAt;
+
+  useEffect(() => {
+    saplingGrowAtRef.current = state.saplingGrowAt;
+  }, [state.saplingGrowAt]);
 
   useEffect(() => {
     const id = setInterval(() => {

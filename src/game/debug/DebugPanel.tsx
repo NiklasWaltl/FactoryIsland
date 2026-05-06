@@ -32,14 +32,12 @@ const CATEGORY_COLORS: Record<LogCategory, string> = {
   General: "#ccc",
 };
 
-export const DebugPanel: React.FC<DebugPanelProps> = ({
+const DebugPanelContent: React.FC<DebugPanelProps> = ({
   onMock,
   onResetState,
   hmrStatus,
   hmrModules,
 }) => {
-  if (!IS_DEV) return null;
-
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<"cheats" | "logs" | "hmr">("cheats");
   const [, setTick] = useState(0);
@@ -256,6 +254,11 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
       </div>
     </div>
   );
+};
+
+export const DebugPanel: React.FC<DebugPanelProps> = (props) => {
+  if (!IS_DEV) return null;
+  return <DebugPanelContent {...props} />;
 };
 
 // ---- Inline Styles (no CSS file needed, stripped in prod) ----

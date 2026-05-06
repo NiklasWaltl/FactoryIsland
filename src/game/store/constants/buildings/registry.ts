@@ -332,7 +332,8 @@ export const BUILDING_REGISTRY: Readonly<Record<BuildingType, BuildingDef>> =
     dock_warehouse: {
       type: "dock_warehouse",
       label: "Dock-Lagerhaus",
-      description: "Das Lagerhaus am Dock. Nimmt Lieferungen für das Schiff entgegen und lagert Belohnungen.",
+      description:
+        "Das Lagerhaus am Dock. Nimmt Lieferungen für das Schiff entgegen und lagert Belohnungen.",
       category: "storage",
       cost: {},
       size: 2,

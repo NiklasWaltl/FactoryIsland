@@ -7,7 +7,7 @@
 
 import { GRID_H, GRID_W } from "../../constants/grid";
 import { directionOffset } from "../utils/direction";
-import type { Direction, PlacedAsset } from "../types";
+import type { PlacedAsset } from "../types";
 
 /** Maximum number of items a single conveyor tile can queue. */
 export const CONVEYOR_TILE_CAPACITY = 4;

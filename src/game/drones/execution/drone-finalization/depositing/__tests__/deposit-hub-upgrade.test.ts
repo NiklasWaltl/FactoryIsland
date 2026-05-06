@@ -32,7 +32,7 @@ describe("finalizeHubAfterConstruction", () => {
           inventory: { ...emptyHubInventory, wood: 5 },
           targetStock: { ...emptyHubInventory },
           tier: 1,
-          droneIds: [base.starterDrone.droneId],
+          droneIds: [base.drones.starter.droneId],
           pendingUpgrade: { wood: 5 },
         },
       },

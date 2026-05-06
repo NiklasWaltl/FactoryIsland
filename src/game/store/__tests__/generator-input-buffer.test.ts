@@ -39,7 +39,10 @@ import type {
 const HUB_POS = { x: 42, y: 24 }; // proto-hub is placed at grid-center x:39 + 3
 
 function createInitialState(mode: GameState["mode"] = "release"): GameState {
-  const state = buildSceneState(debugSceneLayout, createBaseInitialState("debug"));
+  const state = buildSceneState(
+    debugSceneLayout,
+    createBaseInitialState("debug"),
+  );
   return { ...state, mode };
 }
 
@@ -83,10 +86,9 @@ function withDrone(
   state: GameState,
   patch: Partial<StarterDroneState>,
 ): GameState {
-  const updated = { ...state.starterDrone, ...patch };
+  const updated = { ...state.drones.starter, ...patch };
   return {
     ...state,
-    starterDrone: updated,
     drones: { ...state.drones, starter: updated },
   };
 }
@@ -120,7 +122,7 @@ function runDroneUntilIdle(state: GameState, maxTicks = 200): GameState {
   let s = state;
   for (let i = 0; i < maxTicks; i++) {
     s = tick(s, { type: "DRONE_TICK" });
-    if (s.starterDrone.status === "idle" && s.starterDrone.cargo === null) {
+    if (s.drones.starter.status === "idle" && s.drones.starter.cargo === null) {
       // One more tick lets it park / pick a new task; stop here
       return s;
     }
@@ -181,7 +183,7 @@ describe("Drone task selection — building_supply candidates", () => {
   it("does NOT pick a building_supply task when the hub holds no wood and no drops exist", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, 0);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 0, stone: 0 });
     state = withDrone(state, { tileX: HUB_POS.x, tileY: HUB_POS.y });
     const task = selectDroneTask(state);
@@ -191,7 +193,7 @@ describe("Drone task selection — building_supply candidates", () => {
   it("picks building_supply with hub source when the hub has wood and the generator is empty", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, 0, GENERATOR_MAX_FUEL);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 5 });
     state = withDrone(state, { tileX: HUB_POS.x, tileY: HUB_POS.y });
     const task = selectDroneTask(state);
@@ -204,7 +206,7 @@ describe("Drone task selection — building_supply candidates", () => {
   it("picks building_supply with drop source when drops are closer / hub is empty", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, 0, GENERATOR_MAX_FUEL);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 0 });
     // Wood drop near the generator
     state = {
@@ -228,7 +230,7 @@ describe("Drone task selection — building_supply candidates", () => {
   it("does NOT consider warehouse stock as a drone source", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, 0);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 0 });
     // Pretend a warehouse holds wood — it must NOT enable a building_supply task.
     state = {
@@ -251,7 +253,7 @@ describe("Drone task selection — building_supply candidates", () => {
   it("stops emitting building_supply candidates once capacity is reached", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, GENERATOR_MAX_FUEL);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 50 });
     state = withDrone(state, { tileX: HUB_POS.x, tileY: HUB_POS.y });
     const task = selectDroneTask(state);
@@ -265,7 +267,7 @@ describe("Full delivery round-trip — hub source", () => {
   it("drone moves wood from hub inventory into the generator's local buffer", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 8, 5, 0, GENERATOR_MAX_FUEL);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 6 });
     state = withDrone(state, {
       tileX: HUB_POS.x,
@@ -294,7 +296,7 @@ describe("Full delivery round-trip — hub source", () => {
       GENERATOR_MAX_FUEL - 2,
       GENERATOR_MAX_FUEL,
     );
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 50 });
     state = withDrone(state, {
       tileX: HUB_POS.x,
@@ -314,7 +316,7 @@ describe("Full delivery round-trip — drop source", () => {
   it("drone collects wood drop and deposits it into the generator's local buffer", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 8, 5, 0, GENERATOR_MAX_FUEL);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 0, stone: 0 });
     state = {
       ...state,
@@ -340,7 +342,7 @@ describe("Generator consumption — local buffer only", () => {
   it("GENERATOR_TICK draws from the local fuel buffer, not from global / warehouse / hub", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, 5);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 99 });
     // Pre-fill global and a warehouse with wood — none of these may shrink.
     state = {
@@ -370,7 +372,7 @@ describe("Generator consumption — local buffer only", () => {
   it("stops running when the local buffer hits 0, even if other sources have wood", () => {
     let state = createInitialState("release");
     state = placeGenerator(state, "gen-1", 5, 5, 1);
-    const hubId = state.starterDrone.hubId!;
+    const hubId = state.drones.starter.hubId!;
     state = withHubInventory(state, hubId, { wood: 50 });
     state = {
       ...state,

@@ -14,7 +14,7 @@ export interface DroneAssignmentActionDeps {
     hubId: string;
     hubs: GameState["serviceHubs"];
     assets: GameState["assets"];
-    starterDrone: GameState["starterDrone"];
+    starter: StarterDroneState;
     drones: GameState["drones"];
   }): DroneHubAssignmentPreflightResult;
   addErrorNotification(
@@ -36,14 +36,14 @@ export function handleDroneAssignmentAction(
     case "ASSIGN_DRONE_TO_HUB": {
       const workingState = deps.syncDrones(state);
       const { droneId, hubId } = action;
-      const starterDrone = selectStarterDrone(workingState);
-      if (!starterDrone) return state;
+      const starter = selectStarterDrone(workingState);
+      if (!starter) return state;
       const preflightDecision = deps.validateDroneHubAssignment({
         droneId,
         hubId,
         hubs: workingState.serviceHubs,
         assets: workingState.assets,
-        starterDrone,
+        starter,
         drones: workingState.drones,
       });
       if (!preflightDecision || !preflightDecision.valid) {
@@ -61,10 +61,9 @@ export function handleDroneAssignmentAction(
 
       const targetHub = workingState.serviceHubs[hubId]!;
 
-      // Look up the drone - starterDrone is authoritative for "starter"; fall back to drones record
       const drone =
-        droneId === starterDrone.droneId
-          ? starterDrone
+        droneId === starter.droneId
+          ? starter
           : (workingState.drones[droneId] as StarterDroneState);
 
       // Remove drone from its old hub's droneIds
@@ -129,16 +128,12 @@ export function handleDroneAssignmentAction(
         `[ASSIGN_DRONE_TO_HUB] Drone ${droneId} → hub ${hubId} (dock slot ${dockSlot}, pos ${dockX},${dockY})`,
       );
 
-      let newState: GameState = {
+      const newState: GameState = {
         ...workingState,
         serviceHubs: newHubs,
         collectionNodes: newNodes,
         drones: { ...workingState.drones, [droneId]: assignedDrone },
       };
-      // Keep starterDrone in sync
-      if (droneId === starterDrone.droneId) {
-        newState = { ...newState, starterDrone: assignedDrone };
-      }
       return deps.syncDrones(newState);
     }
 

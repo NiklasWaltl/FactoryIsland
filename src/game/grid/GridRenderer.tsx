@@ -18,7 +18,7 @@ const WORLD_H = GRID_H * CELL_PX;
 
 interface GridRendererProps {
   state: GameState;
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  viewportSize: { width: number; height: number };
   cam: { x: number; y: number };
   zoom: number;
   dragging: boolean;
@@ -29,7 +29,7 @@ interface GridRendererProps {
 
 export const GridRenderer: React.FC<GridRendererProps> = ({
   state,
-  containerRef,
+  viewportSize,
   cam,
   zoom,
   dragging,
@@ -51,9 +51,8 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
     [state.connectedAssetIds],
   );
 
-  const el = containerRef.current;
-  const vw = el?.clientWidth ?? window.innerWidth;
-  const vh = el?.clientHeight ?? window.innerHeight;
+  const vw = viewportSize.width > 0 ? viewportSize.width : WORLD_W;
+  const vh = viewportSize.height > 0 ? viewportSize.height : WORLD_H;
   const worldX1 = -cam.x / zoom;
   const worldY1 = -cam.y / zoom;
   const worldX2 = worldX1 + vw / zoom;
@@ -91,6 +90,13 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
     [staticAssetsSignature],
   );
 
+  const droneSignature = Object.values(state.drones)
+    .map(
+      (drone) =>
+        `${drone.droneId}|${drone.status}|${drone.tileX}|${drone.tileY}|${drone.hubId ?? ""}|${drone.cargo?.itemType ?? ""}|${drone.cargo?.amount ?? 0}`,
+    )
+    .join(";");
+
   const droneSnapshots = useMemo(() => {
     return Object.values(state.drones).map((drone) => ({
       droneId: drone.droneId,
@@ -105,14 +111,14 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
       parkingSlot: null as number | null,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    Object.values(state.drones)
-      .map(
-        (drone) =>
-          `${drone.droneId}|${drone.status}|${drone.tileX}|${drone.tileY}|${drone.hubId ?? ""}|${drone.cargo?.itemType ?? ""}|${drone.cargo?.amount ?? 0}`,
-      )
-      .join(";"),
-  ]);
+  }, [droneSignature]);
+
+  const collectionNodeSignature = Object.values(state.collectionNodes)
+    .map(
+      (node) =>
+        `${node.id}|${node.itemType}|${node.amount}|${node.tileX}|${node.tileY}`,
+    )
+    .join(";");
 
   const collectionNodeSnapshots = useMemo(() => {
     return Object.values(state.collectionNodes).map((node) => ({
@@ -123,14 +129,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
       tileY: node.tileY,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    Object.values(state.collectionNodes)
-      .map(
-        (node) =>
-          `${node.id}|${node.itemType}|${node.amount}|${node.tileX}|${node.tileY}`,
-      )
-      .join(";"),
-  ]);
+  }, [collectionNodeSignature]);
 
   const shipSnapshot = useMemo(() => {
     const dockPos = getDockWarehousePos(state.tileMap);
@@ -142,7 +141,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
       inputTileX: dockInputTile.x,
       inputTileY: dockInputTile.y,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.ship.status, state.tileMap]);
 
   const { placementOverlayElement, inspectionOverlayElement } =

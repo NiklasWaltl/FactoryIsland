@@ -1,11 +1,7 @@
-import { debugLog } from "../../../../debug/debugLogger";
 import { LOGISTICS_TICK_MS } from "../../../constants/timing/timing";
 import { AUTO_SMELTER_BUFFER_CAPACITY } from "../../../constants/auto/auto-smelter";
 import { CONVEYOR_TILE_CAPACITY } from "../../../conveyor/constants";
-import {
-  SMELTING_RECIPES,
-  getSmeltingRecipe,
-} from "../../../../simulation/recipes";
+import { getSmeltingRecipe } from "../../../../simulation/recipes";
 import { getAutoSmelterTickInterval } from "../../../../simulation/smelting-utils";
 import { getCraftingSourceInventory } from "../../../../crafting/crafting-sources";
 import {
@@ -31,10 +27,6 @@ import {
   getSourceCapacity,
   type LogisticsTickContext,
 } from "../context";
-
-// Module-scope flag: log smelter recipes only on the first batch start.
-// Lifted from reducer.ts so the case extraction stays behavior-identical.
-let _smelterRecipesLogged = false;
 
 // ------------------------------------------------------------
 // Phase 4: Auto-smelter belt input, processing, output flush, status update.
@@ -84,7 +76,7 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
 
     const { smelterAsset, selectedRecipe } = entryDecision;
     const nextSmelter = { ...smelterState };
-  const equippedModule = getEquippedModule(state, smelterId);
+    const equippedModule = getEquippedModule(state, smelterId);
 
     const source = resolveBuildingSource(getLiveLogisticsState(ctx), smelterId);
     let sourceInv = getCraftingSourceInventory(
@@ -103,11 +95,6 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
     {
       const inX = smelterIo.input.x;
       const inY = smelterIo.input.y;
-      if (import.meta.env.DEV) {
-        console.log(
-          `[AutoSmelter:${smelterId}] input check at tile (${inX},${inY}), buffer=${nextSmelter.inputBuffer.length}/${AUTO_SMELTER_BUFFER_CAPACITY}`,
-        );
-      }
       const inputDecision = decideAutoSmelterInputBeltEligibility({
         state,
         conveyors:
@@ -141,23 +128,6 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
           nextSmelter.lastRecipeInput = selectedRecipe.inputItem;
           nextSmelter.lastRecipeOutput = selectedRecipe.outputItem;
           ctx.changed = true;
-          if (import.meta.env.DEV) {
-            console.log(
-              `[AutoSmelter:${smelterId}] consumed "${inputDecision.matchedInputItem}" from conveyor tile (${inX},${inY})`,
-            );
-          }
-        }
-      } else if (inputDecision.blockReason === "input_item_mismatch") {
-        if (import.meta.env.DEV) {
-          console.log(
-            `[AutoSmelter:${smelterId}] no matching item on belt – found: ${inputDecision.foundInputItem ?? "empty"}, need: ${selectedRecipe.inputItem}`,
-          );
-        }
-      } else if (inputDecision.blockReason === "input_tile_no_conveyor") {
-        if (import.meta.env.DEV) {
-          console.log(
-            `[AutoSmelter:${smelterId}] no conveyor at input tile (${inX},${inY}) – smelter blocked`,
-          );
         }
       }
     }
@@ -239,10 +209,6 @@ export function runAutoSmelterPhase(ctx: LogisticsTickContext): void {
       },
     );
     if (startProcessingDecision.kind === "eligible") {
-      if (import.meta.env.DEV && !_smelterRecipesLogged) {
-        console.log("[Smelter] Rezepte geladen:", SMELTING_RECIPES);
-        _smelterRecipesLogged = true;
-      }
       let batchConsumed = 0;
       nextSmelter.inputBuffer = nextSmelter.inputBuffer.filter((it) => {
         if (

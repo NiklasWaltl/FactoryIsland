@@ -56,7 +56,7 @@ describe("Save v27 → v28 moduleSlot migration", () => {
 
     expect(migrated).not.toBeNull();
     expect(migrated.version).toBe(CURRENT_SAVE_VERSION);
-    expect(CURRENT_SAVE_VERSION).toBe(29);
+    expect(CURRENT_SAVE_VERSION).toBe(30);
     for (const asset of Object.values(migrated.assets)) {
       expect(asset).toHaveProperty("moduleSlot", null);
     }

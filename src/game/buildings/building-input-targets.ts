@@ -36,8 +36,7 @@ export function getBuildingInputTargets(
     });
   }
 
-  const quest =
-    state.ship?.status === "docked" ? state.ship.activeQuest : null;
+  const quest = state.ship?.status === "docked" ? state.ship.activeQuest : null;
   const dockWarehouse = state.assets[DOCK_WAREHOUSE_ID];
   if (
     quest &&

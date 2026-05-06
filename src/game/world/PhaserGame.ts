@@ -199,13 +199,6 @@ class WorldScene extends Phaser.Scene {
   >();
   /** The single starter drone marker. */
   private droneContainers = new Map<string, Phaser.GameObjects.Container>();
-  /** Last logged hub parking signature to avoid per-update spam in DEV. */
-  private lastParkingDebugSignature = "";
-  /** Previous parked/not-parked state per drone for transition logs. */
-  private lastDroneParkingState = new Map<
-    string,
-    { hubId: string | null; parked: boolean; status: string }
-  >();
   /** Initial camera focus is derived once from the reducer-owned tileMap. */
   private hasAppliedInitialCameraFocus = false;
   /** Ship Phaser container: rectangle + anchor label. */
@@ -344,17 +337,6 @@ class WorldScene extends Phaser.Scene {
       if (gx >= 0 && gx < GRID_W && gy >= 0 && gy < GRID_H) {
         this.floorLayer.putTileAt(this.floorFirstGid, gx, gy);
       }
-    }
-
-    if (import.meta.env.DEV) {
-      let placed = 0;
-      this.floorLayer.forEachTile((t: Phaser.Tilemaps.Tile) => {
-        if (t.index !== -1) placed++;
-      });
-      console.debug("[WorldScene] floorMapChanged", {
-        entries: Object.keys(data).length,
-        placed,
-      });
     }
   }
 
@@ -599,8 +581,6 @@ class WorldScene extends Phaser.Scene {
         this.droneContainers.delete(id);
       }
     }
-
-    this.debugParkingSync(data);
   }
 
   private createDroneContainer(): Phaser.GameObjects.Container {
@@ -651,82 +631,6 @@ class WorldScene extends Phaser.Scene {
     );
     label.setPosition(0, 18);
     container.setDepth(data.isParkedAtHub ? 14 : 15);
-  }
-
-  private debugParkingSync(data: DroneSnapshot[]): void {
-    if (!import.meta.env.DEV) return;
-
-    const hubStats = new Map<
-      string,
-      { total: number; parked: number; active: number }
-    >();
-    const nextDroneParkingState = new Map<
-      string,
-      { hubId: string | null; parked: boolean; status: string }
-    >();
-
-    for (const drone of data) {
-      nextDroneParkingState.set(drone.droneId, {
-        hubId: drone.hubId,
-        parked: drone.isParkedAtHub,
-        status: drone.status,
-      });
-
-      const previous = this.lastDroneParkingState.get(drone.droneId);
-      if (
-        !previous ||
-        previous.parked !== drone.isParkedAtHub ||
-        previous.status !== drone.status ||
-        previous.hubId !== drone.hubId
-      ) {
-        if (previous?.parked && !drone.isParkedAtHub) {
-          console.debug(
-            `[Parking visuals] Drone ${drone.droneId} status=${drone.status} -> remove from parked visuals`,
-          );
-        }
-        if ((!previous || !previous.parked) && drone.isParkedAtHub) {
-          console.debug(
-            `[Parking visuals] Drone ${drone.droneId} returned -> show in parked visuals`,
-          );
-        }
-      }
-
-      if (!drone.hubId) continue;
-      const stats = hubStats.get(drone.hubId) ?? {
-        total: 0,
-        parked: 0,
-        active: 0,
-      };
-      stats.total += 1;
-      if (drone.isParkedAtHub) {
-        stats.parked += 1;
-      } else {
-        stats.active += 1;
-      }
-      hubStats.set(drone.hubId, stats);
-    }
-
-    const nextSignature = [...hubStats.entries()]
-      .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
-      .map(
-        ([hubId, stats]) =>
-          `${hubId}:${stats.total}:${stats.parked}:${stats.active}`,
-      )
-      .join("|");
-
-    if (nextSignature !== this.lastParkingDebugSignature) {
-      for (const [hubId, stats] of hubStats.entries()) {
-        console.debug(
-          `[Hub ${hubId}] total drones=${stats.total}, parked=${stats.parked}, active=${stats.active}`,
-        );
-        console.debug(
-          `[Parking visuals] hub=${hubId} visibleSlots=${stats.parked}, expected=${stats.parked}`,
-        );
-      }
-      this.lastParkingDebugSignature = nextSignature;
-    }
-
-    this.lastDroneParkingState = nextDroneParkingState;
   }
 
   private createShipContainer(): Phaser.GameObjects.Container {
@@ -832,7 +736,10 @@ class WorldScene extends Phaser.Scene {
   }
 
   private playCoinAwardAnimation(payload: CoinAwardPayload): void {
-    const start = this.getScreenPointFromTile(payload.fromTileX, payload.fromTileY);
+    const start = this.getScreenPointFromTile(
+      payload.fromTileX,
+      payload.fromTileY,
+    );
     const particleCount = Phaser.Math.Clamp(
       COIN_AWARD_MIN_PARTICLES +
         Math.floor(payload.amount / COIN_AWARD_AMOUNT_PER_EXTRA_PARTICLE),

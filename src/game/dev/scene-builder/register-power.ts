@@ -39,6 +39,7 @@ export const registerScenePower = (
     powerPolesPlaced: Object.values(state.assets).filter(
       (asset) => asset.type === "power_pole",
     ).length,
-    selectedPowerPoleId: state.selectedPowerPoleId ?? firstPowerPole?.id ?? null,
+    selectedPowerPoleId:
+      state.selectedPowerPoleId ?? firstPowerPole?.id ?? null,
   };
 };

@@ -438,9 +438,7 @@ export interface GameState {
    * Keyed by node ID. NOT a warehouse pool — drones address and remove these.
    */
   collectionNodes: Record<string, CollectionNode>;
-  /** The single starter drone (future: hub drone). Persisted. */
-  starterDrone: StarterDroneState;
-  /** All drones keyed by droneId. Persisted. Kept in sync with starterDrone for backward compat. */
+  /** All drones keyed by droneId. Persisted. */
   drones: Record<string, StarterDroneState>;
   /** Per-service-hub state (keyed by asset ID). Persisted. */
   serviceHubs: Record<string, ServiceHubEntry>;

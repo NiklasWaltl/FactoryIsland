@@ -29,9 +29,7 @@ export function getConnectedConsumerDrainEntries(
     .map((id) => state.assets[id])
     .filter(
       (a): a is PlacedAsset =>
-        !!a &&
-        a.status !== "deconstructing" &&
-        ENERGY_DRAIN[a.type] != null,
+        !!a && a.status !== "deconstructing" && ENERGY_DRAIN[a.type] != null,
     )
     .map((asset) => {
       const baseDrain =

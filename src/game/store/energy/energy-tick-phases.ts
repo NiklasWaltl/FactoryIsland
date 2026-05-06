@@ -105,9 +105,7 @@ export function buildEnergyTickPhase1Snapshot(
     .map((id) => state.assets[id])
     .filter(
       (a): a is PlacedAsset =>
-        !!a &&
-        a.status !== "deconstructing" &&
-        isEnergyConsumerType(a.type),
+        !!a && a.status !== "deconstructing" && isEnergyConsumerType(a.type),
     );
 
   const prioritizedConsumers = connectedConsumers

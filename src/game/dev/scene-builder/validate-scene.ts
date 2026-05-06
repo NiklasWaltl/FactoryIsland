@@ -101,11 +101,15 @@ const assertNoResourceOverlap = (
 const assertUndergroundPeers = (
   definitions: readonly SceneAssetDefinition[],
 ): void => {
-  const byId = new Map(definitions.map((definition) => [definition.id, definition]));
+  const byId = new Map(
+    definitions.map((definition) => [definition.id, definition]),
+  );
   for (const definition of definitions) {
     if (!UNDERGROUND_TYPES.has(definition.type)) continue;
     if (!definition.peerId) {
-      throw new Error(`Scene underground asset '${definition.id}' requires peerId.`);
+      throw new Error(
+        `Scene underground asset '${definition.id}' requires peerId.`,
+      );
     }
 
     const peer = byId.get(definition.peerId);

@@ -42,7 +42,7 @@ export function finalizeHubTier2Upgrade(
   if (!hub || !hub.pendingUpgrade) return state;
   const shouldDeduct = options?.deductPendingFromHubInventory ?? true;
 
-  let upgradedInventory: ServiceHubInventory = { ...hub.inventory };
+  const upgradedInventory: ServiceHubInventory = { ...hub.inventory };
   if (shouldDeduct) {
     for (const [k, v] of Object.entries(hub.pendingUpgrade)) {
       const needed = v ?? 0;

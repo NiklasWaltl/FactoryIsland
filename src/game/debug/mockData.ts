@@ -6,7 +6,6 @@
 // exits early when `!import.meta.env.DEV`.
 
 import type { GameState, Inventory, ServiceHubInventory } from "../store/types";
-import type { GameAction } from "../store/game-actions";
 import { HOTBAR_STACK_MAX } from "../store/constants/ui/hotbar";
 import { createInitialHotbar } from "../store/helpers/hotbar";
 import { debugLog } from "./debugLogger";

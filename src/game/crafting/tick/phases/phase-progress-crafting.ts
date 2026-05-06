@@ -1,4 +1,3 @@
-import { debugLog } from "../../../debug/debugLogger";
 import { finishCraftingJob } from "../job-lifecycle";
 import type { TickInput } from "../../tick";
 import type { CraftingTickState } from "./types";

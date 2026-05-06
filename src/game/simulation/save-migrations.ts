@@ -42,7 +42,7 @@ import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 29;
+export const CURRENT_SAVE_VERSION = 30;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -261,7 +261,14 @@ export interface SaveGameV29 extends Omit<SaveGameV28, "version"> {
   ship: ShipState;
 }
 
-export type SaveGameLatest = SaveGameV29;
+export interface SaveGameV30 extends Omit<
+  SaveGameV29,
+  "version" | "starterDrone"
+> {
+  version: 30;
+}
+
+export type SaveGameLatest = SaveGameV30;
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -305,6 +312,24 @@ function step<TIn, TOut>(
       return fn(save as TIn);
     },
   };
+}
+
+function selectMigratedStarter(save: {
+  readonly drones?: Record<string, StarterDroneState>;
+  readonly starterDrone?: StarterDroneState;
+}): StarterDroneState | undefined {
+  return save.drones?.[STARTER_DRONE_ID] ?? save.starterDrone;
+}
+
+function requireMigratedStarter(save: {
+  readonly drones?: Record<string, StarterDroneState>;
+  readonly starterDrone?: StarterDroneState;
+}): StarterDroneState {
+  const starter = selectMigratedStarter(save);
+  if (!starter) {
+    throw new Error("[save] Migration expected a starter drone.");
+  }
+  return starter;
 }
 
 function normalizeNonNegativeInteger(raw: unknown, fallback = 0): number {
@@ -477,10 +502,11 @@ function migrateV3ToV4(save: SaveGameV3): SaveGameV4 {
 }
 
 function migrateV4ToV5(save: SaveGameV4): SaveGameV5 {
+  const starter = requireMigratedStarter(save);
   return {
     ...save,
     version: 5,
-    starterDrone: { ...save.starterDrone, hubId: null },
+    starterDrone: { ...starter, hubId: null },
   };
 }
 
@@ -504,12 +530,13 @@ function migrateV5ToV6(save: SaveGameV5): SaveGameV6 {
 }
 
 function migrateV6ToV7(save: SaveGameV6): SaveGameV7 {
+  const starter = requireMigratedStarter(save);
   return {
     ...save,
     version: 7,
     constructionSites: {},
     starterDrone: {
-      ...save.starterDrone,
+      ...starter,
       currentTaskType: null,
       deliveryTargetId: null,
     },
@@ -517,6 +544,7 @@ function migrateV6ToV7(save: SaveGameV6): SaveGameV7 {
 }
 
 function migrateV7ToV8(save: SaveGameV7): SaveGameV8 {
+  const starter = requireMigratedStarter(save);
   const clearedNodes: Record<string, CollectionNode> = {};
   for (const [id, node] of Object.entries(save.collectionNodes ?? {})) {
     clearedNodes[id] = { ...node, reservedByDroneId: null };
@@ -526,7 +554,7 @@ function migrateV7ToV8(save: SaveGameV7): SaveGameV8 {
     version: 8,
     collectionNodes: clearedNodes,
     starterDrone: {
-      ...save.starterDrone,
+      ...starter,
       droneId: "starter",
     },
   };
@@ -563,7 +591,7 @@ function migrateV9ToV10(save: SaveGameV9): SaveGameV10 {
 }
 
 function migrateV10ToV11(save: SaveGameV10): SaveGameV11 {
-  const droneHubId = save.starterDrone?.hubId ?? null;
+  const droneHubId = selectMigratedStarter(save)?.hubId ?? null;
   const migratedHubs: Record<string, ServiceHubEntry> = {};
   for (const [id, entry] of Object.entries(save.serviceHubs ?? {})) {
     migratedHubs[id] = {
@@ -581,12 +609,13 @@ function migrateV10ToV11(save: SaveGameV10): SaveGameV11 {
 
 function migrateV11ToV12(save: SaveGameV11): SaveGameV12 {
   const drones: Record<string, StarterDroneState> = {};
-  if (save.starterDrone) {
-    const droneId = (save.starterDrone as any).droneId ?? STARTER_DRONE_ID;
+  const starter = selectMigratedStarter(save);
+  if (starter) {
+    const droneId = (starter as any).droneId ?? STARTER_DRONE_ID;
     drones[droneId] = {
-      ...save.starterDrone,
+      ...starter,
       droneId,
-      craftingJobId: (save.starterDrone as any).craftingJobId ?? null,
+      craftingJobId: (starter as any).craftingJobId ?? null,
     } as StarterDroneState;
     if (!drones[STARTER_DRONE_ID]) {
       drones[STARTER_DRONE_ID] = {
@@ -613,7 +642,6 @@ function migrateV11ToV12(save: SaveGameV11): SaveGameV12 {
     ...save,
     version: 12,
     drones,
-    starterDrone: drones[STARTER_DRONE_ID],
   };
 }
 
@@ -626,20 +654,20 @@ function migrateV12ToV13(save: SaveGameV12): SaveGameV13 {
       craftingJobId: (drone as any).craftingJobId ?? null,
     } as StarterDroneState;
   }
-  const starterDrone = save.starterDrone
+  const selectedStarter = selectMigratedStarter(save);
+  const starter = selectedStarter
     ? ({
-        ...save.starterDrone,
-        craftingJobId: (save.starterDrone as any).craftingJobId ?? null,
+        ...selectedStarter,
+        craftingJobId: (selectedStarter as any).craftingJobId ?? null,
       } as StarterDroneState)
-    : save.starterDrone;
-  if (!drones[STARTER_DRONE_ID] && starterDrone) {
-    drones[STARTER_DRONE_ID] = starterDrone;
+    : selectedStarter;
+  if (!drones[STARTER_DRONE_ID] && starter) {
+    drones[STARTER_DRONE_ID] = starter;
   }
   return {
     ...save,
     version: 13,
     drones,
-    starterDrone: drones[STARTER_DRONE_ID],
   };
 }
 
@@ -769,6 +797,16 @@ function migrateV28ToV29(save: SaveGameV28): SaveGameV29 {
   };
 }
 
+function migrateV29ToV30(save: SaveGameV29): SaveGameV30 {
+  const state = { ...save, version: 30 } as Omit<SaveGameV29, "version"> & {
+    version: 30;
+  };
+  if (state.starterDrone !== undefined) {
+    delete (state as any).starterDrone;
+  }
+  return state as SaveGameV30;
+}
+
 const MIGRATIONS: MigrationStep[] = [
   step(0, 1, migrateV0ToV1),
   step(1, 2, migrateV1ToV2),
@@ -799,6 +837,7 @@ const MIGRATIONS: MigrationStep[] = [
   step(26, 27, migrateV26ToV27),
   step(27, 28, migrateV27ToV28),
   step(28, 29, migrateV28ToV29),
+  step(29, 30, migrateV29ToV30),
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {
@@ -811,6 +850,7 @@ export function migrateSave(raw: unknown): SaveGameLatest | null {
       : 0;
 
   if (version > CURRENT_SAVE_VERSION) {
+    // eslint-disable-next-line no-console -- load-time save incompatibility diagnostics should reach DEV consoles.
     console.warn(
       `[save] Save version ${version} is newer than code version ${CURRENT_SAVE_VERSION}. Ignoring save.`,
     );
@@ -826,6 +866,7 @@ export function migrateSave(raw: unknown): SaveGameLatest | null {
   }
 
   if (version !== CURRENT_SAVE_VERSION) {
+    // eslint-disable-next-line no-console -- load-time save corruption diagnostics should reach DEV consoles.
     console.warn(
       `[save] Migration ended at v${version}, expected v${CURRENT_SAVE_VERSION}. Save may be corrupted.`,
     );

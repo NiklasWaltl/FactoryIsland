@@ -39,8 +39,8 @@ describe("gatherDeconstructCandidates", () => {
     const newerConveyor: PlacedAsset = {
       id: "dec-order-new",
       type: "conveyor",
-      x: base.starterDrone.tileX,
-      y: base.starterDrone.tileY + 1,
+      x: base.drones.starter.tileX,
+      y: base.drones.starter.tileY + 1,
       size: 1,
       direction: "east",
     };
@@ -57,12 +57,19 @@ describe("gatherDeconstructCandidates", () => {
       assetId: newerConveyor.id,
     });
 
-    const selectedTask = selectDroneTask(requestedBoth, requestedBoth.starterDrone);
+    const selectedTask = selectDroneTask(
+      requestedBoth,
+      requestedBoth.drones.starter,
+    );
 
     expect(selectedTask?.taskType).toBe("deconstruct");
     expect(selectedTask?.nodeId).toBe(olderConveyor.id);
-    expect(requestedBoth.assets[olderConveyor.id]?.deconstructRequestSeq).toBe(1);
-    expect(requestedBoth.assets[newerConveyor.id]?.deconstructRequestSeq).toBe(2);
+    expect(requestedBoth.assets[olderConveyor.id]?.deconstructRequestSeq).toBe(
+      1,
+    );
+    expect(requestedBoth.assets[newerConveyor.id]?.deconstructRequestSeq).toBe(
+      2,
+    );
   });
 
   it("excludes targets that are already assigned to another deconstruct drone", () => {
@@ -80,7 +87,7 @@ describe("gatherDeconstructCandidates", () => {
 
     const withConveyor = withAsset({ ...base, buildMode: true }, conveyor);
     const assignedDrone = {
-      ...withConveyor.starterDrone,
+      ...withConveyor.drones.starter,
       droneId: "assigned-drone",
       status: "moving_to_collect" as const,
       currentTaskType: "deconstruct" as const,
@@ -98,16 +105,16 @@ describe("gatherDeconstructCandidates", () => {
 
     const candidates = gatherDeconstructCandidates(
       state,
-      state.starterDrone,
+      state.drones.starter,
       { stickyBonus: 0 },
       {
         scoreDroneTask: () => 100,
       },
     );
 
-    expect(candidates.some((candidate) => candidate.nodeId === conveyor.id)).toBe(
-      false,
-    );
+    expect(
+      candidates.some((candidate) => candidate.nodeId === conveyor.id),
+    ).toBe(false);
   });
 
   it("excludes a target after deconstruct request is cancelled", () => {
@@ -129,7 +136,7 @@ describe("gatherDeconstructCandidates", () => {
 
     const beforeCancel = gatherDeconstructCandidates(
       requested,
-      requested.starterDrone,
+      requested.drones.starter,
       { stickyBonus: 0 },
       {
         scoreDroneTask: () => 100,
@@ -146,7 +153,7 @@ describe("gatherDeconstructCandidates", () => {
 
     const afterCancel = gatherDeconstructCandidates(
       cancelled,
-      cancelled.starterDrone,
+      cancelled.drones.starter,
       { stickyBonus: 0 },
       {
         scoreDroneTask: () => 100,

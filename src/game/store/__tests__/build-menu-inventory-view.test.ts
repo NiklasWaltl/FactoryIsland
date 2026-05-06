@@ -116,11 +116,9 @@ describe("selectBuildMenuInventoryView", () => {
   });
 
   it("reuses the cached view when non-input slices change", () => {
-    const state = withHub(
-      withDrop(bareState(), "drop-1", "wood", 5),
-      "hub-1",
-      { wood: 2 },
-    );
+    const state = withHub(withDrop(bareState(), "drop-1", "wood", 5), "hub-1", {
+      wood: 2,
+    });
 
     const first = selectBuildMenuInventoryView(state);
     const second = selectBuildMenuInventoryView({

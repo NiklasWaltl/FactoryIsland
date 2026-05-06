@@ -38,7 +38,10 @@ export const MODULE_EFFECTS = {
 
 export interface ModuleLabRecipe {
   readonly id: string;
-  readonly inputs: readonly { readonly item: "module_fragment"; readonly count: number }[];
+  readonly inputs: readonly {
+    readonly item: "module_fragment";
+    readonly count: number;
+  }[];
   readonly outputTier: 1 | 2 | 3;
   readonly outputModuleType: ModuleType;
   readonly durationMs: number;

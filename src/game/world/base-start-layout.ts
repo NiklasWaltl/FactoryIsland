@@ -1,4 +1,5 @@
 import type { AssetType, GameState } from "../store/types";
+import { selectStarterDrone } from "../store/selectors/drone-selectors";
 import {
   getStartAreaAnchor,
   getStartAreaBounds,
@@ -35,7 +36,7 @@ export interface BaseStartObjectDefinition {
 
 export interface BaseStartLayout {
   readonly assets: readonly BaseStartObjectDefinition[];
-  readonly starterDroneHubId: string;
+  readonly starterHubId: string;
 }
 
 export function createBaseStartLayout(tileMap: TileType[][]): BaseStartLayout {
@@ -51,16 +52,19 @@ export function createBaseStartLayout(tileMap: TileType[][]): BaseStartLayout {
 
   const layout: BaseStartLayout = {
     assets: [
-      baseStartObject(BASE_START_IDS.mapShop, "map_shop", mapShop.x, mapShop.y, {
-        fixed: true,
-      }),
       baseStartObject(
-        BASE_START_IDS.serviceHub,
-        "service_hub",
-        hub.x,
-        hub.y,
-        { fixed: true, droneIds: ["starter"] },
+        BASE_START_IDS.mapShop,
+        "map_shop",
+        mapShop.x,
+        mapShop.y,
+        {
+          fixed: true,
+        },
       ),
+      baseStartObject(BASE_START_IDS.serviceHub, "service_hub", hub.x, hub.y, {
+        fixed: true,
+        droneIds: ["starter"],
+      }),
       baseStartObject(
         BASE_START_IDS.warehouse,
         "warehouse",
@@ -68,7 +72,7 @@ export function createBaseStartLayout(tileMap: TileType[][]): BaseStartLayout {
         starterWarehouse.y,
       ),
     ],
-    starterDroneHubId: BASE_START_IDS.serviceHub,
+    starterHubId: BASE_START_IDS.serviceHub,
   };
 
   assertBaseStartLayoutInsideStartArea(layout.assets, tileMap);
@@ -82,14 +86,16 @@ export function hasRequiredBaseStartLayout(state: GameState): boolean {
     state.assets[BASE_START_IDS.warehouse]?.type === "warehouse" &&
     !!state.warehouseInventories[BASE_START_IDS.warehouse] &&
     !!state.serviceHubs[BASE_START_IDS.serviceHub] &&
-    state.starterDrone.hubId === BASE_START_IDS.serviceHub &&
+    selectStarterDrone(state)?.hubId === BASE_START_IDS.serviceHub &&
     state.drones.starter?.hubId === BASE_START_IDS.serviceHub
   );
 }
 
 export function assertRequiredBaseStartLayout(state: GameState): void {
   if (!hasRequiredBaseStartLayout(state)) {
-    throw new Error("Fresh game state missing required base start layout objects.");
+    throw new Error(
+      "Fresh game state missing required base start layout objects.",
+    );
   }
 }
 
@@ -135,8 +141,16 @@ function assertAssetFootprintInsideStartArea(
 
   if (isBoundsInsideBounds(footprint, startArea)) return;
 
-  for (let row = footprint.row; row < footprint.row + footprint.height; row += 1) {
-    for (let col = footprint.col; col < footprint.col + footprint.width; col += 1) {
+  for (
+    let row = footprint.row;
+    row < footprint.row + footprint.height;
+    row += 1
+  ) {
+    for (
+      let col = footprint.col;
+      col < footprint.col + footprint.width;
+      col += 1
+    ) {
       if (
         row < startArea.row ||
         row >= startArea.row + startArea.height ||
