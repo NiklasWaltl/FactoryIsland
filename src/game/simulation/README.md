@@ -36,18 +36,18 @@ GameState (runtime, hydratiert)
 
 ## Modulkarte
 
-| Datei | Zweck |
-|---|---|
-| [`save.ts`](./save.ts) | Stabile Top-Level Public-API-Fassade fuer Save/Load-Imports. |
-| [`save-codec.ts`](./save-codec.ts) | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields) + `loadAndHydrate` (one-stop Helper: parse → migrate → hydrate). |
-| [`save-migrations.ts`](./save-migrations.ts) | `CURRENT_SAVE_VERSION` (aktuell: 29), alle `SaveGameVN`-Interfaces (V1–V29), `migrateVNToVN+1`-Funktionen (V0→V29), Migrations-Chain + `clampGeneratorFuel` (pure Load-Guard für Generator-Fuel-Overflow). |
+| Datei                                        | Zweck                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`save.ts`](./save.ts)                       | Stabile Top-Level Public-API-Fassade fuer Save/Load-Imports.                                                                                                                                                                                                                                             |
+| [`save-codec.ts`](./save-codec.ts)           | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields) + `loadAndHydrate` (one-stop Helper: parse → migrate → hydrate).                                                                                                                                                      |
+| [`save-migrations.ts`](./save-migrations.ts) | `CURRENT_SAVE_VERSION` (aktuell: 29), alle `SaveGameVN`-Interfaces (V1–V29), `migrateVNToVN+1`-Funktionen (V0→V29), Migrations-Chain + `clampGeneratorFuel` (pure Load-Guard für Generator-Fuel-Overflow).                                                                                               |
 | [`save-normalizer.ts`](./save-normalizer.ts) | `sanitizeXxx`-Funktionen: `sanitizeNetworkSlice`, `sanitizeCraftingQueue`, `sanitizeStarterDrone`, `sanitizeConveyorUndergroundPeers`, `sanitizeKeepStockByWorkbench`, `sanitizeRecipeAutomationPolicies` + `rebuildGlobalInventoryFromStorage` (re-derives `globalInventory` aus warehouse/hub-Slices). |
-| [`save-legacy.ts`](./save-legacy.ts) | V0 (pre-versioned) → V1 Sonderfall + Runtime-Snapshot-Detection. |
-| [`recipes/`](./recipes/) | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler / AutoAssemblerV1). Nicht persistenz-relevant. |
-| [`game.ts`](./game.ts) | Legacy-Compatibility-Shim (`export * from "../store/reducer"`); aktuell ohne interne Konsumenten in `src/**`. |
-| [`mining-utils.ts`](./mining-utils.ts) | Hilfsfunktionen für Auto-Miner-Tick (Yield-Multiplikator, etc.). |
-| [`smelting-utils.ts`](./smelting-utils.ts) | Hilfsfunktionen für Auto-Smelter-Tick (Speed-Multiplikator, Tick-Intervall, etc.). |
-| [`__tests__/`](./__tests__/) | Roundtrip-, Migrations- und Simulation-Unit-Tests (10 Test-Dateien). |
+| [`save-legacy.ts`](./save-legacy.ts)         | V0 (pre-versioned) → V1 Sonderfall + Runtime-Snapshot-Detection.                                                                                                                                                                                                                                         |
+| [`recipes/`](./recipes/)                     | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler / AutoAssemblerV1). Nicht persistenz-relevant.                                                                                                                                                                                     |
+| [`game.ts`](./game.ts)                       | Legacy-Compatibility-Shim (`export * from "../store/reducer"`); aktuell ohne interne Konsumenten in `src/**`.                                                                                                                                                                                            |
+| [`mining-utils.ts`](./mining-utils.ts)       | Hilfsfunktionen für Auto-Miner-Tick (Yield-Multiplikator, etc.).                                                                                                                                                                                                                                         |
+| [`smelting-utils.ts`](./smelting-utils.ts)   | Hilfsfunktionen für Auto-Smelter-Tick (Speed-Multiplikator, Tick-Intervall, etc.).                                                                                                                                                                                                                       |
+| [`__tests__/`](./__tests__/)                 | Roundtrip-, Migrations- und Simulation-Unit-Tests (10 Test-Dateien).                                                                                                                                                                                                                                     |
 
 **API-Grenze:** Neue Konsumenten sollten aus [`save.ts`](./save.ts) importieren. Direkte Importe aus [`save-codec.ts`](./save-codec.ts), [`save-migrations.ts`](./save-migrations.ts) oder [`save-normalizer.ts`](./save-normalizer.ts) sind primär fuer interne Implementierung und gezielte Tests gedacht.
 
@@ -58,13 +58,16 @@ GameState (runtime, hydratiert)
 Beispiel: `state.fooBar: Record<string, number>` soll persistiert werden.
 
 ### Schritt 1 — Type erweitern
+
 [`../store/types.ts`](../store/types.ts): Feld in `GameState` ergänzen.
 
 ### Schritt 2 — Default in initial-state
+
 [`../store/initial-state.ts`](../store/initial-state.ts): `fooBar: {}` (oder sinnvoller Default) in `createInitialState` setzen.
 **Wichtig:** Auch bestehende Saves greifen indirekt darauf zu (`deserializeState` startet von `createInitialState(save.mode)`).
 
 ### Schritt 3 — Save-Schema-Versionsbump
+
 [`save-migrations.ts`](./save-migrations.ts):
 
 1. Neues Interface `SaveGameV<N+1>` — Copy aus `SaveGameV<N>` + neues Feld.
@@ -76,20 +79,25 @@ Beispiel: `state.fooBar: Record<string, number>` soll persistiert werden.
 > **Aktueller Stand:** `CURRENT_SAVE_VERSION = 29` (V29). Nächste Migration wäre V29→V30.
 
 ### Schritt 4 — Whitelist im Codec
+
 [`save-codec.ts`](./save-codec.ts) → `serializeState`: Feld in den zurückgegebenen Object-Literal aufnehmen. **Ohne diesen Schritt wird das Feld nie gespeichert**, egal was im Type steht.
 
 ### Schritt 5 — Hydrate
+
 [`save-codec.ts`](./save-codec.ts) → `deserializeState`: Feld aus `save.fooBar` ins `partial: GameState` übernehmen. Bei optionalen Feldern Fallback auf `base.fooBar`.
 
 ### Schritt 6 — (optional) Sanitizer
+
 Wenn das Feld inhaltliche Invarianten hat (z. B. Foreign Keys auf andere `state`-Slices, die bereits sanitized werden): Sanitizer in [`save-normalizer.ts`](./save-normalizer.ts) ergänzen und in `deserializeState` aufrufen.
 
 ### Schritt 7 — Tests
+
 - Roundtrip: `serializeState(state) → migrateSave → deserializeState` muss `fooBar` erhalten.
 - Migrations-Test: Ein V<N>-Save (ohne `fooBar`) muss durch `migrateV<N>ToV<N+1>` einen sinnvollen Default bekommen.
 - DEV-Invarianten in [`../store/reducer.ts`](../store/reducer.ts) `gameReducerWithInvariants` (z. B. `devAssertInventoryNonNegative`) prüfen, falls das neue Feld inventarähnlich ist.
 
 ### Schritt 8 — Konsumenten
+
 - UI-Komponenten, die `state.fooBar` lesen, ergänzen.
 - `DEBUG_SET_STATE` (siehe [`../store/action-handlers/maintenance-actions/`](../store/action-handlers/maintenance-actions/)) umgeht Invarianten — beim Schreiben von Test-Fixtures auch den neuen Default mitliefern.
 
@@ -99,15 +107,15 @@ Wenn das Feld inhaltliche Invarianten hat (z. B. Foreign Keys auf andere `state`
 
 - **Whitelist-Codec:** `serializeState` ist eine harte Whitelist. Ein Feld nur in `GameState` zu deklarieren bewirkt **nichts** für Persistenz.
 - **HMR-Path geht ebenfalls durch Migration:** Wer den Versionsbump vergisst, bekommt im DEV nach Hot-Reload eine "alte" Save-Version → Migration läuft → Feld könnte zurückgesetzt werden.
-- **`deserializeState` startet von `createInitialState`:** Fehlt der Default dort, ist der hydratisierte State für *neue* Spielstände inkonsistent mit migrated-Saves.
+- **`deserializeState` startet von `createInitialState`:** Fehlt der Default dort, ist der hydratisierte State für _neue_ Spielstände inkonsistent mit migrated-Saves.
 - **`autoDeliveryLog`, `notifications`, `openPanel`, `selected*Id` sind absichtlich NICHT persistiert** — UI-transient. Nicht in `serializeState` aufnehmen, sonst überschreibt Save den UI-State.
 - **`connectedAssetIds`** wird beim Hydraten neu berechnet; **`poweredMachineIds`** wird beim Laden auf ein leeres Array zurückgesetzt und erst im `ENERGY_NET_TICK` neu aufgebaut.
-- **`drones[id]` und `starterDrone`** sind redundant gespeichert (Legacy). `deserializeState` sanitisiert beide separat über `sanitizeStarterDrone` — neue Drone-Felder müssen dort auch ergänzt werden.
+- **`drones[id]`** ist der einzige kanonische Speicherort für Drohnen. Das frühere Parallelfeld `starterDrone` wurde mit Migration v29→v30 entfernt. `deserializeState` sanitisiert Drohneneinträge über `sanitizeStarterDrone` — neue Drone-Felder dort ergänzen.
 
 ---
 
 ## Verwandt
 
 - `ARCHITECTURE.md` "Known Friction" Punkt 1 (`GameAction` standalone in `store/game-actions.ts`).
-- `ARCHITECTURE.md` State Map "Persistiert"-Spalte als Wahrheitsquelle, *welche* Slices durch diese Pipeline gehen.
+- `ARCHITECTURE.md` State Map "Persistiert"-Spalte als Wahrheitsquelle, _welche_ Slices durch diese Pipeline gehen.
 - DEV-Invarianten: [`../store/reducer.ts`](../store/reducer.ts) `gameReducerWithInvariants`.
