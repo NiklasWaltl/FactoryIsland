@@ -42,7 +42,7 @@ import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 31;
+export const CURRENT_SAVE_VERSION = 32;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -274,7 +274,11 @@ export interface SaveGameV31 extends Omit<SaveGameV30, "version"> {
   unlockedBuildings: BuildingType[];
 }
 
-export type SaveGameLatest = SaveGameV31;
+export interface SaveGameV32 extends Omit<SaveGameV31, "version"> {
+  version: 32;
+}
+
+export type SaveGameLatest = SaveGameV32;
 
 /** All BuildingTypes that exist in the game. Used by v30->v31 migration to
  *  unlock everything for legacy saves so existing players keep their access. */
@@ -848,6 +852,22 @@ function migrateV30ToV31(save: SaveGameV30): SaveGameV31 {
   };
 }
 
+function migrateV31ToV32(save: SaveGameV31): SaveGameV32 {
+  // No-op: replacing the coin-based MapShop unlocks with the Research Lab
+  // building did not change the persisted state shape. The research_lab
+  // BuildingType is already part of TIER_0_UNLOCKED_BUILDINGS for fresh games.
+  // Existing saves additionally need it appended (idempotent) so the lab can
+  // be placed without first researching it.
+  const unlocked = save.unlockedBuildings ?? [];
+  return {
+    ...save,
+    version: 32,
+    unlockedBuildings: unlocked.includes("research_lab")
+      ? [...unlocked]
+      : [...unlocked, "research_lab"],
+  };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   step(0, 1, migrateV0ToV1),
   step(1, 2, migrateV1ToV2),
@@ -880,6 +900,7 @@ const MIGRATIONS: MigrationStep[] = [
   step(28, 29, migrateV28ToV29),
   step(29, 30, migrateV29ToV30),
   step(30, 31, migrateV30ToV31),
+  step(31, 32, migrateV31ToV32),
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

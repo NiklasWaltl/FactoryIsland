@@ -44,6 +44,7 @@ import { ConveyorSplitterPanel } from "../ui/panels/ConveyorSplitterPanel";
 import { DockWarehousePanel } from "../ui/panels/DockWarehousePanel";
 import { FragmentTraderPanel } from "../ui/panels/FragmentTraderPanel";
 import { ModulLabPanel } from "../ui/panels/ModulLabPanel";
+import { ResearchLabPanel } from "../ui/panels/ResearchLabPanel";
 import { ShipStatusBar } from "../ui/hud/ShipStatusBar";
 import { BuildMenu } from "../ui/menus/BuildMenu";
 import { Notifications } from "../ui/hud/Notifications";
@@ -388,6 +389,15 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       )}
       {state.openPanel === "module_lab" && (
         <ModulLabPanel state={state} dispatch={dispatch} />
+      )}
+      {state.openPanel === "research_lab" && (
+        <ResearchLabPanel
+          state={{
+            inventory: state.inventory,
+            unlockedBuildings: state.unlockedBuildings,
+          }}
+          dispatch={dispatch}
+        />
       )}
 
       <Hotbar state={hotbarSlice} dispatch={dispatch} />

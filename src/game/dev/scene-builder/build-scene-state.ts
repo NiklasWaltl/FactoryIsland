@@ -57,6 +57,7 @@ const ALL_BUILDING_TYPES_FOR_DEV: readonly BuildingType[] = [
   "service_hub",
   "dock_warehouse",
   "module_lab",
+  "research_lab",
 ];
 
 interface DepositResourceReference {

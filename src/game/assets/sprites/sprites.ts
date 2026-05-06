@@ -830,6 +830,40 @@ function makeModuleLab(): string {
 }
 
 // ---------------------------------------------------------------------------
+// RESEARCH LAB — 2×2 (64×64 SVG) — cyan/teal research palette
+// ---------------------------------------------------------------------------
+
+function makeResearchLab(): string {
+  let s = "";
+  // Dark teal background
+  s += r(2, 2, 60, 60, "#0c1f2c");
+  s += r(4, 4, 56, 56, "#102a3a");
+  // Bright cyan border
+  s += r(0, 0, 64, 2, "#0ea5e9");
+  s += r(0, 62, 64, 2, "#0ea5e9");
+  s += r(0, 0, 2, 64, "#0ea5e9");
+  s += r(62, 0, 2, 64, "#0ea5e9");
+  // Lab bench
+  s += r(8, 44, 48, 4, "#1e3a4a");
+  s += r(10, 42, 44, 4, "#2c4d60");
+  // Microscope body
+  s += r(28, 20, 8, 22, "#67e8f9");
+  s += r(26, 18, 12, 4, "#22d3ee");
+  s += r(30, 14, 4, 8, "#0ea5e9");
+  // Side document / book
+  s += r(14, 28, 10, 14, "#a5f3fc");
+  s += r(16, 30, 6, 2, "#0ea5e9");
+  s += r(16, 34, 6, 2, "#0ea5e9");
+  // Side data tablet
+  s += r(42, 26, 10, 16, "#0ea5e9");
+  s += r(44, 28, 6, 12, "#bae6fd");
+  // Sparkle accents
+  s += r(20, 10, 2, 2, "#fef3c7");
+  s += r(48, 10, 2, 2, "#fef3c7");
+  return svgURI(64, 64, s);
+}
+
+// ---------------------------------------------------------------------------
 // EXPORT MAPS
 // ---------------------------------------------------------------------------
 
@@ -864,6 +898,7 @@ export const ASSET_SPRITES: Record<AssetType, string> = {
   service_hub: makeServiceHub(),
   dock_warehouse: makeDockWarehouse(),
   module_lab: makeModuleLab(),
+  research_lab: makeResearchLab(),
 };
 
 /** Grass tile variants (0 / 1 for checkerboard) */

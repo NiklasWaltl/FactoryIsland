@@ -47,6 +47,7 @@ import { handleWarehouseHotbarAction } from "./action-handlers/warehouse-hotbar-
 import { handleManualAssemblerAction } from "./action-handlers/manual-assembler-actions";
 import { handleFloorPlacementAction } from "./action-handlers/floor-placement";
 import { handleShopAction } from "./action-handlers/shop";
+import { handleResearchAction } from "./action-handlers/research";
 import { handleCoinAction } from "./action-handlers/coin-actions";
 import { handleModuleFragmentAction } from "./action-handlers/module-fragment-actions";
 import { handleModuleLabAction } from "./action-handlers/module-lab-actions";
@@ -111,6 +112,8 @@ export function dispatchAction(
   if (floorPlacementResult !== null) return floorPlacementResult;
   const shopResult = handleShopAction(state, action, SHOP_ACTION_DEPS);
   if (shopResult !== null) return shopResult;
+  const researchResult = handleResearchAction(state, action);
+  if (researchResult !== null) return researchResult;
   const coinResult = handleCoinAction(state, action);
   if (coinResult !== null) return coinResult;
   const moduleFragmentResult = handleModuleFragmentAction(state, action);

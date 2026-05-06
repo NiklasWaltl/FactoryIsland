@@ -8,7 +8,7 @@ import { debugLog } from "../debug/debugLogger";
 import { GRID_W, GRID_H } from "../constants/grid";
 import { WAREHOUSE_CAPACITY } from "./constants/buildings/index";
 import { FLOOR_TILE_COSTS } from "./constants/map/floor";
-import { MAP_SHOP_BUILDING_UNLOCKS, MAP_SHOP_ITEMS } from "./constants/ui/shop";
+import { MAP_SHOP_ITEMS } from "./constants/ui/shop";
 import { RESOURCE_1x1_DROP_AMOUNT } from "./constants/resources";
 import {
   KEEP_STOCK_MAX_TARGET,
@@ -203,8 +203,6 @@ export const FLOOR_PLACEMENT_ACTION_DEPS: FloorPlacementActionDeps = {
 
 export const SHOP_ACTION_DEPS: ShopActionDeps = {
   MAP_SHOP_ITEMS,
-  MAP_SHOP_BUILDING_UNLOCKS,
-  addErrorNotification,
   hasResources,
   consumeResources,
   addNotification,

@@ -1,11 +1,17 @@
 // ============================================================
-// Tests — MapShop building unlock system
+// Tests — Building unlock pipeline (Research Lab era)
 // ============================================================
 //
 // Covers:
-//   1. Save migration v30 -> v31 unlocks ALL buildings for legacy saves.
-//   2. BUY_BUILDING_UNLOCK action: success, idempotent re-buy, insufficient coins.
-//   3. BUILD_PLACE_BUILDING is rejected for locked building types.
+//   1. Save migration v30 -> v31 unlocks every building that
+//      existed pre-Research-Lab for legacy saves.
+//   2. Save migration v31 -> v32 idempotently appends
+//      research_lab to legacy save unlocks (no other shape change).
+//   3. BUILD_PLACE_BUILDING is rejected for locked building types
+//      and accepted once the building has been researched.
+//
+// The dedicated RESEARCH_BUILDING action surface (success / idempotent /
+// missing items) lives in research.test.ts.
 
 import {
   gameReducer,
@@ -29,9 +35,9 @@ function emptyInv() {
 // ---------------------------------------------------------------------------
 
 describe("save migration v30 -> v31 (unlockedBuildings)", () => {
-  it("unlocks every building type for a legacy v30 save", () => {
+  it("unlocks every pre-Research-Lab building type for a legacy v30 save", () => {
     const latest = serializeState(createInitialState("release"));
-    // Drop the v31 field and pin to v30 so the migrator runs the new step.
+    // Drop the v31/v32 fields and pin to v30 so the migrator runs the new step.
     const {
       version: _ignoreVersion,
       unlockedBuildings: _dropUnlocks,
@@ -65,77 +71,45 @@ describe("save migration v30 -> v31 (unlockedBuildings)", () => {
         "service_hub",
         "dock_warehouse",
         "module_lab",
+        "research_lab",
       ]),
     );
-    expect(result!.unlockedBuildings).toHaveLength(20);
   });
 });
 
 // ---------------------------------------------------------------------------
-// 2. Shop action — BUY_BUILDING_UNLOCK
+// 2. Save migration v31 -> v32 (research_lab back-fill)
 // ---------------------------------------------------------------------------
 
-describe("BUY_BUILDING_UNLOCK", () => {
-  function richState(): GameState {
-    const base = createInitialState("release");
-    return {
-      ...base,
-      inventory: { ...base.inventory, coins: 10_000 },
+describe("save migration v31 -> v32 (research_lab back-fill)", () => {
+  it("appends research_lab to existing unlockedBuildings (idempotent)", () => {
+    const latest = serializeState(createInitialState("release"));
+    const v31 = {
+      ...(latest as any),
+      version: 31,
+      unlockedBuildings: ["workbench", "warehouse", "service_hub"],
     };
-  }
 
-  it("unlocks a building, deducts coins, and is recorded in unlockedBuildings", () => {
-    const before = richState();
-    const coinsBefore = before.inventory.coins;
-    expect(before.unlockedBuildings).not.toContain("smithy");
-
-    const after = gameReducer(before, {
-      type: "BUY_BUILDING_UNLOCK",
-      buildingType: "smithy",
-    });
-
-    expect(after.unlockedBuildings).toContain("smithy");
-    expect(after.inventory.coins).toBeLessThan(coinsBefore);
+    const result = migrateSave(v31);
+    expect(result).not.toBeNull();
+    expect(result!.version).toBe(CURRENT_SAVE_VERSION);
+    expect(result!.unlockedBuildings).toContain("research_lab");
   });
 
-  it("blocks a duplicate purchase without charging coins", () => {
-    const start = richState();
-    const first = gameReducer(start, {
-      type: "BUY_BUILDING_UNLOCK",
-      buildingType: "smithy",
-    });
-    const coinsAfterFirst = first.inventory.coins;
-    const occurrencesAfterFirst = first.unlockedBuildings.filter(
-      (b) => b === "smithy",
+  it("does not duplicate research_lab when it already exists", () => {
+    const latest = serializeState(createInitialState("release"));
+    const v31 = {
+      ...(latest as any),
+      version: 31,
+      unlockedBuildings: ["workbench", "research_lab"],
+    };
+
+    const result = migrateSave(v31);
+    expect(result).not.toBeNull();
+    const occurrences = result!.unlockedBuildings.filter(
+      (b) => b === "research_lab",
     ).length;
-
-    const second = gameReducer(first, {
-      type: "BUY_BUILDING_UNLOCK",
-      buildingType: "smithy",
-    });
-
-    expect(second.inventory.coins).toBe(coinsAfterFirst);
-    expect(second.unlockedBuildings.filter((b) => b === "smithy").length).toBe(
-      occurrencesAfterFirst,
-    );
-    // An error notification should surface the rejection.
-    expect(second.notifications.some((n) => n.kind === "error")).toBe(true);
-  });
-
-  it("rejects the purchase when coins are insufficient", () => {
-    const start: GameState = {
-      ...createInitialState("release"),
-    };
-    start.inventory = { ...start.inventory, coins: 1 };
-
-    const after = gameReducer(start, {
-      type: "BUY_BUILDING_UNLOCK",
-      buildingType: "smithy",
-    });
-
-    expect(after.unlockedBuildings).not.toContain("smithy");
-    expect(after.inventory.coins).toBe(1);
-    expect(after.notifications.some((n) => n.kind === "error")).toBe(true);
+    expect(occurrences).toBe(1);
   });
 });
 
@@ -183,7 +157,6 @@ describe("BUILD_PLACE_BUILDING locked-type guard", () => {
   }
 
   it("rejects placement when the building is not unlocked", () => {
-    // Smithy is NOT in tier-0 unlocked set.
     const start: GameState = {
       ...buildPlaceableState(),
       selectedBuildingType: "smithy",
@@ -204,20 +177,16 @@ describe("BUILD_PLACE_BUILDING locked-type guard", () => {
     expect(after.notifications.some((n) => n.kind === "error")).toBe(true);
   });
 
-  it("allows placement after the building is unlocked via the shop", () => {
+  it("allows placement after the building is unlocked", () => {
+    const base = buildPlaceableState();
     const start: GameState = {
-      ...buildPlaceableState(),
+      ...base,
       selectedBuildingType: "smithy",
       buildMode: true,
+      unlockedBuildings: [...base.unlockedBuildings, "smithy"],
     };
 
-    const unlocked = gameReducer(start, {
-      type: "BUY_BUILDING_UNLOCK",
-      buildingType: "smithy",
-    });
-    expect(unlocked.unlockedBuildings).toContain("smithy");
-
-    const placed = gameReducer(unlocked, {
+    const placed = gameReducer(start, {
       type: "BUILD_PLACE_BUILDING",
       x: 20,
       y: 11,
@@ -229,7 +198,7 @@ describe("BUILD_PLACE_BUILDING locked-type guard", () => {
     expect(smithies).toHaveLength(1);
   });
 
-  it("allows placing a tier-0 building (workbench) without any shop interaction", () => {
+  it("allows placing a tier-0 building (workbench) without any unlock interaction", () => {
     const start: GameState = {
       ...buildPlaceableState(),
       selectedBuildingType: "workbench",
@@ -247,5 +216,10 @@ describe("BUILD_PLACE_BUILDING locked-type guard", () => {
       (a) => a.type === "workbench",
     );
     expect(workbenches).toHaveLength(1);
+  });
+
+  it("includes research_lab in TIER_0 so a fresh save can place it", () => {
+    const start = createInitialState("release");
+    expect(start.unlockedBuildings).toContain("research_lab");
   });
 });

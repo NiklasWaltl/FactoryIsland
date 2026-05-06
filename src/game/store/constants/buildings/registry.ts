@@ -357,6 +357,20 @@ export const BUILDING_REGISTRY: Readonly<Record<BuildingType, BuildingDef>> =
       eligibleAsConstructionSite: true,
       inputBuffer: null,
     },
+    research_lab: {
+      type: "research_lab",
+      label: "Forschungslabor",
+      description:
+        "Schaltet neue Gebäude per Sofort-Forschung gegen Items frei. 2×2, einmal platzierbar.",
+      category: "production",
+      cost: { wood: 50, stone: 30 },
+      size: 2,
+      stackable: false,
+      hasDefaultSourceWarehouse: false,
+      requiresStoneFloor: false,
+      eligibleAsConstructionSite: true,
+      inputBuffer: null,
+    },
   });
 
 // ---------------------------------------------------------------------------
@@ -398,6 +412,7 @@ export const BUILD_CATEGORIES: readonly BuildCategory[] = Object.freeze([
       "auto_smelter",
       "auto_assembler",
       "module_lab",
+      "research_lab",
     ],
   },
   {

@@ -34,6 +34,7 @@ const ALL_BUILDINGS_UNLOCKED: BuildingType[] = [
   "service_hub",
   "dock_warehouse",
   "module_lab",
+  "research_lab",
 ];
 
 // ---------------------------------------------------------------------------

@@ -144,5 +144,13 @@ export function tryTogglePanelFromAsset(
     };
   }
 
+  if (asset.type === "research_lab") {
+    const opening = state.openPanel !== "research_lab";
+    return {
+      ...state,
+      openPanel: opening ? "research_lab" : null,
+    };
+  }
+
   return null;
 }

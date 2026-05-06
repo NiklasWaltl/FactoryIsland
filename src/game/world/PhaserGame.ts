@@ -80,7 +80,8 @@ export interface StaticAssetSnapshot {
     | "manual_assembler"
     | "service_hub"
     | "dock_warehouse"
-    | "module_lab";
+    | "module_lab"
+    | "research_lab";
   x: number;
   y: number;
   width: 1 | 2;
@@ -247,6 +248,7 @@ class WorldScene extends Phaser.Scene {
     this.load.image("asset:service_hub", ASSET_SPRITES.service_hub);
     this.load.image("asset:dock_warehouse", ASSET_SPRITES.dock_warehouse);
     this.load.image("asset:module_lab", ASSET_SPRITES.module_lab);
+    this.load.image("asset:research_lab", ASSET_SPRITES.research_lab);
   }
 
   create(): void {

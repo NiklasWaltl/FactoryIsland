@@ -1,5 +1,5 @@
 import type { GameAction } from "../game-actions";
-import type { MapShopBuildingUnlock, MapShopItem } from "../constants/ui/shop";
+import type { MapShopItem } from "../constants/ui/shop";
 import type {
   BuildingType,
   GameNotification,
@@ -12,11 +12,6 @@ import type { ShopItemTargetDecision } from "../helpers/shop";
 
 export interface ShopActionDeps {
   MAP_SHOP_ITEMS: MapShopItem[];
-  MAP_SHOP_BUILDING_UNLOCKS: readonly MapShopBuildingUnlock[];
-  addErrorNotification(
-    notifications: GameNotification[],
-    message: string,
-  ): GameNotification[];
   hasResources(
     inv: Inventory,
     costs: Partial<Record<keyof Inventory, number>>,
@@ -88,43 +83,6 @@ export function handleShopAction(
 
       const newInv = deps.addResources(baseInv, { [item.inventoryKey]: 1 });
       return { ...state, inventory: newInv, notifications: notifs };
-    }
-
-    case "BUY_BUILDING_UNLOCK": {
-      const offer = deps.MAP_SHOP_BUILDING_UNLOCKS.find(
-        (entry) => entry.buildingType === action.buildingType,
-      );
-      if (!offer) return state;
-
-      if (state.unlockedBuildings.includes(offer.buildingType)) {
-        return {
-          ...state,
-          notifications: deps.addErrorNotification(
-            state.notifications,
-            `${offer.label} ist bereits freigeschaltet`,
-          ),
-        };
-      }
-
-      if (!deps.hasResources(state.inventory, { coins: offer.costCoins })) {
-        return {
-          ...state,
-          notifications: deps.addErrorNotification(
-            state.notifications,
-            `Nicht genug Coins für ${offer.label}`,
-          ),
-        };
-      }
-
-      const inventoryAfter = deps.consumeResources(state.inventory, {
-        coins: offer.costCoins,
-      });
-
-      return {
-        ...state,
-        inventory: inventoryAfter,
-        unlockedBuildings: [...state.unlockedBuildings, offer.buildingType],
-      };
     }
 
     default:

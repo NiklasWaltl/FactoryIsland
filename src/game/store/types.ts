@@ -107,7 +107,8 @@ export type AssetType =
   | "auto_assembler"
   | "service_hub"
   | "dock_warehouse"
-  | "module_lab";
+  | "module_lab"
+  | "research_lab";
 
 export type BuildingType =
   | "workbench"
@@ -129,7 +130,8 @@ export type BuildingType =
   | "auto_assembler"
   | "service_hub"
   | "dock_warehouse"
-  | "module_lab";
+  | "module_lab"
+  | "research_lab";
 
 /** Floor tiles that can be placed on the ground layer */
 export type FloorTileType = "stone_floor" | "grass_block";
@@ -245,6 +247,7 @@ export type UIPanel =
   | "dock_warehouse"
   | "fragment_trader"
   | "module_lab"
+  | "research_lab"
   | null;
 
 // ---- Energy Network ----
