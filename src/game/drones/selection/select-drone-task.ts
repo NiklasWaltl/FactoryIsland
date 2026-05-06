@@ -88,20 +88,13 @@ export function selectDroneTask(
   const drone = droneOverride ?? requireStarterDrone(state);
   const role: DroneRole = drone.role ?? "auto";
 
-  const {
-    availableNodes,
-    availableTypes,
-    constructionRoleBonus,
-    restockRoleBonus,
-  } = buildCandidateInputs(state, drone);
+  const { availableNodes, availableTypes } = buildCandidateInputs(state, drone);
 
   let candidates = collectDroneTaskCandidates({
     state,
     drone,
     availableNodes,
     availableTypes,
-    constructionRoleBonus,
-    restockRoleBonus,
     role,
     deps,
   });
@@ -114,8 +107,6 @@ export function selectDroneTask(
       drone,
       availableNodes,
       availableTypes,
-      constructionRoleBonus,
-      restockRoleBonus,
       role: "auto",
       deps,
     });

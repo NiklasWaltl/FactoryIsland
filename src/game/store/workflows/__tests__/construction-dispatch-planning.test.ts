@@ -11,7 +11,6 @@ describe("decideConstructionDispatchPlanningActions", () => {
     const actions = decideConstructionDispatchPlanningActions({
       droneTileX: 10,
       droneTileY: 10,
-      roleBonus: 30,
       stickyNodeId: null,
       siteId: "site-1",
       hubId: "hub-1",
@@ -35,7 +34,6 @@ describe("decideConstructionDispatchPlanningActions", () => {
     const actions = decideConstructionDispatchPlanningActions({
       droneTileX: 10,
       droneTileY: 10,
-      roleBonus: 30,
       stickyNodeId: "hub:hub-1:wood",
       siteId: "site-1",
       hubId: "hub-1",
@@ -58,7 +56,6 @@ describe("decideConstructionDispatchPlanningActions", () => {
     const distance = 3; // Chebyshev distance from (10,10) -> (7,8)
     const expectedScore =
       DRONE_TASK_BASE_SCORE.hub_dispatch +
-      30 +
       stickyBonus +
       demandBonus +
       spreadPenalty -
@@ -72,7 +69,6 @@ describe("decideConstructionDispatchPlanningActions", () => {
           nodeId: "hub:hub-1:wood",
           deliveryTargetId: "site-1",
           score: expectedScore,
-          _roleBonus: 30,
           _stickyBonus: stickyBonus,
           _urgencyBonus: 0,
           _demandBonus: demandBonus,
@@ -86,7 +82,6 @@ describe("decideConstructionDispatchPlanningActions", () => {
     const actions = decideConstructionDispatchPlanningActions({
       droneTileX: 0,
       droneTileY: 0,
-      roleBonus: 0,
       stickyNodeId: null,
       siteId: "site-1",
       hubId: "hub-1",

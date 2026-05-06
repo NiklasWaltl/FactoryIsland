@@ -2,7 +2,6 @@ import type { DroneTaskType } from "../../store/types";
 import type { DroneSelectionCandidate } from "./types";
 
 export interface CandidateBonuses {
-  role?: number;
   sticky?: number;
   urgency?: number;
   demand?: number;
@@ -27,7 +26,6 @@ export function buildScoredCandidate(
     deliveryTargetId,
     deconstructRequestSeq: metadata.deconstructRequestSeq,
     score,
-    _roleBonus: bonuses.role ?? 0,
     _stickyBonus: bonuses.sticky ?? 0,
     _urgencyBonus: bonuses.urgency ?? 0,
     _demandBonus: bonuses.demand ?? 0,

@@ -27,7 +27,6 @@ export interface HubRestockCandidate {
   nodeId: string;
   deliveryTargetId: string;
   score: number;
-  _roleBonus: number;
   _stickyBonus: number;
   _urgencyBonus: number;
   _demandBonus: number;
@@ -44,7 +43,6 @@ export interface DecideHubRestockInput {
   hubId: string;
   droneTileX: number;
   droneTileY: number;
-  roleBonus: number;
   nodes: readonly HubRestockNodeInput[];
 }
 
@@ -75,11 +73,7 @@ export function decideHubRestockActions(
       node.tileY,
     );
     const score =
-      DRONE_TASK_BASE_SCORE.hub_restock -
-      distance +
-      input.roleBonus +
-      stickyBonus +
-      urgencyBonus;
+      DRONE_TASK_BASE_SCORE.hub_restock - distance + stickyBonus + urgencyBonus;
 
     actions.push({
       type: "queue_restock_candidate",
@@ -88,7 +82,6 @@ export function decideHubRestockActions(
         nodeId: node.nodeId,
         deliveryTargetId: input.hubId,
         score,
-        _roleBonus: input.roleBonus,
         _stickyBonus: stickyBonus,
         _urgencyBonus: urgencyBonus,
         _demandBonus: 0,

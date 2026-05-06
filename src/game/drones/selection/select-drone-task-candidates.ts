@@ -15,7 +15,6 @@ import { gatherHubDispatchCandidates } from "../candidates/hub-dispatch-candidat
 import { gatherHubRestockCandidates } from "../candidates/hub-restock-candidates";
 import {
   DRONE_DEMAND_BONUS_MAX,
-  DRONE_ROLE_BONUS,
   DRONE_SPREAD_PENALTY_PER_DRONE,
   scoreDroneTask,
   DRONE_STICKY_BONUS,
@@ -46,21 +45,10 @@ export function collectDroneTaskCandidates(input: {
   drone: StarterDroneState;
   availableNodes: CollectionNode[];
   availableTypes: Set<CollectableItemType>;
-  constructionRoleBonus: number;
-  restockRoleBonus: number;
   role: DroneRole;
   deps: SelectDroneTaskDeps;
 }): DroneSelectionCandidate[] {
-  const {
-    state,
-    drone,
-    availableNodes,
-    availableTypes,
-    constructionRoleBonus,
-    restockRoleBonus,
-    role,
-    deps,
-  } = input;
+  const { state, drone, availableNodes, availableTypes, role, deps } = input;
 
   const candidates: DroneSelectionCandidate[] = [];
 
@@ -86,7 +74,6 @@ export function collectDroneTaskCandidates(input: {
         drone,
         availableNodes,
         availableTypes,
-        constructionRoleBonus,
         {
           demandBonusMax: DRONE_DEMAND_BONUS_MAX,
           stickyBonus: DRONE_STICKY_BONUS,
@@ -112,7 +99,6 @@ export function collectDroneTaskCandidates(input: {
         drone,
         drone.hubId,
         availableNodes,
-        restockRoleBonus,
         {
           stickyBonus: DRONE_STICKY_BONUS,
           urgencyBonusMax: DRONE_URGENCY_BONUS_MAX,
@@ -131,7 +117,6 @@ export function collectDroneTaskCandidates(input: {
       ...gatherHubDispatchCandidates(
         state,
         drone,
-        constructionRoleBonus,
         {
           demandBonusMax: DRONE_DEMAND_BONUS_MAX,
           stickyBonus: DRONE_STICKY_BONUS,
@@ -153,7 +138,6 @@ export function collectDroneTaskCandidates(input: {
       ...gatherWarehouseConstructionCandidates(
         state,
         drone,
-        constructionRoleBonus,
         {
           demandBonusMax: DRONE_DEMAND_BONUS_MAX,
           stickyBonus: DRONE_STICKY_BONUS,
@@ -289,11 +273,9 @@ export function collectDroneTaskCandidates(input: {
           node.tileX,
           node.tileY,
           {
-            role: restockRoleBonus,
             sticky: stickyBonus,
           },
         ),
-        _roleBonus: restockRoleBonus,
         _stickyBonus: stickyBonus,
         _urgencyBonus: 0,
         _demandBonus: 0,
@@ -311,10 +293,7 @@ export function buildCandidateInputs(
 ): {
   availableNodes: CollectionNode[];
   availableTypes: Set<CollectableItemType>;
-  constructionRoleBonus: number;
-  restockRoleBonus: number;
 } {
-  const role = drone.role ?? "auto";
   const availableNodes = Object.values(state.collectionNodes).filter(
     (node) =>
       node.amount > 0 &&
@@ -327,7 +306,5 @@ export function buildCandidateInputs(
   return {
     availableNodes,
     availableTypes,
-    constructionRoleBonus: role === "construction" ? DRONE_ROLE_BONUS : 0,
-    restockRoleBonus: role === "supply" ? DRONE_ROLE_BONUS : 0,
   };
 }

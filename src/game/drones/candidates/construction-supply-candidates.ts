@@ -57,7 +57,6 @@ export function gatherConstructionSupplyCandidates(
   drone: Pick<StarterDroneState, "droneId" | "tileX" | "tileY">,
   availableNodes: readonly CollectionNode[],
   availableTypes: ReadonlySet<CollectableItemType>,
-  constructionRoleBonus: number,
   constants: ConstructionSupplyCandidateConstants,
   deps: ConstructionSupplyCandidateDeps,
 ): DroneSelectionCandidate[] {
@@ -94,7 +93,6 @@ export function gatherConstructionSupplyCandidates(
         const stickyBonus =
           node.reservedByDroneId === drone.droneId ? constants.stickyBonus : 0;
         const bonuses = {
-          role: constructionRoleBonus,
           sticky: stickyBonus,
           demand: demandBonus,
           spread: spreadPenalty,

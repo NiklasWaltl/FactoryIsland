@@ -13,7 +13,6 @@ export type DroneSelectionCandidate = {
   /** Present for deconstruct candidates to preserve request FIFO order. */
   deconstructRequestSeq?: number;
   score: number;
-  _roleBonus: number;
   _stickyBonus: number;
   _urgencyBonus: number;
   _demandBonus: number;

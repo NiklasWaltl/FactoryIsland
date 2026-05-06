@@ -56,7 +56,6 @@ export function gatherHubRestockCandidates(
   drone: Pick<StarterDroneState, "droneId" | "tileX" | "tileY">,
   hubId: string,
   availableNodes: readonly CollectionNode[],
-  restockRoleBonus: number,
   constants: HubRestockCandidateConstants,
   deps: HubRestockCandidateDeps,
 ): DroneSelectionCandidate[] {
@@ -80,7 +79,6 @@ export function gatherHubRestockCandidates(
       node.reservedByDroneId === drone.droneId ? constants.stickyBonus : 0;
     const urgencyBonus = Math.min(constants.urgencyBonusMax, remainingNeed);
     const bonuses = {
-      role: restockRoleBonus,
       sticky: stickyBonus,
       urgency: urgencyBonus,
     };

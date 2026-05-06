@@ -50,9 +50,6 @@ export const DRONE_SEPARATION_RADIUS = 2;
 /** Maximum tiles of separation nudge applied per tick (< 1 so velocity is never reversed). */
 export const DRONE_SEPARATION_STRENGTH = 0.8;
 
-/** Score bonus when a task matches the drone's preferred role. */
-export const DRONE_ROLE_BONUS = 30;
-
 /** Score bonus for a node already reserved by the same drone. */
 export const DRONE_STICKY_BONUS = 15;
 

@@ -6,7 +6,6 @@ export interface ScoreDroneTaskDeps {
 }
 
 export type ScoreDroneTaskBonuses = {
-  role?: number;
   sticky?: number;
   urgency?: number;
   demand?: number;
@@ -32,14 +31,8 @@ export function scoreDroneTask(
   deps: ScoreDroneTaskDeps = defaultScoreDroneTaskDeps,
 ): number {
   const dist = Math.max(Math.abs(droneX - nodeX), Math.abs(droneY - nodeY));
-  const { role = 0, sticky = 0, urgency = 0, demand = 0, spread = 0 } = bonuses;
+  const { sticky = 0, urgency = 0, demand = 0, spread = 0 } = bonuses;
   return (
-    deps.taskBaseScore[taskType] -
-    dist +
-    role +
-    sticky +
-    urgency +
-    demand +
-    spread
+    deps.taskBaseScore[taskType] - dist + sticky + urgency + demand + spread
   );
 }

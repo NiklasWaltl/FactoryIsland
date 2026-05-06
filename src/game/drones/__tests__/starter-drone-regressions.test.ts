@@ -5,7 +5,6 @@ import {
   createInitialState,
   droneTick,
   DRONE_DEMAND_BONUS_MAX,
-  DRONE_ROLE_BONUS,
   DRONE_SPREAD_PENALTY_PER_DRONE,
   DRONE_STICKY_BONUS,
   DRONE_TASK_BASE_SCORE,
@@ -585,14 +584,6 @@ describe("Task Scoring – selectDroneTask() picks nearest node of same type", (
 // ============================================================
 
 describe("Task Scoring – DroneRole influence", () => {
-  it("scoreDroneTask applies bonus when role bonus provided", () => {
-    const base = scoreDroneTask("hub_restock", 0, 0, 5, 0);
-    const withBonus = scoreDroneTask("hub_restock", 0, 0, 5, 0, {
-      role: DRONE_ROLE_BONUS,
-    });
-    expect(withBonus).toBe(base + DRONE_ROLE_BONUS);
-  });
-
   it("DRONE_SET_ROLE sets role on drones record", () => {
     const { state: hubState } = placeServiceHub(
       createInitialState("release"),

@@ -14,9 +14,6 @@ export const DRONE_TASK_BASE_SCORE: Record<DroneTaskType, number> = {
   hub_restock: 100,
 };
 
-/** Score bonus when a task matches the drone's preferred role. */
-export const DRONE_ROLE_BONUS = 30;
-
 /** Score bonus for a node already reserved by this drone. */
 export const DRONE_STICKY_BONUS = 15;
 

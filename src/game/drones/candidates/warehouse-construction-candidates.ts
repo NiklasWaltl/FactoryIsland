@@ -76,7 +76,6 @@ export function gatherWarehouseConstructionCandidates(
     StarterDroneState,
     "droneId" | "tileX" | "tileY" | "targetNodeId"
   >,
-  constructionRoleBonus: number,
   constants: WarehouseConstructionCandidateConstants,
   deps: WarehouseConstructionCandidateDeps,
 ): DroneSelectionCandidate[] {
@@ -119,7 +118,6 @@ export function gatherWarehouseConstructionCandidates(
         const stickyBonus =
           drone.targetNodeId === syntheticNodeId ? constants.stickyBonus : 0;
         const bonuses = {
-          role: constructionRoleBonus,
           sticky: stickyBonus,
           demand: demandBonus,
           spread: spreadPenalty,

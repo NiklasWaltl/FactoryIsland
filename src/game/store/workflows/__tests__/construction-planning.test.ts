@@ -12,7 +12,6 @@ describe("decideConstructionPlanningActions", () => {
       droneId: "d1",
       droneTileX: 10,
       droneTileY: 10,
-      roleBonus: 0,
       siteId: "site-1",
       openSlots: 0,
       assignedConstructionDrones: 0,
@@ -36,7 +35,6 @@ describe("decideConstructionPlanningActions", () => {
       droneId: "d1",
       droneTileX: 10,
       droneTileY: 10,
-      roleBonus: 30,
       siteId: "site-1",
       openSlots: 2,
       assignedConstructionDrones: 2,
@@ -58,7 +56,6 @@ describe("decideConstructionPlanningActions", () => {
     const distance = 2; // Chebyshev distance from (10,10) -> (12,11)
     const expectedScore =
       DRONE_TASK_BASE_SCORE.construction_supply +
-      30 +
       stickyBonus +
       demandBonus +
       spreadPenalty -
@@ -72,7 +69,6 @@ describe("decideConstructionPlanningActions", () => {
           nodeId: "n1",
           deliveryTargetId: "site-1",
           score: expectedScore,
-          _roleBonus: 30,
           _stickyBonus: stickyBonus,
           _urgencyBonus: 0,
           _demandBonus: demandBonus,
@@ -87,7 +83,6 @@ describe("decideConstructionPlanningActions", () => {
       droneId: "d1",
       droneTileX: 0,
       droneTileY: 0,
-      roleBonus: 0,
       siteId: "site-1",
       openSlots: 1,
       assignedConstructionDrones: 0,

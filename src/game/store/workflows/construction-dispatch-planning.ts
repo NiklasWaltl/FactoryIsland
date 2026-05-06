@@ -24,7 +24,6 @@ export interface ConstructionHubDispatchCandidate {
   nodeId: string;
   deliveryTargetId: string;
   score: number;
-  _roleBonus: number;
   _stickyBonus: number;
   _urgencyBonus: number;
   _demandBonus: number;
@@ -39,7 +38,6 @@ export type ConstructionDispatchPlanningAction = {
 export interface DecideConstructionDispatchPlanningInput {
   droneTileX: number;
   droneTileY: number;
-  roleBonus: number;
   stickyNodeId: string | null;
   siteId: string;
   hubId: string;
@@ -84,7 +82,6 @@ export function decideConstructionDispatchPlanningActions(
     const score =
       DRONE_TASK_BASE_SCORE.hub_dispatch -
       distanceToHub +
-      input.roleBonus +
       stickyBonus +
       demandBonus +
       spreadPenalty;
@@ -96,7 +93,6 @@ export function decideConstructionDispatchPlanningActions(
         nodeId: syntheticNodeId,
         deliveryTargetId: input.siteId,
         score,
-        _roleBonus: input.roleBonus,
         _stickyBonus: stickyBonus,
         _urgencyBonus: 0,
         _demandBonus: demandBonus,

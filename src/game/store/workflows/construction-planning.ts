@@ -31,7 +31,6 @@ export interface ConstructionSupplyCandidate {
   nodeId: string;
   deliveryTargetId: string;
   score: number;
-  _roleBonus: number;
   _stickyBonus: number;
   _urgencyBonus: number;
   _demandBonus: number;
@@ -47,7 +46,6 @@ export interface DecideConstructionPlanningInput {
   droneId: string;
   droneTileX: number;
   droneTileY: number;
-  roleBonus: number;
   siteId: string;
   openSlots: number;
   assignedConstructionDrones: number;
@@ -92,7 +90,6 @@ export function decideConstructionPlanningActions(
       const score =
         DRONE_TASK_BASE_SCORE.construction_supply -
         distance +
-        input.roleBonus +
         stickyBonus +
         demandBonus +
         spreadPenalty;
@@ -104,7 +101,6 @@ export function decideConstructionPlanningActions(
           nodeId: node.nodeId,
           deliveryTargetId: input.siteId,
           score,
-          _roleBonus: input.roleBonus,
           _stickyBonus: stickyBonus,
           _urgencyBonus: 0,
           _demandBonus: demandBonus,
