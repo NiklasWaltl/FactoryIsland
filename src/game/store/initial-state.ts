@@ -21,6 +21,7 @@ import type {
 } from "./types";
 import { createEmptyInventory } from "./inventory-ops";
 import { BATTERY_CAPACITY } from "./constants/energy/battery";
+import { TIER_0_UNLOCKED_BUILDINGS } from "./constants/ui/shop";
 import type { ShipState } from "./types/ship-types";
 
 export function createInitialShipState(): ShipState {
@@ -75,6 +76,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     moduleLabJob: null,
     purchasedBuildings: [],
     placedBuildings: [],
+    unlockedBuildings: [...TIER_0_UNLOCKED_BUILDINGS],
     warehousesPurchased: 0,
     warehousesPlaced: 0,
     warehouseInventories: {},

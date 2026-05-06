@@ -28,6 +28,7 @@ function withBuildResources(state: GameState): GameState {
       stone: 999,
       iron: 999,
     },
+    unlockedBuildings: [...state.unlockedBuildings, "module_lab"],
   };
 }
 

@@ -2,7 +2,7 @@
 // Tests – Auto-assign nearest warehouse source on building placement
 // ============================================================
 
-import type { GameState, Inventory, PlacedAsset } from "../types";
+import type { BuildingType, GameState, Inventory, PlacedAsset } from "../types";
 import {
   gameReducer,
   createInitialState,
@@ -12,6 +12,29 @@ import {
   cellKey,
 } from "../reducer";
 import { BUILDINGS_WITH_DEFAULT_SOURCE } from "../constants/buildings/index";
+
+const ALL_BUILDINGS_UNLOCKED: BuildingType[] = [
+  "workbench",
+  "warehouse",
+  "smithy",
+  "generator",
+  "cable",
+  "battery",
+  "power_pole",
+  "auto_miner",
+  "conveyor",
+  "conveyor_corner",
+  "conveyor_merger",
+  "conveyor_splitter",
+  "conveyor_underground_in",
+  "conveyor_underground_out",
+  "manual_assembler",
+  "auto_smelter",
+  "auto_assembler",
+  "service_hub",
+  "dock_warehouse",
+  "module_lab",
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,6 +76,7 @@ function stateWithOneWarehouse(): GameState {
     warehouseInventories: { "wh-A": emptyInv() },
     placedBuildings: [],
     purchasedBuildings: [],
+    unlockedBuildings: ALL_BUILDINGS_UNLOCKED,
     inventory: addResources(emptyInv(), {
       wood: 200,
       stone: 200,
@@ -106,6 +130,7 @@ function stateWithNoWarehouse(): GameState {
     warehouseInventories: {},
     placedBuildings: [],
     purchasedBuildings: [],
+    unlockedBuildings: ALL_BUILDINGS_UNLOCKED,
     connectedAssetIds: [],
     inventory: addResources(emptyInv(), {
       wood: 200,

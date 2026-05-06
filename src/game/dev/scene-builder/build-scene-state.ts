@@ -4,6 +4,7 @@ import type {
   AutoAssemblerEntry,
   AutoAssemblerRecipeId,
   AutoSmelterEntry,
+  BuildingType,
   GameState,
 } from "../../store/types";
 import {
@@ -32,6 +33,31 @@ const CONVEYOR_TYPES = new Set([
   "conveyor_underground_in",
   "conveyor_underground_out",
 ]);
+
+// Dev scenes pre-place machines and let the developer freely place more, so
+// the unlock gate would just get in the way. Unlock everything by default.
+const ALL_BUILDING_TYPES_FOR_DEV: readonly BuildingType[] = [
+  "workbench",
+  "warehouse",
+  "smithy",
+  "generator",
+  "cable",
+  "battery",
+  "power_pole",
+  "auto_miner",
+  "conveyor",
+  "conveyor_corner",
+  "conveyor_merger",
+  "conveyor_splitter",
+  "conveyor_underground_in",
+  "conveyor_underground_out",
+  "manual_assembler",
+  "auto_smelter",
+  "auto_assembler",
+  "service_hub",
+  "dock_warehouse",
+  "module_lab",
+];
 
 interface DepositResourceReference {
   readonly id: string;
@@ -77,6 +103,7 @@ export const buildSceneState = (
     placedBuildings: resolvedScene.placedBuildings
       ? [...resolvedScene.placedBuildings]
       : baseState.placedBuildings,
+    unlockedBuildings: [...ALL_BUILDING_TYPES_FOR_DEV],
     ...getClearBaseWorldState(resolvedScene, baseState),
   };
 

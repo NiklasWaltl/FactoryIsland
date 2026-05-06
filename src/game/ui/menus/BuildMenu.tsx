@@ -134,9 +134,17 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
       return state.placedBuildings.filter((b) => b === bType).length >= limit;
     };
 
+    const isLocked = (bType: BuildingType): boolean =>
+      !state.unlockedBuildings.includes(bType);
+
     const getStatus = (
       bType: BuildingType,
     ): { label: string; className: string } => {
+      if (isLocked(bType))
+        return {
+          label: "Im Shop kaufen",
+          className: "fi-build-status--no-res",
+        };
       if (isAlreadyPlaced(bType))
         return {
           label: "Bereits platziert",
@@ -183,16 +191,21 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
                 const isSelected = selected === bType;
                 const affordable = canAfford(bType);
                 const placed = isAlreadyPlaced(bType);
+                const locked = isLocked(bType);
                 const size = BUILDING_SIZES[bType];
                 return (
                   <div
                     key={bType}
-                    className={`fi-build-item ${isSelected ? "fi-build-item--selected" : ""} ${placed ? "fi-build-item--placed" : ""} ${!affordable && !placed ? "fi-build-item--disabled" : ""}`}
+                    className={`fi-build-item ${isSelected ? "fi-build-item--selected" : ""} ${placed ? "fi-build-item--placed" : ""} ${(!affordable && !placed) || locked ? "fi-build-item--disabled" : ""}`}
                     title={
-                      placed ? status.label : getBuildSourceDebugTitle(costs)
+                      locked
+                        ? "Erst im Shop freischalten"
+                        : placed
+                          ? status.label
+                          : getBuildSourceDebugTitle(costs)
                     }
                     onClick={() => {
-                      if (placed || !affordable) {
+                      if (locked || placed || !affordable) {
                         return;
                       }
                       dispatch({

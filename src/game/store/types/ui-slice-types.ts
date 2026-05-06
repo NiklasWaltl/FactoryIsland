@@ -9,6 +9,7 @@ export interface ShipStatusSlice {
 
 export interface MapShopStateSlice {
   readonly coins: GameState["inventory"]["coins"];
+  readonly unlockedBuildings: GameState["unlockedBuildings"];
 }
 
 export interface HudStateSlice {
@@ -31,4 +32,5 @@ export interface BuildUIStateSlice {
   collectionNodes: GameState["collectionNodes"];
   inventory: GameState["inventory"];
   warehouseInventories: GameState["warehouseInventories"];
+  unlockedBuildings: GameState["unlockedBuildings"];
 }

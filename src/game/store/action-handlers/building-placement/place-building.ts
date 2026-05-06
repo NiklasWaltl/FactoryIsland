@@ -57,6 +57,15 @@ export function handlePlaceBuildingAction(
     ? state.selectedBuildingType
     : hotbarBuildingType;
   if (!bType) return state;
+  if (!state.unlockedBuildings.includes(bType)) {
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        `${BUILDING_LABELS[bType]} ist noch nicht freigeschaltet`,
+      ),
+    };
+  }
   const { x, y } = action;
   if (x < 0 || y < 0 || x >= GRID_W || y >= GRID_H) return state;
 

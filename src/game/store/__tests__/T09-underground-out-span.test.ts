@@ -14,6 +14,11 @@ function withPlacementResources(state: GameState): GameState {
       iron: 999,
       copper: 999,
     },
+    unlockedBuildings: [
+      ...state.unlockedBuildings,
+      "conveyor_underground_in",
+      "conveyor_underground_out",
+    ],
   };
 }
 

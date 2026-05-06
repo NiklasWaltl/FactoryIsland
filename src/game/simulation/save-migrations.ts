@@ -42,7 +42,7 @@ import { STARTER_DRONE_ID } from "../store/selectors/drone-selectors";
 import { migrateV0ToV1 } from "./save-legacy";
 
 /** Current save format version. Bump when persisted shape changes. */
-export const CURRENT_SAVE_VERSION = 30;
+export const CURRENT_SAVE_VERSION = 31;
 
 // ---- Save schema (V1 - initial versioned format) --------------------
 
@@ -268,7 +268,38 @@ export interface SaveGameV30 extends Omit<
   version: 30;
 }
 
-export type SaveGameLatest = SaveGameV30;
+export interface SaveGameV31 extends Omit<SaveGameV30, "version"> {
+  version: 31;
+  /** Buildings the player has unlocked. Persisted. */
+  unlockedBuildings: BuildingType[];
+}
+
+export type SaveGameLatest = SaveGameV31;
+
+/** All BuildingTypes that exist in the game. Used by v30->v31 migration to
+ *  unlock everything for legacy saves so existing players keep their access. */
+const ALL_BUILDING_TYPES_FOR_LEGACY_UNLOCK: readonly BuildingType[] = [
+  "workbench",
+  "warehouse",
+  "smithy",
+  "generator",
+  "cable",
+  "battery",
+  "power_pole",
+  "auto_miner",
+  "conveyor",
+  "conveyor_corner",
+  "conveyor_merger",
+  "conveyor_splitter",
+  "conveyor_underground_in",
+  "conveyor_underground_out",
+  "manual_assembler",
+  "auto_smelter",
+  "auto_assembler",
+  "service_hub",
+  "dock_warehouse",
+  "module_lab",
+];
 
 /**
  * Clamp each generator's local fuel buffer to GENERATOR_MAX_FUEL.
@@ -807,6 +838,16 @@ function migrateV29ToV30(save: SaveGameV29): SaveGameV30 {
   return state as SaveGameV30;
 }
 
+function migrateV30ToV31(save: SaveGameV30): SaveGameV31 {
+  // Strategy A: existing saves keep access to every building they had before
+  // the unlock system existed. Fresh games start gated via TIER_0_UNLOCKED_BUILDINGS.
+  return {
+    ...save,
+    version: 31,
+    unlockedBuildings: [...ALL_BUILDING_TYPES_FOR_LEGACY_UNLOCK],
+  };
+}
+
 const MIGRATIONS: MigrationStep[] = [
   step(0, 1, migrateV0ToV1),
   step(1, 2, migrateV1ToV2),
@@ -838,6 +879,7 @@ const MIGRATIONS: MigrationStep[] = [
   step(27, 28, migrateV27ToV28),
   step(28, 29, migrateV28ToV29),
   step(29, 30, migrateV29ToV30),
+  step(30, 31, migrateV30ToV31),
 ];
 
 export function migrateSave(raw: unknown): SaveGameLatest | null {

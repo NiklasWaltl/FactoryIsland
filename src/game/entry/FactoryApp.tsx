@@ -291,6 +291,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       collectionNodes: state.collectionNodes,
       inventory: state.inventory,
       warehouseInventories: state.warehouseInventories,
+      unlockedBuildings: state.unlockedBuildings,
     }),
     [
       state.buildMode,
@@ -303,6 +304,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       state.collectionNodes,
       state.inventory,
       state.warehouseInventories,
+      state.unlockedBuildings,
     ],
   );
 
@@ -323,8 +325,11 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   );
 
   const mapShopSlice = useMemo<MapShopStateSlice>(
-    () => ({ coins: state.inventory.coins }),
-    [state.inventory.coins],
+    () => ({
+      coins: state.inventory.coins,
+      unlockedBuildings: state.unlockedBuildings,
+    }),
+    [state.inventory.coins, state.unlockedBuildings],
   );
 
   return (

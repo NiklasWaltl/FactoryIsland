@@ -361,6 +361,8 @@ export interface GameState {
   moduleLabJob: ModuleState["moduleLabJob"];
   purchasedBuildings: BuildingType[];
   placedBuildings: BuildingType[];
+  /** Buildings the player has unlocked via the map shop or as starting tier-0. Persisted. */
+  unlockedBuildings: BuildingType[];
   warehousesPurchased: number;
   warehousesPlaced: number;
   /** Per-warehouse storage (keyed by warehouse asset ID).
