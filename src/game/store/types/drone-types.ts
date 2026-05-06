@@ -2,12 +2,13 @@ import type { CollectableItemType } from "./item-types";
 
 // ---- Drone Roles ----
 /**
- * Optional role that biases a drone's task selection toward a specific work type.
- * "auto" = no preference — drone picks any best-scoring task (default).
- * "construction" = prefers construction_supply tasks (score bonus applied).
- * "supply" = prefers hub_restock tasks (score bonus applied).
- * Roles never block fallback: if the preferred task type has no candidates the
- * drone still picks the highest-scoring task of any type.
+ * Optional role that hard-filters a drone's task selection to a specific work type.
+ * "auto" = no filter — drone picks any best-scoring task (default).
+ * "construction" = only construction_supply, hub_dispatch, deconstruct.
+ * "supply" = only hub_restock, building_supply, workbench_delivery.
+ * Fallback: if the role-filtered candidate list is empty, selection retries with
+ * the unfiltered "auto" set so role-locked drones don't deadlock when their
+ * preferred work is unavailable.
  */
 export type DroneRole = "auto" | "construction" | "supply";
 
@@ -85,3 +86,26 @@ export type DroneTaskType =
   | "workbench_delivery"
   | "building_supply"
   | "deconstruct";
+
+/**
+ * Hard-filter mapping: which task types a given role is allowed to take.
+ * "auto" matches every task type. The selection layer falls back to "auto"
+ * when a role-filtered candidate list comes up empty, so this is not a
+ * deadlock surface — see selectDroneTask().
+ */
+export function roleAllows(role: DroneRole, taskType: DroneTaskType): boolean {
+  if (role === "auto") return true;
+  if (role === "construction") {
+    return (
+      taskType === "construction_supply" ||
+      taskType === "hub_dispatch" ||
+      taskType === "deconstruct"
+    );
+  }
+  // role === "supply"
+  return (
+    taskType === "hub_restock" ||
+    taskType === "building_supply" ||
+    taskType === "workbench_delivery"
+  );
+}

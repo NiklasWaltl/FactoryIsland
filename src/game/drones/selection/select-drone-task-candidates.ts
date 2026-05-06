@@ -1,9 +1,11 @@
 import type {
   CollectableItemType,
   CollectionNode,
+  DroneRole,
   GameState,
   StarterDroneState,
 } from "../../store/types";
+import { roleAllows } from "../../store/types";
 import { gatherDeconstructCandidates } from "../candidates/deconstruct-candidates";
 import { gatherWarehouseBuildingSupplyCandidates } from "../candidates/building-supply-warehouse-source-candidates";
 import { gatherConstructionSupplyCandidates } from "../candidates/construction-supply-candidates";
@@ -46,6 +48,7 @@ export function collectDroneTaskCandidates(input: {
   availableTypes: Set<CollectableItemType>;
   constructionRoleBonus: number;
   restockRoleBonus: number;
+  role: DroneRole;
   deps: SelectDroneTaskDeps;
 }): DroneSelectionCandidate[] {
   const {
@@ -55,49 +58,54 @@ export function collectDroneTaskCandidates(input: {
     availableTypes,
     constructionRoleBonus,
     restockRoleBonus,
+    role,
     deps,
   } = input;
 
   const candidates: DroneSelectionCandidate[] = [];
 
-  candidates.push(
-    ...gatherDeconstructCandidates(
-      state,
-      drone,
-      {
-        stickyBonus: DRONE_STICKY_BONUS,
-      },
-      {
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "deconstruct")) {
+    candidates.push(
+      ...gatherDeconstructCandidates(
+        state,
+        drone,
+        {
+          stickyBonus: DRONE_STICKY_BONUS,
+        },
+        {
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
-  candidates.push(
-    ...gatherConstructionSupplyCandidates(
-      state,
-      drone,
-      availableNodes,
-      availableTypes,
-      constructionRoleBonus,
-      {
-        demandBonusMax: DRONE_DEMAND_BONUS_MAX,
-        stickyBonus: DRONE_STICKY_BONUS,
-        spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
-      },
-      {
-        getOpenConstructionDroneSlots,
-        getAssignedConstructionDroneCount,
-        getRemainingConstructionNeed,
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "construction_supply")) {
+    candidates.push(
+      ...gatherConstructionSupplyCandidates(
+        state,
+        drone,
+        availableNodes,
+        availableTypes,
+        constructionRoleBonus,
+        {
+          demandBonusMax: DRONE_DEMAND_BONUS_MAX,
+          stickyBonus: DRONE_STICKY_BONUS,
+          spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
+        },
+        {
+          getOpenConstructionDroneSlots,
+          getAssignedConstructionDroneCount,
+          getRemainingConstructionNeed,
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
   const hubEntry = drone.hubId
     ? (state.serviceHubs[drone.hubId] ?? null)
     : null;
-  if (hubEntry && drone.hubId) {
+  if (hubEntry && drone.hubId && roleAllows(role, "hub_restock")) {
     candidates.push(
       ...gatherHubRestockCandidates(
         state,
@@ -118,7 +126,7 @@ export function collectDroneTaskCandidates(input: {
     );
   }
 
-  if (hubEntry && drone.hubId) {
+  if (hubEntry && drone.hubId && roleAllows(role, "hub_dispatch")) {
     candidates.push(
       ...gatherHubDispatchCandidates(
         state,
@@ -140,50 +148,54 @@ export function collectDroneTaskCandidates(input: {
     );
   }
 
-  candidates.push(
-    ...gatherWarehouseConstructionCandidates(
-      state,
-      drone,
-      constructionRoleBonus,
-      {
-        demandBonusMax: DRONE_DEMAND_BONUS_MAX,
-        stickyBonus: DRONE_STICKY_BONUS,
-        spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
-        warehousePriorityBonus: DRONE_WAREHOUSE_PRIORITY_BONUS,
-      },
-      {
-        getOpenConstructionDroneSlots,
-        getAssignedConstructionDroneCount,
-        getRemainingConstructionNeed,
-        getNearbyWarehousesForDispatch: deps.getNearbyWarehousesForDispatch,
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "construction_supply")) {
+    candidates.push(
+      ...gatherWarehouseConstructionCandidates(
+        state,
+        drone,
+        constructionRoleBonus,
+        {
+          demandBonusMax: DRONE_DEMAND_BONUS_MAX,
+          stickyBonus: DRONE_STICKY_BONUS,
+          spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
+          warehousePriorityBonus: DRONE_WAREHOUSE_PRIORITY_BONUS,
+        },
+        {
+          getOpenConstructionDroneSlots,
+          getAssignedConstructionDroneCount,
+          getRemainingConstructionNeed,
+          getNearbyWarehousesForDispatch: deps.getNearbyWarehousesForDispatch,
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
-  candidates.push(
-    ...gatherGroundBuildingSupplyCandidates(
-      state,
-      drone,
-      availableNodes,
-      availableTypes,
-      {
-        demandBonusMax: DRONE_DEMAND_BONUS_MAX,
-        stickyBonus: DRONE_STICKY_BONUS,
-        spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
-      },
-      {
-        getBuildingInputTargets: deps.getBuildingInputTargets,
-        isUnderConstruction: deps.isUnderConstruction,
-        getRemainingBuildingInputDemand,
-        getOpenBuildingSupplyDroneSlots,
-        getAssignedBuildingSupplyDroneCount,
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "building_supply")) {
+    candidates.push(
+      ...gatherGroundBuildingSupplyCandidates(
+        state,
+        drone,
+        availableNodes,
+        availableTypes,
+        {
+          demandBonusMax: DRONE_DEMAND_BONUS_MAX,
+          stickyBonus: DRONE_STICKY_BONUS,
+          spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
+        },
+        {
+          getBuildingInputTargets: deps.getBuildingInputTargets,
+          isUnderConstruction: deps.isUnderConstruction,
+          getRemainingBuildingInputDemand,
+          getOpenBuildingSupplyDroneSlots,
+          getAssignedBuildingSupplyDroneCount,
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
-  if (hubEntry && drone.hubId) {
+  if (hubEntry && drone.hubId && roleAllows(role, "building_supply")) {
     candidates.push(
       ...gatherHubBuildingSupplyCandidates(
         state,
@@ -206,57 +218,63 @@ export function collectDroneTaskCandidates(input: {
     );
   }
 
-  candidates.push(
-    ...gatherWarehouseBuildingSupplyCandidates(
-      state,
-      drone,
-      {
-        demandBonusMax: DRONE_DEMAND_BONUS_MAX,
-        stickyBonus: DRONE_STICKY_BONUS,
-        spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
-        warehousePriorityBonus: DRONE_WAREHOUSE_PRIORITY_BONUS,
-      },
-      {
-        getBuildingInputTargets: deps.getBuildingInputTargets,
-        isUnderConstruction: deps.isUnderConstruction,
-        getRemainingBuildingInputDemand,
-        getOpenBuildingSupplyDroneSlots,
-        getAssignedBuildingSupplyDroneCount,
-        getNearbyWarehousesForDispatch: deps.getNearbyWarehousesForDispatch,
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "building_supply")) {
+    candidates.push(
+      ...gatherWarehouseBuildingSupplyCandidates(
+        state,
+        drone,
+        {
+          demandBonusMax: DRONE_DEMAND_BONUS_MAX,
+          stickyBonus: DRONE_STICKY_BONUS,
+          spreadPenaltyPerDrone: DRONE_SPREAD_PENALTY_PER_DRONE,
+          warehousePriorityBonus: DRONE_WAREHOUSE_PRIORITY_BONUS,
+        },
+        {
+          getBuildingInputTargets: deps.getBuildingInputTargets,
+          isUnderConstruction: deps.isUnderConstruction,
+          getRemainingBuildingInputDemand,
+          getOpenBuildingSupplyDroneSlots,
+          getAssignedBuildingSupplyDroneCount,
+          getNearbyWarehousesForDispatch: deps.getNearbyWarehousesForDispatch,
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
-  candidates.push(
-    ...gatherWorkbenchInputCandidates(
-      state,
-      drone,
-      { stickyBonus: DRONE_STICKY_BONUS },
-      {
-        hasCompleteWorkbenchInput: deps.hasCompleteWorkbenchInput,
-        isCollectableCraftingItem: deps.isCollectableCraftingItem,
-        getWorkbenchJobInputAmount,
-        getAssignedWorkbenchInputDroneCount,
-        resolveWorkbenchInputPickup: deps.resolveWorkbenchInputPickup,
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "workbench_delivery")) {
+    candidates.push(
+      ...gatherWorkbenchInputCandidates(
+        state,
+        drone,
+        { stickyBonus: DRONE_STICKY_BONUS },
+        {
+          hasCompleteWorkbenchInput: deps.hasCompleteWorkbenchInput,
+          isCollectableCraftingItem: deps.isCollectableCraftingItem,
+          getWorkbenchJobInputAmount,
+          getAssignedWorkbenchInputDroneCount,
+          resolveWorkbenchInputPickup: deps.resolveWorkbenchInputPickup,
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
-  candidates.push(
-    ...gatherWorkbenchOutputDeliveryCandidates(
-      state,
-      drone,
-      { stickyBonus: DRONE_STICKY_BONUS },
-      {
-        getAssignedWorkbenchDeliveryDroneCount,
-        scoreDroneTask,
-      },
-    ),
-  );
+  if (roleAllows(role, "workbench_delivery")) {
+    candidates.push(
+      ...gatherWorkbenchOutputDeliveryCandidates(
+        state,
+        drone,
+        { stickyBonus: DRONE_STICKY_BONUS },
+        {
+          getAssignedWorkbenchDeliveryDroneCount,
+          scoreDroneTask,
+        },
+      ),
+    );
+  }
 
-  if (!drone.hubId || !hubEntry) {
+  if ((!drone.hubId || !hubEntry) && roleAllows(role, "hub_restock")) {
     for (const node of availableNodes) {
       const stickyBonus =
         node.reservedByDroneId === drone.droneId ? DRONE_STICKY_BONUS : 0;

@@ -95,15 +95,31 @@ export function selectDroneTask(
     restockRoleBonus,
   } = buildCandidateInputs(state, drone);
 
-  const candidates = collectDroneTaskCandidates({
+  let candidates = collectDroneTaskCandidates({
     state,
     drone,
     availableNodes,
     availableTypes,
     constructionRoleBonus,
     restockRoleBonus,
+    role,
     deps,
   });
+
+  // Hard-filter fallback: if a role-locked drone has no role-matching work,
+  // retry with role: "auto" so the drone doesn't deadlock idle.
+  if (candidates.length === 0 && role !== "auto") {
+    candidates = collectDroneTaskCandidates({
+      state,
+      drone,
+      availableNodes,
+      availableTypes,
+      constructionRoleBonus,
+      restockRoleBonus,
+      role: "auto",
+      deps,
+    });
+  }
 
   const {
     selected: chosen,

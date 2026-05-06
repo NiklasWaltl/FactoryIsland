@@ -44,6 +44,7 @@ export type {
   StarterDroneState,
   DroneTaskType,
 } from "./types/drone-types";
+export { roleAllows } from "./types/drone-types";
 export type {
   KeepStockTargetEntry,
   KeepStockByWorkbench,
