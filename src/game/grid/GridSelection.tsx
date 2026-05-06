@@ -1,5 +1,5 @@
 import React from "react";
-import { CELL_PX } from "../constants/grid";
+import { CELL_PX, GRID_H, GRID_W } from "../constants/grid";
 import { BUILDING_LABELS } from "../store/constants/buildings/index";
 import { FLOOR_TILE_EMOJIS } from "../store/constants/map/floor";
 import { RESOURCE_EMOJIS } from "../store/constants/resources";
@@ -8,6 +8,12 @@ import { cellKey } from "../store/utils/cell-key";
 import { getWarehouseInputCell } from "../store/warehouse-input";
 import type { Direction, GameState, PlacedAsset } from "../store/types";
 import { isConveyorPreviewBuildingType } from "../store/building-placement-preview";
+import { findUnpairedUndergroundEntranceId } from "../store/conveyor/underground-out-pairing-hint";
+import {
+  MAX_UNDERGROUND_SPAN,
+  MIN_UNDERGROUND_SPAN,
+} from "../store/conveyor/constants";
+import { isTileFootprintPlayable } from "../world/tile-footprint-utils";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
 import {
   collectPowerPoleRangeHighlightElements as collectPowerPoleRangeHighlightElementsHelper,
@@ -32,6 +38,141 @@ interface BuildSelectionOverlaysParams {
 export interface GridSelectionOverlays {
   placementOverlayElement: React.ReactNode;
   inspectionOverlayElement: React.ReactNode;
+}
+
+function isCellInsideGrid(x: number, y: number): boolean {
+  return x >= 0 && y >= 0 && x < GRID_W && y < GRID_H;
+}
+
+function isCellPlayable(state: GameState, x: number, y: number): boolean {
+  return isTileFootprintPlayable(state.tileMap, {
+    row: y,
+    col: x,
+    width: 1,
+    height: 1,
+  });
+}
+
+function renderUndergroundInRangePreview(
+  state: GameState,
+  x: number,
+  y: number,
+  direction: Direction,
+): React.ReactNode {
+  const [ox, oy] = directionOffset(direction);
+  const boxes: React.ReactNode[] = [];
+  for (let k = MIN_UNDERGROUND_SPAN; k <= MAX_UNDERGROUND_SPAN; k++) {
+    const cx = x + ox * k;
+    const cy = y + oy * k;
+    const inBounds = isCellInsideGrid(cx, cy);
+    const occupantId = inBounds ? state.cellMap[cellKey(cx, cy)] : undefined;
+    const occupied = !!(occupantId && state.assets[occupantId]);
+    const playable = inBounds && isCellPlayable(state, cx, cy);
+    const reachable = inBounds && playable && !occupied;
+    boxes.push(
+      <div
+        key={`ug-in-range-${k}`}
+        style={{
+          position: "absolute",
+          left: cx * CELL_PX,
+          top: cy * CELL_PX,
+          width: CELL_PX,
+          height: CELL_PX,
+          border: reachable
+            ? "2px dashed rgba(120,220,140,0.85)"
+            : "2px dashed rgba(160,160,160,0.55)",
+          background: reachable
+            ? "rgba(120,220,140,0.12)"
+            : "rgba(120,120,120,0.10)",
+          borderRadius: 6,
+          zIndex: 9,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            right: 3,
+            bottom: 1,
+            fontSize: 9,
+            lineHeight: 1,
+            color: reachable ? "#b8f5c4" : "#cccccc",
+            background: "rgba(0,0,0,0.6)",
+            padding: "1px 3px",
+            borderRadius: 3,
+            pointerEvents: "none",
+          }}
+        >
+          {k}
+        </div>
+      </div>,
+    );
+  }
+  return <>{boxes}</>;
+}
+
+function renderUndergroundOutPairingHighlight(
+  state: GameState,
+  outX: number,
+  outY: number,
+  direction: Direction,
+): React.ReactNode {
+  const entranceId = findUnpairedUndergroundEntranceId(
+    state,
+    outX,
+    outY,
+    direction,
+  );
+  if (!entranceId) return null;
+  const entrance = state.assets[entranceId];
+  if (!entrance || entrance.type !== "conveyor_underground_in") return null;
+
+  const [ox, oy] = directionOffset(direction);
+  const elements: React.ReactNode[] = [];
+  elements.push(
+    <div
+      key={`ug-out-pair-entrance-${entranceId}`}
+      style={{
+        position: "absolute",
+        left: entrance.x * CELL_PX,
+        top: entrance.y * CELL_PX,
+        width: CELL_PX,
+        height: CELL_PX,
+        border: "3px solid rgba(80,220,120,0.95)",
+        background: "rgba(80,220,120,0.22)",
+        borderRadius: 6,
+        boxShadow: "0 0 8px rgba(80,220,120,0.45)",
+        zIndex: 11,
+        pointerEvents: "none",
+      }}
+    />,
+  );
+
+  const dx = outX - entrance.x;
+  const dy = outY - entrance.y;
+  const k = ox !== 0 ? Math.abs(dx) : Math.abs(dy);
+  for (let step = 1; step < k; step++) {
+    const cx = entrance.x + ox * step;
+    const cy = entrance.y + oy * step;
+    elements.push(
+      <div
+        key={`ug-out-pair-mid-${step}`}
+        style={{
+          position: "absolute",
+          left: cx * CELL_PX,
+          top: cy * CELL_PX,
+          width: CELL_PX,
+          height: CELL_PX,
+          border: "2px dashed rgba(80,220,120,0.7)",
+          background: "rgba(80,220,120,0.10)",
+          borderRadius: 6,
+          zIndex: 9,
+          pointerEvents: "none",
+        }}
+      />,
+    );
+  }
+  return <>{elements}</>;
 }
 
 function renderFloorPlacementOverlay(
@@ -172,8 +313,19 @@ export function buildSelectionOverlays({
             ? { left: x * CELL_PX, top: y * CELL_PX - CELL_PX }
             : { left: x * CELL_PX, top: (y + bHeight) * CELL_PX };
 
+    const undergroundInRangePreview =
+      activeBuildingType === "conveyor_underground_in"
+        ? renderUndergroundInRangePreview(state, x, y, buildDirection)
+        : null;
+    const undergroundOutPairingHighlight =
+      activeBuildingType === "conveyor_underground_out"
+        ? renderUndergroundOutPairingHighlight(state, x, y, buildDirection)
+        : null;
+
     const placementBox = (
       <>
+        {undergroundInRangePreview}
+        {undergroundOutPairingHighlight}
         <div
           key="placement"
           style={{

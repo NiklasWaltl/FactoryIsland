@@ -196,29 +196,21 @@ export function buildWorldOverlayData({
                 />
               );
             })}
-            {import.meta.env.DEV &&
-            (asset.type === "conveyor_underground_in" ||
-              asset.type === "conveyor_underground_out") ? (
-              <span
-                key={`${asset.id}-ug-peer`}
+            {state.buildMode &&
+            asset.type === "conveyor_underground_in" &&
+            !state.conveyorUndergroundPeers[asset.id] ? (
+              <div
+                key={`${asset.id}-ug-orphan`}
                 style={{
                   position: "absolute",
-                  left: 2,
-                  top: 2,
-                  fontSize: 8,
-                  lineHeight: 1,
-                  color: "#eea",
-                  background: "rgba(0,0,0,0.65)",
-                  padding: "1px 3px",
-                  borderRadius: 3,
-                  zIndex: 6,
+                  inset: 0,
+                  border: "2px solid rgba(255,200,60,0.9)",
+                  background: "rgba(255,200,60,0.10)",
+                  borderRadius: 6,
                   pointerEvents: "none",
+                  zIndex: 6,
                 }}
-              >
-                {state.conveyorUndergroundPeers[asset.id]
-                  ? `peer:${state.conveyorUndergroundPeers[asset.id].slice(0, 8)}`
-                  : "peer:—"}
-              </span>
+              />
             ) : null}
           </div>,
         );
