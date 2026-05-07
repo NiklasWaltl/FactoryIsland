@@ -49,8 +49,8 @@ export const DevSceneSelector: React.FC<DevSceneSelectorProps> = ({
       aria-label="Dev scene selector"
       style={{
         position: "fixed",
-        top: 12,
-        right: 12,
+        top: "var(--fi-hud-top-dev-scene, 56px)",
+        right: "var(--fi-hud-edge, 10px)",
         zIndex: 1000,
         display: "flex",
         gap: 8,

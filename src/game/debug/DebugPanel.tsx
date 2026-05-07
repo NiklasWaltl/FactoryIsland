@@ -70,8 +70,8 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
         onClick={() => setCollapsed(false)}
         style={{
           position: "fixed",
-          top: 44,
-          right: 10,
+          top: "var(--fi-hud-top-debug-collapsed, 100px)",
+          right: "var(--fi-hud-edge, 10px)",
           zIndex: 9999,
           background: "rgba(255,0,0,0.25)",
           border: "1px solid rgba(255,0,0,0.5)",
@@ -265,11 +265,11 @@ export const DebugPanel: React.FC<DebugPanelProps> = (props) => {
 
 const panelStyle: React.CSSProperties = {
   position: "fixed",
-  top: 10,
-  right: 10,
+  top: "var(--fi-hud-top-debug-collapsed, 100px)",
+  right: "var(--fi-hud-edge, 10px)",
   zIndex: 9999,
   width: 340,
-  maxHeight: "80vh",
+  maxHeight: "calc(100vh - var(--fi-hud-top-debug-collapsed, 100px) - 24px)",
   background: "rgba(15, 15, 20, 0.96)",
   border: "1px solid rgba(255, 0, 0, 0.35)",
   borderRadius: 12,

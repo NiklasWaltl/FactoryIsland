@@ -10,18 +10,55 @@
   font-family: "Segoe UI", system-ui, sans-serif;
   color: #fff;
   user-select: none;
+
+  /* Zentrale HUD-Layout-Konstanten (siehe ARCHITECTURE.md / CLAUDE.md).
+     Stack-Offsets ergeben sich aus diesen Variablen, damit kein Element
+     freihängende Pixelwerte braucht. */
+  --fi-hud-edge: 10px;
+  --fi-hud-gap: 8px;
+
+  /* Top-rechts-Stack: ResourceBar -> DevSceneSelector -> DebugPanel */
+  --fi-hud-top-resource: var(--fi-hud-edge);
+  --fi-hud-top-dev-scene: 56px; /* unterhalb ResourceBar */
+  --fi-hud-top-debug-collapsed: 100px; /* unterhalb DevSceneSelector */
+
+  /* Top-mitte-Stack: ShipStatusBar -> Debug-Badge */
+  --fi-hud-top-ship: 8px;
+  --fi-hud-top-debug-badge: 44px;
+
+  /* Rechte Spalte: BuildMenu */
+  --fi-hud-build-menu-top: 56px;
+  --fi-hud-build-menu-bottom: 140px;
+  --fi-hud-build-menu-width: 280px;
+
+  /* Bottom-rechts-Stack: AutoDeliveryFeed -> ProductionStatusFeed */
+  --fi-hud-bottom-feed: 88px;
+  --fi-hud-bottom-feed-secondary: 320px;
+}
+
+/* Default: rechte Spalte direkt am Rand. Mit aktivem BuildMenu
+   rutschen rechte Status-Feeds nach links, damit sie nicht unter dem Menü
+   verschwinden. Flag wird auf .fi-root via data-build-mode gesetzt. */
+.fi-root {
+  --fi-hud-side-right: var(--fi-hud-edge);
+}
+.fi-root[data-build-mode="on"] {
+  --fi-hud-side-right: calc(
+    var(--fi-hud-edge) + var(--fi-hud-build-menu-width) + var(--fi-hud-gap)
+  );
 }
 
 /* ---- Resource Bar (top) ---- */
 .fi-resource-bar {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: var(--fi-hud-top-resource);
+  right: var(--fi-hud-edge);
   z-index: 100;
   display: flex;
-  gap: 8px;
+  gap: var(--fi-hud-gap);
   flex-wrap: wrap;
   pointer-events: none;
+  max-width: calc(100vw - 2 * var(--fi-hud-edge));
 }
 .fi-resource-item {
   display: flex;
@@ -108,7 +145,7 @@
   font-size: 10px;
   font-weight: bold;
   color: #ffd700;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   border-radius: 4px;
   padding: 0 3px;
 }
@@ -303,7 +340,7 @@
   font-size: 11px;
   color: rgba(255, 255, 255, 0.4);
   margin: 0 0 12px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
   padding: 4px 8px;
 }
@@ -459,8 +496,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 13px;
@@ -469,8 +506,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 13px;
@@ -650,8 +687,8 @@
 /* ---- Auto-Delivery Feed ---- */
 .fi-auto-delivery-feed {
   position: absolute;
-  bottom: 80px;
-  right: 16px;
+  bottom: var(--fi-hud-bottom-feed);
+  right: var(--fi-hud-side-right);
   z-index: 150;
   width: 230px;
   background: rgba(10, 20, 10, 0.88);
@@ -727,10 +764,11 @@
 /* ---- Production Status Feed ---- */
 .fi-production-status-feed {
   position: absolute;
-  bottom: 300px;
-  right: 16px;
+  bottom: var(--fi-hud-bottom-feed-secondary);
+  right: var(--fi-hud-side-right);
   z-index: 150;
   width: 300px;
+  max-width: calc(100vw - var(--fi-hud-side-right) - var(--fi-hud-edge));
   background: rgba(14, 18, 26, 0.92);
   border: 1px solid rgba(120, 150, 240, 0.35);
   border-radius: 8px;
@@ -954,7 +992,7 @@
 /* ---- Debug Badge ---- */
 .fi-debug-badge {
   position: absolute;
-  top: 10px;
+  top: var(--fi-hud-top-debug-badge);
   left: 50%;
   transform: translateX(-50%);
   z-index: 300;
@@ -1091,10 +1129,10 @@
 
 /* ---- Battery Panel ---- */
 .fi-battery-panel {
-  border-left-color: #2196F3;
+  border-left-color: #2196f3;
 }
 .fi-battery-bar-fill {
-  background: linear-gradient(90deg, #1565C0, #2196F3);
+  background: linear-gradient(90deg, #1565c0, #2196f3);
 }
 .fi-battery-status {
   display: inline-block;
@@ -1137,7 +1175,7 @@
 /* ---- Cable cell visual (grid) ---- */
 .fi-cell--cable {
   background: rgba(255, 215, 0, 0.25);
-  border: 1px dashed #FFD700;
+  border: 1px dashed #ffd700;
 }
 
 /* ============================================================
@@ -1241,7 +1279,7 @@
 /* â”€â”€ Build Mode Toggle Button â”€â”€ */
 .fi-build-toggle {
   position: fixed;
-  bottom: 80px;
+  bottom: 96px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
@@ -1254,7 +1292,9 @@
   color: #ffe0a0;
   cursor: pointer;
   backdrop-filter: blur(6px);
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 .fi-build-toggle:hover {
   background: rgba(60, 45, 15, 0.95);
@@ -1269,10 +1309,10 @@
 /* â”€â”€ Build Menu â”€â”€ */
 .fi-build-menu {
   position: fixed;
-  top: 60px;
-  right: 12px;
-  bottom: 120px;
-  width: 300px;
+  top: var(--fi-hud-build-menu-top);
+  right: var(--fi-hud-edge);
+  bottom: var(--fi-hud-build-menu-bottom);
+  width: var(--fi-hud-build-menu-width);
   z-index: 90;
   background: rgba(20, 18, 12, 0.92);
   border: 1px solid rgba(255, 180, 0, 0.35);
@@ -1345,7 +1385,9 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 .fi-build-item:hover {
   background: rgba(255, 200, 50, 0.08);

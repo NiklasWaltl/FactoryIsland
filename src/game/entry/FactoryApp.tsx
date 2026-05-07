@@ -261,6 +261,18 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
 
   useGameTicks(state, dispatch);
 
+  // Reflect build-mode flag on the root container so HUD layers (rechte
+  // Statusfeeds) per CSS-Variable nach links rutschen, wenn das BuildMenu
+  // die rechte Spalte beansprucht. Siehe factory-game.css.
+  useEffect(() => {
+    const root = document.querySelector<HTMLDivElement>(".fi-root");
+    if (!root) return;
+    root.dataset.buildMode = state.buildMode ? "on" : "off";
+    return () => {
+      root.dataset.buildMode = "off";
+    };
+  }, [state.buildMode]);
+
   const hudSlice = useMemo<HudStateSlice>(
     () => ({
       mode: state.mode,
