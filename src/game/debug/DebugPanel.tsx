@@ -4,7 +4,13 @@
 // Floating overlay only rendered when import.meta.env.DEV is true.
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { IS_DEV, isDebugEnabled, setDebugEnabled } from "./debugConfig";
+import {
+  IS_DEV,
+  isDebugEnabled,
+  setDebugEnabled,
+  isDevAutoUnlockBuildingsEnabled,
+  setDevAutoUnlockBuildingsEnabled,
+} from "./debugConfig";
 import {
   getLogEntries,
   subscribeLog,
@@ -42,6 +48,9 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
   const [tab, setTab] = useState<"cheats" | "logs" | "hmr">("cheats");
   const [, setTick] = useState(0);
   const [cheatsOn, setCheatsOn] = useState(isDebugEnabled());
+  const [autoUnlockOn, setAutoUnlockOn] = useState(
+    isDevAutoUnlockBuildingsEnabled(),
+  );
   const logEndRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to log updates
@@ -61,6 +70,12 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
     setCheatsOn(next);
     setDebugEnabled(next);
   }, [cheatsOn]);
+
+  const toggleAutoUnlock = useCallback(() => {
+    const next = !autoUnlockOn;
+    setAutoUnlockOn(next);
+    setDevAutoUnlockBuildingsEnabled(next);
+  }, [autoUnlockOn]);
 
   const logs = getLogEntries();
 
@@ -126,6 +141,20 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
               />
               <span>Debug-Logs aktiv</span>
             </label>
+            <label
+              style={rowStyle}
+              title="Wirkt nach Reset oder Scene-Neuladen"
+            >
+              <input
+                type="checkbox"
+                checked={autoUnlockOn}
+                onChange={toggleAutoUnlock}
+              />
+              <span>Alle Gebäude automatisch freischalten</span>
+            </label>
+            <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>
+              Wirkt nach Reset oder Scene-Neuladen.
+            </div>
             <div style={sectionTitle}>Mock-Daten laden</div>
             <div style={btnGridStyle}>
               <button

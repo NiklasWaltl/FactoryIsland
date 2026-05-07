@@ -24,6 +24,7 @@ import {
   requireStarterDrone,
   STARTER_DRONE_ID,
 } from "../../store/selectors/drone-selectors";
+import { isDevAutoUnlockBuildingsEnabled } from "../../debug/debugConfig";
 
 const CONVEYOR_TYPES = new Set([
   "conveyor",
@@ -104,7 +105,9 @@ export const buildSceneState = (
     placedBuildings: resolvedScene.placedBuildings
       ? [...resolvedScene.placedBuildings]
       : baseState.placedBuildings,
-    unlockedBuildings: [...ALL_BUILDING_TYPES_FOR_DEV],
+    unlockedBuildings: isDevAutoUnlockBuildingsEnabled()
+      ? [...ALL_BUILDING_TYPES_FOR_DEV]
+      : [...baseState.unlockedBuildings],
     ...getClearBaseWorldState(resolvedScene, baseState),
   };
 

@@ -140,8 +140,19 @@ function createConstructionBase(): GameState {
     debugSceneLayout,
     createInitialState("debug"),
   );
+  // In tests IS_DEV=false so buildSceneState only unlocks TIER_0 buildings.
+  // Unlock all CONSTRUCTION_SITE_BUILDINGS so placement guards don't block.
+  const withUnlocks: GameState = {
+    ...debugState,
+    unlockedBuildings: [
+      ...new Set([
+        ...debugState.unlockedBuildings,
+        ...Array.from(CONSTRUCTION_SITE_BUILDINGS),
+      ]),
+    ],
+  };
   return placeServiceHub(
-    debugState,
+    withUnlocks,
     TEST_CONSTRUCTION_HUB_POS.x,
     TEST_CONSTRUCTION_HUB_POS.y,
   ).state;

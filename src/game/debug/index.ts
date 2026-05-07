@@ -1,5 +1,11 @@
 // Debug module barrel export
-export { IS_DEV, isDebugEnabled, setDebugEnabled } from "./debugConfig";
+export {
+  IS_DEV,
+  isDebugEnabled,
+  setDebugEnabled,
+  isDevAutoUnlockBuildingsEnabled,
+  setDevAutoUnlockBuildingsEnabled,
+} from "./debugConfig";
 export {
   debugLog,
   getLogEntries,
