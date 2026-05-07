@@ -65,14 +65,15 @@ main.factory.tsx
             ├─ useReducer(gameReducer | gameReducerWithInvariants)
             │     state: GameState  •  dispatch: (GameAction) => void
             ├─ useGameTicks(state, dispatch)
-            │    └─ 12 independent setInterval hooks → dispatch periodic actions (mostly "*_TICK")
+            │    └─ 3 timers: Natural Spawn, Sapling Polling, BASE_TICK orchestrator
             ├─ localStorage save (alle 10 s + beforeunload)
             ├─ HMR-State-Restore (DEV)
             ├─ Grid (Phaser-Host + React-Overlays)
             └─ HUD + Panels (state als Prop, dispatch als Prop)
 ```
 
-All mutations run through `dispatch`. Phaser is read-only via `state` snapshots. Tick order within a browser frame is **not guaranteed** — each tick is its own `setInterval`.
+All mutations run through `dispatch`. Phaser is read-only via `state` snapshots.
+useGameTicks nutzt drei Timer: einen Natural-Spawn-Timer, einen Sapling-Polling-Timer und einen zentralen BASE_TICK-Orchestrator, der alle uebrigen Tick-Aktionen in deterministischer Reihenfolge dispatcht. Dadurch bleiben alle Tick-Frequenzen erhalten, waehrend die Dispatch-Reihenfolge innerhalb eines Tick-Durchlaufs stabil ist.
 
 ### Dispatch Sources
 
@@ -95,20 +96,20 @@ In DEV debug mode, scene boot can be URL-driven via `?scene=`:
 
 ## Tick Pipeline
 
-| Tick | Interval (ms) | Action | Trigger | Handler | Primary state writes |
-|---|---|---|---|---|---|
-| Sapling Growth | 1000 (Polling) | GROW_SAPLINGS | Polling läuft immer; Dispatch nur bei reifen Saplings | growth-actions | assets, cellMap, saplingGrowAt |
-| Natural Spawn | 60 000 | `NATURAL_SPAWN` | always | [`growth-actions`](./store/action-handlers/growth-actions/) | `assets`, `cellMap`, `saplingGrowAt` |
-| Smithy | 100 | `SMITHY_TICK` | only when `smithy.processing` | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `smithy` |
-| Manual Assembler | 100 | `MANUAL_ASSEMBLER_TICK` | only when `manualAssembler.processing` | [`manual-assembler-actions.ts`](./store/action-handlers/manual-assembler-actions.ts) | `manualAssembler`, source inventory, `notifications` |
-| Module Lab | 500 | `MODULE_LAB_TICK` | only while `moduleLabJob !== null` | [`module-lab-actions.ts`](./store/action-handlers/module-lab-actions.ts) | `moduleLabJob`, `moduleInventory`, `moduleFragments`, `assets`, `notifications` |
-| Generator | 200 | `GENERATOR_TICK` | only when at least 1 generator is running | [`machine-actions`](./store/action-handlers/machine-actions.ts) | `generators` |
-| Energy Net | 2000 | `ENERGY_NET_TICK` | always | inline `switch` → [`energy-net-tick.ts`](./store/energy/energy-net-tick.ts) | `battery.stored`, `poweredMachineIds`, `machinePowerRatio` |
-| Logistics | 500 | `LOGISTICS_TICK` | always | dispatch-chain guard → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `autoAssemblers`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
-| Crafting Jobs | 500 | `JOB_TICK` | only when pending jobs OR active keep-stock targets | [`crafting-queue-actions`](./store/action-handlers/crafting-queue-actions/) | `crafting`, `network`, physical inventories, `keepStockByWorkbench` |
-| Drones | 500 | `DRONE_TICK` | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/) | `drones`, target inventories, `crafting` (input buffer + delivery), `collectionNodes` |
-| Ship | 1000 | `SHIP_TICK` | always | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts) | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications` |
-| Notifications | 500 | `EXPIRE_NOTIFICATIONS` | always | [`maintenance-actions`](./store/action-handlers/maintenance-actions/) | `notifications` |
+| Tick             | Interval (ms)  | Action                  | Trigger                                               | Handler                                                                                 | Primary state writes                                                                                                                           |
+| ---------------- | -------------- | ----------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sapling Growth   | 1000 (Polling) | GROW_SAPLINGS           | Polling läuft immer; Dispatch nur bei reifen Saplings | growth-actions                                                                          | assets, cellMap, saplingGrowAt                                                                                                                 |
+| Natural Spawn    | 60 000         | `NATURAL_SPAWN`         | always                                                | [`growth-actions`](./store/action-handlers/growth-actions/)                             | `assets`, `cellMap`, `saplingGrowAt`                                                                                                           |
+| Smithy           | 100            | `SMITHY_TICK`           | only when `smithy.processing`                         | [`machine-actions`](./store/action-handlers/machine-actions.ts)                         | `smithy`                                                                                                                                       |
+| Manual Assembler | 100            | `MANUAL_ASSEMBLER_TICK` | only when `manualAssembler.processing`                | [`manual-assembler-actions.ts`](./store/action-handlers/manual-assembler-actions.ts)    | `manualAssembler`, source inventory, `notifications`                                                                                           |
+| Module Lab       | 500            | `MODULE_LAB_TICK`       | only while `moduleLabJob !== null`                    | [`module-lab-actions.ts`](./store/action-handlers/module-lab-actions.ts)                | `moduleLabJob`, `moduleInventory`, `moduleFragments`, `assets`, `notifications`                                                                |
+| Generator        | 200            | `GENERATOR_TICK`        | only when at least 1 generator is running             | [`machine-actions`](./store/action-handlers/machine-actions.ts)                         | `generators`                                                                                                                                   |
+| Energy Net       | 2000           | `ENERGY_NET_TICK`       | always                                                | inline `switch` → [`energy-net-tick.ts`](./store/energy/energy-net-tick.ts)             | `battery.stored`, `poweredMachineIds`, `machinePowerRatio`                                                                                     |
+| Logistics        | 500            | `LOGISTICS_TICK`        | always                                                | dispatch-chain guard → [`logistics-tick.ts`](./store/action-handlers/logistics-tick.ts) | `autoMiners`, `conveyors`, `autoSmelters`, `autoAssemblers`, `inventory`, `warehouseInventories`, `smithy`, `notifications`, `autoDeliveryLog` |
+| Crafting Jobs    | 500            | `JOB_TICK`              | only when pending jobs OR active keep-stock targets   | [`crafting-queue-actions`](./store/action-handlers/crafting-queue-actions/)             | `crafting`, `network`, physical inventories, `keepStockByWorkbench`                                                                            |
+| Drones           | 500            | `DRONE_TICK`            | always (sequential per-drone processing in key order) | [`drone-tick-actions`](./store/action-handlers/drone-tick-actions/)                     | `drones`, target inventories, `crafting` (input buffer + delivery), `collectionNodes`                                                          |
+| Ship             | 1000           | `SHIP_TICK`             | always                                                | [`ship-actions.ts`](./store/action-handlers/ship-actions.ts)                            | `ship`, `warehouseInventories`, `inventory`, `moduleInventory`, `moduleFragments`, `notifications`                                             |
+| Notifications    | 500            | `EXPIRE_NOTIFICATIONS`  | always                                                | [`maintenance-actions`](./store/action-handlers/maintenance-actions/)                   | `notifications`                                                                                                                                |
 
 There is no separate `AUTO_ASSEMBLER_TICK` action. Auto-assembler processing runs as Phase 4 (`runAutoAssemblerPhase`) inside `LOGISTICS_TICK`.
 
@@ -117,7 +118,7 @@ Einträge entstehen bei jeder Auto-Delivery (Auto-Miner, Conveyor-Transfer).
 Mehrere Einträge innerhalb eines Zeitfensters werden gebatcht; bei Erreichen
 eines konfigurierten Limits werden älteste Einträge rotiert (FIFO).
 Die React-Komponente liest das Log direkt aus dem Game-State
-(`FactoryApp.tsx:336`). Ziel ist ausschließlich UI-Feedback, keine
+(`FactoryApp.tsx:342`). Ziel ist ausschließlich UI-Feedback, keine
 Replay-Fähigkeit.
 
 > Hinweis: Die 1000 ms sind die Polling-Frequenz. Die Reifezeit eines neu gespawnten Saplings wird über `SAPLING_GROW_MS` gesetzt (derzeit 30 000 ms).
@@ -186,24 +187,27 @@ Beim Laden werden Claims in beiden Pfaden auf `null` gesetzt: im Save-Codec sowi
 
 `GameState` is a single flat interface in [`store/types.ts`](./store/types.ts) (Interface `GameState`). Logically, it decomposes into the following slices:
 
-| Slice (logical) | Fields | Persisted |
-|---|---|---|
-| **Identity** | `mode` | yes |
-| **Inventories** | `inventory`, `warehouseInventories`, `serviceHubs`, `network` | yes |
-| **Terrain / World** | `tileMap`, `floorMap`, `assets`, `cellMap`, `collectionNodes`, `saplingGrowAt` | yes |
-| **Build / Shop** | `purchasedBuildings`, `placedBuildings`, `warehousesPurchased`, `warehousesPlaced`, `cablesPlaced`, `powerPolesPlaced`, `buildMode`, `selectedBuildingType`, `selectedFloorTile` | partial |
-| **Hotbar** | `hotbarSlots`, `activeSlot` | yes |
-| **Machines / Logistics** | `smithy`, `manualAssembler`, `autoMiners`, `autoSmelters`, `autoAssemblers`, `conveyors`, `conveyorUndergroundPeers`, `generators`, `battery` | yes |
-| **Conveyor Routing** | `splitterRouteState`, `splitterFilterState` | yes |
-| **Energy** | `connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio`, `energyDebugOverlay` | partial |
-| **Drones / Hubs** | `drones`, `constructionSites` | yes |
-| **Zones** | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds` | yes |
-| **Crafting** | `crafting`, `keepStockByWorkbench`, `recipeAutomationPolicies` | yes |
-| **Modules / Module Lab** | `moduleInventory`, `moduleFragments`, `moduleLabJob` | yes |
-| **Ship / Dock** | `ship` | yes |
-| **UI (transient)** | `openPanel`, `selectedWarehouseId`, `selectedPowerPoleId`, `selectedAutoMinerId`, `selectedAutoSmelterId`, `selectedAutoAssemblerId`, `selectedGeneratorId`, `selectedServiceHubId`, `selectedCraftingBuildingId`, `selectedSplitterId`, `notifications`, `autoDeliveryLog` | no |
+| Slice (logical)          | Fields                                                                                                                                                                                                                                                                      | Persisted |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **Identity**             | `mode`                                                                                                                                                                                                                                                                      | yes       |
+| **Inventories**          | `inventory`, `warehouseInventories`, `serviceHubs`, `network`                                                                                                                                                                                                               | yes       |
+| **Terrain / World**      | `tileMap`, `floorMap`, `assets`, `cellMap`, `collectionNodes`, `saplingGrowAt`                                                                                                                                                                                              | yes       |
+| **Build / Shop**         | `purchasedBuildings`, `placedBuildings`, `warehousesPurchased`, `warehousesPlaced`, `cablesPlaced`, `powerPolesPlaced`, `buildMode`, `selectedBuildingType`, `selectedFloorTile`, `unlockedBuildings`                                                                       | yes       |
+| **Hotbar**               | `hotbarSlots`, `activeSlot`                                                                                                                                                                                                                                                 | yes       |
+| **Machines / Logistics** | `smithy`, `manualAssembler`, `autoMiners`, `autoSmelters`, `autoAssemblers`, `conveyors`, `conveyorUndergroundPeers`, `generators`, `battery`                                                                                                                               | yes       |
+| **Conveyor Routing**     | `splitterRouteState`, `splitterFilterState`                                                                                                                                                                                                                                 | yes       |
+| **Energy**               | `connectedAssetIds`, `poweredMachineIds`, `machinePowerRatio`, `energyDebugOverlay`                                                                                                                                                                                         | partial   |
+| **Drones / Hubs**        | `drones`, `constructionSites`                                                                                                                                                                                                                                               | yes       |
+| **Zones**                | `productionZones`, `buildingZoneIds`, `buildingSourceWarehouseIds`                                                                                                                                                                                                          | yes       |
+| **Crafting**             | `crafting`, `keepStockByWorkbench`, `recipeAutomationPolicies`                                                                                                                                                                                                              | yes       |
+| **Modules / Module Lab** | `moduleInventory`, `moduleFragments`, `moduleLabJob`                                                                                                                                                                                                                        | yes       |
+| **Ship / Dock**          | `ship`                                                                                                                                                                                                                                                                      | yes       |
+| **UI (transient)**       | `openPanel`, `selectedWarehouseId`, `selectedPowerPoleId`, `selectedAutoMinerId`, `selectedAutoSmelterId`, `selectedAutoAssemblerId`, `selectedGeneratorId`, `selectedServiceHubId`, `selectedCraftingBuildingId`, `selectedSplitterId`, `notifications`, `autoDeliveryLog` | no        |
 
-The starter drone lives in `drones["starter"]`. `selectStarterDrone()` and `requireStarterDrone()` remain the stable read API; latest saves remove the old duplicated field via save migration v30.
+`unlockedBuildings` (`string[]`) startet mit Tier-0-Unlocks; Legacy-Saves werden per Migration auf gueltige Unlock-Listen angehoben.
+
+The starter drone lives in `drones["starter"]`. `selectStarterDrone()` and `requireStarterDrone()` remain the stable read API; save migration v30 removed the old duplicated field.
+Die aktuelle Save-Version ist 32. Zwischenschritte: v30 entfernt das legacy-duplicated `starterDrone`-Feld, v31 ergaenzt `unlockedBuildings` fuer Legacy-Saves, v32 ergaenzt `research_lab` idempotent in `unlockedBuildings`. Alle Schritte sind in `save-migrations.ts` dokumentiert.
 
 Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 
@@ -216,6 +220,13 @@ Type definitions for all slice fields: see [TYPES.md](./TYPES.md).
 - Floor placement uses its own action path (`BUILD_PLACE_FLOOR_TILE` -> `handleFloorPlacementAction`).
 - Building placement/removal remains separate (`BUILD_PLACE_BUILDING`, `BUILD_REMOVE_ASSET`) via `building-placement`.
 - All four paths are wired in `dispatchAction` (`store/game-reducer-dispatch.ts`) as separate reducer clusters.
+
+### Research Lab / Unlock Pipeline
+
+Das Unlock-System laeuft ueber die Action `RESEARCH_BUILDING` mit item-basierten Research-Rezepten (`research.ts`).
+Der Handler schreibt das Ergebnis in das persistierte Feld `unlockedBuildings`; die Action wird ueber `game-reducer-dispatch.ts` in die Dispatch-Kette eingebunden.
+Die Platzierungslogik (`place-building.ts`) gate't alle Gebaeudetypen, die noch nicht freigeschaltet sind.
+Die Bedienung erfolgt ueber das Research-Lab-Panel (`FactoryApp.tsx`).
 
 ### Production Zones
 
@@ -269,8 +280,8 @@ Service hubs are tiered and persisted through `serviceHubs[hubId]`:
 
 Construction Sites entstehen in zwei Pfaden:
 (a) Regulärer Building-Placement-Flow (`place-building.ts`): Beim Platzieren eines
-   Gebäudes wird eine Construction Site angelegt, die offene Materialschuld
-   in `constructionSites[assetId]` hält.
+Gebäudes wird eine Construction Site angelegt, die offene Materialschuld
+in `constructionSites[assetId]` hält.
 (b) Hub-Upgrade-Flow (`UPGRADE_HUB`): Analog wird beim Hub-Upgrade eine Site erstellt.
 
 Drone-Deposits (`deposit-construction.ts`) reduzieren schrittweise die `remaining`-
@@ -282,14 +293,15 @@ Relevante Dateien: `store/action-handlers/building-placement/place-building.ts`,
 ### Conveyor Route State
 
 `conveyorUndergroundPeers`, `splitterRouteState`, and `splitterFilterState` are persisted logistics state. Splitter-Routing in `store/conveyor/conveyor-routing.ts` arbeitet nach folgendem Schema:
+
 1. **Filter-Prüfung**: Vor der Side-Auswahl werden optionale Output-Filter
-  pro Output-Seite geprüft.
+   pro Output-Seite geprüft.
 2. **Round-Robin**: Über `lastSide` wird die nächste Ausgabe-Seite im
-  Round-Robin-Verfahren gewählt.
+   Round-Robin-Verfahren gewählt.
 3. **State-Update**: Bei erfolgreichem Routing wird `splitterRouteState`
-  für den jeweiligen Splitter aktualisiert.
+   für den jeweiligen Splitter aktualisiert.
 4. **Fallback**: Schlägt das Routing fehl (Filter blockiert, kein Platz),
-  bleibt das Item auf dem Eingangs-Conveyor.
+   bleibt das Item auf dem Eingangs-Conveyor.
 
 `SET_SPLITTER_FILTER` persistiert die Filter-Konfiguration pro Seite.
 
@@ -301,14 +313,14 @@ The Dock Warehouse is not a normal build-menu placement. It is seeded and normal
 
 ## React vs Phaser vs Reducer — Boundaries
 
-| Layer | Directory/directories | Writes state? | Reads state? |
-|---|---|---|---|
-| **Simulation (Pure Logic)** | [`store/`](./store/) (including [`store/selectors/`](./store/selectors/)), [`crafting/`](./crafting/), [`drones/`](./drones/), [`inventory/`](./inventory/), [`logistics/`](./logistics/), [`zones/`](./zones/), [`power/`](./power/), [`buildings/`](./buildings/), [`simulation/`](./simulation/) | only via reducer | — |
-| **UI (React)** | [`ui/`](./ui/), [`grid/Grid*.tsx`](./grid/) | only via `dispatch` | yes, as prop |
-| **Renderer (Phaser)** | [`world/PhaserGame.ts`](./world/PhaserGame.ts), [`world/PhaserHost.tsx`](./world/PhaserHost.tsx), [`assets/sprites/`](./assets/sprites/) | never | snapshot via bridge |
-| **Persistence** | [`simulation/save*.ts`](./simulation/) | codec only | hydrates state |
-| **Debug** | [`debug/`](./debug/) | via `DEBUG_SET_STATE` | yes |
-| **Entry / Bootstrap** | [`entry/`](./entry/) | indirectly | yes |
+| Layer                       | Directory/directories                                                                                                                                                                                                                                                                               | Writes state?         | Reads state?        |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------- |
+| **Simulation (Pure Logic)** | [`store/`](./store/) (including [`store/selectors/`](./store/selectors/)), [`crafting/`](./crafting/), [`drones/`](./drones/), [`inventory/`](./inventory/), [`logistics/`](./logistics/), [`zones/`](./zones/), [`power/`](./power/), [`buildings/`](./buildings/), [`simulation/`](./simulation/) | only via reducer      | —                   |
+| **UI (React)**              | [`ui/`](./ui/), [`grid/Grid*.tsx`](./grid/)                                                                                                                                                                                                                                                         | only via `dispatch`   | yes, as prop        |
+| **Renderer (Phaser)**       | [`world/PhaserGame.ts`](./world/PhaserGame.ts), [`world/PhaserHost.tsx`](./world/PhaserHost.tsx), [`assets/sprites/`](./assets/sprites/)                                                                                                                                                            | never                 | snapshot via bridge |
+| **Persistence**             | [`simulation/save*.ts`](./simulation/)                                                                                                                                                                                                                                                              | codec only            | hydrates state      |
+| **Debug**                   | [`debug/`](./debug/)                                                                                                                                                                                                                                                                                | via `DEBUG_SET_STATE` | yes                 |
+| **Entry / Bootstrap**       | [`entry/`](./entry/)                                                                                                                                                                                                                                                                                | indirectly            | yes                 |
 
 **Golden rule:** Phaser must never call `dispatch`. UI events are the only source of interactive mutations apart from tickers.
 
@@ -352,36 +364,42 @@ Grid/building constants have canonical homes under `constants/` and `store/const
 
 **Rationale:** Planning can iteratively reject candidates without leaving state inconsistencies.
 
-### 7. Tick order deliberately nondeterministic
+## 7. Tick-Orchestrierung und Reihenfolge-Rationale
 
-No global tick orchestrator — every `setInterval` runs independently.
+Die Tick-Architektur basiert auf einem zentralen BASE_TICK-Orchestrator statt auf voneinander entkoppelten Intervallen. Ziel ist eine reproduzierbare Dispatch-Reihenfolge fuer voneinander abhaengige Systeme bei unveraenderten Tick-Intervallen.
 
-**Rationale:** Simpler than a centralized scheduler. Race conditions are tolerable because each tick performs a complete reducer pass. (*UNCERTAIN:* Race safety per tick has not been formally verified.)
+Deterministische Reihenfolge innerhalb eines Orchestrator-Durchlaufs:
 
-Aktueller Stand: Die Laufzeit nutzt **12 unabhängige `setInterval`-Hooks**; es gibt keinen globalen Tick-Orchestrator.
+1. `GENERATOR_TICK` - Ressourcenproduktion
+2. `ENERGY_NET_TICK` - Energienetz-Update
+3. `LOGISTICS_TICK` - Logistik + Auto-Assembler-Phase
+4. `DRONE_TICK` - Drohnen-Bewegung
+5. `JOB_TICK` - Job-Queue-Verarbeitung
+
+Jede Phase sieht damit den konsistenten Vorzustand der vorherigen. Sondertimer (Natural Spawn, Sapling-Polling) laufen weiterhin unabhaengig, da sie keine Abhaengigkeit zu den oben genannten Phasen haben.
 
 ---
 
 ## Glossary
 
-| Term | Meaning |
-|---|---|
-| **Asset** | Placed world object (building, tree, deposit, drone-capable). Keyed by `assetId`. |
-| **Cell** | 1×1 grid tile. Addressed via `cellKey(x,y)` from [`store/utils/cell-key.ts`](./store/utils/cell-key.ts). |
-| **Hub / Service Hub** | Drone home base with its own inventory (`ServiceHubInventory`). |
-| **Workbench** | Crafting asset; occupied by crafting jobs. |
-| **Network Slice** | Logical reservations on physical inventory. Defined in [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts). |
-| **Owner** | Owner of a reservation. Convention: `reservationOwnerId === job.id` and reservation `ownerId === reservationOwnerId`. |
-| **Source / CraftingInventorySource** | Discriminated union: `global` \| `warehouse` \| `zone`. |
-| **Zone / ProductionZone** | Logical grouping of buildings + warehouses with aggregated stock. |
-| **Job-Lifecycle** | `queued → reserved → crafting → delivering → done|cancelled`. |
-| **Keep-Stock-Target** | Per-workbench/recipe auto-refill threshold. |
-| **Tick-Phase** | Internal step of a tick handler (e.g. `auto-miner` in `LOGISTICS_TICK`). |
-| **Cluster** | Group of related action types with a shared handler under `store/action-handlers/`. |
-| **Deps** | Reducer-internal helpers injected into handlers. Avoids ESM cycles. |
-| **HMR** | Hot Module Replacement. In DEV, state is mirrored on `window.__FI_HMR_STATE__` via `debug/hmrState.ts`. |
-| **Construction Site** | Building that still has outstanding resource debt. Drones deliver. |
-| **DroneRole** | `auto | construction | supply` — affects only task scoring; role changes mutate only `drone.role` and do **not** cancel running tasks. |
+| Term                                 | Meaning                                                                                                                    |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| **Asset**                            | Placed world object (building, tree, deposit, drone-capable). Keyed by `assetId`.                                          |
+| **Cell**                             | 1×1 grid tile. Addressed via `cellKey(x,y)` from [`store/utils/cell-key.ts`](./store/utils/cell-key.ts).                   |
+| **Hub / Service Hub**                | Drone home base with its own inventory (`ServiceHubInventory`).                                                            |
+| **Workbench**                        | Crafting asset; occupied by crafting jobs.                                                                                 |
+| **Network Slice**                    | Logical reservations on physical inventory. Defined in [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts). |
+| **Owner**                            | Owner of a reservation. Convention: `reservationOwnerId === job.id` and reservation `ownerId === reservationOwnerId`.      |
+| **Source / CraftingInventorySource** | Discriminated union: `global` \| `warehouse` \| `zone`.                                                                    |
+| **Zone / ProductionZone**            | Logical grouping of buildings + warehouses with aggregated stock.                                                          |
+| **Job-Lifecycle**                    | `queued → reserved → crafting → delivering → done                                                                          | cancelled`.  |
+| **Keep-Stock-Target**                | Per-workbench/recipe auto-refill threshold.                                                                                |
+| **Tick-Phase**                       | Internal step of a tick handler (e.g. `auto-miner` in `LOGISTICS_TICK`).                                                   |
+| **Cluster**                          | Group of related action types with a shared handler under `store/action-handlers/`.                                        |
+| **Deps**                             | Reducer-internal helpers injected into handlers. Avoids ESM cycles.                                                        |
+| **HMR**                              | Hot Module Replacement. In DEV, state is mirrored on `window.__FI_HMR_STATE__` via `debug/hmrState.ts`.                    |
+| **Construction Site**                | Building that still has outstanding resource debt. Drones deliver.                                                         |
+| **DroneRole**                        | `auto                                                                                                                      | construction | supply`— affects only task scoring; role changes mutate only`drone.role` and do **not** cancel running tasks. |
 
 ---
 

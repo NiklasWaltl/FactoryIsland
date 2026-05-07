@@ -30,6 +30,7 @@ Nutze dieses Dokument als Verhaltensregeln und verlinke fuer Details auf die obi
 
 - Keine Spiellogik in UI-Komponenten.
 - React mutiert State nur via `dispatch`; Phaser ist read-only und dispatcht nicht.
+- React Compiler ist aktiv. Render-Purity bleibt Zielzustand: keine neuen nicht-deterministischen Render-Berechnungen (z. B. `Date.now()`/`Math.random()`), keine I/O-Zugriffe und keine mutierenden Singletons im Renderpfad. Bestehende Countdown-UI mit `Date.now()` im Renderpfad gilt als technischer Altstand und sollte bei Beruehrung bevorzugt auf compiler-freundliche Zeitableitung refaktoriert werden.
 - Keine neuen Re-Export-Hubs ohne klaren Grund.
 - Produktionsrezepte liegen unter `src/game/simulation/recipes/`. Ausnahme: Module-Lab-Rezepte liegen in `src/game/constants/moduleLabConstants.ts` und werden von `src/game/store/action-handlers/module-lab-actions.ts` und `src/game/ui/panels/ModulLabPanel.tsx` konsumiert.
 - Neue UI-Elemente unter `src/game/ui/**`; `BuildMenu.tsx` liegt unter `src/game/ui/menus/`.
@@ -51,6 +52,8 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 - Alte Saves muessen ueber `normalizeLoadedState()` kompatibel bleiben.
 - Fuer Footprint-Logik in der Regel zentrale Geometrie-Helper (`assetWidth`/`assetHeight`) oder das etablierte `width`/`height`-Fallback-Muster nutzen. Direkte `asset.size`-Nutzung vermeiden und nur in klar begruendeten Pfaden (z. B. Rendering, Connectivity, Routing, Debug/Overlay oder bestehende Infrastruktur) belassen; wenn moeglich ueber Helper wie `asset-geometry.ts`.
 - Rotierbare Maschinen brauchen korrekte `direction`-Logik.
+- Das fruehere `starterDrone`-Duplikat wurde per Migration v30 entfernt. Kanonische Laufzeitquelle ist `drones["starter"]`; fuer stabile Reads `selectStarterDrone` oder `requireStarterDrone` nutzen. `syncDrones` ist nur noch ein No-op-Kompatibilitaetshelfer.
+- Tick-Dispatches laufen ueber den zentralen BASE_TICK-Orchestrator mit deterministischer Reihenfolge (Generator -> Energy -> Logistics -> Drone -> Job). Tick-Logik trotzdem auf robuste Slice-Interaktionen pruefen.
 - Bei Build-Fehlern zuerst Konfigurations- und Importkette pruefen.
 - In dieser Windows-Umgebung ist `rg` ggf. nicht verfuegbar; unter aktuellen Claude-Permissions ist `rg` als Bash-Befehl zudem ggf. nicht freigeschaltet. Nutze dann VS-Code-Suche oder `Select-String` sowie erlaubte Alternativen wie `xargs grep *`.
 
@@ -58,5 +61,12 @@ Fuehre nach Aenderungen immer passende Verifikation aus:
 
 - Keine neuen npm-Abhaengigkeiten ohne Rueckfrage.
 - Keine stillen Fallbacks fuer fehlende Logik.
-- Bei jeder neuen persistierten `GameState`-Property muessen zwingend alle drei Pfade gepflegt werden: (1) Default-Wert in `initial-state`, (2) Serialisierung/Deserialisierung im Save-Codec, (3) Migration in `save-migrations.ts` (aktuelle Version: v29). Betrifft u. a.: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterRouteState`, `splitterFilterState`.
+- Bei jeder neuen persistierten `GameState`-Property muessen zwingend mindestens diese drei Pfade gepflegt werden: (1) Default-Wert in `initial-state`, (2) Serialisierung/Deserialisierung im Save-Codec, (3) Migration in `save-migrations.ts` (aktuelle Save-Version: siehe `CURRENT_SAVE_VERSION` in `src/game/simulation/save-migrations.ts`; derzeit v32 - bei Migrationsarbeiten immer dort nachschlagen). Betrifft u. a.: `moduleInventory`, `moduleFragments`, `moduleLabJob`, `ship`, `splitterRouteState`, `splitterFilterState`, `unlockedBuildings` und den `research_lab`-Unlock-Pfad.
+- (4) Typdefinitionen: Wurde das zugehoerige Interface/Type in `src/game/store/types.ts` aktualisiert?
+- (5) Architekturdoku: Ist der Persistenzstatus in `src/game/ARCHITECTURE.md` (Abschnitt Save System) noch korrekt?
 - Keine Aenderung ohne anschliessende Verifikation.
+
+## Kritische Must-follow-Regeln
+
+- React Compiler Purity: React-Komponenten muessen render-pure bleiben (keine Seiteneffekte im Render); der React Compiler ist aktiv. Kanonische Quelle: `AGENTS.md`.
+- Selector-Imports: Selectors nur aus `src/game/store/selectors/**` importieren, nie direkt aus State-Slices. Kanonische Quellen: `AGENTS.md` und `src/game/ARCHITECTURE.md`.

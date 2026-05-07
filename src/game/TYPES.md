@@ -35,14 +35,14 @@
 
 ## Domain Overview
 
-| Domain | Source | Contents |
-|---|---|---|
-| Store & Core State | [`store/types.ts`](./store/types.ts) | `GameState` + all slice types |
-| Crafting | [`crafting/types.ts`](./crafting/types.ts) | job lifecycle types |
-| Items | [`items/types.ts`](./items/types.ts) | item IDs, categories, stacks |
-| Inventory / Reservations | [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts) | reservation types, network slice |
-| Drones | [`store/types/drone-types.ts`](./store/types/drone-types.ts), [`drones/candidates/types.ts`](./drones/candidates/types.ts), [`drones/candidates/candidate-builder.ts`](./drones/candidates/candidate-builder.ts) | drone FSM, role, task-selection types |
-| Game Actions | [`store/game-actions.ts`](./store/game-actions.ts) | `GameAction` union type |
+| Domain                   | Source                                                                                                                                                                                                           | Contents                              |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Store & Core State       | [`store/types.ts`](./store/types.ts)                                                                                                                                                                             | `GameState` + all slice types         |
+| Crafting                 | [`crafting/types.ts`](./crafting/types.ts)                                                                                                                                                                       | job lifecycle types                   |
+| Items                    | [`items/types.ts`](./items/types.ts)                                                                                                                                                                             | item IDs, categories, stacks          |
+| Inventory / Reservations | [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts)                                                                                                                                               | reservation types, network slice      |
+| Drones                   | [`store/types/drone-types.ts`](./store/types/drone-types.ts), [`drones/candidates/types.ts`](./drones/candidates/types.ts), [`drones/candidates/candidate-builder.ts`](./drones/candidates/candidate-builder.ts) | drone FSM, role, task-selection types |
+| Game Actions             | [`store/game-actions.ts`](./store/game-actions.ts)                                                                                                                                                               | `GameAction` union type               |
 
 ---
 
@@ -50,44 +50,44 @@
 
 **Sources:** [`store/types.ts`](./store/types.ts), [`store/types/drone-types.ts`](./store/types/drone-types.ts), [`store/types/crafting-types.ts`](./store/types/crafting-types.ts), [`store/types/conveyor-types.ts`](./store/types/conveyor-types.ts), [`store/types/module-state.ts`](./store/types/module-state.ts), [`store/types/power-state.ts`](./store/types/power-state.ts), [`store/types/zone-source-state.ts`](./store/types/zone-source-state.ts)
 
-| Type | Description |
-|------|-------------|
-| `GameState` | Root state object — all runtime data (assets, inventory, drones, crafting, energy, UI), including `tileMap`, `moduleInventory`, `moduleFragments`, `moduleLabJob`, `autoAssemblers`, `conveyorUndergroundPeers`, `splitterRouteState`, `splitterFilterState`, `ship`, `selectedAutoAssemblerId`, `selectedSplitterId` |
-| `PlacedAsset` | Building or resource node on the grid: `{ id, type, x, y, size, width?, height?, fixed?, direction?, priority?, boosted?, moduleSlot?, isDockWarehouse?, status?, deconstructRequestSeq? }` |
-| `AssetStatus` | Runtime marker for asset lifecycle states: `"deconstructing"` |
-| `AssetType` | Union of all grid entities: trees, buildings, conveyors, service hubs, etc. |
-| `BuildingType` | Subset of `AssetType` — buildable/managed building asset subset; includes fixed/special buildings such as `dock_warehouse` |
-| `FloorTileType` | Placeable floor layer union: `"stone_floor" \| "grass_block"` |
-| `Inventory` | `{ coins: number } & Record<ItemId, number>` — global or per-warehouse pool |
-| `ToolKind` | Hotbar tool/build selector union: `"axe" \| "wood_pickaxe" \| "stone_pickaxe" \| "sapling" \| "building" \| "empty"` |
-| `HotbarSlot` | Hotbar entry: `{ toolKind, buildingType?, amount, label, emoji }` |
-| `Direction` | `"north" \| "east" \| "south" \| "west"` |
-| `GameMode` | `"release" \| "debug"` — controls infinite warehouse + drop-rate overrides |
-| `CollectableItemType` | `"wood" \| "stone" \| "iron" \| "copper"` — physically collectable by drones |
-| `CollectionNode` | World-dropped resource pile with `itemType`, `amount`, `tileX`, `tileY`, `collectable`, `createdAt`, and `reservedByDroneId: string \| null` |
-| `DroneTaskType` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply" \| "deconstruct"` |
-| `StarterDroneState` | Runtime state of a drone: `{ status, tileX, tileY, targetNodeId, cargo, ticksRemaining, hubId, currentTaskType, deliveryTargetId, craftingJobId, droneId, role?, deconstructRefund? }` |
-| `DroneRole` | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter |
-| `DroneStatus` | `idle` \| `moving_to_collect` \| `collecting` \| `moving_to_dropoff` \| `depositing` \| `returning_to_dock` |
-| `ServiceHubInventory` | Hub-local stock map: `Record<CollectableItemType, number>` |
-| `ServiceHubEntry` | Per hub: inventory, target stock, tier, assigned drones, optional `pendingUpgrade?` |
-| `HubTier` | `1 \| 2` — proto hub vs service hub |
-| `ConstructionSite` | Outstanding resource debt: `{ buildingType, remaining }` |
-| `ProductionZone` | Zone metadata `{ id, name }`; membership is stored in `GameState.buildingZoneIds` |
-| `CraftingSource` | Object union: `{ kind: "global" } \| { kind: "warehouse"; warehouseId: string } \| { kind: "zone"; zoneId: string }` |
-| `WorkbenchSource` | `@deprecated` alias on `CraftingSource` for backward compatibility |
-| `KeepStockTargetEntry` | Keep-stock target entry per recipe: `{ enabled, amount }` |
-| `KeepStockByWorkbench` | Keep-stock map: `Record<workbenchId, Record<recipeId, KeepStockTargetEntry>>` |
-| `UIPanel` | Which side panel is open: `"map_shop"`, `"warehouse"`, `"smithy"`, `"workbench"`, `"generator"`, `"battery"`, `"power_pole"`, `"auto_miner"`, `"auto_smelter"`, `"auto_assembler"`, `"manual_assembler"`, `"service_hub"`, `"conveyor_splitter"`, `"dock_warehouse"`, `"fragment_trader"`, `"module_lab"`, or `null` |
-| `MachinePriority` | `1..5` — energy-scheduling priority (`1` high, `5` low) |
-| `AutoMinerEntry` | Per-auto-miner production entry: `{ depositId, resource, progress }` |
-| `AutoSmelterEntry` | Per-smelter belt processing: input buffer, processing, pending output, status, `lastRecipeInput`, `lastRecipeOutput`, `throughputEvents`, `selectedRecipe` |
-| `SmithyState` | Smithy runtime state: fuel/input slots, selected recipe, processing/progress, outputs, and `buildingId` |
-| `ManualAssemblerState` | Manual assembler runtime state: `{ processing, recipe, progress, buildingId }` |
-| `BatteryState` | Battery energy state: `{ stored, capacity }` |
-| `GeneratorState` | Fuel slot + burn progress, `running: boolean`, optional drone refill counter `requestedRefill?: number` |
-| `AutoDeliveryEntry` | Auto-delivery log entry: `{ id, sourceType, sourceId, resource, amount, warehouseId, timestamp }` |
-| `GameNotification` | Transient HUD notification: `id`, resource, displayName, amount, `expiresAt`, optional `kind?` |
+| Type                   | Description                                                                                                                                                                                                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------- |
+| `GameState`            | Root state object — all runtime data (assets, inventory, drones, crafting, energy, UI), including `tileMap`, `moduleInventory`, `moduleFragments`, `moduleLabJob`, `autoAssemblers`, `conveyorUndergroundPeers`, `splitterRouteState`, `splitterFilterState`, `ship`, `selectedAutoAssemblerId`, `selectedSplitterId`                  |
+| `PlacedAsset`          | Building or resource node on the grid: `{ id, type, x, y, size, width?, height?, fixed?, direction?, priority?, boosted?, moduleSlot?, isDockWarehouse?, status?, deconstructRequestSeq? }`                                                                                                                                            |
+| `AssetStatus`          | Runtime marker for asset lifecycle states: `"deconstructing"`                                                                                                                                                                                                                                                                          |
+| `AssetType`            | Union of all grid entities: trees, buildings, conveyors, service hubs, etc.                                                                                                                                                                                                                                                            |
+| `BuildingType`         | Subset of `AssetType` — buildable/managed building asset subset; includes fixed/special buildings such as `dock_warehouse`                                                                                                                                                                                                             |
+| `FloorTileType`        | Placeable floor layer union: `"stone_floor" \| "grass_block"`                                                                                                                                                                                                                                                                          |
+| `Inventory`            | `{ coins: number } & Record<ItemId, number>` — global or per-warehouse pool                                                                                                                                                                                                                                                            |
+| `ToolKind`             | Hotbar tool/build selector union: `"axe" \| "wood_pickaxe" \| "stone_pickaxe" \| "sapling" \| "building" \| "empty"`                                                                                                                                                                                                                   |
+| `HotbarSlot`           | Hotbar entry: `{ toolKind, buildingType?, amount, label, emoji }`                                                                                                                                                                                                                                                                      |
+| `Direction`            | `"north" \| "east" \| "south" \| "west"`                                                                                                                                                                                                                                                                                               |
+| `GameMode`             | `"release" \| "debug"` — controls infinite warehouse + drop-rate overrides                                                                                                                                                                                                                                                             |
+| `CollectableItemType`  | `"wood" \| "stone" \| "iron" \| "copper"` — physically collectable by drones                                                                                                                                                                                                                                                           |
+| `CollectionNode`       | World-dropped resource pile with `itemType`, `amount`, `tileX`, `tileY`, `collectable`, `createdAt`, and `reservedByDroneId: string \| null`                                                                                                                                                                                           |
+| `DroneTaskType`        | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply" \| "deconstruct"`                                                                                                                                                                                                               |
+| `StarterDroneState`    | Runtime state of a drone: `{ status, tileX, tileY, targetNodeId, cargo, ticksRemaining, hubId, currentTaskType, deliveryTargetId, craftingJobId, droneId, role?, deconstructRefund? }`                                                                                                                                                 |
+| `DroneRole`            | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter                                                                                                                                                                                                                                                                |
+| `DroneStatus`          | `idle` \| `moving_to_collect` \| `collecting` \| `moving_to_dropoff` \| `depositing` \| `returning_to_dock`                                                                                                                                                                                                                            |
+| `ServiceHubInventory`  | Hub-local stock map: `Record<CollectableItemType, number>`                                                                                                                                                                                                                                                                             |
+| `ServiceHubEntry`      | Per hub: inventory, target stock, tier, assigned drones, optional `pendingUpgrade?`                                                                                                                                                                                                                                                    |
+| `HubTier`              | `1 \| 2` — proto hub vs service hub                                                                                                                                                                                                                                                                                                    |
+| `ConstructionSite`     | Outstanding resource debt: `{ buildingType, remaining }`                                                                                                                                                                                                                                                                               |
+| `ProductionZone`       | Zone metadata `{ id, name }`; membership is stored in `GameState.buildingZoneIds`                                                                                                                                                                                                                                                      |
+| `CraftingSource`       | Object union: `{ kind: "global" } \| { kind: "warehouse"; warehouseId: string } \| { kind: "zone"; zoneId: string }`                                                                                                                                                                                                                   |
+| `WorkbenchSource`      | `@deprecated` alias on `CraftingSource` for backward compatibility                                                                                                                                                                                                                                                                     |
+| `KeepStockTargetEntry` | Keep-stock target entry per recipe: `{ enabled, amount }`                                                                                                                                                                                                                                                                              |
+| `KeepStockByWorkbench` | Keep-stock map: `Record<workbenchId, Record<recipeId, KeepStockTargetEntry>>`                                                                                                                                                                                                                                                          |
+| `UIPanel`              | Which side panel is open: `"map_shop"`, `"warehouse"`, `"smithy"`, `"workbench"`, `"generator"`, `"battery"`, `"power_pole"`, `"auto_miner"`, `"auto_smelter"`, `"auto_assembler"`, `"manual_assembler"`, `"service_hub"`, `"conveyor_splitter"`, `"dock_warehouse"`, `"fragment_trader"`, `"module_lab"`, `"research_lab"`, or `null` | <!-- patched --> |
+| `MachinePriority`      | `1..5` — energy-scheduling priority (`1` high, `5` low)                                                                                                                                                                                                                                                                                |
+| `AutoMinerEntry`       | Per-auto-miner production entry: `{ depositId, resource, progress }`                                                                                                                                                                                                                                                                   |
+| `AutoSmelterEntry`     | Per-smelter belt processing: input buffer, processing, pending output, status, `lastRecipeInput`, `lastRecipeOutput`, `throughputEvents`, `selectedRecipe`                                                                                                                                                                             |
+| `SmithyState`          | Smithy runtime state: fuel/input slots, selected recipe, processing/progress, outputs, and `buildingId`                                                                                                                                                                                                                                |
+| `ManualAssemblerState` | Manual assembler runtime state: `{ processing, recipe, progress, buildingId }`                                                                                                                                                                                                                                                         |
+| `BatteryState`         | Battery energy state: `{ stored, capacity }`                                                                                                                                                                                                                                                                                           |
+| `GeneratorState`       | Fuel slot + burn progress, `running: boolean`, optional drone refill counter `requestedRefill?: number`                                                                                                                                                                                                                                |
+| `AutoDeliveryEntry`    | Auto-delivery log entry: `{ id, sourceType, sourceId, resource, amount, warehouseId, timestamp }`                                                                                                                                                                                                                                      |
+| `GameNotification`     | Transient HUD notification: `id`, resource, displayName, amount, `expiresAt`, optional `kind: 'success'                                                                                                                                                                                                                                | 'error'`         | <!-- patched --> |
 
 ### ModuleState
 
@@ -116,17 +116,17 @@ Referenced by `GameState` for building-to-warehouse and building-to-zone relatio
 
 **Source:** [`crafting/types.ts`](./crafting/types.ts)
 
-| Type | Description |
-|------|-------------|
-| `CraftingJob` | Snapshot-style job: frozen recipe, `inventorySource`, optional `inputBuffer?`, `workbenchId`, status, priority, source, `enqueuedAt`, `startedAt`, `finishesAt`, progress, `ingredients`, `output`, `processingTime`, reservation owner |
-| `JobStatus` | `"queued" \| "reserved" \| "crafting" \| "delivering" \| "done" \| "cancelled"` |
-| `JobPriority` | `"high" \| "normal" \| "low"` |
-| `JobSource` | `"player" \| "automation"` |
-| `CraftingQueueState` | `state.crafting` slice: `{ jobs, nextJobSeq, lastError }` |
-| `CraftingInventorySource` | Physical stock scope: global / warehouse / zone (with `warehouseIds`) |
-| `CraftingErrorKind` | `UNKNOWN_RECIPE` \| `UNKNOWN_WORKBENCH` \| `UNKNOWN_JOB` \| `INVALID_TRANSITION` \| `INVALID_OUTPUT_ITEM` |
-| `RecipeId` | `string` alias |
-| `JobId` | `string` alias |
+| Type                      | Description                                                                                                                                                                                                                             |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `CraftingJob`             | Snapshot-style job: frozen recipe, `inventorySource`, optional `inputBuffer?`, `workbenchId`, status, priority, source, `enqueuedAt`, `startedAt`, `finishesAt`, progress, `ingredients`, `output`, `processingTime`, reservation owner |
+| `JobStatus`               | `"queued" \| "reserved" \| "crafting" \| "delivering" \| "done" \| "cancelled"`                                                                                                                                                         |
+| `JobPriority`             | `"high" \| "normal" \| "low"`                                                                                                                                                                                                           |
+| `JobSource`               | `"player" \| "automation"`                                                                                                                                                                                                              |
+| `CraftingQueueState`      | `state.crafting` slice: `{ jobs, nextJobSeq, lastError }`                                                                                                                                                                               |
+| `CraftingInventorySource` | Physical stock scope: global / warehouse / zone (with `warehouseIds`). Zone-Variante erfordert `zoneId: string`; Warehouse-Variante erfordert `readonly warehouseIds: string[]` (`types.ts:39`, `types.ts:44–45`).                      | <!-- patched --> |
+| `CraftingErrorKind`       | `UNKNOWN_RECIPE` \| `UNKNOWN_WORKBENCH` \| `UNKNOWN_JOB` \| `INVALID_TRANSITION` \| `INVALID_OUTPUT_ITEM`                                                                                                                               |
+| `RecipeId`                | `string` alias                                                                                                                                                                                                                          |
+| `JobId`                   | `string` alias                                                                                                                                                                                                                          |
 
 ---
 
@@ -134,14 +134,14 @@ Referenced by `GameState` for building-to-warehouse and building-to-zone relatio
 
 **Source:** [`items/types.ts`](./items/types.ts)
 
-| Type | Description |
-|------|-------------|
-| `ItemId` | Union of all item IDs: raw, material, intermediate, buildable, tool, seed |
-| `ItemCategory` | `"raw_resource" \| "material" \| "intermediate" \| "buildable" \| "seed" \| "player_gear"` |
-| `ItemDef` | Static metadata: `id`, displayName, category, stackSize, hotbar eligibility, optional `iconKey?`, `tags?`, `sortGroup?` |
-| `ItemStack` | `{ itemId: ItemId, count: number }` |
-| `WarehouseId` | `string` alias — asset ID of a warehouse |
-| `NetworkStockView` | Read-only snapshot of aggregated warehouse totals |
+| Type               | Description                                                                                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `ItemId`           | Union of all item IDs: raw, material, intermediate, buildable, tool, seed                                               |
+| `ItemCategory`     | `"raw_resource" \| "material" \| "intermediate" \| "buildable" \| "seed" \| "player_gear"`                              |
+| `ItemDef`          | Static metadata: `id`, displayName, category, stackSize, hotbar eligibility, optional `iconKey?`, `tags?`, `sortGroup?` |
+| `ItemStack`        | `{ itemId: ItemId, count: number }`                                                                                     |
+| `WarehouseId`      | `string` alias — asset ID of a warehouse                                                                                |
+| `NetworkStockView` | Read-only snapshot of aggregated warehouse totals                                                                       |
 
 ---
 
@@ -149,14 +149,14 @@ Referenced by `GameState` for building-to-warehouse and building-to-zone relatio
 
 **Source:** [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts)
 
-| Type | Description |
-|------|-------------|
-| `Reservation` | Active hold: `id`, `itemId`, amount, ownerKind, ownerId, optional scope key, `createdAt` |
-| `ReservationOwnerKind` | `"crafting_job" \| "system_request"` |
-| `ReservationId` | `string` alias |
-| `NetworkSlice` | `state.network`: `{ reservations, nextReservationId, lastError }` |
-| `NetworkErrorKind` | `"INSUFFICIENT_STOCK" \| "UNKNOWN_RESERVATION" \| "EMPTY_BATCH"` |
-| `MissingItem` | Per-item shortfall for a failed batch: requested vs available |
+| Type                   | Description                                                                              |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `Reservation`          | Active hold: `id`, `itemId`, amount, ownerKind, ownerId, optional scope key, `createdAt` |
+| `ReservationOwnerKind` | `"crafting_job" \| "system_request"`                                                     |
+| `ReservationId`        | `string` alias                                                                           |
+| `NetworkSlice`         | `state.network`: `{ reservations, nextReservationId, lastError }`                        |
+| `NetworkErrorKind`     | `"INSUFFICIENT_STOCK" \| "UNKNOWN_RESERVATION" \| "EMPTY_BATCH"`                         |
+| `MissingItem`          | Per-item shortfall for a failed batch: requested vs available                            |
 
 ---
 
@@ -164,16 +164,16 @@ Referenced by `GameState` for building-to-warehouse and building-to-zone relatio
 
 **Sources:** [`store/types/drone-types.ts`](./store/types/drone-types.ts), [`drones/candidates/types.ts`](./drones/candidates/types.ts), [`drones/candidates/candidate-builder.ts`](./drones/candidates/candidate-builder.ts)
 
-| Type | Source | Description |
-|------|--------|-------------|
-| `DroneRole` | `store/types/drone-types.ts` | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter |
-| `DroneStatus` | `store/types/drone-types.ts` | `idle` \| `moving_to_collect` \| `collecting` \| `moving_to_dropoff` \| `depositing` \| `returning_to_dock` |
-| `DroneCargoItem` | `store/types/drone-types.ts` | Drone cargo payload: `{ itemType: CollectableItemType, amount }` |
-| `StarterDroneState` | `store/types/drone-types.ts` | Runtime state of a drone: `status`, `tileX`, `tileY`, `targetNodeId`, `cargo`, `ticksRemaining`, `hubId`, `currentTaskType`, `deliveryTargetId`, `craftingJobId`, `droneId`, optional `role?`, optional `deconstructRefund?` |
-| `DroneTaskType` | `store/types/drone-types.ts` | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply" \| "deconstruct"` |
-| `DroneSelectionCandidate` | `candidates/types.ts` | Scored task option: taskType, nodeId, deliveryTargetId, score, bonus breakdown |
-| `CandidateBonuses` | `candidates/candidate-builder.ts` | Optional: role, sticky, urgency, demand, spread |
-| `CandidateMetadata` | `candidates/candidate-builder.ts` | Optional candidate metadata passed into score construction (currently `deconstructRequestSeq?`) |
+| Type                      | Source                            | Description                                                                                                                                                                                                                  |
+| ------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DroneRole`               | `store/types/drone-types.ts`      | `"auto" \| "construction" \| "supply"` — biased scoring, no hard filter                                                                                                                                                      |
+| `DroneStatus`             | `store/types/drone-types.ts`      | `idle` \| `moving_to_collect` \| `collecting` \| `moving_to_dropoff` \| `depositing` \| `returning_to_dock`                                                                                                                  |
+| `DroneCargoItem`          | `store/types/drone-types.ts`      | Drone cargo payload: `{ itemType: CollectableItemType, amount }`                                                                                                                                                             |
+| `StarterDroneState`       | `store/types/drone-types.ts`      | Runtime state of a drone: `status`, `tileX`, `tileY`, `targetNodeId`, `cargo`, `ticksRemaining`, `hubId`, `currentTaskType`, `deliveryTargetId`, `craftingJobId`, `droneId`, optional `role?`, optional `deconstructRefund?` |
+| `DroneTaskType`           | `store/types/drone-types.ts`      | `"construction_supply" \| "hub_restock" \| "hub_dispatch" \| "workbench_delivery" \| "building_supply" \| "deconstruct"`                                                                                                     |
+| `DroneSelectionCandidate` | `candidates/types.ts`             | Scored task option: taskType, nodeId, deliveryTargetId, score, bonus breakdown                                                                                                                                               |
+| `CandidateBonuses`        | `candidates/candidate-builder.ts` | Optional: role, sticky, urgency, demand, spread                                                                                                                                                                              |
+| `CandidateMetadata`       | `candidates/candidate-builder.ts` | Optional candidate metadata passed into score construction (currently `deconstructRequestSeq?`)                                                                                                                              |
 
 `StarterDroneState` schema:
 
@@ -203,8 +203,8 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 
 **Source:** [`store/game-actions.ts`](./store/game-actions.ts)
 
-| Type | Description |
-|------|-------------|
+| Type         | Description                                                                                                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GameAction` | Root discriminated union of reducer actions (UI/building/machine ticks, logistics/drone/ship/module actions) and embedded `NetworkAction` + `CraftingAction` branches |
 
 ---
@@ -213,13 +213,13 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 
 **Source:** [`store/types/ship-types.ts`](./store/types/ship-types.ts)
 
-| Type | Description |
-|------|-------------|
-| `RewardType` | `coins` \| `basic_resource` \| `rare_resource` \| `module_fragment` \| `complete_module` |
-| `ShipStatus` | `sailing` \| `docked` \| `departing` |
-| `ShipQuest` | Requested item, amount, label and phase |
-| `ShipReward` | Reward kind, item id, amount, label, multiplier |
-| `ShipState` | Persisted ship quest loop state (status, quests, timestamps, reward history, pity counters) |
+| Type         | Description                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| `RewardType` | `coins` \| `basic_resource` \| `rare_resource` \| `module_fragment` \| `complete_module`    |
+| `ShipStatus` | `sailing` \| `docked` \| `departing`                                                        |
+| `ShipQuest`  | Requested item, amount, label and phase                                                     |
+| `ShipReward` | Reward kind, item id, amount, label, multiplier                                             |
+| `ShipState`  | Persisted ship quest loop state (status, quests, timestamps, reward history, pity counters) |
 
 ---
 
@@ -227,13 +227,13 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 
 **Sources:** [`modules/module.types.ts`](./modules/module.types.ts), [`constants/moduleLabConstants.ts`](./constants/moduleLabConstants.ts), [`store/types.ts`](./store/types.ts)
 
-| Type | Description |
-|------|-------------|
-| `ModuleType` | `miner-boost` \| `smelter-boost` |
-| `Module` | Owned module with `id`, `type`, `tier`, and mandatory `equippedTo: string \| null` (nicht optional) |
-| `ModuleLabRecipe` | Static recipe definition for module lab |
-| `ModuleLabJob` | In-flight module crafting job (persisted in GameState) |
-| `ModuleFragmentCount` | Numeric unspent fragment count |
+| Type                  | Description                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| `ModuleType`          | `miner-boost` \| `smelter-boost`                                                                    |
+| `Module`              | Owned module with `id`, `type`, `tier`, and mandatory `equippedTo: string \| null` (nicht optional) |
+| `ModuleLabRecipe`     | Static recipe definition for module lab                                                             |
+| `ModuleLabJob`        | In-flight module crafting job (persisted in GameState)                                              |
+| `ModuleFragmentCount` | Numeric unspent fragment count                                                                      |
 
 ---
 
@@ -241,16 +241,24 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 
 **Source:** [`store/types/conveyor-types.ts`](./store/types/conveyor-types.ts)
 
-| Type | Description |
-|------|-------------|
-| `ConveyorItem` | Belt-transportable item union |
-| `ConveyorState` | Per-conveyor item queue |
-| `AutoSmelterStatus` | `IDLE` \| `PROCESSING` \| `OUTPUT_BLOCKED` \| `NO_POWER` \| `MISCONFIGURED` |
-| `AutoSmelterProcessing` | Active smelter processing payload |
-| `AutoSmelterEntry` | Full smelter state including buffers, recipe tracking, throughput |
-| `AutoAssemblerStatus` | `IDLE` \| `PROCESSING` \| `OUTPUT_BLOCKED` \| `NO_POWER` \| `MISCONFIGURED` |
-| `AutoAssemblerRecipeId` | `metal_plate` \| `gear` |
-| `AutoAssemblerEntry` | Full assembler state |
+| Type                    | Description                                                                 |
+| ----------------------- | --------------------------------------------------------------------------- |
+| `ConveyorItem`          | Belt-transportable item union                                               |
+| `ConveyorState`         | Per-conveyor item queue                                                     |
+| `AutoSmelterStatus`     | `IDLE` \| `PROCESSING` \| `OUTPUT_BLOCKED` \| `NO_POWER` \| `MISCONFIGURED` |
+| `AutoSmelterProcessing` | Active smelter processing payload                                           |
+| `AutoSmelterEntry`      | Full smelter state including buffers, recipe tracking, throughput           |
+| `AutoAssemblerStatus`   | `IDLE` \| `PROCESSING` \| `OUTPUT_BLOCKED` \| `NO_POWER` \| `MISCONFIGURED` |
+| `AutoAssemblerRecipeId` | `metal_plate` \| `gear`                                                     |
+| `AutoAssemblerEntry`    | Full assembler state                                                        |
+
+### Splitter <!-- patched -->
+
+| Type | Datei | Beschreibung | <!-- patched -->
+|---|---|---| <!-- patched -->
+| `SplitterOutputSide` | `splitter-filter-state.ts:14` | Literal-Union der moeglichen Ausgabeseiten eines Splitters; wird in `GameAction`-Payloads verwendet (`game-actions.ts:122`). | <!-- patched -->
+| `SplitterFilterEntry` | `splitter-filter-state.ts:16` | Ein einzelner Filter-Eintrag fuer einen Splitter-Ausgang (ItemId + SplitterOutputSide). | <!-- patched -->
+| `SplitterFilterState` | `splitter-filter-state.ts:21` | Vollstaendiger Filter-Zustand eines Splitters; referenziert in `GameState.splitterFilterState` (TYPES.md:55). | <!-- patched -->
 
 ---
 
@@ -258,10 +266,10 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 
 **Source:** [`crafting/types.ts`](./crafting/types.ts)
 
-| Type | Description |
-|------|-------------|
-| `WorkbenchId` | String alias |
-| `CraftingError` | Error payload with kind, message, optional job/recipe/workbench ids |
+| Type             | Description                                                                     |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `WorkbenchId`    | String alias                                                                    |
+| `CraftingError`  | Error payload with kind, message, optional job/recipe/workbench ids             |
 | `CraftingAction` | Discriminated union for `JOB_*` actions plus `CRAFT_REQUEST_WITH_PREREQUISITES` |
 
 ### Recipe Automation Policies
@@ -273,6 +281,10 @@ Drone FSM and role types live in [`store/types/drone-types.ts`](./store/types/dr
 
 `RecipeAutomationPolicyMap`: map of recipe id to `RecipeAutomationPolicyEntry`;
 used in `GameState.recipeAutomationPolicies` and re-exported via `store/types.ts`.
+| `RecipeAutomationPolicyPatch` | `policies.ts:20` | Partial-Patch-Typ fuer Automation-Policy-Updates; wird als Payload in `GameAction` verwendet (`game-actions.ts:116`). | <!-- patched -->
+| `ResolvedRecipeAutomationPolicy` | `policies.ts:14` | Vollstaendig aufgeloeste Policy nach Merge aller Patch-Ebenen. | <!-- patched -->
+| `RecipePolicyDecision` | `policies.ts:26` | Rueckgabetyp der Policy-Auswertung (z. B. `allow` / `block` / `queue`). | <!-- patched -->
+| `RecipeAutomationPolicyContext` | `policies.ts:161` | Kontext-Objekt, das der Policy-Resolver zur Entscheidungsfindung erhaelt. | <!-- patched -->
 
 ---
 
@@ -280,11 +292,11 @@ used in `GameState.recipeAutomationPolicies` and re-exported via `store/types.ts
 
 **Source:** [`inventory/reservationTypes.ts`](./inventory/reservationTypes.ts)
 
-| Type | Description |
-|------|-------------|
-| `NetworkError` | Error payload with message, optional missing items or reservation id |
-| `ReserveBatchResult` | Success with reservations or failure with NetworkError |
-| `NetworkAction` | Discriminated union for reserve, commit, cancel |
+| Type                 | Description                                                          |
+| -------------------- | -------------------------------------------------------------------- |
+| `NetworkError`       | Error payload with message, optional missing items or reservation id |
+| `ReserveBatchResult` | Success with reservations or failure with NetworkError               |
+| `NetworkAction`      | Discriminated union for reserve, commit, cancel                      |
 
 ---
 
@@ -292,12 +304,12 @@ used in `GameState.recipeAutomationPolicies` and re-exported via `store/types.ts
 
 **Source:** [`simulation/recipes/`](./simulation/recipes/)
 
-| Type | Description |
-|------|-------------|
-| `WorkbenchRecipe` | Workbench recipe schema |
-| `SmeltingRecipe` | Smelting recipe schema |
-| `ManualAssemblerRecipeKey` / `ManualAssemblerRecipe` | Manual assembler key/schema |
-| `AutoAssemblerV1Recipe` | V1 auto-assembler recipe schema |
+| Type                                                 | Description                     |
+| ---------------------------------------------------- | ------------------------------- |
+| `WorkbenchRecipe`                                    | Workbench recipe schema         |
+| `SmeltingRecipe`                                     | Smelting recipe schema          |
+| `ManualAssemblerRecipeKey` / `ManualAssemblerRecipe` | Manual assembler key/schema     |
+| `AutoAssemblerV1Recipe`                              | V1 auto-assembler recipe schema |
 
 ---
 
