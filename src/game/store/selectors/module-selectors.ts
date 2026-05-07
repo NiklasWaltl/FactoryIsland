@@ -1,6 +1,6 @@
 import type { Module, ModuleType } from "../../modules/module.types";
+import { MODULE_COMPATIBLE_BUILDINGS } from "../../constants/moduleLabConstants";
 import type { GameState, PlacedAsset } from "../types";
-import { MODULE_COMPATIBLE_BUILDINGS } from "../action-handlers/module-compat";
 
 export const selectModules = (state: GameState): Module[] =>
   state.moduleInventory;

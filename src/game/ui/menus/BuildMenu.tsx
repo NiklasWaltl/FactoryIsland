@@ -142,7 +142,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
     ): { label: string; className: string } => {
       if (isLocked(bType))
         return {
-          label: "Im Shop kaufen",
+          label: "Im Forschungslabor freischalten",
           className: "fi-build-status--no-res",
         };
       if (isAlreadyPlaced(bType))
@@ -199,7 +199,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
                     className={`fi-build-item ${isSelected ? "fi-build-item--selected" : ""} ${placed ? "fi-build-item--placed" : ""} ${(!affordable && !placed) || locked ? "fi-build-item--disabled" : ""}`}
                     title={
                       locked
-                        ? "Erst im Shop freischalten"
+                        ? "Erst im Forschungslabor freischalten"
                         : placed
                           ? status.label
                           : getBuildSourceDebugTitle(costs)

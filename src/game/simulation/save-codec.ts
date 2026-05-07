@@ -39,6 +39,7 @@ import {
   sanitizeRecipeAutomationPolicies,
   sanitizeStarterDrone,
   sanitizeConveyorUndergroundPeers,
+  normalizeModuleInventory,
 } from "./save-normalizer";
 import { isRuntimeGameStateSnapshot } from "./save-legacy";
 import { normalizeModuleFragmentCount } from "../store/helpers/module-fragments";
@@ -161,7 +162,8 @@ export function deserializeState(save: SaveGameLatest): GameState {
     cellMap: save.cellMap,
     tileMap: sanitizeTileMap(save.tileMap, GRID_H, GRID_W),
     inventory: save.inventory,
-    moduleInventory: save.moduleInventory ?? [],
+    // SAVE GUARD: moduleInventory sanitization
+    moduleInventory: normalizeModuleInventory(save.moduleInventory),
     moduleFragments: normalizeModuleFragmentCount(
       (save as any).moduleFragments,
     ),

@@ -1,13 +1,6 @@
+import { MODULE_COMPATIBLE_BUILDINGS } from "../../constants/moduleLabConstants";
 import type { ModuleType } from "../../modules/module.types";
 import type { AssetType, GameState } from "../types";
-
-export const MODULE_COMPATIBLE_BUILDINGS: Record<
-  ModuleType,
-  readonly AssetType[]
-> = {
-  "miner-boost": ["auto_miner"],
-  "smelter-boost": ["auto_smelter"],
-};
 
 export function isModuleCompatibleWithAsset(
   moduleType: ModuleType,

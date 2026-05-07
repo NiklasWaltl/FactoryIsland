@@ -11,6 +11,7 @@
 // ============================================================
 
 import type { ModuleType } from "../modules/module.types";
+import type { AssetType } from "../store/types";
 
 type ModuleTier = 1 | 2 | 3;
 type MinerYieldEffect = { readonly yieldMultiplier: number };
@@ -22,6 +23,14 @@ export const MODULE_LAB_SIZE = { w: 2, h: 2 } as const;
 
 /** Tick interval for the Module Lab job-progress check. */
 export const MODULE_LAB_TICK_MS = 500;
+
+export const MODULE_COMPATIBLE_BUILDINGS: Record<
+  ModuleType,
+  readonly AssetType[]
+> = {
+  "miner-boost": ["auto_miner"],
+  "smelter-boost": ["auto_smelter"],
+};
 
 export const MODULE_EFFECTS = {
   "miner-boost": {

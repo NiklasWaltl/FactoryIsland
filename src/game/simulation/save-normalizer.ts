@@ -8,6 +8,8 @@ import type {
   KeepStockTargetEntry,
   KeepStockByWorkbench,
 } from "../store/types";
+import type { Module, ModuleType } from "../modules/module.types";
+import { MODULE_EFFECTS } from "../constants/moduleLabConstants";
 import type { TileType } from "../world/tile-types";
 import { getStartModulePosition } from "../store/bootstrap/start-module-position";
 import { KEEP_STOCK_MAX_TARGET } from "../store/constants/keep-stock";
@@ -44,6 +46,50 @@ const PHYSICAL_HUB_KEYS: ReadonlyArray<keyof Inventory> = [
   "iron",
   "copper",
 ];
+
+function isModuleType(value: unknown): value is ModuleType {
+  return (
+    typeof value === "string" &&
+    Object.prototype.hasOwnProperty.call(MODULE_EFFECTS, value)
+  );
+}
+
+function isModuleTier(value: unknown): value is Module["tier"] {
+  return value === 1 || value === 2 || value === 3;
+}
+
+export function normalizeModuleInventory(raw: unknown): Module[] {
+  if (!Array.isArray(raw)) return [];
+
+  const modules: Module[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+
+    const candidate = entry as Record<string, unknown>;
+    const { id, type, tier } = candidate;
+    if (typeof id !== "string" || id.trim() === "") continue;
+    if (!isModuleType(type)) continue;
+    if (!isModuleTier(tier)) continue;
+
+    const equippedTo = candidate.equippedTo;
+    if (
+      equippedTo !== undefined &&
+      equippedTo !== null &&
+      typeof equippedTo !== "string"
+    ) {
+      continue;
+    }
+
+    modules.push({
+      id,
+      type,
+      tier,
+      equippedTo: equippedTo ?? null,
+    });
+  }
+
+  return modules;
+}
 
 /**
  * Rebuilds underground belt peer links from save data and live assets.

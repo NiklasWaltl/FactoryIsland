@@ -8,6 +8,7 @@ import type { GameState, PlacedAsset } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import type { Module } from "../../modules/module.types";
 import {
+  MODULE_COMPATIBLE_BUILDINGS,
   MODULE_FRAGMENT_RECIPES,
   getModuleLabRecipe,
   getRecipeFragmentCost,
@@ -16,7 +17,6 @@ import {
   getCompatibleAssetsForModule,
   selectModuleFragmentCount,
 } from "../../store/selectors/module-selectors";
-import { MODULE_COMPATIBLE_BUILDINGS } from "../../store/action-handlers/module-compat";
 
 interface ModulLabPanelProps {
   state: GameState;

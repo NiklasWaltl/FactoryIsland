@@ -73,6 +73,86 @@ describe("moduleInventory", () => {
     expect(hydrated.moduleInventory).toEqual([]);
   });
 
+  it("hydrates an empty moduleInventory array as empty", () => {
+    const save = {
+      ...serializeState(freshState()),
+      moduleInventory: [],
+    };
+
+    const hydrated = loadAndHydrate(save, "release");
+
+    expect(hydrated.moduleInventory).toEqual([]);
+  });
+
+  it("drops moduleInventory entries with unknown module types", () => {
+    const save = {
+      ...serializeState(freshState()),
+      moduleInventory: [
+        { id: "valid-miner", type: "miner-boost", tier: 1, equippedTo: null },
+        { id: "legacy", type: "archived-boost", tier: 1, equippedTo: null },
+      ],
+    };
+
+    const hydrated = loadAndHydrate(save, "release");
+
+    expect(hydrated.moduleInventory).toEqual([
+      { id: "valid-miner", type: "miner-boost", tier: 1, equippedTo: null },
+    ]);
+  });
+
+  it("hydrates mixed moduleInventory arrays by keeping only valid entries", () => {
+    const save = {
+      ...serializeState(freshState()),
+      moduleInventory: [
+        { id: "valid-miner", type: "miner-boost", tier: 1, equippedTo: null },
+        null,
+        "not-an-object",
+        { id: "", type: "miner-boost", tier: 1, equippedTo: null },
+        { id: null, type: "miner-boost", tier: 1, equippedTo: null },
+        { id: "missing-type", tier: 1, equippedTo: null },
+        { id: "bad-type", type: "unknown", tier: 1, equippedTo: null },
+        { id: "bad-tier", type: "miner-boost", tier: 4, equippedTo: null },
+        {
+          id: "bad-equipped-to",
+          type: "smelter-boost",
+          tier: 2,
+          equippedTo: { assetId: "smelter-1" },
+        },
+        {
+          id: "valid-smelter",
+          type: "smelter-boost",
+          tier: 3,
+          equippedTo: "smelter-1",
+        },
+      ],
+    };
+
+    const hydrated = loadAndHydrate(save, "release");
+
+    expect(hydrated.moduleInventory).toEqual([
+      { id: "valid-miner", type: "miner-boost", tier: 1, equippedTo: null },
+      {
+        id: "valid-smelter",
+        type: "smelter-boost",
+        tier: 3,
+        equippedTo: "smelter-1",
+      },
+    ]);
+  });
+
+  it("normalizes undefined equippedTo to null during moduleInventory hydration", () => {
+    const save = {
+      ...serializeState(freshState()),
+      moduleInventory: [{ id: "free-module", type: "miner-boost", tier: 2 }],
+    };
+
+    const hydrated = loadAndHydrate(save, "release");
+
+    expect(hydrated.moduleInventory).toEqual([
+      { id: "free-module", type: "miner-boost", tier: 2, equippedTo: null },
+    ]);
+  });
+
   it("COLLECT_FRAGMENT with gear in dock warehouse increments fragments and removes one gear", () => {
     const state = {
       ...freshState(),
