@@ -8,7 +8,7 @@ import {
 import {
   getSplitterFilter,
   type SplitterOutputSide,
-} from "../../store/slices/splitter-filter-state";
+} from "../../store/selectors/splitter-selectors";
 
 interface ConveyorSplitterPanelProps {
   state: GameState;

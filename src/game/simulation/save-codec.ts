@@ -164,10 +164,8 @@ export function deserializeState(save: SaveGameLatest): GameState {
     inventory: save.inventory,
     // SAVE GUARD: moduleInventory sanitization
     moduleInventory: normalizeModuleInventory(save.moduleInventory),
-    moduleFragments: normalizeModuleFragmentCount(
-      (save as any).moduleFragments,
-    ),
-    moduleLabJob: (save as any).moduleLabJob ?? null,
+    moduleFragments: normalizeModuleFragmentCount(save.moduleFragments),
+    moduleLabJob: save.moduleLabJob ?? null,
     purchasedBuildings: save.purchasedBuildings,
     placedBuildings: save.placedBuildings,
     unlockedBuildings: save.unlockedBuildings,

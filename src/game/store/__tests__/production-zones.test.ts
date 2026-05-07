@@ -114,6 +114,7 @@ function makeTestState(overrides?: Partial<GameState>): GameState {
     productionZones: {},
     buildingZoneIds: {},
     selectedCraftingBuildingId: null,
+    moduleInventory: [],
     ...overrides,
   };
 }

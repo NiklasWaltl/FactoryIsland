@@ -86,7 +86,7 @@ function collectModule(state: GameState): GameState {
   return {
     ...state,
     moduleLabJob: null,
-    moduleInventory: [...(state.moduleInventory ?? []), newModule],
+    moduleInventory: [...state.moduleInventory, newModule],
   };
 }
 
@@ -95,7 +95,7 @@ function placeModule(
   moduleId: string,
   assetId: string,
 ): GameState {
-  const inventory = state.moduleInventory ?? [];
+  const inventory = state.moduleInventory;
   const target = inventory.find((m) => m.id === moduleId);
   if (!target) return state;
   if (target.equippedTo !== null) return state;
@@ -138,7 +138,7 @@ function removeModule(
   moduleId: string,
   assetId?: string,
 ): GameState {
-  const inventory = state.moduleInventory ?? [];
+  const inventory = state.moduleInventory;
   const target = inventory.find((m) => m.id === moduleId);
   if (!target) return state;
   if (target.equippedTo === null) return state;

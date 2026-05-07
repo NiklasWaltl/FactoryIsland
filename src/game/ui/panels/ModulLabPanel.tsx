@@ -65,7 +65,7 @@ export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
 
     const fragments = selectModuleFragmentCount(state);
     const job = state.moduleLabJob;
-    const modules = state.moduleInventory ?? [];
+    const modules = state.moduleInventory;
 
     useEffect(() => {
       if (!job || job.status !== "crafting") return;

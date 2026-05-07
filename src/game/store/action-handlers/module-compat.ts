@@ -13,7 +13,7 @@ export function clearModulesEquippedToAny(
   state: GameState,
   removedAssetIds: readonly string[],
 ): GameState {
-  const inventory = state.moduleInventory ?? [];
+  const inventory = state.moduleInventory;
   if (inventory.length === 0) return state;
 
   const removedAssetIdSet = new Set(removedAssetIds);
