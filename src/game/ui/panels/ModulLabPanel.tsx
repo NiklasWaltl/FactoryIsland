@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useEffect, useState } from "react";
-import type { GameState } from "../../store/types";
+import type { GameState, PlacedAsset } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import type { Module } from "../../modules/module.types";
 import {
@@ -12,7 +12,11 @@ import {
   getModuleLabRecipe,
   getRecipeFragmentCost,
 } from "../../constants/moduleLabConstants";
-import { selectModuleFragmentCount } from "../../store/selectors/module-selectors";
+import {
+  getCompatibleAssetsForModule,
+  selectModuleFragmentCount,
+} from "../../store/selectors/module-selectors";
+import { MODULE_COMPATIBLE_BUILDINGS } from "../../store/action-handlers/module-compat";
 
 interface ModulLabPanelProps {
   state: GameState;
@@ -25,6 +29,22 @@ const MODULE_TYPE_LABELS: Record<Module["type"], string> = {
   "miner-boost": "Miner-Boost",
   "smelter-boost": "Smelter-Boost",
 };
+
+const ASSET_TYPE_LABELS: Partial<Record<PlacedAsset["type"], string>> = {
+  auto_miner: "Auto-Miner",
+  auto_smelter: "Auto-Smelter",
+};
+
+function formatAssetLabel(asset: PlacedAsset): string {
+  const typeLabel = ASSET_TYPE_LABELS[asset.type] ?? asset.type;
+  return `${typeLabel} @ (${asset.x}, ${asset.y})`;
+}
+
+function formatCompatibleTypes(moduleType: Module["type"]): string {
+  return MODULE_COMPATIBLE_BUILDINGS[moduleType]
+    .map((type) => ASSET_TYPE_LABELS[type] ?? type)
+    .join(", ");
+}
 
 function formatSeconds(ms: number): string {
   return `${Math.max(0, Math.ceil(ms / 1000))}s`;
@@ -41,20 +61,19 @@ function getRemainingModuleLabMs(
 export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
   ({ state, dispatch }) => {
     const [activeTab, setActiveTab] = useState<TabId>("fragments");
-    const [, forceUpdate] = useState(0);
+    const [now, setNow] = useState(() => Date.now());
 
     const fragments = selectModuleFragmentCount(state);
     const job = state.moduleLabJob;
     const modules = state.moduleInventory ?? [];
 
-    // Re-render once a second so the active-job countdown updates without a tick.
     useEffect(() => {
       if (!job || job.status !== "crafting") return;
-      const id = window.setInterval(() => forceUpdate((n) => n + 1), 250);
+      const id = window.setInterval(() => setNow(Date.now()), 250);
       return () => window.clearInterval(id);
-    }, [job?.durationMs, job?.startedAt, job?.status]);
+    }, [job]);
 
-    const remainingMs = getRemainingModuleLabMs(job, Date.now());
+    const remainingMs = getRemainingModuleLabMs(job, now);
 
     const close = () => dispatch({ type: "CLOSE_PANEL" });
 
@@ -308,15 +327,19 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
       {modules.map((m) => {
         const placedAsset = m.equippedTo ? state.assets[m.equippedTo] : null;
         const placedLabel = placedAsset
-          ? `Platziert in ${placedAsset.type}`
+          ? `Platziert in ${formatAssetLabel(placedAsset)}`
           : "Frei";
+        const compatibleAssets = m.equippedTo
+          ? []
+          : getCompatibleAssetsForModule(state, m.type);
         return (
           <div
             key={m.id}
+            data-testid={`module-row-${m.id}`}
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              flexDirection: "column",
+              gap: 6,
               padding: "6px 10px",
               background: "rgba(147,51,234,0.06)",
               border: "1px solid rgba(147,51,234,0.3)",
@@ -324,26 +347,70 @@ const ModulesTab: React.FC<ModulesTabProps> = ({
               fontSize: 13,
             }}
           >
-            <div>
-              <div style={{ fontWeight: 600 }}>
-                Tier {m.tier} — {MODULE_TYPE_LABELS[m.type]}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600 }}>
+                  Tier {m.tier} — {MODULE_TYPE_LABELS[m.type]}
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.7 }}>{placedLabel}</div>
               </div>
-              <div style={{ fontSize: 11, opacity: 0.7 }}>{placedLabel}</div>
+              {m.equippedTo && (
+                <button
+                  className="fi-btn fi-btn-sm"
+                  onClick={() =>
+                    dispatch({ type: "REMOVE_MODULE", moduleId: m.id })
+                  }
+                >
+                  Ausbauen
+                </button>
+              )}
             </div>
-            {m.equippedTo ? (
-              <button
-                className="fi-btn fi-btn-sm"
-                onClick={() =>
-                  dispatch({ type: "REMOVE_MODULE", moduleId: m.id })
-                }
-              >
-                Ausbauen
-              </button>
-            ) : (
-              <span style={{ fontSize: 11, opacity: 0.6 }}>
-                (Platzierung folgt)
-              </span>
-            )}
+            {!m.equippedTo &&
+              (compatibleAssets.length === 0 ? (
+                <div style={{ fontSize: 11, opacity: 0.6 }}>
+                  Kein freies kompatibles Gebäude (benötigt:{" "}
+                  {formatCompatibleTypes(m.type)})
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 4 }}>
+                  <span style={{ fontSize: 11, opacity: 0.7 }}>
+                    Einsetzen in:
+                  </span>
+                  {compatibleAssets.map((asset) => (
+                    <div
+                      key={asset.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{ fontSize: 12 }}>
+                        {formatAssetLabel(asset)}
+                      </span>
+                      <button
+                        className="fi-btn fi-btn-sm"
+                        onClick={() =>
+                          dispatch({
+                            type: "PLACE_MODULE",
+                            moduleId: m.id,
+                            assetId: asset.id,
+                          })
+                        }
+                      >
+                        Einsetzen
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ))}
           </div>
         );
       })}

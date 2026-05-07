@@ -16,6 +16,7 @@ import {
 } from "../reducer";
 import { WAREHOUSE_CAPACITY } from "../constants/buildings/index";
 import { AUTO_MINER_PRODUCE_TICKS } from "../constants/drone/drone-config";
+import { AUTO_MINER_BASE_OUTPUT } from "../../simulation/mining-utils";
 
 function emptyInv(): Inventory {
   return createInitialState("release").inventory;
@@ -147,7 +148,9 @@ describe("Auto Miner source integration", () => {
     const after = runTicks(state, 1);
 
     // Zone warehouse must have received the iron
-    expect(after.warehouseInventories.whA.iron as number).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(
+      AUTO_MINER_BASE_OUTPUT,
+    );
     // Miner progress must have reset
     expect(after.autoMiners.mn1.progress).toBe(0);
     // Global inventory must be unchanged
@@ -188,7 +191,9 @@ describe("Auto Miner source integration", () => {
 
     const after = runTicks(state, 1);
 
-    expect(after.warehouseInventories.whA.iron as number).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(
+      AUTO_MINER_BASE_OUTPUT,
+    );
     expect(after.warehouseInventories.whB.iron as number).toBe(0);
   });
 
@@ -218,7 +223,9 @@ describe("Auto Miner source integration", () => {
 
     const after = runTicks(state, 1);
 
-    expect(after.warehouseInventories.whA.iron as number).toBe(1);
+    expect(after.warehouseInventories.whA.iron as number).toBe(
+      AUTO_MINER_BASE_OUTPUT,
+    );
     expect(after.inventory.iron as number).toBe(0);
   });
 
@@ -236,7 +243,7 @@ describe("Auto Miner source integration", () => {
 
     const after = runTicks(state, 1);
 
-    expect(after.inventory.iron as number).toBe(1);
+    expect(after.inventory.iron as number).toBe(AUTO_MINER_BASE_OUTPUT);
     expect(after.autoMiners.mn1.progress).toBe(0);
   });
 
@@ -318,7 +325,7 @@ describe("Auto Miner source integration", () => {
     const after = runTicks(state, 1);
 
     // Fell back to global inventory
-    expect(after.inventory.iron as number).toBe(1);
+    expect(after.inventory.iron as number).toBe(AUTO_MINER_BASE_OUTPUT);
   });
 
   // ---- Conveyor path unaffected ------------------------------------------

@@ -1,5 +1,6 @@
 import type { Module, ModuleType } from "../../modules/module.types";
-import type { GameState } from "../types";
+import type { GameState, PlacedAsset } from "../types";
+import { MODULE_COMPATIBLE_BUILDINGS } from "../action-handlers/module-compat";
 
 export const selectModules = (state: GameState): Module[] =>
   state.moduleInventory;
@@ -25,5 +26,18 @@ export function getFreeModulesForType(
 ): Module[] {
   return state.moduleInventory.filter(
     (module) => module.type === moduleType && module.equippedTo === null,
+  );
+}
+
+export function getCompatibleAssetsForModule(
+  state: GameState,
+  moduleType: ModuleType,
+): PlacedAsset[] {
+  const compatibleTypes = MODULE_COMPATIBLE_BUILDINGS[moduleType];
+  return Object.values(state.assets).filter(
+    (asset) =>
+      compatibleTypes.includes(asset.type) &&
+      !asset.moduleSlot &&
+      asset.status !== "deconstructing",
   );
 }

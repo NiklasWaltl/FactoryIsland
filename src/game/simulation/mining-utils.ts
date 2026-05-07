@@ -1,7 +1,7 @@
 import type { Module } from "../modules/module.types";
 import { MODULE_EFFECTS } from "../constants/moduleLabConstants";
 
-export const AUTO_MINER_BASE_OUTPUT = 1;
+export const AUTO_MINER_BASE_OUTPUT = 10;
 
 export function getMinerYieldMultiplier(equippedModule: Module | null): number {
   if (!equippedModule || equippedModule.type !== "miner-boost") return 1.0;

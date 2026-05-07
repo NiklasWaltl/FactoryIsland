@@ -105,6 +105,8 @@ describe("Auto-Miner miner-boost output", () => {
     const after = runLogisticsTick(state);
 
     expect(after.inventory.iron).toBe(expectedOutput(null));
+    // Base: floor(10 * 1.0) = 10
+    expect(after.inventory.iron).toBe(10);
   });
 
   it("produces floored Tier 1 miner-boost output", () => {
@@ -123,6 +125,8 @@ describe("Auto-Miner miner-boost output", () => {
     const after = runLogisticsTick(state);
 
     expect(after.inventory.iron).toBe(expectedOutput(module));
+    // Tier 1 (+10%): floor(10 * 1.1) = 11
+    expect(after.inventory.iron).toBe(11);
   });
 
   it("produces floored Tier 2 miner-boost output", () => {
@@ -141,6 +145,28 @@ describe("Auto-Miner miner-boost output", () => {
     const after = runLogisticsTick(state);
 
     expect(after.inventory.iron).toBe(expectedOutput(module));
+    // Tier 2 (+25%): floor(10 * 1.25) = 12
+    expect(after.inventory.iron).toBe(12);
+  });
+
+  it("produces floored Tier 3 miner-boost output", () => {
+    const module = makeModule({
+      id: "module-1",
+      tier: 3,
+      equippedTo: "miner-1",
+    });
+    const state = buildState({
+      miners: [
+        { id: "miner-1", resource: "iron", x: 5, y: 5, moduleSlot: module.id },
+      ],
+      modules: [module],
+    });
+
+    const after = runLogisticsTick(state);
+
+    expect(after.inventory.iron).toBe(expectedOutput(module));
+    // Tier 3 (+50%): floor(10 * 1.5) = 15
+    expect(after.inventory.iron).toBe(15);
   });
 
   it("falls back to base output after the module is removed", () => {

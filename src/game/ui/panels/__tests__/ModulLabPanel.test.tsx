@@ -9,7 +9,9 @@ import {
   gameReducer,
   type GameAction,
   type GameState,
+  type PlacedAsset,
 } from "../../../store/reducer";
+import type { Module } from "../../../modules/module.types";
 import { MODULE_FRAGMENT_RECIPES } from "../../../constants/moduleLabConstants";
 import { ModulLabPanel } from "../ModulLabPanel";
 
@@ -310,7 +312,8 @@ describe("ModulLabPanel — 3d button state transitions", () => {
   });
 
   it("3b: countdown derives from completesAt-Date.now, not reset on tab switch", () => {
-    const fakeNow = jest.spyOn(Date, "now").mockReturnValue(6_000_000);
+    jest.useFakeTimers();
+    jest.setSystemTime(6_000_000);
 
     try {
       let state = withFragments(createInitialState("release"), 10);
@@ -339,9 +342,10 @@ describe("ModulLabPanel — 3d button state transitions", () => {
         getButton("Fragmente")?.click();
       });
 
-      // 2 seconds elapse; re-render with same state but new Date.now()
-      fakeNow.mockReturnValue(6_000_000 + 2_000);
-      render(<ModulLabPanel state={state} dispatch={disp} />);
+      // 2 seconds elapse — fire the setInterval ticks so now-state updates
+      act(() => {
+        jest.advanceTimersByTime(2_000);
+      });
 
       // Switch back to job tab
       act(() => {
@@ -355,7 +359,127 @@ describe("ModulLabPanel — 3d button state transitions", () => {
       // Countdown must reflect actual elapsed time — at least 1s less
       expect(secondSecs).toBeLessThanOrEqual(firstSecs - 1);
     } finally {
-      fakeNow.mockRestore();
+      jest.useRealTimers();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Modules tab — slot placement UI
+// ---------------------------------------------------------------------------
+
+const MINER_ID = "miner-test-1";
+
+function makeMinerAsset(overrides: Partial<PlacedAsset> = {}): PlacedAsset {
+  return {
+    id: MINER_ID,
+    type: "auto_miner",
+    x: 4,
+    y: 7,
+    size: 1,
+    ...overrides,
+  };
+}
+
+function makeFreeMinerModule(id: string): Module {
+  return { id, type: "miner-boost", tier: 1, equippedTo: null };
+}
+
+function withModulesTab(state: GameState): GameState {
+  return state;
+}
+
+function clickModulesTab(): void {
+  const tab = getButton(/^Meine Module/);
+  act(() => {
+    tab?.click();
+  });
+}
+
+describe("ModulLabPanel — Modules tab slot placement", () => {
+  it("shows hint when no compatible building is placed", () => {
+    let state = withModulesTab(createInitialState("release"));
+    state = {
+      ...state,
+      moduleInventory: [makeFreeMinerModule("mod-a")],
+    };
+
+    render(
+      <ModulLabPanel
+        state={state}
+        dispatch={(a) => {
+          state = dispatch(state, a);
+        }}
+      />,
+    );
+    clickModulesTab();
+
+    expect(container.textContent).toMatch(/Kein freies kompatibles Gebäude/);
+    expect(container.textContent).toMatch(/Auto-Miner/);
+    // No "Einsetzen" buttons should exist
+    expect(getButton(/^Einsetzen$/)).toBeNull();
+  });
+
+  it("dispatches PLACE_MODULE when clicking Einsetzen for a compatible asset", () => {
+    let state: GameState = {
+      ...createInitialState("release"),
+      assets: {
+        ...createInitialState("release").assets,
+        [MINER_ID]: makeMinerAsset(),
+      },
+      moduleInventory: [makeFreeMinerModule("mod-place")],
+    };
+
+    const testDispatch = (a: GameAction) => {
+      state = dispatch(state, a);
+      render(<ModulLabPanel state={state} dispatch={testDispatch} />);
+    };
+
+    render(<ModulLabPanel state={state} dispatch={testDispatch} />);
+    clickModulesTab();
+
+    const placeBtn = getButton(/^Einsetzen$/);
+    expect(placeBtn).not.toBeNull();
+    act(() => {
+      placeBtn?.click();
+    });
+
+    expect(state.moduleInventory[0].equippedTo).toBe(MINER_ID);
+    expect(state.assets[MINER_ID].moduleSlot).toBe("mod-place");
+    // After placing, the row should show the "Ausbauen" button instead.
+    expect(getButton(/^Ausbauen$/)).not.toBeNull();
+  });
+
+  it("dispatches REMOVE_MODULE when clicking Ausbauen for an equipped module", () => {
+    let state: GameState = {
+      ...createInitialState("release"),
+      assets: {
+        ...createInitialState("release").assets,
+        [MINER_ID]: makeMinerAsset({ moduleSlot: "mod-eq" }),
+      },
+      moduleInventory: [
+        { id: "mod-eq", type: "miner-boost", tier: 1, equippedTo: MINER_ID },
+      ],
+    };
+
+    const testDispatch = (a: GameAction) => {
+      state = dispatch(state, a);
+      render(<ModulLabPanel state={state} dispatch={testDispatch} />);
+    };
+
+    render(<ModulLabPanel state={state} dispatch={testDispatch} />);
+    clickModulesTab();
+
+    expect(container.textContent).toMatch(/Platziert in Auto-Miner/);
+    const removeBtn = getButton(/^Ausbauen$/);
+    expect(removeBtn).not.toBeNull();
+    act(() => {
+      removeBtn?.click();
+    });
+
+    expect(state.moduleInventory[0].equippedTo).toBeNull();
+    expect(state.assets[MINER_ID].moduleSlot).toBeNull();
+    // After removing, the placement UI should reappear (Einsetzen button).
+    expect(getButton(/^Einsetzen$/)).not.toBeNull();
   });
 });
