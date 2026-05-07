@@ -167,13 +167,9 @@ export type GameAction =
   | {
       type: "PLACE_MODULE";
       moduleId: string;
-      assetId: string;
-      buildingId?: string;
-    }
-  | {
-      type: "PLACE_MODULE";
-      moduleId: string;
-      buildingId: string;
+      /** Canonical target asset. */
       assetId?: string;
+      /** @deprecated Legacy alias for `assetId` — kept for older test fixtures. */
+      buildingId?: string;
     }
   | { type: "REMOVE_MODULE"; moduleId: string; assetId?: string };

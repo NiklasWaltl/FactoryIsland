@@ -20,12 +20,16 @@ import { normalizeModuleFragmentCount } from "../helpers/module-fragments";
 import { addErrorNotification } from "../utils/notifications";
 import { isModuleCompatibleWithAsset } from "./module-compat";
 
-function generateModuleId(): string {
+function generateModuleId(now: number, rand: () => number): string {
   // Sufficient for in-game ids; uniqueness is per-save and unconstrained by NFT addresses.
-  return `mod-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `mod-${now.toString(36)}-${rand().toString(36).slice(2, 8)}`;
 }
 
-function startModuleCraft(state: GameState, recipeId: string): GameState {
+function startModuleCraft(
+  state: GameState,
+  recipeId: string,
+  now: number,
+): GameState {
   if (state.moduleLabJob !== null) return state;
 
   const recipe = getModuleLabRecipe(recipeId);
@@ -40,7 +44,7 @@ function startModuleCraft(state: GameState, recipeId: string): GameState {
     moduleType: recipe.outputModuleType,
     tier: recipe.outputTier,
     fragmentsRequired: cost,
-    startedAt: Date.now(),
+    startedAt: now,
     durationMs: recipe.durationMs,
     status: "crafting",
   };
@@ -52,7 +56,7 @@ function startModuleCraft(state: GameState, recipeId: string): GameState {
   };
 }
 
-function moduleLabTick(state: GameState): GameState {
+function moduleLabTick(state: GameState, now: number): GameState {
   const job = state.moduleLabJob;
   if (!job || job.status !== "crafting") return state;
   const moduleLab = Object.values(state.assets).find(
@@ -60,7 +64,7 @@ function moduleLabTick(state: GameState): GameState {
   );
   if (moduleLab?.status === "deconstructing") return state;
 
-  if (Date.now() < job.startedAt + job.durationMs) return state;
+  if (now < job.startedAt + job.durationMs) return state;
 
   return {
     ...state,
@@ -68,16 +72,20 @@ function moduleLabTick(state: GameState): GameState {
   };
 }
 
-function collectModule(state: GameState): GameState {
+function collectModule(
+  state: GameState,
+  now: number,
+  rand: () => number,
+): GameState {
   const job = state.moduleLabJob;
   if (!job) return state;
   // Belt-and-suspenders: don't collect if the wall-clock says the job isn't done yet,
   // even if somehow status slipped through as "done" due to a deserialization quirk.
-  if (job.startedAt + job.durationMs > Date.now()) return state;
+  if (job.startedAt + job.durationMs > now) return state;
   if (job.status !== "done") return state;
 
   const newModule: Module = {
-    id: generateModuleId(),
+    id: generateModuleId(now, rand),
     type: job.moduleType,
     tier: job.tier,
     equippedTo: null,
@@ -165,13 +173,15 @@ export function handleModuleLabAction(
   state: GameState,
   action: GameAction,
 ): GameState | null {
+  const now = Date.now();
+  const rand = Math.random;
   switch (action.type) {
     case "START_MODULE_CRAFT":
-      return startModuleCraft(state, action.recipeId);
+      return startModuleCraft(state, action.recipeId, now);
     case "MODULE_LAB_TICK":
-      return moduleLabTick(state);
+      return moduleLabTick(state, now);
     case "COLLECT_MODULE":
-      return collectModule(state);
+      return collectModule(state, now, rand);
     case "PLACE_MODULE": {
       const assetId = action.assetId ?? action.buildingId;
       return assetId ? placeModule(state, action.moduleId, assetId) : state;
