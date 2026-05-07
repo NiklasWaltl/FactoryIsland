@@ -13,6 +13,11 @@
 import type { ModuleType } from "../modules/module.types";
 import type { AssetType } from "../store/types";
 
+export const MODULE_TYPE_LABELS: Record<ModuleType, string> = {
+  "miner-boost": "Miner-Boost",
+  "smelter-boost": "Smelter-Boost",
+};
+
 type ModuleTier = 1 | 2 | 3;
 type MinerYieldEffect = { readonly yieldMultiplier: number };
 type SmelterSpeedEffect = { readonly speedMultiplier: number };

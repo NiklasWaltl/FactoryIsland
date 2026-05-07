@@ -155,7 +155,7 @@ describe("AutoSmelterPanel module slot", () => {
     });
     renderPanel(state, dispatch);
 
-    expect(container.textContent).toContain("Smelter Boost Tier 1");
+    expect(container.textContent).toContain("Smelter-Boost Tier 1");
     const button = getButton("Herausnehmen");
     expect(button).not.toBeNull();
     clickButton(button!);

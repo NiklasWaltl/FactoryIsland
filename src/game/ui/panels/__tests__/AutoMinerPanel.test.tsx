@@ -169,7 +169,7 @@ describe("AutoMinerPanel module slot", () => {
     renderPanel(state, dispatch);
 
     expect(getButton("Herausnehmen")).not.toBeNull();
-    expect(container.textContent).toContain("Miner Boost Tier 1");
+    expect(container.textContent).toContain("Miner-Boost Tier 1");
     expect(container.textContent).toContain("T1");
   });
 });

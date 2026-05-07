@@ -8,3 +8,12 @@ let counter = 0;
 export function makeId(prefix: string = "a"): string {
   return `${prefix}${Date.now()}_${counter++}`;
 }
+
+/** Returns a collision-resistant module id using injected clock and rng. */
+export function makeModuleId(
+  prefix: string,
+  now: number,
+  rand: () => number,
+): string {
+  return `${prefix}-${now.toString(36)}-${rand().toString(36).slice(2, 8)}`;
+}

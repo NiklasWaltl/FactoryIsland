@@ -28,6 +28,7 @@ import {
   collectDockWarehouseFragment,
 } from "../helpers/module-fragments";
 import { addNotification } from "../utils/notifications";
+import { makeModuleId } from "../utils/make-id";
 
 const SHIP_TICK_TYPES = new Set<GameAction["type"]>([
   "SHIP_TICK",
@@ -88,9 +89,12 @@ function getUpdatedRewardCounters(
   return { shipsSinceLastFragment, pityCounter };
 }
 
-function createShipRewardModule(now: number): Module {
+function createShipRewardModule(
+  now: number,
+  rand: () => number = Math.random,
+): Module {
   return {
-    id: `ship-mod-${now.toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    id: makeModuleId("ship-mod", now, rand),
     type: "miner-boost",
     tier: 1,
     equippedTo: null,

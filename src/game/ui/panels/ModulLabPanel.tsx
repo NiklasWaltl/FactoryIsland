@@ -10,6 +10,7 @@ import type { Module } from "../../modules/module.types";
 import {
   MODULE_COMPATIBLE_BUILDINGS,
   MODULE_FRAGMENT_RECIPES,
+  MODULE_TYPE_LABELS,
   getModuleLabRecipe,
   getRecipeFragmentCost,
 } from "../../constants/moduleLabConstants";
@@ -24,11 +25,6 @@ interface ModulLabPanelProps {
 }
 
 type TabId = "fragments" | "job" | "modules";
-
-const MODULE_TYPE_LABELS: Record<Module["type"], string> = {
-  "miner-boost": "Miner-Boost",
-  "smelter-boost": "Smelter-Boost",
-};
 
 const ASSET_TYPE_LABELS: Partial<Record<PlacedAsset["type"], string>> = {
   auto_miner: "Auto-Miner",

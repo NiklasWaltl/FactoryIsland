@@ -21,16 +21,12 @@ import {
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { WAREHOUSE_CAPACITY } from "../../store/constants/buildings/index";
 import { ZoneSourceSelector } from "./ZoneSourceSelector";
+import { MODULE_TYPE_LABELS } from "../../constants/moduleLabConstants";
 
 interface AutoMinerPanelProps {
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
 }
-
-const MODULE_TYPE_LABELS: Record<Module["type"], string> = {
-  "miner-boost": "Miner Boost",
-  "smelter-boost": "Smelter Boost",
-};
 
 function getModuleDisplayName(module: Module): string {
   return `${MODULE_TYPE_LABELS[module.type]} Tier ${module.tier}`;

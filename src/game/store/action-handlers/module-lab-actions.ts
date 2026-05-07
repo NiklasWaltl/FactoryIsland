@@ -18,12 +18,11 @@ import {
 } from "../../constants/moduleLabConstants";
 import { normalizeModuleFragmentCount } from "../helpers/module-fragments";
 import { addErrorNotification } from "../utils/notifications";
+import { makeModuleId } from "../utils/make-id";
 import { isModuleCompatibleWithAsset } from "./module-compat";
 
-function generateModuleId(now: number, rand: () => number): string {
-  // Sufficient for in-game ids; uniqueness is per-save and unconstrained by NFT addresses.
-  return `mod-${now.toString(36)}-${rand().toString(36).slice(2, 8)}`;
-}
+const generateModuleId = (now: number, rand: () => number): string =>
+  makeModuleId("mod", now, rand);
 
 function startModuleCraft(
   state: GameState,
