@@ -11,7 +11,10 @@ export const getDevSceneFromUrl = (): DevSceneId => {
   if (!scene) return DEFAULT_DEV_SCENE;
   if (isDevSceneId(scene)) return scene;
 
-  console.warn(`[dev-scene] Unknown scene "${scene}", falling back to "${DEFAULT_DEV_SCENE}"`);
+  // eslint-disable-next-line no-console
+  console.warn(
+    `[dev-scene] Unknown scene "${scene}", falling back to "${DEFAULT_DEV_SCENE}"`,
+  );
   return DEFAULT_DEV_SCENE;
 };
 
