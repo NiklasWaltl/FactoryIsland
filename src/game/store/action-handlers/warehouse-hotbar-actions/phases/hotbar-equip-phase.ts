@@ -1,4 +1,6 @@
 import { debugLog } from "../../../../debug/debugLogger";
+import { isKnownItemId } from "../../../../items/registry";
+import { removeItem } from "../../../../inventory/helpers";
 import { RESOURCE_LABELS } from "../../../constants/resources";
 import type {
   GameState,
@@ -36,15 +38,29 @@ function decideEquipWarehousePreflight(
   void hotbarSlots;
   if (!whId) return { kind: "blocked" };
   if (!whInv) return { kind: "blocked" };
-  const key = invKey as keyof Inventory;
-  if ((whInv[key] as number) < amount) return { kind: "blocked" };
+
+  if (isKnownItemId(invKey)) {
+    const nextWhInv = removeItem(whInv, invKey, amount);
+    if (!nextWhInv) return { kind: "blocked" };
+    return {
+      kind: "ready",
+      invKey,
+      newWhInv: nextWhInv,
+    };
+  }
+
+  const base = Reflect.get(whInv, invKey);
+  if (typeof base !== "number" || !Number.isFinite(base) || base < amount) {
+    return { kind: "blocked" };
+  }
+
+  const nextWhInv = { ...whInv };
+  Reflect.set(nextWhInv, invKey, base - amount);
+
   return {
     kind: "ready",
     invKey,
-    newWhInv: {
-      ...whInv,
-      [key]: (whInv[key] as number) - amount,
-    },
+    newWhInv: nextWhInv,
   };
 }
 
@@ -60,7 +76,7 @@ export function runHotbarEquipPhase(ctx: HotbarEquipContext): GameState {
   switch (action.type) {
     case "EQUIP_BUILDING_FROM_WAREHOUSE": {
       const { buildingType, amount = 1 } = action;
-      const invKey = buildingType as keyof Inventory;
+      const invKey = buildingType;
       const whId = state.selectedWarehouseId;
       const whInv = whId ? state.warehouseInventories[whId] : undefined;
       const preflight = decideEquipWarehousePreflight(
@@ -106,7 +122,7 @@ export function runHotbarEquipPhase(ctx: HotbarEquipContext): GameState {
       debugLog.hotbar(
         `Equip ${RESOURCE_LABELS[itemKind] ?? itemKind} ×${amount} from warehouse → hotbar`,
       );
-      const invKey = itemKind as keyof Inventory;
+      const invKey = itemKind;
       const whId = state.selectedWarehouseId;
       const whInv = whId ? state.warehouseInventories[whId] : undefined;
       const preflight = decideEquipWarehousePreflight(
