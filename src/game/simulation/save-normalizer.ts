@@ -58,20 +58,23 @@ function isModuleTier(value: unknown): value is Module["tier"] {
   return value === 1 || value === 2 || value === 3;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 export function normalizeModuleInventory(raw: unknown): Module[] {
   if (!Array.isArray(raw)) return [];
 
   const modules: Module[] = [];
   for (const entry of raw) {
-    if (!entry || typeof entry !== "object") continue;
+    if (!isRecord(entry)) continue;
 
-    const candidate = entry as Record<string, unknown>;
-    const { id, type, tier } = candidate;
+    const { id, type, tier } = entry;
     if (typeof id !== "string" || id.trim() === "") continue;
     if (!isModuleType(type)) continue;
     if (!isModuleTier(tier)) continue;
 
-    const equippedTo = candidate.equippedTo;
+    const equippedTo = entry.equippedTo;
     if (
       equippedTo !== undefined &&
       equippedTo !== null &&
@@ -99,8 +102,8 @@ export function sanitizeConveyorUndergroundPeers(
   raw: unknown,
   assets: Record<string, PlacedAsset>,
 ): Record<string, string> {
-  if (!raw || typeof raw !== "object") return {};
-  const rawMap = raw as Record<string, unknown>;
+  if (!isRecord(raw)) return {};
+  const rawMap = raw;
   const out: Record<string, string> = {};
   for (const [id, asset] of Object.entries(assets)) {
     if (asset.type !== "conveyor_underground_in") continue;
@@ -132,12 +135,12 @@ export function rebuildGlobalInventoryFromStorage(
     return state.inventory;
   }
 
-  const nextInv = { ...state.inventory } as Record<string, number>;
+  const nextInv: Inventory = { ...state.inventory };
   let changed = false;
   for (const key of keysToZero) {
-    const current = nextInv[key as string] ?? 0;
+    const current = nextInv[key] ?? 0;
     if (current !== 0) {
-      nextInv[key as string] = 0;
+      nextInv[key] = 0;
       changed = true;
     }
   }
@@ -147,7 +150,7 @@ export function rebuildGlobalInventoryFromStorage(
     `Load: re-derived globalInventory - zeroed physical keys [${keysToZero.join(", ")}] ` +
       `(warehouse=${hasWarehouse}, hub=${hasHub}).`,
   );
-  return nextInv as unknown as Inventory;
+  return nextInv;
 }
 
 const VALID_JOB_STATUSES: ReadonlySet<JobStatus> = new Set([
@@ -286,15 +289,17 @@ export function sanitizeCraftingQueue(
 
     cleaned.push({
       ...j,
-      inputBuffer: Array.isArray((j as Partial<CraftingJob>).inputBuffer)
-        ? (j as Partial<CraftingJob>).inputBuffer!.filter(
-            (stack): stack is CraftingJob["ingredients"][number] =>
-              !!stack &&
-              typeof stack === "object" &&
-              typeof stack.itemId === "string" &&
-              typeof stack.count === "number" &&
-              Number.isFinite(stack.count) &&
-              stack.count > 0,
+      inputBuffer: Array.isArray(j.inputBuffer)
+        ? j.inputBuffer.filter(
+            (stack: unknown): stack is CraftingJob["ingredients"][number] => {
+              if (!isRecord(stack)) return false;
+              return (
+                typeof stack.itemId === "string" &&
+                typeof stack.count === "number" &&
+                Number.isFinite(stack.count) &&
+                stack.count > 0
+              );
+            },
           )
         : [],
     });
@@ -326,21 +331,17 @@ export function sanitizeKeepStockByWorkbench(
   const cleaned: KeepStockByWorkbench = {};
   for (const [workbenchId, recipes] of Object.entries(raw)) {
     if (assets[workbenchId]?.type !== "workbench") continue;
-    if (!recipes || typeof recipes !== "object") continue;
+    if (!isRecord(recipes)) continue;
 
     const cleanRecipes: Record<string, KeepStockTargetEntry> = {};
-    for (const [recipeId, value] of Object.entries(
-      recipes as Record<string, unknown>,
-    )) {
-      if (!value || typeof value !== "object") continue;
-      const entry = value as Partial<KeepStockTargetEntry>;
-      const amount = Number.isFinite(entry.amount)
-        ? Math.max(
-            0,
-            Math.min(KEEP_STOCK_MAX_TARGET, Math.floor(entry.amount as number)),
-          )
-        : 0;
-      const enabled = !!entry.enabled && amount > 0;
+    for (const [recipeId, value] of Object.entries(recipes)) {
+      if (!isRecord(value)) continue;
+      const rawAmount = value.amount;
+      const amount =
+        typeof rawAmount === "number" && Number.isFinite(rawAmount)
+          ? Math.max(0, Math.min(KEEP_STOCK_MAX_TARGET, Math.floor(rawAmount)))
+          : 0;
+      const enabled = !!value.enabled && amount > 0;
       if (!enabled && amount === 0) continue;
       cleanRecipes[recipeId] = { enabled, amount };
     }
