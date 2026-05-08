@@ -6,10 +6,50 @@ import {
   type Inventory,
   type PlacedAsset,
 } from "../../../store/reducer";
+import type { CraftingJob } from "../../../crafting/types";
 import { buildProductionTransparency } from "../productionTransparency";
 
 const WB = "wb-ui";
 const WH = "wh-ui";
+
+function buildJob(overrides: Partial<CraftingJob> = {}): CraftingJob {
+  const id = overrides.id ?? "job-ui";
+  return {
+    id,
+    recipeId: "wood_pickaxe",
+    workbenchId: WB,
+    inventorySource: { kind: "global" },
+    inputBuffer: [],
+    status: "queued",
+    priority: "normal",
+    source: "player",
+    enqueuedAt: 1,
+    startedAt: null,
+    finishesAt: null,
+    progress: 0,
+    ingredients: [{ itemId: "wood", count: 1 }],
+    output: { itemId: "wood_pickaxe", count: 1 },
+    processingTime: 1,
+    reservationOwnerId: id,
+    ...overrides,
+  };
+}
+
+function withJobs(state: GameState, jobs: readonly CraftingJob[]): GameState {
+  return {
+    ...state,
+    crafting: {
+      ...state.crafting,
+      jobs,
+    },
+  };
+}
+
+function getReason(state: GameState, jobId: string): string | undefined {
+  return buildProductionTransparency(state).jobs.find(
+    (entry) => entry.id === `craft:${jobId}`,
+  )?.reason;
+}
 
 function buildState(overrides?: Partial<Inventory>): GameState {
   const base = createInitialState("release");
@@ -287,6 +327,173 @@ describe("productionTransparency", () => {
 
     expect(row).toBeDefined();
     expect(row?.reason).toContain("wartet");
+  });
+
+  it("shows no-power blocker for unpowered energy consumers", () => {
+    const machineId = "smithy-no-power";
+    let state = buildState({ wood: 5 });
+    state = withJobs(
+      {
+        ...state,
+        assets: {
+          ...state.assets,
+          [machineId]: {
+            id: machineId,
+            type: "smithy",
+            x: 12,
+            y: 4,
+            size: 1,
+          },
+        },
+        poweredMachineIds: [],
+      },
+      [
+        buildJob({
+          id: "job-no-power",
+          workbenchId: machineId,
+          status: "crafting",
+        }),
+      ],
+    );
+
+    expect(getReason(state, "job-no-power")).toBe("⚡ Kein Strom");
+  });
+
+  it("shows output-full blocker for delivering jobs", () => {
+    const state = withJobs(buildState({ wood: 5 }), [
+      buildJob({ id: "job-output-full", status: "delivering" }),
+    ]);
+
+    expect(getReason(state, "job-output-full")).toBe("📦 Output voll");
+  });
+
+  it("shows the first missing input item for reserved jobs", () => {
+    const state = withJobs(buildState({ wood: 0 }), [
+      buildJob({
+        id: "job-missing-input",
+        status: "reserved",
+        ingredients: [{ itemId: "wood", count: 2 }],
+        inputBuffer: [],
+      }),
+    ]);
+
+    expect(getReason(state, "job-missing-input")).toBe(
+      "⏳ Wartet auf Input: Wood",
+    );
+  });
+
+  it("shows reserved-resource blocker for queued jobs", () => {
+    let state = buildState({ wood: 5 });
+    state = withJobs(
+      {
+        ...state,
+        network: {
+          ...state.network,
+          reservations: [
+            {
+              id: "res-blocking-wood",
+              itemId: "wood",
+              amount: 5,
+              ownerKind: "system_request",
+              ownerId: "other-system",
+              scopeKey: `crafting:warehouse:${WH}`,
+              createdAt: 1,
+            },
+          ],
+        },
+      },
+      [
+        buildJob({
+          id: "job-reserved-resource",
+          status: "queued",
+          inventorySource: { kind: "warehouse", warehouseId: WH },
+          ingredients: [{ itemId: "wood", count: 5 }],
+        }),
+      ],
+    );
+
+    expect(getReason(state, "job-reserved-resource")).toBe(
+      "🔒 Ressource reserviert",
+    );
+  });
+
+  it("shows no-drone blocker when no free role-compatible drone can deliver input", () => {
+    let state = buildState({ wood: 1 });
+    state = withJobs(
+      {
+        ...state,
+        drones: {
+          ...state.drones,
+          starter: {
+            ...state.drones.starter,
+            status: "moving_to_collect",
+            currentTaskType: "hub_restock",
+          },
+        },
+        network: {
+          ...state.network,
+          reservations: [
+            {
+              id: "res-input-wood",
+              itemId: "wood",
+              amount: 1,
+              ownerKind: "crafting_job",
+              ownerId: "job-no-drone",
+              scopeKey: `crafting:warehouse:${WH}`,
+              createdAt: 1,
+            },
+          ],
+        },
+      },
+      [
+        buildJob({
+          id: "job-no-drone",
+          status: "reserved",
+          inventorySource: { kind: "warehouse", warehouseId: WH },
+          ingredients: [{ itemId: "wood", count: 1 }],
+          inputBuffer: [],
+        }),
+      ],
+    );
+
+    expect(getReason(state, "job-no-drone")).toBe("🚁 Keine Drohne verfügbar");
+  });
+
+  it("shows wrong-zone blocker when global stock can satisfy a zone miss", () => {
+    const zoneId = "zone-wrong";
+    let state = buildState({ wood: 0 });
+    state = withJobs(
+      {
+        ...state,
+        inventory: {
+          ...state.inventory,
+          wood: 5,
+        },
+        productionZones: {
+          ...state.productionZones,
+          [zoneId]: { id: zoneId, name: "Wrong Zone" },
+        },
+        buildingZoneIds: {
+          ...state.buildingZoneIds,
+          [WB]: zoneId,
+          [WH]: zoneId,
+        },
+      },
+      [
+        buildJob({
+          id: "job-wrong-zone",
+          status: "queued",
+          inventorySource: {
+            kind: "zone",
+            zoneId,
+            warehouseIds: [WH],
+          },
+          ingredients: [{ itemId: "wood", count: 5 }],
+        }),
+      ],
+    );
+
+    expect(getReason(state, "job-wrong-zone")).toBe("❌ Falsche Zone");
   });
 
   it("shows keep-in-stock skip reason when higher-priority jobs are open", () => {

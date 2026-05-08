@@ -29,6 +29,16 @@ import {
   type KeepStockEvaluationDeps,
 } from "../../crafting/policies";
 import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
+import { pickCraftingPhysicalSourceForIngredient } from "../../crafting/tick";
+import { hasCompleteWorkbenchInput } from "../../crafting/workbench-input-complete";
+import { isCollectableCraftingItem } from "../../crafting/workbench-input-buffer";
+import { gatherWorkbenchInputCandidates } from "../../drones/candidates/workbench-input-candidates";
+import { scoreDroneTask } from "../../drones/candidates/scoring";
+import {
+  getAssignedWorkbenchInputDroneCount,
+  getWorkbenchJobInputAmount,
+} from "../../drones/selection/helpers/need-slot-resolvers";
+import { getItemCount } from "../../inventory/helpers";
 import { isKnownItemId, getItemDef } from "../../items/registry";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
 import type {
@@ -36,13 +46,16 @@ import type {
   CraftingSource,
   GameState,
 } from "../../store/types";
+import { roleAllows } from "../../store/types";
 import {
   KEEP_STOCK_MAX_TARGET,
   KEEP_STOCK_OPEN_JOB_CAP,
 } from "../../store/constants/keep-stock";
+import { ENERGY_DRAIN } from "../../store/constants/energy/energy-balance";
 import { isUnderConstruction } from "../../store/helpers/asset-status";
 import { resolveBuildingSource } from "../../store/building-source";
 import { toCraftingJobInventorySource } from "../../store/crafting/crafting-source-adapters";
+import { resolveWorkbenchInputPickup } from "../../store/workbench/workbench-input-pickup";
 import {
   getDeconstructRequestQueueRows,
   type DeconstructRequestQueueRow,
@@ -102,6 +115,8 @@ interface ProductionTransparencyInputRefs {
   readonly constructionSites: GameState["constructionSites"];
   readonly drones: GameState["drones"];
   readonly assets: GameState["assets"];
+  readonly poweredMachineIds: GameState["poweredMachineIds"];
+  readonly machinePowerRatio: GameState["machinePowerRatio"];
   readonly inventory: GameState["inventory"];
   readonly warehouseInventories: GameState["warehouseInventories"];
   readonly serviceHubs: GameState["serviceHubs"];
@@ -121,6 +136,8 @@ function getProductionTransparencyInputRefs(
     constructionSites: state.constructionSites,
     drones: state.drones,
     assets: state.assets,
+    poweredMachineIds: state.poweredMachineIds,
+    machinePowerRatio: state.machinePowerRatio,
     inventory: state.inventory,
     warehouseInventories: state.warehouseInventories,
     serviceHubs: state.serviceHubs,
@@ -143,6 +160,8 @@ function hasSameProductionTransparencyInputRefs(
     left.constructionSites === right.constructionSites &&
     left.drones === right.drones &&
     left.assets === right.assets &&
+    left.poweredMachineIds === right.poweredMachineIds &&
+    left.machinePowerRatio === right.machinePowerRatio &&
     left.inventory === right.inventory &&
     left.warehouseInventories === right.warehouseInventories &&
     left.serviceHubs === right.serviceHubs &&
@@ -202,6 +221,100 @@ function hasBufferedIngredients(job: CraftingJob): boolean {
   );
 }
 
+function getFirstMissingIngredientLabel(job: CraftingJob): string | null {
+  const missing = job.ingredients.find(
+    (ingredient) =>
+      getBufferedAmount(job, ingredient.itemId) < ingredient.count,
+  );
+  if (!missing) return null;
+  return getItemLabel(missing.itemId);
+}
+
+function getNoPowerReason(state: GameState, assetId: string): string | null {
+  const asset = state.assets[assetId];
+  if (!asset) return null;
+  if (!Object.prototype.hasOwnProperty.call(ENERGY_DRAIN, asset.type)) {
+    return null;
+  }
+  if (state.poweredMachineIds.includes(assetId)) return null;
+  return "⚡ Kein Strom";
+}
+
+function hasWorkbenchInputCandidateForJob(
+  state: GameState,
+  job: CraftingJob,
+  drone: Parameters<typeof gatherWorkbenchInputCandidates>[1],
+): boolean {
+  return gatherWorkbenchInputCandidates(
+    state,
+    drone,
+    { stickyBonus: 0 },
+    {
+      hasCompleteWorkbenchInput,
+      isCollectableCraftingItem,
+      getWorkbenchJobInputAmount,
+      getAssignedWorkbenchInputDroneCount,
+      resolveWorkbenchInputPickup,
+      scoreDroneTask,
+    },
+  ).some((candidate) =>
+    candidate.nodeId.startsWith(
+      `workbench_input:${job.workbenchId}:${job.id}:`,
+    ),
+  );
+}
+
+function getNoWorkbenchInputDroneReason(
+  state: GameState,
+  job: CraftingJob,
+): string | null {
+  if (job.status !== "reserved") return null;
+  if (job.inventorySource.kind === "global") return null;
+  if (hasCompleteWorkbenchInput(job)) return null;
+
+  const probeDrone = {
+    droneId: "production-transparency-probe",
+    tileX: 0,
+    tileY: 0,
+    targetNodeId: null,
+  };
+  if (!hasWorkbenchInputCandidateForJob(state, job, probeDrone)) return null;
+
+  for (const drone of Object.values(state.drones)) {
+    if (drone.status !== "idle") continue;
+    if (!roleAllows(drone.role ?? "auto", "workbench_delivery")) continue;
+    if (hasWorkbenchInputCandidateForJob(state, job, drone)) return null;
+  }
+
+  return "🚁 Keine Drohne verfügbar";
+}
+
+function getWrongZoneReason(state: GameState, job: CraftingJob): string | null {
+  if (job.inventorySource.kind !== "zone") return null;
+
+  for (const ingredient of job.ingredients) {
+    const decision = pickCraftingPhysicalSourceForIngredient({
+      source: job.inventorySource,
+      itemId: ingredient.itemId,
+      required: ingredient.count,
+      warehouseInventories: state.warehouseInventories,
+      serviceHubs: state.serviceHubs,
+      network: state.network,
+      assets: state.assets,
+      preferredFromAssetId: job.workbenchId,
+    });
+
+    if (decision.status !== "missing") continue;
+    if (getItemCount(state.inventory, ingredient.itemId) < ingredient.count) {
+      continue;
+    }
+
+    return "❌ Falsche Zone";
+  }
+
+  return null;
+}
+
 function getQueuedReason(state: GameState, job: CraftingJob): string {
   const recipe = getWorkbenchRecipe(job.recipeId);
   if (!recipe) return "wartet: recipe unknown";
@@ -210,8 +323,11 @@ function getQueuedReason(state: GameState, job: CraftingJob): string {
   const sourceInv = getCraftingSourceInventory(state, source);
   const lines = computeIngredientLines(state, recipe, source, sourceInv);
 
+  const wrongZoneReason = getWrongZoneReason(state, job);
+  if (wrongZoneReason) return wrongZoneReason;
+
   const hasReserved = lines.some((line) => line.status === "reserved");
-  if (hasReserved) return "wartet auf freien Bestand (reserviert)";
+  if (hasReserved) return "🔒 Ressource reserviert";
 
   const missing = lines.find((line) => line.status === "missing");
   if (missing) {
@@ -249,7 +365,10 @@ function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
     } else if (job.status === "reserved") {
       status = "reserved";
       if (!hasBufferedIngredients(job)) {
-        reason = "wartet auf Lieferung";
+        const missingIngredientLabel = getFirstMissingIngredientLabel(job);
+        reason =
+          getNoWorkbenchInputDroneReason(state, job) ??
+          `⏳ Wartet auf Input: ${missingIngredientLabel ?? "?"}`;
       } else {
         const blockedByWorkbench = state.crafting.jobs.some(
           (other) =>
@@ -266,18 +385,12 @@ function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
       reason = "in Produktion";
     } else if (job.status === "delivering") {
       status = "delivering";
-      const hasActiveDelivery = Object.values(state.drones).some(
-        (drone) =>
-          drone.currentTaskType === "workbench_delivery" &&
-          drone.craftingJobId === job.id &&
-          drone.status !== "idle",
-      );
-      reason = hasActiveDelivery
-        ? "delivery unterwegs"
-        : "wartet auf Abholung/Lieferung";
+      reason = "📦 Output voll";
     } else {
       status = "waiting";
     }
+
+    reason = getNoPowerReason(state, job.workbenchId) ?? reason;
 
     rows.push({
       id: `craft:${job.id}`,

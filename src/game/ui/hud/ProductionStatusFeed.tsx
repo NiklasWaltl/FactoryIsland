@@ -35,6 +35,8 @@ export const ProductionStatusFeed: React.FC<ProductionStatusFeedProps> =
         state.constructionSites,
         state.drones,
         state.assets,
+        state.poweredMachineIds,
+        state.machinePowerRatio,
         state.inventory,
         state.warehouseInventories,
         state.serviceHubs,
