@@ -1,7 +1,7 @@
 import {
   buildConveyorRoutingIndex,
   type ConveyorRoutingIndex,
-} from "../conveyor/conveyor-routing";
+} from "../conveyor/conveyor-index";
 import type { GameState } from "../types";
 
 export function invalidateRoutingIndexCache(state: GameState): GameState {

@@ -28,7 +28,7 @@ import type { ShipState } from "./types/ship-types";
 import type { ModuleState } from "./types/module-state";
 import type { ZoneSourceState } from "./types/zone-source-state";
 import type { PowerState } from "./types/power-state";
-import type { ConveyorRoutingIndex } from "./conveyor/conveyor-routing";
+import type { ConveyorRoutingIndex } from "./conveyor/conveyor-index";
 
 export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
 export type { CollectableItemType } from "./types/item-types";
@@ -55,6 +55,12 @@ export type {
 export type {
   ConveyorItem,
   ConveyorState,
+  ConveyorTargetBlockReason,
+  ConveyorTargetDecision,
+  ConveyorTargetEligibility,
+  ConveyorTargetEligibilityCheck,
+  ConveyorTargetType,
+  ConveyorNoTargetReason,
   AutoSmelterStatus,
   AutoSmelterProcessing,
   AutoSmelterEntry,

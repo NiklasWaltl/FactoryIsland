@@ -15,17 +15,23 @@ export type {
   ConveyorTargetEligibilityCheck,
   ConveyorTargetType,
   ConveyorNoTargetReason,
-  ConveyorTickEligibilityDecision,
+} from "../types/conveyor-types";
+export type {
   ConveyorRoutingIndex,
-  DecideConveyorTargetSelectionInput,
   TileId,
   WorkbenchJob,
   ZoneId,
-} from "../conveyor/conveyor-routing";
+} from "../conveyor/conveyor-index";
+export type { ConveyorTickEligibilityDecision } from "../conveyor/conveyor-eligibility";
+export type { DecideConveyorTargetSelectionInput } from "../conveyor/conveyor-routing";
+export { buildConveyorRoutingIndex } from "../conveyor/conveyor-index";
+export { decideConveyorTickEligibility } from "../conveyor/conveyor-eligibility";
 export {
-  buildConveyorRoutingIndex,
   classifyConveyorTargetEligibility,
-  decideConveyorTargetSelection,
-  decideConveyorTickEligibility,
   shouldDeferRightMergerInputToLeft,
+} from "../conveyor/conveyor-helpers";
+export {
+  decideConveyorRouting,
+  decideConveyorTargetSelection,
+  decideRoutingFor,
 } from "../conveyor/conveyor-routing";
