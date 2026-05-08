@@ -26,12 +26,10 @@ export type { ConveyorTickEligibilityDecision } from "../conveyor/conveyor-eligi
 export type { DecideConveyorTargetSelectionInput } from "../conveyor/conveyor-routing";
 export { buildConveyorRoutingIndex } from "../conveyor/conveyor-index";
 export { decideConveyorTickEligibility } from "../conveyor/conveyor-eligibility";
-export {
-  classifyConveyorTargetEligibility,
-  shouldDeferRightMergerInputToLeft,
-} from "../conveyor/conveyor-helpers";
+export { classifyConveyorTargetEligibility } from "../conveyor/conveyor-helpers";
 export {
   decideConveyorRouting,
   decideConveyorTargetSelection,
   decideRoutingFor,
+  shouldDeferRightMergerInputToLeft,
 } from "../conveyor/conveyor-routing";

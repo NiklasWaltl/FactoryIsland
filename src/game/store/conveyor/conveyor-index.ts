@@ -1,13 +1,13 @@
 import { ALL_ITEM_IDS } from "../../items/registry";
 import type { ItemId } from "../../items/types";
 import { areZonesTransportCompatible } from "../../logistics/conveyor-zone";
-import type { CraftingJob, WorkbenchId } from "../../crafting/types";
-import type { GameState } from "../types";
 import {
   assetHeight,
   cellKey,
   isWarehouseStorageAsset,
-} from "./conveyor-helpers";
+} from "../../logistics/common/index-utils";
+import type { CraftingJob, WorkbenchId } from "../../crafting/types";
+import type { GameState } from "../types";
 
 export type TileId = string;
 export type ZoneId = string;
