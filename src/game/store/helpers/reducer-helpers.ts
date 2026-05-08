@@ -14,6 +14,8 @@ import {
   tickOneDrone as tickOneDroneExecution,
   type TickOneDroneIoDeps,
 } from "../../drones/execution/tick-one-drone";
+import { addItem, getItemCount, removeItem } from "../../inventory/helpers";
+import type { ItemId } from "../../items/types";
 import type {
   GameMode,
   GameState,
@@ -25,6 +27,10 @@ import type {
   KeepStockByWorkbench,
   RecipeAutomationPolicyMap,
 } from "../types";
+
+function isItemInventoryKey(key: keyof Inventory): key is ItemId {
+  return key !== "coins";
+}
 
 export function getWarehouseCapacity(mode: GameMode): number {
   return mode === "debug" ? Infinity : WAREHOUSE_CAPACITY;
@@ -46,17 +52,36 @@ export function consumeResources(
   inv: Inventory,
   costs: Partial<Record<keyof Inventory, number>>,
 ): Inventory {
-  const result = { ...inv } as Record<string, number>;
-  for (const [key, amt] of Object.entries(costs)) {
-    result[key] = (result[key] ?? 0) - (amt ?? 0);
-    if (import.meta.env.DEV && result[key] < 0) {
+  let result: Inventory = { ...inv };
+  for (const [rawKey, amt] of Object.entries(costs)) {
+    const key = rawKey as keyof Inventory;
+    const delta = amt ?? 0;
+
+    if (isItemInventoryKey(key)) {
+      if (delta > 0) {
+        const next = removeItem(result, key, delta);
+        result = next ?? {
+          ...result,
+          [key]: getItemCount(result, key) - delta,
+        };
+      } else if (delta < 0) {
+        result = addItem(result, key, -delta);
+      }
+    } else {
+      result = { ...result, coins: (result.coins ?? 0) - delta };
+    }
+
+    const currentValue = isItemInventoryKey(key)
+      ? getItemCount(result, key)
+      : (result.coins ?? 0);
+    if (import.meta.env.DEV && currentValue < 0) {
       // eslint-disable-next-line no-console -- DEV invariant failure should be visible immediately.
       console.warn(
-        `[consumeResources] Negative value for "${key}": ${result[key]}. Missing hasResources() guard?`,
+        `[consumeResources] Negative value for "${key}": ${currentValue}. Missing hasResources() guard?`,
       );
     }
   }
-  return result as unknown as Inventory;
+  return result;
 }
 
 type CraftingBuildingAssetType = "workbench" | "smithy" | "manual_assembler";

@@ -4,6 +4,13 @@ import type {
   Inventory,
   ServiceHubEntry,
 } from "./types";
+import type { ItemId } from "../items/types";
+import {
+  addItem,
+  getItemCount,
+  hasItem,
+  removeItem,
+} from "../inventory/helpers";
 
 export const COLLECTABLE_KEYS = new Set<string>([
   "wood",
@@ -11,6 +18,10 @@ export const COLLECTABLE_KEYS = new Set<string>([
   "iron",
   "copper",
 ]);
+
+function isItemInventoryKey(key: keyof Inventory): key is ItemId {
+  return key !== "coins";
+}
 
 export function createEmptyInventory(): Inventory {
   return {
@@ -44,9 +55,18 @@ export function hasResources(
   inv: Inventory,
   costs: Partial<Record<keyof Inventory, number>>,
 ): boolean {
-  for (const [key, amt] of Object.entries(costs)) {
-    if (((inv as unknown as Record<string, number>)[key] ?? 0) < (amt ?? 0))
-      return false;
+  for (const [rawKey, amt] of Object.entries(costs)) {
+    const key = rawKey as keyof Inventory;
+    const required = amt ?? 0;
+    if (isItemInventoryKey(key)) {
+      if (required > 0) {
+        if (!hasItem(inv, key, required)) return false;
+      } else if (getItemCount(inv, key) < required) {
+        return false;
+      }
+      continue;
+    }
+    if ((inv.coins ?? 0) < required) return false;
   }
   return true;
 }
@@ -55,11 +75,24 @@ export function addResources(
   inv: Inventory,
   items: Partial<Record<keyof Inventory, number>>,
 ): Inventory {
-  const result = { ...inv } as Record<string, number>;
-  for (const [key, amt] of Object.entries(items)) {
-    result[key] = (result[key] ?? 0) + (amt ?? 0);
+  let result: Inventory = { ...inv };
+  for (const [rawKey, amt] of Object.entries(items)) {
+    const key = rawKey as keyof Inventory;
+    const delta = amt ?? 0;
+    if (delta === 0) continue;
+
+    if (isItemInventoryKey(key)) {
+      if (delta > 0) {
+        result = addItem(result, key, delta);
+      } else {
+        result = { ...result, [key]: getItemCount(result, key) + delta };
+      }
+      continue;
+    }
+
+    result = { ...result, coins: (result.coins ?? 0) + delta };
   }
-  return result as unknown as Inventory;
+  return result;
 }
 
 export function getEffectiveBuildInventory(
@@ -108,21 +141,27 @@ export function consumeBuildResources(
   serviceHubs: Record<string, ServiceHubEntry>;
   remaining: Partial<Record<CollectableItemType, number>>;
 } {
-  const inv = { ...state.inventory } as Record<string, number>;
+  let inv: Inventory = { ...state.inventory };
   let warehouses = state.warehouseInventories;
   let hubs = state.serviceHubs;
   const remaining: Partial<Record<CollectableItemType, number>> = {};
-  for (const [key, amt] of Object.entries(costs)) {
+  for (const [rawKey, amt] of Object.entries(costs)) {
+    const key = rawKey as keyof Inventory;
     let needed = amt ?? 0;
     if (needed <= 0) continue;
     for (const [whId, whInv] of Object.entries(warehouses)) {
       if (needed <= 0) break;
-      const whHave = (whInv as unknown as Record<string, number>)[key] ?? 0;
+      const whHave = isItemInventoryKey(key)
+        ? getItemCount(whInv, key)
+        : (whInv.coins ?? 0);
       const fromWh = Math.min(whHave, needed);
       if (fromWh > 0) {
+        const nextWhInv = isItemInventoryKey(key)
+          ? (removeItem(whInv, key, fromWh) ?? whInv)
+          : { ...whInv, coins: whHave - fromWh };
         warehouses = {
           ...warehouses,
-          [whId]: { ...whInv, [key]: whHave - fromWh } as Inventory,
+          [whId]: nextWhInv,
         };
         needed -= fromWh;
       }
@@ -145,17 +184,29 @@ export function consumeBuildResources(
       }
     }
     if (needed > 0) {
-      const globalHave = inv[key] ?? 0;
-      const fromGlobal = Math.min(globalHave, needed);
-      inv[key] = globalHave - fromGlobal;
-      needed -= fromGlobal;
+      if (isItemInventoryKey(key)) {
+        const globalHave = getItemCount(inv, key);
+        const fromGlobal = Math.min(globalHave, needed);
+        if (fromGlobal > 0) {
+          const nextInv = removeItem(inv, key, fromGlobal);
+          if (nextInv) {
+            inv = nextInv;
+          }
+        }
+        needed -= fromGlobal;
+      } else {
+        const globalHave = inv.coins ?? 0;
+        const fromGlobal = Math.min(globalHave, needed);
+        inv = { ...inv, coins: globalHave - fromGlobal };
+        needed -= fromGlobal;
+      }
     }
     if (needed > 0) {
       remaining[key as CollectableItemType] = needed;
     }
   }
   return {
-    inventory: inv as unknown as Inventory,
+    inventory: inv,
     warehouseInventories: warehouses,
     serviceHubs: hubs,
     remaining,

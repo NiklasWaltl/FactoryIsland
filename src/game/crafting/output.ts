@@ -12,6 +12,7 @@
 
 import { isPlayerGear, isSeed } from "../items/registry";
 import type { ItemStack, WarehouseId } from "../items/types";
+import { addItem, getItemCount } from "../inventory/helpers";
 import type { Inventory, PlacedAsset, ServiceHubEntry } from "../store/types";
 import type { CraftingInventorySource } from "./types";
 
@@ -237,12 +238,14 @@ function getLogicalSection(
 }
 
 function depositInto(inv: Inventory, stack: ItemStack): Inventory {
-  const key = stack.itemId as keyof Inventory;
-  const current = (inv as unknown as Record<string, number>)[key] ?? 0;
+  const current = getItemCount(inv, stack.itemId);
+  if (stack.count > 0) {
+    return addItem(inv, stack.itemId, stack.count);
+  }
   return {
     ...inv,
-    [key]: current + stack.count,
-  } as Inventory;
+    [stack.itemId]: current + stack.count,
+  };
 }
 
 type HubStorableItemId = "wood" | "stone" | "iron" | "copper";

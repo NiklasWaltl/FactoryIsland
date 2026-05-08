@@ -1,4 +1,5 @@
 import { applyNetworkAction } from "../../inventory/reservations";
+import { getItemCount } from "../../inventory/helpers";
 import type { CraftingJob } from "../../crafting/types";
 import {
   getGlobalHubWarehouseId,
@@ -92,10 +93,7 @@ export function commitWorkbenchInputReservation(
     const warehouseId = decision.source.warehouseId;
     const warehouseInventory = state.warehouseInventories[warehouseId];
     if (!warehouseInventory) return null;
-    const beforeAmount =
-      (warehouseInventory as unknown as Record<string, number>)[
-        reservation.itemId
-      ] ?? 0;
+    const beforeAmount = getItemCount(warehouseInventory, reservation.itemId);
     const scoped = { [warehouseId]: warehouseInventory };
     const result = applyNetworkAction(scoped, state.network, {
       type: "NETWORK_COMMIT_RESERVATION",
@@ -105,10 +103,7 @@ export function commitWorkbenchInputReservation(
     if (import.meta.env.DEV) {
       const afterInventory =
         result.warehouseInventories[warehouseId] ?? warehouseInventory;
-      const afterAmount =
-        (afterInventory as unknown as Record<string, number>)[
-          reservation.itemId
-        ] ?? 0;
+      const afterAmount = getItemCount(afterInventory, reservation.itemId);
       if (beforeAmount - afterAmount !== reservation.amount) {
         throw new Error(
           `[workbench] Invariant violated: commit ${reservation.id} debited ${beforeAmount - afterAmount} ` +

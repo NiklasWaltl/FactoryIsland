@@ -1,10 +1,16 @@
 import { COLLECTABLE_KEYS } from "../../store/constants/resources";
+import { getItemCount, removeItem } from "../../inventory/helpers";
+import type { ItemId } from "../../items/types";
 import type {
   CollectableItemType,
   GameState,
   Inventory,
   ServiceHubEntry,
 } from "../../store/types";
+
+function isItemInventoryKey(key: keyof Inventory): key is ItemId {
+  return key !== "coins";
+}
 
 function consumeBuildResources(
   state: Pick<GameState, "inventory" | "warehouseInventories" | "serviceHubs">,
@@ -15,22 +21,28 @@ function consumeBuildResources(
   serviceHubs: Record<string, ServiceHubEntry>;
   remaining: Partial<Record<CollectableItemType, number>>;
 } {
-  const inv = { ...state.inventory } as Record<string, number>;
+  let inv: Inventory = { ...state.inventory };
   let warehouses = state.warehouseInventories;
   let hubs = state.serviceHubs;
   const remaining: Partial<Record<CollectableItemType, number>> = {};
-  for (const [key, amt] of Object.entries(costs)) {
+  for (const [rawKey, amt] of Object.entries(costs)) {
+    const key = rawKey as keyof Inventory;
     let needed = amt ?? 0;
     if (needed <= 0) continue;
     // 1) Warehouses first (any key they happen to hold).
     for (const [whId, whInv] of Object.entries(warehouses)) {
       if (needed <= 0) break;
-      const whHave = (whInv as unknown as Record<string, number>)[key] ?? 0;
+      const whHave = isItemInventoryKey(key)
+        ? getItemCount(whInv, key)
+        : (whInv.coins ?? 0);
       const fromWh = Math.min(whHave, needed);
       if (fromWh > 0) {
+        const nextWhInv = isItemInventoryKey(key)
+          ? (removeItem(whInv, key, fromWh) ?? whInv)
+          : { ...whInv, coins: whHave - fromWh };
         warehouses = {
           ...warehouses,
-          [whId]: { ...whInv, [key]: whHave - fromWh } as Inventory,
+          [whId]: nextWhInv,
         };
         needed -= fromWh;
       }
@@ -56,17 +68,29 @@ function consumeBuildResources(
     // 3) Last-resort fallback: global inventory (e.g. coins, items without
     // a physical home, or pre-Phase-1 saves where stocks still live globally).
     if (needed > 0) {
-      const globalHave = inv[key] ?? 0;
-      const fromGlobal = Math.min(globalHave, needed);
-      inv[key] = globalHave - fromGlobal;
-      needed -= fromGlobal;
+      if (isItemInventoryKey(key)) {
+        const globalHave = getItemCount(inv, key);
+        const fromGlobal = Math.min(globalHave, needed);
+        if (fromGlobal > 0) {
+          const nextInv = removeItem(inv, key, fromGlobal);
+          if (nextInv) {
+            inv = nextInv;
+          }
+        }
+        needed -= fromGlobal;
+      } else {
+        const globalHave = inv.coins ?? 0;
+        const fromGlobal = Math.min(globalHave, needed);
+        inv = { ...inv, coins: globalHave - fromGlobal };
+        needed -= fromGlobal;
+      }
     }
     if (needed > 0) {
       remaining[key as CollectableItemType] = needed;
     }
   }
   return {
-    inventory: inv as unknown as Inventory,
+    inventory: inv,
     warehouseInventories: warehouses,
     serviceHubs: hubs,
     remaining,

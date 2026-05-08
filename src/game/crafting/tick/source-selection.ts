@@ -16,6 +16,7 @@ import type {
   PlacedAsset,
   ServiceHubEntry,
 } from "../../store/types";
+import { getItemCount } from "../../inventory/helpers";
 import type { ItemId, WarehouseId } from "../../items/types";
 import type { NetworkSlice } from "../../inventory/reservationTypes";
 import type { CraftingInventorySource } from "../types";
@@ -216,10 +217,7 @@ export function pickCraftingPhysicalSourceForIngredient(args: {
     preferredFromAssetId,
   );
   for (const warehouseId of primaryWarehouseIds) {
-    const stored =
-      (warehouseInventories[warehouseId] as unknown as Record<string, number>)[
-        itemId
-      ] ?? 0;
+    const stored = getItemCount(warehouseInventories[warehouseId], itemId);
     const scopedReserved = getReservedInScope(
       network,
       itemId,
