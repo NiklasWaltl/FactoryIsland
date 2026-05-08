@@ -1,4 +1,6 @@
 import { debugLog } from "../../../../debug/debugLogger";
+import { isKnownItemId } from "../../../../items/registry";
+import { addItem } from "../../../../inventory/helpers";
 import type { GameState } from "../../../types";
 import type { WarehouseHotbarActionDeps } from "../deps";
 import type { HotbarRemoveAction } from "../types";
@@ -26,7 +28,14 @@ export function runHotbarRemovePhase(ctx: HotbarRemoveContext): GameState {
   let newWhInv = { ...whInv };
   if (hs.toolKind === "building" && hs.buildingType) {
     const bType = hs.buildingType;
-    (newWhInv as any)[bType] = ((newWhInv as any)[bType] ?? 0) + hs.amount;
+    if (isKnownItemId(bType)) {
+      newWhInv = addItem(newWhInv, bType, hs.amount);
+    } else {
+      const base = Reflect.get(newWhInv, bType);
+      const nextWhInv = { ...newWhInv };
+      Reflect.set(nextWhInv, bType, (base ?? 0) + hs.amount);
+      newWhInv = nextWhInv;
+    }
     return {
       ...state,
       warehouseInventories: {

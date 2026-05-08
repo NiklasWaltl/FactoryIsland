@@ -4,6 +4,7 @@ import {
   getInboundHubDispatchAmount,
   getInboundWarehouseDispatchAmount,
 } from "../selection/helpers/need-slot-resolvers";
+import { getItemCount, hasItem } from "../../inventory/helpers";
 import { isUnderConstruction } from "../../store/helpers/asset-status";
 import type { CollectableItemType, GameState } from "../../store/types";
 
@@ -40,8 +41,8 @@ export function getAvailableWarehouseDispatchSupply(
 ): number {
   const inv = state.warehouseInventories[warehouseId];
   if (!inv) return 0;
-  const current = (inv as unknown as Record<string, number>)[itemType] ?? 0;
-  if (current <= 0) return 0;
+  if (!hasItem(inv, itemType, 1)) return 0;
+  const current = getItemCount(inv, itemType);
   const inbound = getInboundWarehouseDispatchAmount(
     state,
     warehouseId,

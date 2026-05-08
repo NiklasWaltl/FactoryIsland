@@ -17,7 +17,11 @@ import type {
   ShipStatusSlice,
 } from "../store/types/ui-slice-types";
 import { DOCK_WAREHOUSE_ID } from "../store/bootstrap/apply-dock-warehouse-layout";
-import { serializeState, loadAndHydrate } from "../simulation/save";
+import {
+  loadAndHydrate,
+  loadFromStorage,
+  saveToStorage,
+} from "../simulation/save";
 import {
   applyDevScene,
   DevSceneSelector,
@@ -51,6 +55,7 @@ import { Notifications } from "../ui/hud/Notifications";
 import { AutoDeliveryFeed } from "../ui/hud/AutoDeliveryFeed";
 import { ProductionStatusFeed } from "../ui/hud/ProductionStatusFeed";
 import { ResourceBar } from "../ui/hud/ResourceBar";
+import { addErrorNotification } from "../store/utils/notifications";
 import "../ui/styles/factory-game.css";
 
 // Debug system (tree-shaken in production)
@@ -68,6 +73,8 @@ import {
 import type { MockAction } from "../debug";
 
 const SAVE_KEY = "factory-island-save";
+const SAVE_RECOVERY_MESSAGE =
+  "⚠️ Speicherstand hatte Fehler – automatisch repariert";
 
 /**
  * Thin wrapper kept for backward compatibility with HMR path.
@@ -151,15 +158,20 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
         const hmr = loadHmrState();
         if (hmr) return normalizeLoadedState(hmr, m);
       }
-      try {
-        const saved = localStorage.getItem(SAVE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.mode === m)
-            return normalizeLoadedState(parsed, m);
-        }
-      } catch {
-        /* corrupt save, ignore */
+      const loaded = loadFromStorage(SAVE_KEY, m);
+      if (loaded.state) {
+        return loaded.state;
+      }
+      if (loaded.recoveredFromCorruption) {
+        const fresh = createFreshInitialState(m);
+        return {
+          ...fresh,
+          notifications: addErrorNotification(
+            fresh.notifications,
+            SAVE_RECOVERY_MESSAGE,
+            8000,
+          ),
+        };
       }
       return createFreshInitialState(m);
     },
@@ -176,14 +188,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   // Periodic localStorage save (every 10s + on unload)
   useEffect(() => {
     const save = () => {
-      try {
-        localStorage.setItem(
-          SAVE_KEY,
-          JSON.stringify(serializeState(stateRef.current)),
-        );
-      } catch {
-        /* quota */
-      }
+      saveToStorage(SAVE_KEY, stateRef.current);
     };
     const id = setInterval(save, 10_000);
     window.addEventListener("beforeunload", save);

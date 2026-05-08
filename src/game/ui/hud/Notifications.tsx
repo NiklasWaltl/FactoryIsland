@@ -8,11 +8,37 @@ interface NotificationsProps {
 
 export const Notifications: React.FC<NotificationsProps> = React.memo(
   ({ notifications }) => {
-    if (notifications.length === 0) return null;
+    const [dismissedIds, setDismissedIds] = React.useState<Set<string>>(
+      () => new Set(),
+    );
+
+    React.useEffect(() => {
+      setDismissedIds((previous) => {
+        const liveIds = new Set(notifications.map((n) => n.id));
+        const next = new Set([...previous].filter((id) => liveIds.has(id)));
+        return next.size === previous.size ? previous : next;
+      });
+    }, [notifications]);
+
+    const visibleNotifications = React.useMemo(
+      () => notifications.filter((n) => !dismissedIds.has(n.id)),
+      [notifications, dismissedIds],
+    );
+
+    const dismiss = React.useCallback((id: string) => {
+      setDismissedIds((previous) => {
+        if (previous.has(id)) return previous;
+        const next = new Set(previous);
+        next.add(id);
+        return next;
+      });
+    }, []);
+
+    if (visibleNotifications.length === 0) return null;
 
     return (
       <div className="fi-notifications">
-        {notifications.map((n) => (
+        {visibleNotifications.map((n) => (
           <div
             key={n.id}
             className={`fi-notification ${n.kind === "error" ? "fi-notification--error" : ""}`}
@@ -27,6 +53,16 @@ export const Notifications: React.FC<NotificationsProps> = React.memo(
                 ? n.displayName
                 : `+${n.amount} ${n.displayName}`}
             </span>
+            {n.kind === "error" && (
+              <button
+                type="button"
+                className="fi-notification-dismiss"
+                onClick={() => dismiss(n.id)}
+                aria-label="Meldung schließen"
+              >
+                ✕
+              </button>
+            )}
           </div>
         ))}
       </div>

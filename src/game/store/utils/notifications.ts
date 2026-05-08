@@ -26,6 +26,7 @@ export function addNotification(
 export function addErrorNotification(
   notifications: GameNotification[],
   message: string,
+  expiresInMs = 3000,
 ): GameNotification[] {
   const now = Date.now();
   const filtered = notifications.filter(
@@ -39,7 +40,7 @@ export function addErrorNotification(
       displayName: message,
       amount: 0,
       kind: "error" as const,
-      expiresAt: now + 3000,
+      expiresAt: now + expiresInMs,
     },
   ];
 }

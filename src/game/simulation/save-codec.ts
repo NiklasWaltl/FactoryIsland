@@ -477,3 +477,94 @@ export function loadAndHydrate(raw: unknown, mode: GameMode): GameState {
 
   return deserializeState(migrated);
 }
+
+export interface LoadFromStorageResult {
+  readonly state: GameState | null;
+  readonly recoveredFromCorruption: boolean;
+}
+
+function backupCorruptedRawData(corruptedRawData: string): void {
+  try {
+    const backupKey = `factory_island_backup_${Date.now()}`;
+    localStorage.setItem(backupKey, corruptedRawData);
+    // eslint-disable-next-line no-console -- Save-Backup-Key soll in der Konsole sichtbar sein.
+    console.info(`[Save] Backup unter: ${backupKey}`);
+  } catch (error) {
+    const operation = "backup erstellen";
+    // eslint-disable-next-line no-console -- Persistenzfehler muessen im Browser-Log sichtbar sein.
+    console.error(`[Save] ${operation} fehlgeschlagen:`, error, {
+      timestamp: Date.now(),
+    });
+  }
+}
+
+export function loadFromStorage(
+  saveKey: string,
+  mode: GameMode,
+): LoadFromStorageResult {
+  let raw: string | null = null;
+
+  try {
+    raw = localStorage.getItem(saveKey);
+  } catch (error) {
+    const operation = "localStorage lesen";
+    // eslint-disable-next-line no-console -- Persistenzfehler muessen im Browser-Log sichtbar sein.
+    console.error(`[Save] ${operation} fehlgeschlagen:`, error, {
+      timestamp: Date.now(),
+    });
+    return { state: null, recoveredFromCorruption: false };
+  }
+
+  if (!raw) {
+    return { state: null, recoveredFromCorruption: false };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    const operation = "Save parsen";
+    // eslint-disable-next-line no-console -- Persistenzfehler muessen im Browser-Log sichtbar sein.
+    console.error(`[Save] ${operation} fehlgeschlagen:`, error, {
+      timestamp: Date.now(),
+    });
+    backupCorruptedRawData(raw);
+    return { state: null, recoveredFromCorruption: true };
+  }
+
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    (parsed as { mode?: unknown }).mode !== mode
+  ) {
+    return { state: null, recoveredFromCorruption: false };
+  }
+
+  try {
+    return {
+      state: loadAndHydrate(parsed, mode),
+      recoveredFromCorruption: false,
+    };
+  } catch (error) {
+    const operation = "Save laden";
+    // eslint-disable-next-line no-console -- Persistenzfehler muessen im Browser-Log sichtbar sein.
+    console.error(`[Save] ${operation} fehlgeschlagen:`, error, {
+      timestamp: Date.now(),
+    });
+    backupCorruptedRawData(raw);
+    return { state: null, recoveredFromCorruption: true };
+  }
+}
+
+export function saveToStorage(saveKey: string, state: GameState): void {
+  try {
+    const serialized = JSON.stringify(serializeState(state));
+    localStorage.setItem(saveKey, serialized);
+  } catch (error) {
+    const operation = "Save schreiben";
+    // eslint-disable-next-line no-console -- Persistenzfehler muessen im Browser-Log sichtbar sein.
+    console.error(`[Save] ${operation} fehlgeschlagen:`, error, {
+      timestamp: Date.now(),
+    });
+  }
+}

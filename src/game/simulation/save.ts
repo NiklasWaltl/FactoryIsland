@@ -32,6 +32,12 @@ export type {
   SaveGameLatest,
 } from "./save-migrations";
 
-export { serializeState, deserializeState, loadAndHydrate } from "./save-codec";
+export {
+  serializeState,
+  deserializeState,
+  loadAndHydrate,
+  loadFromStorage,
+  saveToStorage,
+} from "./save-codec";
 
 export { rebuildGlobalInventoryFromStorage } from "./save-normalizer";

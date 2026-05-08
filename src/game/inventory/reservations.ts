@@ -9,6 +9,7 @@
 import type { Inventory } from "../store/types";
 import { assertItemExists, isKnownItemId } from "../items/registry";
 import type { ItemId, ItemStack, WarehouseId } from "../items/types";
+import { getItemCount } from "./helpers";
 import { getNetworkAmount, type NetworkStateSlice } from "./network";
 import type {
   MissingItem,
@@ -248,7 +249,7 @@ function decrementPhysicalStock(
     if (remaining <= 0) break;
     const inv = next[whId];
     if (!inv) continue;
-    const current = (inv as unknown as Record<string, number>)[itemId] ?? 0;
+    const current = getItemCount(inv, itemId);
     if (current <= 0) continue;
     const take = Math.min(current, remaining);
     const updated: Inventory = {
