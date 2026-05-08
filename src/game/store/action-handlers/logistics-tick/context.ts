@@ -48,6 +48,7 @@ export interface LogisticsTickContext {
   state: GameState;
   deps: LogisticsTickIoDeps;
   poweredSet: Set<string>;
+  connectedSet: Set<string>;
   newAutoMinersL: Record<string, AutoMinerEntry>;
   newConveyorsL: Record<string, ConveyorState>;
   newInvL: Inventory;

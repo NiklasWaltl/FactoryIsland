@@ -53,10 +53,12 @@ export function handleLogisticsTickAction(
 ): GameState {
   // Phase 0: Snapshot powered machines and initialize mutable working set.
   const conveyorRoutingIndex = buildConveyorRoutingIndex(state);
+  const connectedSet = new Set(state.connectedAssetIds ?? []);
   const ctx: LogisticsTickContext = {
     state,
     deps,
     poweredSet: new Set(state.poweredMachineIds ?? []),
+    connectedSet,
     newAutoMinersL: state.autoMiners,
     newConveyorsL: state.conveyors,
     newInvL: state.inventory,

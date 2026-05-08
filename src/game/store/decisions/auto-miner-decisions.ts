@@ -15,16 +15,16 @@ export type AutoMinerTickEligibilityDecision =
 export const decideAutoMinerTickEligibility = (input: {
   minerId: string;
   assets: Record<string, PlacedAsset>;
-  connectedAssetIds: readonly string[];
+  connectedSet: ReadonlySet<string>;
   getMachinePowerRatio: (assetId: string) => number;
 }): AutoMinerTickEligibilityDecision => {
-  const { minerId, assets, connectedAssetIds, getMachinePowerRatio } = input;
+  const { minerId, assets, connectedSet, getMachinePowerRatio } = input;
 
   const minerAsset = assets[minerId];
   if (!minerAsset) return { kind: "blocked" };
   if (minerAsset.status === "deconstructing") return { kind: "blocked" };
 
-  const isConnected = connectedAssetIds.includes(minerId);
+  const isConnected = connectedSet.has(minerId);
   const powerRatio = getMachinePowerRatio(minerId);
   if (!isConnected || powerRatio < 1) return { kind: "blocked" };
 

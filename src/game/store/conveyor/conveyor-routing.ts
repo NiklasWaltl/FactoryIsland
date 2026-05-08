@@ -127,12 +127,11 @@ export type ConveyorTickEligibilityDecision =
 export const decideConveyorTickEligibility = (input: {
   conveyorId: string;
   assets: Record<string, PlacedAsset>;
-  connectedAssetIds: readonly string[];
+  connectedSet: ReadonlySet<string>;
   poweredSet: ReadonlySet<string>;
   movedThisTick: ReadonlySet<string>;
 }): ConveyorTickEligibilityDecision => {
-  const { conveyorId, assets, connectedAssetIds, poweredSet, movedThisTick } =
-    input;
+  const { conveyorId, assets, connectedSet, poweredSet, movedThisTick } = input;
 
   if (movedThisTick.has(conveyorId)) return { kind: "blocked" };
 
@@ -140,7 +139,7 @@ export const decideConveyorTickEligibility = (input: {
   if (!conveyorAsset) return { kind: "blocked" };
   if (conveyorAsset.status === "deconstructing") return { kind: "blocked" };
 
-  const isConnected = connectedAssetIds.includes(conveyorId);
+  const isConnected = connectedSet.has(conveyorId);
   const isPowered = poweredSet.has(conveyorId);
   if (!isConnected || !isPowered) return { kind: "blocked" };
 
@@ -255,7 +254,7 @@ export function shouldDeferRightMergerInputToLeft(input: {
   targetMergerId: string;
   assets: Record<string, PlacedAsset>;
   cellMap: GameState["cellMap"];
-  connectedAssetIds: readonly string[];
+  connectedSet: ReadonlySet<string>;
   poweredSet: ReadonlySet<string>;
   movedThisTick: ReadonlySet<string>;
   conveyors: Record<string, ConveyorState>;
@@ -271,7 +270,7 @@ export function shouldDeferRightMergerInputToLeft(input: {
     targetMergerId,
     assets,
     cellMap,
-    connectedAssetIds,
+    connectedSet,
     poweredSet,
     movedThisTick,
     conveyors,
@@ -305,7 +304,7 @@ export function shouldDeferRightMergerInputToLeft(input: {
     conveyorId: leftInputId,
     movedThisTick,
     assets,
-    connectedAssetIds,
+    connectedSet,
     poweredSet,
   });
   if (leftPreflight.kind === "blocked") return false;

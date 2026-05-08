@@ -148,7 +148,7 @@ export function runConveyorPhase(
       conveyorId: convId,
       movedThisTick,
       assets: state.assets,
-      connectedAssetIds: state.connectedAssetIds,
+      connectedSet: ctx.connectedSet,
       poweredSet: ctx.poweredSet,
     });
     if (preflight.kind === "blocked") continue;
@@ -195,7 +195,7 @@ export function runConveyorPhase(
           targetMergerId: nextConveyorId,
           assets: state.assets,
           cellMap: state.cellMap,
-          connectedAssetIds: state.connectedAssetIds,
+          connectedSet: ctx.connectedSet,
           poweredSet: ctx.poweredSet,
           movedThisTick,
           conveyors: getActiveConveyors(),

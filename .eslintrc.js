@@ -26,6 +26,7 @@ module.exports = {
     },
     ecmaVersion: "latest",
     sourceType: "module",
+    warnOnUnsupportedTypeScriptVersion: false,
   },
   settings: {
     react: {

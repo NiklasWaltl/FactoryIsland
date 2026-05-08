@@ -29,7 +29,7 @@ export function runAutoMinerPhase(ctx: LogisticsTickContext): void {
     const minerTickEligibility = decideAutoMinerTickEligibility({
       minerId,
       assets: state.assets,
-      connectedAssetIds: state.connectedAssetIds,
+      connectedSet: ctx.connectedSet,
       getMachinePowerRatio: (assetId) => getMachinePowerRatio(ctx, assetId),
     });
     // Unterstrom = kompletter Stopp: Progress bleibt eingefroren, bis die Maschine wieder voll versorgt ist.

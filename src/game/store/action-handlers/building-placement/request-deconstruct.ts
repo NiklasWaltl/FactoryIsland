@@ -2,6 +2,7 @@ import type { GameAction } from "../../game-actions";
 import type { GameState, PlacedAsset } from "../../types";
 import type { BuildingPlacementIoDeps } from "./shared";
 import { decideRemoveAssetEligibility } from "./remove-asset";
+import { computeConnectedAssetIds } from "../../../logistics/connectivity";
 
 function getNextDeconstructRequestSeq(
   assets: Readonly<Record<string, PlacedAsset>>,
@@ -23,7 +24,7 @@ function markAssetAsDeconstructing(
   const targetAsset = state.assets[assetId];
   if (!targetAsset || targetAsset.status === "deconstructing") return state;
   const nextDeconstructRequestSeq = getNextDeconstructRequestSeq(state.assets);
-  return {
+  const nextState: GameState = {
     ...state,
     assets: {
       ...state.assets,
@@ -33,6 +34,10 @@ function markAssetAsDeconstructing(
         deconstructRequestSeq: nextDeconstructRequestSeq,
       },
     },
+  };
+  return {
+    ...nextState,
+    connectedAssetIds: computeConnectedAssetIds(nextState),
   };
 }
 
@@ -48,12 +53,16 @@ function clearAssetDeconstructingStatus(
     deconstructRequestSeq: _deconstructRequestSeq,
     ...assetWithoutStatus
   } = targetAsset;
-  return {
+  const nextState: GameState = {
     ...state,
     assets: {
       ...state.assets,
       [assetId]: assetWithoutStatus,
     },
+  };
+  return {
+    ...nextState,
+    connectedAssetIds: computeConnectedAssetIds(nextState),
   };
 }
 

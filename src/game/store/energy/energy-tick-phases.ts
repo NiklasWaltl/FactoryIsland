@@ -6,7 +6,6 @@
 // ============================================================
 
 import { getEnergyProductionPerPeriod } from "../../power/energy-production";
-import { computeConnectedAssetIds } from "../../logistics/connectivity";
 import {
   AUTO_ASSEMBLER_IDLE_DRAIN_PER_PERIOD,
   AUTO_ASSEMBLER_PROCESSING_DRAIN_PER_PERIOD,
@@ -98,8 +97,8 @@ export function buildEnergyTickPhase1Snapshot(
     | "battery"
   >,
 ): EnergyTickPhase1Result {
-  const connectedAssetIds = computeConnectedAssetIds(state);
-  const energyState = { ...state, connectedAssetIds };
+  const connectedAssetIds = state.connectedAssetIds;
+  const energyState = state;
   const production = getEnergyProductionPerPeriod(energyState);
   const connectedConsumers = connectedAssetIds
     .map((id) => state.assets[id])
