@@ -1,5 +1,6 @@
 import type { GameState } from "../../../types";
 import type { DebugSetStateAction } from "../types";
+import { invalidateRoutingIndexCache } from "../../../helpers/routing-index-cache";
 
 export interface DebugSetStateContext {
   state: GameState;
@@ -9,5 +10,5 @@ export interface DebugSetStateContext {
 export function runDebugSetStatePhase(ctx: DebugSetStateContext): GameState {
   const { state, action } = ctx;
   if (!import.meta.env.DEV) return state;
-  return action.state;
+  return invalidateRoutingIndexCache(action.state);
 }

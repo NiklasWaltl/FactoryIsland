@@ -2,7 +2,7 @@ import { GRID_H, GRID_W } from "../../constants/grid";
 import { ALL_ITEM_IDS } from "../../items/registry";
 import type { ItemId } from "../../items/types";
 import { areZonesTransportCompatible } from "../../logistics/conveyor-zone";
-import type { CraftingJob } from "../../crafting/types";
+import type { CraftingJob, WorkbenchId } from "../../crafting/types";
 import { CONVEYOR_TILE_CAPACITY } from "../conveyor/constants";
 import { directionOffset } from "../utils/direction";
 import type {
@@ -50,10 +50,17 @@ export interface ConveyorRoutingIndex {
   readonly warehouseInputTilesByItemId: Map<ItemId, Set<TileId>>;
   /** Input item id -> active, non-terminal workbench jobs that require it. */
   readonly activeWorkbenchJobsByInputItem: Map<ItemId, WorkbenchJob[]>;
+  /** Input item id -> workbench id -> first active, non-terminal job for that workbench. */
+  readonly activeWorkbenchJobsByItemAndWorkbench: Map<
+    ItemId,
+    Map<WorkbenchId, WorkbenchJob>
+  >;
   /** Zone id -> compatible zone ids for belt handoff and destination checks. */
   readonly zoneCompatLookup: Map<ZoneId, Set<ZoneId>>;
   /** Resolves indexed warehouse input tiles back to their warehouse asset id. */
   readonly warehouseIdByInputTileId: Map<TileId, string>;
+  /** Reference to the assets object this index was built from — used for staleness detection. */
+  readonly assetsRef: Record<string, unknown>;
 }
 
 export function buildConveyorRoutingIndex(
@@ -61,6 +68,10 @@ export function buildConveyorRoutingIndex(
 ): ConveyorRoutingIndex {
   const warehouseInputTilesByItemId = new Map<ItemId, Set<TileId>>();
   const activeWorkbenchJobsByInputItem = new Map<ItemId, WorkbenchJob[]>();
+  const activeWorkbenchJobsByItemAndWorkbench = new Map<
+    ItemId,
+    Map<WorkbenchId, WorkbenchJob>
+  >();
   const zoneCompatLookup = new Map<ZoneId, Set<ZoneId>>();
   const warehouseIdByInputTileId = new Map<TileId, string>();
 
@@ -94,6 +105,20 @@ export function buildConveyorRoutingIndex(
       } else {
         activeWorkbenchJobsByInputItem.set(ingredient.itemId, [job]);
       }
+
+      let jobsByWorkbench = activeWorkbenchJobsByItemAndWorkbench.get(
+        ingredient.itemId,
+      );
+      if (!jobsByWorkbench) {
+        jobsByWorkbench = new Map<WorkbenchId, WorkbenchJob>();
+        activeWorkbenchJobsByItemAndWorkbench.set(
+          ingredient.itemId,
+          jobsByWorkbench,
+        );
+      }
+      if (!jobsByWorkbench.has(job.workbenchId)) {
+        jobsByWorkbench.set(job.workbenchId, job);
+      }
     }
   }
 
@@ -115,8 +140,10 @@ export function buildConveyorRoutingIndex(
   return {
     warehouseInputTilesByItemId,
     activeWorkbenchJobsByInputItem,
+    activeWorkbenchJobsByItemAndWorkbench,
     zoneCompatLookup,
     warehouseIdByInputTileId,
+    assetsRef: state.assets,
   };
 }
 
@@ -662,9 +689,10 @@ export const decideConveyorTargetSelection = <TSource>(
     nextAsset?.type === "workbench" &&
     nextAsset.status !== "deconstructing"
   ) {
-    const activeJobForWb = (
-      routingIndex.activeWorkbenchJobsByInputItem.get(input.currentItem) ?? []
-    ).find((job) => job.workbenchId === nextAsset.id);
+    const wbJobMap = routingIndex.activeWorkbenchJobsByItemAndWorkbench.get(
+      input.currentItem,
+    );
+    const activeJobForWb = wbJobMap?.get(nextAsset.id) ?? null;
     const workbenchJobEligibility = classifyConveyorTargetEligibility([
       {
         condition: !!activeJobForWb,

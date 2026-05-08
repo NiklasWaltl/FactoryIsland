@@ -11,6 +11,7 @@ import { MAX_ZONES } from "../constants/buildings/index";
 import { makeId } from "../utils/make-id";
 import type { GameState } from "../types";
 import { hasAsset, isBuildingZoneStateConsistent } from "../utils/asset-guards";
+import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 
 type HandledActionType = "CREATE_ZONE" | "DELETE_ZONE" | "SET_BUILDING_ZONE";
 
@@ -36,7 +37,7 @@ function finalizeZoneAction(
   actionType: string,
 ): GameState {
   logZoneInvariantIfInvalid(nextState, actionType);
-  return nextState;
+  return invalidateRoutingIndexCache(nextState);
 }
 
 /**

@@ -110,6 +110,7 @@ export function createInitialState(mode: GameMode = "release"): GameState {
     floorMap: {},
     autoMiners: {},
     conveyors: {},
+    routingIndexCache: null,
     conveyorUndergroundPeers: {},
     selectedAutoMinerId: null,
     autoSmelters: {},

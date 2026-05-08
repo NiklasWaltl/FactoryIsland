@@ -28,6 +28,7 @@ import type { ShipState } from "./types/ship-types";
 import type { ModuleState } from "./types/module-state";
 import type { ZoneSourceState } from "./types/zone-source-state";
 import type { PowerState } from "./types/power-state";
+import type { ConveyorRoutingIndex } from "./conveyor/conveyor-routing";
 
 export type { RecipeAutomationPolicyEntry, RecipeAutomationPolicyMap };
 export type { CollectableItemType } from "./types/item-types";
@@ -403,6 +404,8 @@ export interface GameState {
   autoMiners: Record<string, AutoMinerEntry>;
   /** Per-conveyor item state (keyed by asset ID) */
   conveyors: Record<string, ConveyorState>;
+  /** Runtime-only conveyor routing lookup cache. Not persisted. */
+  routingIndexCache?: ConveyorRoutingIndex | null;
   /**
    * Underground belt tunnel endpoints: each entrance/exit asset ID maps to its peer.
    * Always bidirectional (A→B and B→A). Empty when no tunnels exist.

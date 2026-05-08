@@ -3,6 +3,7 @@ import type { GameState, PlacedAsset } from "../../types";
 import type { BuildingPlacementIoDeps } from "./shared";
 import { decideRemoveAssetEligibility } from "./remove-asset";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
+import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 
 function getNextDeconstructRequestSeq(
   assets: Readonly<Record<string, PlacedAsset>>,
@@ -35,10 +36,10 @@ function markAssetAsDeconstructing(
       },
     },
   };
-  return {
+  return invalidateRoutingIndexCache({
     ...nextState,
     connectedAssetIds: computeConnectedAssetIds(nextState),
-  };
+  });
 }
 
 function clearAssetDeconstructingStatus(
@@ -60,10 +61,10 @@ function clearAssetDeconstructingStatus(
       [assetId]: assetWithoutStatus,
     },
   };
-  return {
+  return invalidateRoutingIndexCache({
     ...nextState,
     connectedAssetIds: computeConnectedAssetIds(nextState),
-  };
+  });
 }
 
 export function handleRequestDeconstructAssetAction(

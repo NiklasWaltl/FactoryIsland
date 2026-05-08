@@ -5,6 +5,7 @@ import type { TileType } from "../../../world/tile-types";
 import { cellKey } from "../../utils/cell-key";
 import { getAutoSmelterIoCells } from "../../asset-geometry";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
+import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 import type { BuildPlacementEligibilityDecision } from "../../decisions/build-placement-eligibility";
 import {
   type BuildingPlacementIoDeps,
@@ -160,10 +161,10 @@ export function finalizePlacement(
   actionType: "BUILD_PLACE_BUILDING",
   debugLog: BuildingPlacementIoDeps["debugLog"],
 ): GameState {
-  const nextState = {
+  const nextState = invalidateRoutingIndexCache({
     ...partial,
     connectedAssetIds: computeConnectedAssetIds(partial),
-  };
+  });
   logPlacementInvariantWarnings(nextState, actionType, debugLog);
   return nextState;
 }

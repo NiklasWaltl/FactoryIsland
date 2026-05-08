@@ -25,6 +25,7 @@
 import type { GameState } from "../../types";
 import type { GameAction } from "../../game-actions";
 import type { CraftingQueueActionDeps } from "./deps";
+import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 import { HANDLED_ACTION_TYPES, type CraftingQueueHandledAction } from "./types";
 import {
   runNetworkReservationsPhase,
@@ -41,6 +42,29 @@ export function isCraftingQueueAction(
   action: GameAction,
 ): action is CraftingQueueHandledAction {
   return HANDLED_ACTION_TYPES.has(action.type);
+}
+
+function invalidateIfCraftingChanged(
+  previousState: GameState,
+  nextState: GameState,
+): GameState {
+  if (nextState.crafting === previousState.crafting) return nextState;
+  return getRoutingRelevantCraftingSignature(nextState) ===
+    getRoutingRelevantCraftingSignature(previousState)
+    ? nextState
+    : invalidateRoutingIndexCache(nextState);
+}
+
+function getRoutingRelevantCraftingSignature(state: GameState): string {
+  return state.crafting.jobs
+    .filter((job) => job.status !== "done" && job.status !== "cancelled")
+    .map((job) => {
+      const ingredients = job.ingredients
+        .map((ingredient) => `${ingredient.itemId}:${ingredient.count}`)
+        .join(",");
+      return `${job.id}:${job.workbenchId}:${job.status}:${ingredients}`;
+    })
+    .join("|");
 }
 
 /**
@@ -62,25 +86,37 @@ export function handleCraftingQueueAction(
     case "NETWORK_COMMIT_BY_OWNER":
     case "NETWORK_CANCEL_RESERVATION":
     case "NETWORK_CANCEL_BY_OWNER": {
-      return runNetworkReservationsPhase({ state, action });
+      return invalidateIfCraftingChanged(
+        state,
+        runNetworkReservationsPhase({ state, action }),
+      );
     }
 
     // -----------------------------------------------------------------
     // Crafting jobs (Step 3)
     // -----------------------------------------------------------------
     case "CRAFT_REQUEST_WITH_PREREQUISITES": {
-      return runCraftRequestPhase({ state, action, deps });
+      return invalidateIfCraftingChanged(
+        state,
+        runCraftRequestPhase({ state, action, deps }),
+      );
     }
 
     case "JOB_ENQUEUE": {
-      return runJobEnqueuePhase({ state, action, deps });
+      return invalidateIfCraftingChanged(
+        state,
+        runJobEnqueuePhase({ state, action, deps }),
+      );
     }
 
     case "JOB_CANCEL":
     case "JOB_MOVE":
     case "JOB_SET_PRIORITY":
     case "JOB_TICK": {
-      return runQueueManagementPhase({ state, action, deps });
+      return invalidateIfCraftingChanged(
+        state,
+        runQueueManagementPhase({ state, action, deps }),
+      );
     }
 
     case "SET_KEEP_STOCK_TARGET": {

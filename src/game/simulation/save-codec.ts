@@ -99,6 +99,7 @@ export function serializeState(state: GameState): SaveGameLatest {
   debugLog.general(
     `Save: ${state.network.reservations.length} reservations, ${state.crafting.jobs.length} jobs`,
   );
+  // Runtime-only Map/Set caches are intentionally omitted from save data.
   return {
     version: CURRENT_SAVE_VERSION,
     mode: state.mode,
@@ -322,6 +323,7 @@ export function deserializeState(save: SaveGameLatest): GameState {
     selectedSplitterId: null,
     energyDebugOverlay: false,
     autoDeliveryLog: [],
+    routingIndexCache: null,
     selectedCraftingBuildingId: null,
   };
 

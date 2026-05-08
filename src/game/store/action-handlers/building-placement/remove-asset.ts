@@ -14,6 +14,7 @@ import { ASSET_LABELS } from "../../constants/ui/assets";
 import { cellKey } from "../../utils/cell-key";
 import { addResources } from "../../inventory-ops";
 import { removeAsset } from "../../asset-mutation";
+import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 import { getDeconstructRefundForBuildingType } from "../../../constants/deconstruct-refund";
 import { reassignBuildingSourceIds } from "../../../buildings/warehouse/warehouse-assignment";
 import { computeConnectedAssetIds } from "../../../logistics/connectivity";
@@ -478,10 +479,10 @@ export function executeGenericRemoveAsset(
     });
   }
   partialRemove = clearModulesEquippedToAny(partialRemove, stripAssetIds);
-  const nextState = {
+  const nextState = invalidateRoutingIndexCache({
     ...partialRemove,
     connectedAssetIds: computeConnectedAssetIds(partialRemove),
-  };
+  });
   logPlacementInvariantWarnings(nextState, actionLabel, debugLog);
 
   return { nextState, refund };
