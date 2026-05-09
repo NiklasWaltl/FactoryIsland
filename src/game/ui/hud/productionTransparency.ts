@@ -54,7 +54,6 @@ import {
 import { getItemCount } from "../../inventory/helpers";
 import { isKnownItemId, getItemDef } from "../../items/registry";
 import { RESOURCE_LABELS } from "../../store/constants/resources";
-import { AUTO_MINER_PRODUCE_TICKS } from "../../store/constants/drone/drone-config";
 import type {
   CollectableItemType,
   ConveyorItem,
@@ -715,78 +714,17 @@ function getConstructionRows(state: GameState): ProductionJobStatusRow[] {
 function getAutoMinerRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
 
-  for (const minerId of Object.keys(state.autoMiners).sort()) {
-    const miner = state.autoMiners[minerId];
-    const minerAsset = state.assets[minerId];
-    if (!minerAsset || minerAsset.type !== "auto_miner") continue;
-
-    const resolvedSource = resolveBuildingSource(state, minerId);
-    const inventorySource = toCraftingJobInventorySource(state, resolvedSource);
-
-    const readyToOutput = miner.progress >= AUTO_MINER_PRODUCE_TICKS;
-    let status: TransparencyJobStatus = "waiting";
-    if (readyToOutput) status = "delivering";
-    else if (miner.progress > 0) status = "crafting";
-
-    let reason: string | undefined =
-      getNoPowerReason(state, minerId) ?? undefined;
-
-    const depositAsset = state.assets[miner.depositId];
-    const hasAssignedCell =
-      !!depositAsset &&
-      depositAsset.status !== "deconstructing" &&
-      isDepositAssetType(depositAsset.type);
-
-    if (!reason && !hasAssignedCell) {
-      reason = "⛏️ Keine Zelle";
-    }
-
-    if (!reason && readyToOutput) {
-      const dir = minerAsset.direction ?? "east";
-      const outputX =
-        dir === "east"
-          ? minerAsset.x + 1
-          : dir === "west"
-            ? minerAsset.x - 1
-            : minerAsset.x;
-      const outputY =
-        dir === "south"
-          ? minerAsset.y + 1
-          : dir === "north"
-            ? minerAsset.y - 1
-            : minerAsset.y;
-
-      const outputDecision = getAutoMinerOutputDecision(
-        state,
-        minerId,
-        outputX,
-        outputY,
-      );
-
-      reason =
-        getAutoMinerWrongZoneReason(
-          state,
-          minerId,
-          outputX,
-          outputY,
-          outputDecision,
-        ) ?? undefined;
-
-      if (!reason && outputDecision.kind === "no_target") {
-        reason = "📦 Output voll";
-      }
-    }
-
-    if (!reason && miner.progress === 0) {
-      reason = "⏳ Startet...";
-    }
+  for (const [minerId, miner] of Object.entries(state.autoMiners)) {
+    const noPower = getNoPowerReason(state, minerId);
+    const reason =
+      noPower ?? (!miner.depositId ? "⛏️ Keine Zelle zugewiesen" : undefined);
 
     rows.push({
       id: `auto_miner:${minerId}`,
       type: "auto_miner",
-      status,
+      status: noPower ? "waiting" : miner.depositId ? "crafting" : "waiting",
       targetLabel: `auto miner ${minerId}`,
-      sourceLabel: formatSourceLabel(inventorySource),
+      sourceLabel: "global",
       reason,
     });
   }
@@ -1371,6 +1309,19 @@ export function buildProductionTransparency(
     ...getConstructionRows(state),
     ...getMachineRows(state),
   ];
+
+  const REASON_PRIORITY = (reason: string | undefined): number => {
+    if (!reason) return 99;
+    if (reason.includes("⚡")) return 1;
+    if (reason.includes("❌")) return 2;
+    if (reason.includes("⛏️")) return 3;
+    if (reason.includes("⏳")) return 4;
+    if (reason.includes("🔧")) return 5;
+    return 10;
+  };
+
+  jobs.sort((a, b) => REASON_PRIORITY(a.reason) - REASON_PRIORITY(b.reason));
+
   const keepStock = getKeepStockRows(state);
   const deconstructRequests = getDeconstructRequestQueueRows(state);
   const snapshot = { jobs, keepStock, deconstructRequests };

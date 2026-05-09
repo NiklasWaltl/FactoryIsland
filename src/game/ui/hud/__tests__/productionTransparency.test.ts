@@ -1315,7 +1315,7 @@ describe("productionTransparency", () => {
     );
   });
 
-  it("shows output-full blocker for auto miner rows", () => {
+  it("shows no blocker reason for powered auto miner rows with deposit", () => {
     const minerId = "miner-output-blocked";
     const depositId = "deposit-output-blocked";
     let state = buildState({ iron: 20 });
@@ -1366,9 +1366,7 @@ describe("productionTransparency", () => {
       },
     };
 
-    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
-      "📦 Output voll",
-    );
+    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBeUndefined();
   });
 
   it("shows no-cell blocker for auto miner rows", () => {
@@ -1391,7 +1389,7 @@ describe("productionTransparency", () => {
       autoMiners: {
         ...state.autoMiners,
         [minerId]: {
-          depositId: "missing-assigned-cell",
+          depositId: "",
           resource: "iron",
           progress: 0,
         },
@@ -1404,11 +1402,11 @@ describe("productionTransparency", () => {
     };
 
     expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
-      "⛏️ Keine Zelle",
+      "⛏️ Keine Zelle zugewiesen",
     );
   });
 
-  it("shows startup reason for auto miner rows at zero progress", () => {
+  it("shows no startup reason for auto miner rows at zero progress", () => {
     const minerId = "miner-starting";
     const depositId = "deposit-starting";
     let state = buildState({ iron: 0 });
@@ -1448,8 +1446,6 @@ describe("productionTransparency", () => {
       },
     };
 
-    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
-      "⏳ Startet...",
-    );
+    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBeUndefined();
   });
 });
