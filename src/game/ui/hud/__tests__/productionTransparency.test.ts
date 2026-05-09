@@ -7,6 +7,7 @@ import {
   type PlacedAsset,
 } from "../../../store/reducer";
 import type { CraftingJob } from "../../../crafting/types";
+import { AUTO_MINER_PRODUCE_TICKS } from "../../../store/constants/drone/drone-config";
 import { buildProductionTransparency } from "../productionTransparency";
 
 const WB = "wb-ui";
@@ -48,6 +49,12 @@ function withJobs(state: GameState, jobs: readonly CraftingJob[]): GameState {
 function getReason(state: GameState, jobId: string): string | undefined {
   return buildProductionTransparency(state).jobs.find(
     (entry) => entry.id === `craft:${jobId}`,
+  )?.reason;
+}
+
+function getMachineReason(state: GameState, rowId: string): string | undefined {
+  return buildProductionTransparency(state).jobs.find(
+    (entry) => entry.id === rowId,
   )?.reason;
 }
 
@@ -102,16 +109,7 @@ describe("productionTransparency", () => {
     const first = buildProductionTransparency(state);
     const second = buildProductionTransparency({
       ...state,
-      notifications: [
-        ...state.notifications,
-        {
-          id: "n-cache",
-          resource: "wood",
-          displayName: "wood",
-          amount: 1,
-          expiresAt: Date.now() + 1000,
-        },
-      ],
+      openPanel: "warehouse",
     });
 
     expect(second).toBe(first);
@@ -129,6 +127,20 @@ describe("productionTransparency", () => {
       priority: "high",
     });
     const second = buildProductionTransparency(next);
+
+    expect(second).not.toBe(first);
+  });
+
+  it("rebuilds the snapshot when auto assembler slice changes", () => {
+    const state = buildState({ ironIngot: 5 });
+
+    const first = buildProductionTransparency(state);
+    const second = buildProductionTransparency({
+      ...state,
+      autoAssemblers: {
+        ...state.autoAssemblers,
+      },
+    });
 
     expect(second).not.toBe(first);
   });
@@ -546,5 +558,898 @@ describe("productionTransparency", () => {
     expect(row).toBeDefined();
     expect(row?.decision).toBe("skip");
     expect(row?.decisionReason).toContain("keep-in-stock disabled");
+  });
+
+  it("shows no-power blocker for unpowered auto smelters", () => {
+    const smelterId = "smelter-no-power";
+    let state = buildState({ iron: 50 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [smelterId]: {
+          id: smelterId,
+          type: "auto_smelter",
+          x: 16,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoSmelters: {
+        ...state.autoSmelters,
+        [smelterId]: {
+          inputBuffer: [],
+          processing: null,
+          pendingOutput: [],
+          status: "IDLE",
+          lastRecipeInput: null,
+          lastRecipeOutput: null,
+          throughputEvents: [],
+          selectedRecipe: "iron",
+        },
+      },
+      poweredMachineIds: [],
+    };
+
+    expect(getMachineReason(state, `auto_smelter:${smelterId}`)).toBe(
+      "⚡ Kein Strom",
+    );
+  });
+
+  it("shows output-full blocker for auto smelter rows", () => {
+    const smelterId = "smelter-output-blocked";
+    let state = buildState({ iron: 50 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [smelterId]: {
+          id: smelterId,
+          type: "auto_smelter",
+          x: 17,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoSmelters: {
+        ...state.autoSmelters,
+        [smelterId]: {
+          inputBuffer: ["iron"],
+          processing: null,
+          pendingOutput: ["iron"],
+          status: "OUTPUT_BLOCKED",
+          lastRecipeInput: "iron",
+          lastRecipeOutput: "ironIngot",
+          throughputEvents: [],
+          selectedRecipe: "iron",
+        },
+      },
+      poweredMachineIds: [smelterId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [smelterId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `auto_smelter:${smelterId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows missing-input blocker for auto smelter rows", () => {
+    const smelterId = "smelter-missing-input";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [smelterId]: {
+          id: smelterId,
+          type: "auto_smelter",
+          x: 18,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoSmelters: {
+        ...state.autoSmelters,
+        [smelterId]: {
+          inputBuffer: [],
+          processing: null,
+          pendingOutput: [],
+          status: "IDLE",
+          lastRecipeInput: null,
+          lastRecipeOutput: null,
+          throughputEvents: [],
+          selectedRecipe: "iron",
+        },
+      },
+      poweredMachineIds: [smelterId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [smelterId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `auto_smelter:${smelterId}`)).toBe(
+      "⏳ Wartet auf Input: Iron Ore",
+    );
+  });
+
+  it("shows no-power blocker for unpowered auto assemblers", () => {
+    const assemblerId = "auto-assembler-no-power";
+    let state = buildState({ ironIngot: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [assemblerId]: {
+          id: assemblerId,
+          type: "auto_assembler",
+          x: 19,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoAssemblers: {
+        ...state.autoAssemblers,
+        [assemblerId]: {
+          ironIngotBuffer: 0,
+          processing: null,
+          pendingOutput: [],
+          status: "IDLE",
+          selectedRecipe: "metal_plate",
+        },
+      },
+      poweredMachineIds: [],
+    };
+
+    expect(getMachineReason(state, `auto_assembler:${assemblerId}`)).toBe(
+      "⚡ Kein Strom",
+    );
+  });
+
+  it("shows output-full blocker for auto assembler rows", () => {
+    const assemblerId = "auto-assembler-output-blocked";
+    let state = buildState({ ironIngot: 5 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [assemblerId]: {
+          id: assemblerId,
+          type: "auto_assembler",
+          x: 20,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoAssemblers: {
+        ...state.autoAssemblers,
+        [assemblerId]: {
+          ironIngotBuffer: 3,
+          processing: null,
+          pendingOutput: ["gear"],
+          status: "OUTPUT_BLOCKED",
+          selectedRecipe: "gear",
+        },
+      },
+      poweredMachineIds: [assemblerId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [assemblerId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `auto_assembler:${assemblerId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows missing-input blocker for auto assembler rows", () => {
+    const assemblerId = "auto-assembler-waiting-input";
+    let state = buildState({ ironIngot: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [assemblerId]: {
+          id: assemblerId,
+          type: "auto_assembler",
+          x: 21,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoAssemblers: {
+        ...state.autoAssemblers,
+        [assemblerId]: {
+          ironIngotBuffer: 0,
+          processing: null,
+          pendingOutput: [],
+          status: "IDLE",
+          selectedRecipe: "gear",
+        },
+      },
+      poweredMachineIds: [assemblerId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [assemblerId]: 1,
+      },
+      buildingSourceWarehouseIds: {
+        ...state.buildingSourceWarehouseIds,
+        [assemblerId]: WH,
+      },
+    };
+
+    expect(getMachineReason(state, `auto_assembler:${assemblerId}`)).toBe(
+      "⏳ Wartet auf Input: Iron Ingot",
+    );
+  });
+
+  it("shows output-full blocker for module lab rows", () => {
+    const moduleLabId = "module-lab-output-full";
+    let state = buildState({ gear: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [moduleLabId]: {
+          id: moduleLabId,
+          type: "module_lab",
+          x: 21,
+          y: 10,
+          size: 2,
+        },
+      },
+      moduleLabJob: {
+        recipeId: "module_tier1",
+        moduleType: "miner-boost",
+        tier: 1,
+        fragmentsRequired: 3,
+        startedAt: 1,
+        durationMs: 10000,
+        status: "done",
+      },
+    };
+
+    expect(getMachineReason(state, `module_lab:${moduleLabId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows missing-input blocker for module lab rows with item label", () => {
+    const moduleLabId = "module-lab-missing-fragment";
+    let state = buildState({ gear: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [moduleLabId]: {
+          id: moduleLabId,
+          type: "module_lab",
+          x: 22,
+          y: 10,
+          size: 2,
+        },
+      },
+      moduleLabJob: null,
+      moduleFragments: 0,
+    };
+
+    expect(getMachineReason(state, `module_lab:${moduleLabId}`)).toBe(
+      "⏳ Wartet auf Input: Modul-Fragment",
+    );
+  });
+
+  it("shows output-full blocker for research lab rows", () => {
+    const researchLabId = "research-lab-output-full";
+    let state = buildState({ gear: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [researchLabId]: {
+          id: researchLabId,
+          type: "research_lab",
+          x: 23,
+          y: 10,
+          size: 2,
+        },
+      },
+      notifications: [
+        ...state.notifications,
+        {
+          id: "n-research-ready",
+          resource: "research_unlock",
+          displayName: "smithy freigeschaltet",
+          amount: 1,
+          expiresAt: Date.now() + 1000,
+          kind: "success",
+        },
+      ],
+    };
+
+    expect(getMachineReason(state, `research_lab:${researchLabId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows output-full blocker for conveyor rows when output is blocked", () => {
+    const conveyorId = "conveyor-output-blocked";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [conveyorId]: {
+          id: conveyorId,
+          type: "conveyor",
+          x: 0,
+          y: 0,
+          size: 1,
+          direction: "west",
+        },
+      },
+      conveyors: {
+        ...state.conveyors,
+        [conveyorId]: {
+          queue: ["iron"],
+        },
+      },
+      connectedAssetIds: [...state.connectedAssetIds, conveyorId],
+      poweredMachineIds: [...state.poweredMachineIds, conveyorId],
+    };
+
+    expect(getMachineReason(state, `conveyor:${conveyorId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows idle conveyor rows without reason", () => {
+    const conveyorId = "conveyor-idle";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [conveyorId]: {
+          id: conveyorId,
+          type: "conveyor_splitter",
+          x: 10,
+          y: 10,
+          size: 1,
+          direction: "east",
+        },
+      },
+      conveyors: {
+        ...state.conveyors,
+        [conveyorId]: {
+          queue: [],
+        },
+      },
+    };
+
+    const row = buildProductionTransparency(state).jobs.find(
+      (entry) => entry.id === `conveyor:${conveyorId}`,
+    );
+
+    expect(row).toBeDefined();
+    expect(row?.status).toBe("waiting");
+    expect(row?.reason).toBeUndefined();
+  });
+
+  it("shows output-full blocker for generator rows", () => {
+    const generatorId = "generator-output-full";
+    const batteryId = "battery-output-full";
+    let state = buildState({ wood: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [generatorId]: {
+          id: generatorId,
+          type: "generator",
+          x: 20,
+          y: 6,
+          size: 2,
+        },
+        [batteryId]: {
+          id: batteryId,
+          type: "battery",
+          x: 20,
+          y: 9,
+          size: 2,
+        },
+      },
+      generators: {
+        ...state.generators,
+        [generatorId]: {
+          fuel: 5,
+          progress: 0.25,
+          running: true,
+          requestedRefill: 0,
+        },
+      },
+      connectedAssetIds: [generatorId, batteryId],
+      battery: {
+        ...state.battery,
+        stored: state.battery.capacity,
+      },
+      poweredMachineIds: [],
+      machinePowerRatio: {},
+    };
+
+    expect(getMachineReason(state, `generator:${generatorId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows missing-input blocker for generator rows without fuel", () => {
+    const generatorId = "generator-no-fuel";
+    let state = buildState({ wood: 5 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [generatorId]: {
+          id: generatorId,
+          type: "generator",
+          x: 21,
+          y: 6,
+          size: 2,
+        },
+      },
+      generators: {
+        ...state.generators,
+        [generatorId]: {
+          fuel: 0,
+          progress: 0,
+          running: false,
+          requestedRefill: 0,
+        },
+      },
+    };
+
+    expect(getMachineReason(state, `generator:${generatorId}`)).toBe(
+      "⏳ Wartet auf Input: Wood",
+    );
+  });
+
+  it("shows initializing reason for generator rows with fuel but not running", () => {
+    const generatorId = "generator-initializing";
+    let state = buildState({ wood: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [generatorId]: {
+          id: generatorId,
+          type: "generator",
+          x: 22,
+          y: 6,
+          size: 2,
+        },
+      },
+      generators: {
+        ...state.generators,
+        [generatorId]: {
+          fuel: 3,
+          progress: 0,
+          running: false,
+          requestedRefill: 0,
+        },
+      },
+    };
+
+    expect(getMachineReason(state, `generator:${generatorId}`)).toBe(
+      "⚙️ Initialisiert",
+    );
+  });
+
+  it("shows output-full blocker for manual assembler rows", () => {
+    const manualAssemblerId = "manual-assembler-output-full";
+    let state = buildState({ metalPlate: 1, gear: 999 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [manualAssemblerId]: {
+          id: manualAssemblerId,
+          type: "manual_assembler",
+          x: 22,
+          y: 10,
+          size: 2,
+        },
+      },
+      manualAssembler: {
+        ...state.manualAssembler,
+        processing: false,
+        recipe: "gear",
+        progress: 0,
+        buildingId: manualAssemblerId,
+      },
+      buildingSourceWarehouseIds: {
+        ...state.buildingSourceWarehouseIds,
+        [manualAssemblerId]: WH,
+      },
+    };
+
+    expect(
+      getMachineReason(state, `manual_assembler:${manualAssemblerId}`),
+    ).toBe("📦 Output voll");
+  });
+
+  it("shows missing-input blocker for manual assembler rows with item label", () => {
+    const manualAssemblerId = "manual-assembler-waiting-input";
+    let state = buildState({ metalPlate: 0, gear: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [manualAssemblerId]: {
+          id: manualAssemblerId,
+          type: "manual_assembler",
+          x: 24,
+          y: 10,
+          size: 2,
+        },
+      },
+      manualAssembler: {
+        ...state.manualAssembler,
+        processing: false,
+        recipe: "gear",
+        progress: 0,
+        buildingId: manualAssemblerId,
+      },
+      buildingSourceWarehouseIds: {
+        ...state.buildingSourceWarehouseIds,
+        [manualAssemblerId]: WH,
+      },
+    };
+
+    expect(
+      getMachineReason(state, `manual_assembler:${manualAssemblerId}`),
+    ).toBe("⏳ Wartet auf Input: Metal Plate");
+  });
+
+  it("shows no-recipe reason for manual assembler rows", () => {
+    const manualAssemblerId = "manual-assembler-no-recipe";
+    let state = buildState({ metalPlate: 0, gear: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [manualAssemblerId]: {
+          id: manualAssemblerId,
+          type: "manual_assembler",
+          x: 25,
+          y: 10,
+          size: 2,
+        },
+      },
+      manualAssembler: {
+        ...state.manualAssembler,
+        processing: false,
+        recipe: null,
+        progress: 0,
+        buildingId: manualAssemblerId,
+      },
+      buildingSourceWarehouseIds: {
+        ...state.buildingSourceWarehouseIds,
+        [manualAssemblerId]: WH,
+      },
+    };
+
+    expect(
+      getMachineReason(state, `manual_assembler:${manualAssemblerId}`),
+    ).toBe("🔧 Kein Rezept gewählt");
+  });
+
+  it("shows no-power blocker for unpowered smithy rows", () => {
+    const smithyId = "smithy-no-power";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [smithyId]: {
+          id: smithyId,
+          type: "smithy",
+          x: 22,
+          y: 6,
+          size: 2,
+        },
+      },
+      smithy: {
+        ...state.smithy,
+        selectedRecipe: "iron",
+        fuel: 1,
+        iron: 5,
+        processing: false,
+        progress: 0,
+        outputIngots: 0,
+        outputCopperIngots: 0,
+        buildingId: smithyId,
+      },
+      poweredMachineIds: [],
+    };
+
+    expect(getMachineReason(state, `smithy:${smithyId}`)).toBe("⚡ Kein Strom");
+  });
+
+  it("shows output-full blocker for smithy rows", () => {
+    const smithyId = "smithy-output-full";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [smithyId]: {
+          id: smithyId,
+          type: "smithy",
+          x: 23,
+          y: 6,
+          size: 2,
+        },
+      },
+      smithy: {
+        ...state.smithy,
+        selectedRecipe: "iron",
+        fuel: 0,
+        iron: 0,
+        processing: false,
+        progress: 0,
+        outputIngots: 2,
+        outputCopperIngots: 0,
+        buildingId: smithyId,
+      },
+      poweredMachineIds: [smithyId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [smithyId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `smithy:${smithyId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows missing-input blocker for smithy rows with item label", () => {
+    const smithyId = "smithy-waiting-input";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [smithyId]: {
+          id: smithyId,
+          type: "smithy",
+          x: 24,
+          y: 6,
+          size: 2,
+        },
+      },
+      smithy: {
+        ...state.smithy,
+        selectedRecipe: "iron",
+        fuel: 3,
+        iron: 0,
+        processing: false,
+        progress: 0,
+        outputIngots: 0,
+        outputCopperIngots: 0,
+        buildingId: smithyId,
+      },
+      poweredMachineIds: [smithyId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [smithyId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `smithy:${smithyId}`)).toBe(
+      "⏳ Wartet auf Input: Iron Ore",
+    );
+  });
+
+  it("shows no-power blocker for unpowered auto miners", () => {
+    const minerId = "miner-no-power";
+    const depositId = "deposit-no-power";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [minerId]: {
+          id: minerId,
+          type: "auto_miner",
+          x: 26,
+          y: 6,
+          size: 1,
+          direction: "east",
+        },
+        [depositId]: {
+          id: depositId,
+          type: "iron_deposit",
+          x: 26,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoMiners: {
+        ...state.autoMiners,
+        [minerId]: {
+          depositId,
+          resource: "iron",
+          progress: 0,
+        },
+      },
+      poweredMachineIds: [],
+    };
+
+    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
+      "⚡ Kein Strom",
+    );
+  });
+
+  it("shows output-full blocker for auto miner rows", () => {
+    const minerId = "miner-output-blocked";
+    const depositId = "deposit-output-blocked";
+    let state = buildState({ iron: 20 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [minerId]: {
+          id: minerId,
+          type: "auto_miner",
+          x: 28,
+          y: 6,
+          size: 1,
+          direction: "east",
+        },
+        [depositId]: {
+          id: depositId,
+          type: "iron_deposit",
+          x: 28,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoMiners: {
+        ...state.autoMiners,
+        [minerId]: {
+          depositId,
+          resource: "iron",
+          progress: AUTO_MINER_PRODUCE_TICKS,
+        },
+      },
+      poweredMachineIds: [minerId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [minerId]: 1,
+      },
+      buildingSourceWarehouseIds: {
+        ...state.buildingSourceWarehouseIds,
+        [minerId]: WH,
+      },
+      warehouseInventories: {
+        ...state.warehouseInventories,
+        [WH]: {
+          ...state.warehouseInventories[WH],
+          iron: 20,
+        },
+      },
+    };
+
+    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
+      "📦 Output voll",
+    );
+  });
+
+  it("shows no-cell blocker for auto miner rows", () => {
+    const minerId = "miner-no-cell";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [minerId]: {
+          id: minerId,
+          type: "auto_miner",
+          x: 30,
+          y: 6,
+          size: 1,
+          direction: "east",
+        },
+      },
+      autoMiners: {
+        ...state.autoMiners,
+        [minerId]: {
+          depositId: "missing-assigned-cell",
+          resource: "iron",
+          progress: 0,
+        },
+      },
+      poweredMachineIds: [minerId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [minerId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
+      "⛏️ Keine Zelle",
+    );
+  });
+
+  it("shows startup reason for auto miner rows at zero progress", () => {
+    const minerId = "miner-starting";
+    const depositId = "deposit-starting";
+    let state = buildState({ iron: 0 });
+
+    state = {
+      ...state,
+      assets: {
+        ...state.assets,
+        [minerId]: {
+          id: minerId,
+          type: "auto_miner",
+          x: 31,
+          y: 6,
+          size: 1,
+          direction: "east",
+        },
+        [depositId]: {
+          id: depositId,
+          type: "iron_deposit",
+          x: 31,
+          y: 6,
+          size: 2,
+        },
+      },
+      autoMiners: {
+        ...state.autoMiners,
+        [minerId]: {
+          depositId,
+          resource: "iron",
+          progress: 0,
+        },
+      },
+      poweredMachineIds: [minerId],
+      machinePowerRatio: {
+        ...state.machinePowerRatio,
+        [minerId]: 1,
+      },
+    };
+
+    expect(getMachineReason(state, `auto_miner:${minerId}`)).toBe(
+      "⏳ Startet...",
+    );
   });
 });
