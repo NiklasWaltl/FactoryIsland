@@ -15,7 +15,6 @@ import type {
   BuildUIStateSlice,
   HotbarStateSlice,
   HudStateSlice,
-  MapShopStateSlice,
   ShipStatusSlice,
 } from "../store/types/ui-slice-types";
 import { DOCK_WAREHOUSE_ID } from "../store/bootstrap/apply-dock-warehouse-layout";
@@ -29,23 +28,7 @@ import { useGameTicks } from "./use-game-ticks";
 import { ModeSelect } from "../ui/menus/ModeSelect";
 import { Grid } from "../grid/Grid";
 import { Hotbar } from "../ui/hud/Hotbar";
-import { MapShopPanel } from "../ui/panels/MapShopPanel";
-import { WorkbenchPanel } from "../ui/panels/WorkbenchPanel";
-import { WarehousePanel } from "../ui/panels/WarehousePanel";
-import { SmithyPanel } from "../ui/panels/SmithyPanel";
-import { GeneratorPanel } from "../ui/panels/GeneratorPanel";
-import { BatteryPanel } from "../ui/panels/BatteryPanel";
-import { PowerPolePanel } from "../ui/panels/PowerPolePanel";
-import { AutoMinerPanel } from "../ui/panels/AutoMinerPanel";
-import { AutoSmelterPanel } from "../ui/panels/AutoSmelterPanel";
-import { AutoAssemblerPanel } from "../ui/panels/AutoAssemblerPanel";
-import { ManualAssemblerPanel } from "../ui/panels/ManualAssemblerPanel";
-import { ServiceHubPanel } from "../ui/panels/ServiceHubPanel";
-import { ConveyorSplitterPanel } from "../ui/panels/ConveyorSplitterPanel";
-import { DockWarehousePanel } from "../ui/panels/DockWarehousePanel";
-import { FragmentTraderPanel } from "../ui/panels/FragmentTraderPanel";
-import { ModulLabPanel } from "../ui/panels/ModulLabPanel";
-import { ResearchLabPanel } from "../ui/panels/ResearchLabPanel";
+import { PanelRouter } from "./PanelRouter";
 import { ShipStatusBar } from "../ui/hud/ShipStatusBar";
 import { BuildMenu } from "../ui/menus/BuildMenu";
 import { Notifications } from "../ui/hud/Notifications";
@@ -322,14 +305,6 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
     [state.ship, state.warehouseInventories],
   );
 
-  const mapShopSlice = useMemo<MapShopStateSlice>(
-    () => ({
-      coins: state.inventory.coins,
-      unlockedBuildings: state.unlockedBuildings,
-    }),
-    [state.inventory.coins, state.unlockedBuildings],
-  );
-
   return (
     <>
       <Grid state={state} dispatch={dispatch} />
@@ -339,63 +314,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
       <AutoDeliveryFeed log={state.autoDeliveryLog} />
       <ProductionStatusFeed state={state} />
 
-      {state.openPanel === "map_shop" && (
-        <MapShopPanel state={mapShopSlice} dispatch={dispatch} />
-      )}
-      {state.openPanel === "warehouse" && (
-        <WarehousePanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "smithy" && (
-        <SmithyPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "generator" && (
-        <GeneratorPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "battery" && (
-        <BatteryPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "power_pole" && (
-        <PowerPolePanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "workbench" && (
-        <WorkbenchPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "auto_miner" && (
-        <AutoMinerPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "auto_smelter" && (
-        <AutoSmelterPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "auto_assembler" && (
-        <AutoAssemblerPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "manual_assembler" && (
-        <ManualAssemblerPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "service_hub" && (
-        <ServiceHubPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "conveyor_splitter" && (
-        <ConveyorSplitterPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "dock_warehouse" && (
-        <DockWarehousePanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "fragment_trader" && (
-        <FragmentTraderPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "module_lab" && (
-        <ModulLabPanel state={state} dispatch={dispatch} />
-      )}
-      {state.openPanel === "research_lab" && (
-        <ResearchLabPanel
-          state={{
-            inventory: state.inventory,
-            unlockedBuildings: state.unlockedBuildings,
-          }}
-          dispatch={dispatch}
-        />
-      )}
+      <PanelRouter state={state} dispatch={dispatch} />
 
       <Hotbar state={hotbarSlice} dispatch={dispatch} />
 
