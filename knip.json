@@ -1,0 +1,13 @@
+{
+  "entry": [
+    "src/game/entry/FactoryApp.tsx",
+    "src/game/store/reducer-public-api.ts",
+    "src/game/simulation/game.ts",
+    "src/game/store/reducer.ts",
+    "src/game/entry/main.tsx"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignoreDependencies": ["lint-staged", "jest-environment-jsdom"],
+  "ignoreUnresolved": ["jest-environment-jsdom"],
+  "ignore": ["src/game/simulation/save-migrations.ts", ".husky/**"]
+}

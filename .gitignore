@@ -38,4 +38,5 @@ yarn-error.log*
 !/.prettierrc.json
 !tsconfig.factory.json
 !tsconfig.test.json
+!/knip.json
 node_modules
