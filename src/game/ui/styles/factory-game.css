@@ -635,6 +635,94 @@
   margin-bottom: 10px;
   flex-wrap: wrap;
 }
+.fi-workbench-intro {
+  font-size: 11px;
+  color: #9aa8d0;
+  margin: 0 0 8px 0;
+}
+.fi-workbench-queue-section {
+  margin: 8px 0;
+}
+.fi-workbench-queue-heading {
+  font-size: 11px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+.fi-workbench-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.fi-workbench-queue-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+.fi-workbench-queue-icon {
+  width: 18px;
+  text-align: center;
+}
+.fi-workbench-queue-label {
+  flex: 1;
+  font-size: 12px;
+}
+.fi-workbench-queue-meta {
+  margin-left: 6px;
+  color: #999;
+  font-size: 10px;
+}
+.fi-workbench-queue-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ddd;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+}
+.fi-workbench-queue-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.fi-workbench-ingredients {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fi-workbench-ingredient {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+.fi-workbench-ingredient-icon {
+  width: 12px;
+  text-align: center;
+}
+.fi-workbench-ingredient-qty {
+  font-size: 10px;
+}
+.fi-workbench-ingredient-hint {
+  font-size: 10px;
+  color: #999;
+  margin-left: auto;
+}
+.fi-workbench-block-reason {
+  font-size: 10px;
+  color: #e8a946;
+  margin-top: 2px;
+}
+.fi-workbench-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+  margin: 12px 0;
+}
+.fi-workbench-footer-hint {
+  color: #777;
+  font-size: 11px;
+}
 .fi-btn-active {
   background: rgba(100, 200, 255, 0.25);
   border-color: rgba(100, 200, 255, 0.6);

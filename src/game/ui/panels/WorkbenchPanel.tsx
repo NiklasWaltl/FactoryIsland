@@ -76,17 +76,6 @@ function isCancellable(status: JobStatus): boolean {
   return status !== "delivering" && status !== "done" && status !== "cancelled";
 }
 
-const JOB_QUEUE_BTN_STYLE: React.CSSProperties = {
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.15)",
-  color: "#ddd",
-  padding: "2px 6px",
-  borderRadius: 3,
-  cursor: "pointer",
-  fontSize: 11,
-  lineHeight: 1,
-};
-
 interface JobQueueRowProps {
   job: CraftingJob;
   canMoveUp: boolean;
@@ -111,11 +100,7 @@ const JobQueueRow: React.FC<JobQueueRowProps> = ({
   ) => (
     <button
       type="button"
-      style={{
-        ...JOB_QUEUE_BTN_STYLE,
-        opacity: enabled ? 1 : 0.35,
-        cursor: enabled ? "pointer" : "not-allowed",
-      }}
+      className="fi-workbench-queue-btn"
       disabled={!enabled}
       title={title}
       onClick={onClick}
@@ -124,22 +109,11 @@ const JobQueueRow: React.FC<JobQueueRowProps> = ({
     </button>
   );
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "4px 6px",
-        background: "rgba(255,255,255,0.03)",
-        borderRadius: 3,
-      }}
-    >
-      <span style={{ width: 18, textAlign: "center" }}>
-        {recipe?.emoji ?? "•"}
-      </span>
-      <span style={{ flex: 1, fontSize: 12 }}>
+    <div className="fi-workbench-queue-row">
+      <span className="fi-workbench-queue-icon">{recipe?.emoji ?? "•"}</span>
+      <span className="fi-workbench-queue-label">
         {recipe?.label ?? job.recipeId}
-        <span style={{ marginLeft: 6, color: "#999", fontSize: 10 }}>
+        <span className="fi-workbench-queue-meta">
           {JOB_STATUS_LABEL[job.status]} · {PRIORITY_LABEL[job.priority]}
         </span>
       </span>
@@ -182,7 +156,7 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
         onClick={(e) => e.stopPropagation()}
       >
         <h2>🔨 Werkbank</h2>
-        <p style={{ fontSize: 11, color: "#9aa8d0", margin: "0 0 8px 0" }}>
+        <p className="fi-workbench-intro">
           Manuelle Werkzeug-Station. Fertige Werkzeuge landen im verbundenen
           Lagerhaus und werden per Hotbar entnommen.
         </p>
@@ -195,11 +169,11 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
         />
 
         {sortedJobs.length > 0 && (
-          <div style={{ margin: "8px 0" }}>
-            <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>
+          <div className="fi-workbench-queue-section">
+            <div className="fi-workbench-queue-heading">
               Warteschlange ({sortedJobs.length})
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div className="fi-workbench-queue-list">
               {sortedJobs.map((job) => {
                 const reorderIdx = reorderableSorted.findIndex(
                   (j) => j.id === job.id,
@@ -268,10 +242,7 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
                 <div className="fi-shop-item-icon">{recipe.emoji}</div>
                 <div className="fi-shop-item-info">
                   <strong>{recipe.label}</strong>
-                  <div
-                    className="fi-shop-item-costs"
-                    style={{ display: "flex", flexDirection: "column", gap: 2 }}
-                  >
+                  <div className="fi-shop-item-costs fi-workbench-ingredients">
                     {lines.map((line) => {
                       const key = ingredientStatusKey(line);
                       const color = STATUS_COLOR[key];
@@ -280,35 +251,24 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
                       return (
                         <span
                           key={line.resource}
-                          className="fi-shop-cost"
-                          style={{
-                            color,
-                            display: "flex",
-                            gap: 4,
-                            alignItems: "baseline",
-                          }}
+                          className="fi-shop-cost fi-workbench-ingredient"
+                          style={{ color }}
                           title={hint}
                         >
-                          <span style={{ width: 12, textAlign: "center" }}>
+                          <span className="fi-workbench-ingredient-icon">
                             {icon}
                           </span>
                           <span>{RESOURCE_EMOJIS[line.resource] ?? ""}</span>
                           <span>
                             {RESOURCE_LABELS[line.resource] ?? line.resource}
                           </span>
-                          <span style={{ fontSize: 10 }}>
+                          <span className="fi-workbench-ingredient-qty">
                             {line.stored}/{line.required}
                             {line.reserved > 0
                               ? ` (${line.reserved} res.)`
                               : ""}
                           </span>
-                          <span
-                            style={{
-                              fontSize: 10,
-                              color: "#999",
-                              marginLeft: "auto",
-                            }}
-                          >
+                          <span className="fi-workbench-ingredient-hint">
                             {hint}
                           </span>
                         </span>
@@ -333,18 +293,14 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
                   Craft
                 </button>
                 {!canQueue && blockReason && (
-                  <div style={{ fontSize: 10, color: "#e8a946", marginTop: 2 }}>
-                    {blockReason}
-                  </div>
+                  <div className="fi-workbench-block-reason">{blockReason}</div>
                 )}
               </div>
             );
           })}
         </div>
-        <hr
-          style={{ borderColor: "rgba(255,255,255,0.1)", margin: "12px 0" }}
-        />
-        <p style={{ color: "#777", fontSize: 11 }}>
+        <hr className="fi-workbench-divider" />
+        <p className="fi-workbench-footer-hint">
           Entfernen nur im Bau-Modus (Rechtsklick).
         </p>
       </div>
