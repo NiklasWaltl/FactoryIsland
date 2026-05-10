@@ -34,7 +34,10 @@ export function getHubDrones(
 ): StarterDroneState[] {
   const hub = state.serviceHubs[hubId];
   if (!hub) return [];
-  return hub.droneIds.map((id) => state.drones[id]).filter(Boolean);
+  return hub.droneIds.flatMap((id) => {
+    const drone = state.drones[id];
+    return drone ? [drone] : [];
+  });
 }
 
 /** Produce a human-readable status detail for a drone (for UI display). */

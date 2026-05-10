@@ -47,8 +47,8 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
   const [collapsed, setCollapsed] = useState(true);
   const [tab, setTab] = useState<"cheats" | "logs" | "hmr">("cheats");
   const [, setTick] = useState(0);
-  const [cheatsOn, setCheatsOn] = useState(isDebugEnabled());
-  const [autoUnlockOn, setAutoUnlockOn] = useState(
+  const [cheatsOn, setCheatsOn] = useState(() => isDebugEnabled());
+  const [autoUnlockOn, setAutoUnlockOn] = useState(() =>
     isDevAutoUnlockBuildingsEnabled(),
   );
   const logEndRef = useRef<HTMLDivElement>(null);

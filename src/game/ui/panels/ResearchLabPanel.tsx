@@ -55,82 +55,110 @@ function missingResources(
   return missing;
 }
 
+interface ResearchRecipeItemProps {
+  recipe: ResearchRecipe;
+  inventory: Inventory;
+  unlockedBuildings: GameState["unlockedBuildings"];
+  dispatch: React.Dispatch<GameAction>;
+}
+
+const ResearchRecipeItem: React.FC<ResearchRecipeItemProps> = React.memo(
+  ({ recipe, inventory, unlockedBuildings, dispatch }) => {
+    const alreadyUnlocked = unlockedBuildings.includes(recipe.buildingType);
+    const affordable = canAfford(inventory, recipe.cost);
+    const missing = alreadyUnlocked
+      ? []
+      : missingResources(inventory, recipe.cost);
+
+    const disabledReason = alreadyUnlocked
+      ? "Bereits freigeschaltet"
+      : !affordable
+        ? `Fehlt: ${missing.join(", ")}`
+        : undefined;
+
+    return (
+      <div className="fi-shop-item">
+        <div className="fi-shop-item-icon">
+          {ASSET_EMOJIS[recipe.buildingType]}
+        </div>
+        <div className="fi-shop-item-info">
+          <strong>{ASSET_LABELS[recipe.buildingType]}</strong>
+          <div className="fi-shop-item-costs">
+            {Object.entries(recipe.cost).map(([key, amt]) => (
+              <span key={key} className="fi-shop-cost">
+                {RESOURCE_EMOJIS[key] ?? ""} {amt} {RESOURCE_LABELS[key] ?? key}
+              </span>
+            ))}
+          </div>
+        </div>
+        {alreadyUnlocked ? (
+          <span
+            className="fi-build-status fi-build-status--placed"
+            style={{ minWidth: 140, textAlign: "center" }}
+          >
+            Bereits freigeschaltet
+          </span>
+        ) : (
+          <button
+            className="fi-btn"
+            disabled={!affordable}
+            title={disabledReason}
+            onClick={() =>
+              dispatch({ type: "RESEARCH_BUILDING", recipeId: recipe.id })
+            }
+          >
+            Forschen
+          </button>
+        )}
+      </div>
+    );
+  },
+);
+ResearchRecipeItem.displayName = "ResearchRecipeItem";
+
+interface ResearchTierProps {
+  label: string;
+  recipes: readonly ResearchRecipe[];
+  inventory: Inventory;
+  unlockedBuildings: GameState["unlockedBuildings"];
+  dispatch: React.Dispatch<GameAction>;
+}
+
+const ResearchTier: React.FC<ResearchTierProps> = React.memo(
+  ({ label, recipes, inventory, unlockedBuildings, dispatch }) => (
+    <>
+      <h4 className="fi-panel-section-subtitle" style={{ marginTop: 8 }}>
+        {label}
+      </h4>
+      <div className="fi-shop-list">
+        {recipes.map((recipe) => (
+          <ResearchRecipeItem
+            key={recipe.id}
+            recipe={recipe}
+            inventory={inventory}
+            unlockedBuildings={unlockedBuildings}
+            dispatch={dispatch}
+          />
+        ))}
+      </div>
+    </>
+  ),
+);
+ResearchTier.displayName = "ResearchTier";
+
+const TIER_1_RECIPES = RESEARCH_RECIPES.filter((r) => r.tier === 1);
+const TIER_2_RECIPES = RESEARCH_RECIPES.filter((r) => r.tier === 2);
+const TIER_3_RECIPES = RESEARCH_RECIPES.filter((r) => r.tier === 3);
+
 export const ResearchLabPanel: React.FC<ResearchLabPanelProps> = React.memo(
   ({ state, dispatch }) => {
-    const tier1 = RESEARCH_RECIPES.filter((r) => r.tier === 1);
-    const tier2 = RESEARCH_RECIPES.filter((r) => r.tier === 2);
-    const tier3 = RESEARCH_RECIPES.filter((r) => r.tier === 3);
-
     const close = () => dispatch({ type: "CLOSE_PANEL" });
 
-    const renderRecipe = (recipe: ResearchRecipe): React.ReactNode => {
-      const alreadyUnlocked = state.unlockedBuildings.includes(
-        recipe.buildingType,
-      );
-      const affordable = canAfford(state.inventory, recipe.cost);
-      const missing = alreadyUnlocked
-        ? []
-        : missingResources(state.inventory, recipe.cost);
-
-      const disabledReason = alreadyUnlocked
-        ? "Bereits freigeschaltet"
-        : !affordable
-          ? `Fehlt: ${missing.join(", ")}`
-          : undefined;
-
-      return (
-        <div key={recipe.id} className="fi-shop-item">
-          <div className="fi-shop-item-icon">
-            {ASSET_EMOJIS[recipe.buildingType]}
-          </div>
-          <div className="fi-shop-item-info">
-            <strong>{ASSET_LABELS[recipe.buildingType]}</strong>
-            <div className="fi-shop-item-costs">
-              {Object.entries(recipe.cost).map(([key, amt]) => (
-                <span key={key} className="fi-shop-cost">
-                  {RESOURCE_EMOJIS[key] ?? ""} {amt}{" "}
-                  {RESOURCE_LABELS[key] ?? key}
-                </span>
-              ))}
-            </div>
-          </div>
-          {alreadyUnlocked ? (
-            <span
-              className="fi-build-status fi-build-status--placed"
-              style={{ minWidth: 140, textAlign: "center" }}
-            >
-              Bereits freigeschaltet
-            </span>
-          ) : (
-            <button
-              className="fi-btn"
-              disabled={!affordable}
-              title={disabledReason}
-              onClick={() =>
-                dispatch({
-                  type: "RESEARCH_BUILDING",
-                  recipeId: recipe.id,
-                })
-              }
-            >
-              Forschen
-            </button>
-          )}
-        </div>
-      );
+    const commonTierProps = {
+      inventory: state.inventory,
+      unlockedBuildings: state.unlockedBuildings,
+      dispatch,
     };
-
-    const renderTier = (
-      label: string,
-      recipes: readonly ResearchRecipe[],
-    ): React.ReactNode => (
-      <>
-        <h4 className="fi-panel-section-subtitle" style={{ marginTop: 8 }}>
-          {label}
-        </h4>
-        <div className="fi-shop-list">{recipes.map(renderRecipe)}</div>
-      </>
-    );
 
     return (
       <div
@@ -161,9 +189,21 @@ export const ResearchLabPanel: React.FC<ResearchLabPanelProps> = React.memo(
           angegebenen Items aus deinem globalen Inventar.
         </p>
 
-        {renderTier("Tier 1 — Energie & Schmieden", tier1)}
-        {renderTier("Tier 2 — Automation", tier2)}
-        {renderTier("Tier 3 — Logistik & Module", tier3)}
+        <ResearchTier
+          label="Tier 1 — Energie & Schmieden"
+          recipes={TIER_1_RECIPES}
+          {...commonTierProps}
+        />
+        <ResearchTier
+          label="Tier 2 — Automation"
+          recipes={TIER_2_RECIPES}
+          {...commonTierProps}
+        />
+        <ResearchTier
+          label="Tier 3 — Logistik & Module"
+          recipes={TIER_3_RECIPES}
+          {...commonTierProps}
+        />
       </div>
     );
   },
