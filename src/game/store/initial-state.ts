@@ -24,7 +24,7 @@ import { BATTERY_CAPACITY } from "./constants/energy/battery";
 import { TIER_0_UNLOCKED_BUILDINGS } from "./constants/ui/shop";
 import type { ShipState } from "./types/ship-types";
 
-export function createInitialShipState(): ShipState {
+function createInitialShipState(): ShipState {
   return {
     status: "sailing",
     activeQuest: null,

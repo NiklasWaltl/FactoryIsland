@@ -2,10 +2,9 @@ import type { Module, ModuleType } from "../../modules/module.types";
 import { MODULE_COMPATIBLE_BUILDINGS } from "../../constants/moduleLabConstants";
 import type { GameState, PlacedAsset } from "../types";
 
-export const selectModules = (state: GameState): Module[] =>
-  state.moduleInventory;
+const selectModules = (state: GameState): Module[] => state.moduleInventory;
 
-export const selectModuleCount = (state: GameState): number =>
+const selectModuleCount = (state: GameState): number =>
   selectModules(state).length;
 
 export const selectModuleFragmentCount = (state: GameState): number =>

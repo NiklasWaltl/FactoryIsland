@@ -40,7 +40,6 @@
     "src/game/store/conveyor/conveyor-routing.ts",
     "src/game/store/selectors/**",
     "src/game/buildings/**",
-    "src/game/store/constants/ui/**",
-    "src/game/store/initial-state.ts"
+    "src/game/store/constants/ui/**"
   ]
 }
