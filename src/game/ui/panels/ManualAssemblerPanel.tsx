@@ -41,7 +41,12 @@ export const ManualAssemblerPanel: React.FC<ManualAssemblerPanelProps> =
     const canCraftGear = (sourceInv.metalPlate as number) >= 1 && !isBusy;
 
     return (
-      <div className="fi-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fi-panel"
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <h2>🧰 Manueller Assembler</h2>
 
         {/* ---- Source / Zone selector ---- */}

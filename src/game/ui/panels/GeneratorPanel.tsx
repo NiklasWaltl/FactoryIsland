@@ -93,7 +93,9 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
     return (
       <div
         className="fi-panel fi-generator"
+        role="presentation"
         onClick={(ev) => ev.stopPropagation()}
+        onKeyDown={(ev) => ev.stopPropagation()}
       >
         <h2>⚡ Holz-Generator</h2>
 

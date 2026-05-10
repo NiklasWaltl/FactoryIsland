@@ -120,11 +120,11 @@ describe("BuildMenu", () => {
     container.remove();
   });
 
-  function findBuildItem(name: string): HTMLDivElement {
+  function findBuildItem(name: string): HTMLElement {
     const item = Array.from(container.querySelectorAll(".fi-build-item")).find(
       (element) => element.textContent?.includes(name),
     );
-    if (!(item instanceof HTMLDivElement)) {
+    if (!(item instanceof HTMLElement)) {
       throw new Error(`Could not find build item for ${name}`);
     }
     return item;

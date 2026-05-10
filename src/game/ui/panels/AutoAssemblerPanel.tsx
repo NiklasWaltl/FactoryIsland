@@ -80,7 +80,12 @@ export const AutoAssemblerPanel: React.FC<AutoAssemblerPanelProps> = React.memo(
       entry.pendingOutput.length === 0;
 
     return (
-      <div className="fi-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fi-panel"
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <h2>Auto-Assembler</h2>
 
         <div style={{ display: "grid", gap: 8 }}>

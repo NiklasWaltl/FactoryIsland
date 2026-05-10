@@ -59,7 +59,9 @@ export const FragmentTraderPanel: React.FC<FragmentTraderPanelProps> =
     return (
       <div
         className="fi-panel fi-fragment-trader-panel"
+        role="presentation"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
       >
         <div className="fi-fragment-trader-header">
           <h2>⚓ Fragment-Händler</h2>

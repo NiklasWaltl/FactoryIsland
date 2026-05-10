@@ -31,12 +31,16 @@ export const Grid: React.FC<GridProps> = ({ state, dispatch }) => {
     <div
       ref={containerRef}
       className="fi-grid-container"
+      role="application"
+      aria-label="Spielfeld"
+      tabIndex={-1}
       onMouseDown={onMouseDown}
       onMouseMove={onGridMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
       onWheel={onWheel}
       onClick={onClick}
+      onKeyDown={() => {}}
       onContextMenu={onContextMenu}
       style={{
         position: "absolute",

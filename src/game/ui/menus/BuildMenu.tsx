@@ -53,7 +53,8 @@ const BuildMenuDebugSection: React.FC<BuildMenuDebugSectionProps> = ({
   <div className="fi-build-category">
     <h3 className="fi-build-category-title">🧪 Debug</h3>
     <div className="fi-build-items">
-      <div
+      <button
+        type="button"
         className={`fi-build-item ${energyDebugOverlay ? "fi-build-item--selected" : ""}`}
         onClick={onToggle}
         title="Stromnetz-Analyse ein/aus"
@@ -82,7 +83,7 @@ const BuildMenuDebugSection: React.FC<BuildMenuDebugSectionProps> = ({
             {energyDebugOverlay ? "Aktiv" : "Inaktiv"}
           </div>
         </div>
-      </div>
+      </button>
     </div>
   </div>
 );
@@ -162,7 +163,12 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
     };
 
     return (
-      <div className="fi-build-menu" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fi-build-menu"
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <div className="fi-build-menu-header">
           <h2>🏗️ Bau-Menü</h2>
           <button
@@ -194,7 +200,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
                 const locked = isLocked(bType);
                 const size = BUILDING_SIZES[bType];
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={bType}
                     className={`fi-build-item ${isSelected ? "fi-build-item--selected" : ""} ${placed ? "fi-build-item--placed" : ""} ${(!affordable && !placed) || locked ? "fi-build-item--disabled" : ""}`}
                     title={
@@ -256,7 +263,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
                         {status.label}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -272,7 +279,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
               const isSelectedF = state.selectedFloorTile === tileType;
               const affordable = canAffordFloor(tileType);
               return (
-                <div
+                <button
+                  type="button"
                   key={tileType}
                   className={`fi-build-item ${isSelectedF ? "fi-build-item--selected" : ""} ${!affordable ? "fi-build-item--disabled" : ""}`}
                   onClick={() =>
@@ -330,7 +338,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = React.memo(
                         : "Nicht genug Ressourcen"}
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

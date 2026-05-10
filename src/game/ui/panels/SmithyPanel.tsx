@@ -22,7 +22,12 @@ export const SmithyPanel: React.FC<SmithyPanelProps> = React.memo(
     const sourceInv = getCraftingSourceInventory(state, info.source);
 
     return (
-      <div className="fi-panel fi-smithy" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fi-panel fi-smithy"
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <h2>🔥 Schmiede</h2>
 
         {/* ---- Source / Zone selector ---- */}

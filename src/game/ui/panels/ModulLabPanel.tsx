@@ -76,7 +76,9 @@ export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
     return (
       <div
         className="fi-panel"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         style={{ minWidth: 360, maxWidth: 460 }}
       >
         <div

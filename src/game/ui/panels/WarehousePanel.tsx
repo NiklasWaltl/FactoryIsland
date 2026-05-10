@@ -75,7 +75,9 @@ export const WarehousePanel: React.FC<WarehousePanelProps> = React.memo(
     return (
       <div
         className="fi-panel fi-warehouse"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <h2>📦 Lagerhaus</h2>
         <p className="fi-warehouse-capacity">

@@ -195,7 +195,9 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
       <div
         ref={panelRef}
         className="fi-panel fi-floating-panel fi-auto-miner-panel"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="fi-auto-miner-header">
           <h2>Auto-Miner</h2>

@@ -153,7 +153,9 @@ export const WorkbenchPanel: React.FC<WorkbenchPanelProps> = React.memo(
     return (
       <div
         className="fi-panel fi-workbench"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <h2>🔨 Werkbank</h2>
         <p className="fi-workbench-intro">

@@ -51,7 +51,9 @@ export const PowerPolePanel: React.FC<PowerPolePanelProps> = React.memo(
       return (
         <div
           className="fi-panel fi-power-pole-panel"
+          role="presentation"
           onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
         >
           <h2>🗼 Stromknoten</h2>
           <p style={{ color: "#aaa" }}>Kein Stromknoten ausgewählt.</p>
@@ -82,7 +84,9 @@ export const PowerPolePanel: React.FC<PowerPolePanelProps> = React.memo(
     return (
       <div
         className="fi-panel fi-power-pole-panel"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <h2>🗼 Stromknoten</h2>
 

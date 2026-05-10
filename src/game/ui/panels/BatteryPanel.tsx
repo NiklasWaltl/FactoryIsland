@@ -55,7 +55,9 @@ export const BatteryPanel: React.FC<BatteryPanelProps> = React.memo(
     return (
       <div
         className="fi-panel fi-battery-panel"
+        role="presentation"
         onClick={(ev) => ev.stopPropagation()}
+        onKeyDown={(ev) => ev.stopPropagation()}
       >
         <h2>🔋 Batterie</h2>
 

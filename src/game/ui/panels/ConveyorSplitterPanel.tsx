@@ -70,7 +70,9 @@ export const ConveyorSplitterPanel: React.FC<ConveyorSplitterPanelProps> =
       <div
         ref={panelRef}
         className="fi-panel fi-conveyor-splitter-panel"
+        role="presentation"
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
         style={{
           position: "absolute",
           top: 120,

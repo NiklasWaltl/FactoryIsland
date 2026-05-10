@@ -14,7 +14,9 @@ export const MapShopPanel: React.FC<MapShopPanelProps> = React.memo(
     return (
       <div
         className="fi-panel fi-map-shop"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <h2>🧑‍🌾 Händler</h2>
 

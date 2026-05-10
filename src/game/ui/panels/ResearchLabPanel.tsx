@@ -163,7 +163,9 @@ export const ResearchLabPanel: React.FC<ResearchLabPanelProps> = React.memo(
     return (
       <div
         className="fi-panel"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
         style={{ minWidth: 360, maxWidth: 480 }}
       >
         <div

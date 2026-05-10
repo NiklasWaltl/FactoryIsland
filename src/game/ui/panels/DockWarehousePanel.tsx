@@ -89,7 +89,9 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
       <div
         ref={panelRef}
         className="fi-panel fi-floating-panel fi-dock-warehouse-panel"
+        role="presentation"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="fi-dock-warehouse-header">
           <h2>⚓ Dock-Lagerhaus</h2>

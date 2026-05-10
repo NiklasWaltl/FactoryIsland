@@ -224,7 +224,12 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
     }
 
     return (
-      <div className="fi-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fi-panel"
+        role="presentation"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         <h2>Auto Smelter</h2>
 
         <ZoneSourceSelector
