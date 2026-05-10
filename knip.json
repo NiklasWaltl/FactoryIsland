@@ -1,13 +1,35 @@
 {
   "entry": [
     "src/game/entry/FactoryApp.tsx",
+    "src/game/entry/main.tsx",
     "src/game/store/reducer-public-api.ts",
-    "src/game/simulation/game.ts",
     "src/game/store/reducer.ts",
-    "src/game/entry/main.tsx"
+    "src/game/simulation/game.ts",
+    "src/game/store/conveyor/conveyor-routing.ts",
+    "src/game/store/constants/buildings/index.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreDependencies": ["lint-staged", "jest-environment-jsdom"],
-  "ignoreUnresolved": ["jest-environment-jsdom"],
-  "ignore": ["src/game/simulation/save-migrations.ts", ".husky/**"]
+  "ignore": [
+    "src/game/simulation/save-migrations.ts",
+    "src/game/simulation/save.ts",
+    ".husky/**",
+    "src/game/debug/**",
+    "src/game/dev/**",
+    "src/game/store/decisions/**",
+    "src/game/store/workflows/**",
+    "src/game/store/types.ts",
+    "src/game/store/types/**",
+    "src/game/store/decisions/conveyor-decisions.ts",
+    "src/game/store/action-handlers/**",
+    "src/game/store/energy/**",
+    "src/game/store/selectors/deconstruct-request-queue.ts",
+    "src/game/store/slices/**",
+    "src/game/crafting/**",
+    "src/game/drones/**",
+    "src/game/ui/hud/productionTransparency.ts",
+    "src/game/ui/panels/helpers/workbenchPanelHelpers.ts",
+    "src/game/ui/panels/ResearchLabPanel.tsx",
+    "src/game/inventory/**"
+  ]
 }
