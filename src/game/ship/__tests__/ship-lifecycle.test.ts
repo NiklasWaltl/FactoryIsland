@@ -290,7 +290,7 @@ describe("pendingMultiplier flow", () => {
 // ---- drawReward distribution test (1000 draws) ---------------------
 
 describe("drawReward distribution over 1000 draws", () => {
-  const DRAWS = 1_000;
+  const DRAWS = 5_000;
 
   function runDraws(multiplier: 1 | 2 | 3, phase: number) {
     const counts: Record<string, number> = {};

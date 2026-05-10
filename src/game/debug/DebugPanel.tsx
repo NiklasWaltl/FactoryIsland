@@ -45,12 +45,17 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
   hmrModules,
 }) => {
   const [collapsed, setCollapsed] = useState(true);
-  const [tab, setTab] = useState<"cheats" | "logs" | "hmr">("cheats");
   const [, setTick] = useState(0);
-  const [cheatsOn, setCheatsOn] = useState(() => isDebugEnabled());
-  const [autoUnlockOn, setAutoUnlockOn] = useState(() =>
-    isDevAutoUnlockBuildingsEnabled(),
-  );
+  const [uiState, setUiState] = useState<{
+    tab: "cheats" | "logs" | "hmr";
+    cheatsOn: boolean;
+    autoUnlockOn: boolean;
+  }>(() => ({
+    tab: "cheats",
+    cheatsOn: isDebugEnabled(),
+    autoUnlockOn: isDevAutoUnlockBuildingsEnabled(),
+  }));
+  const { tab, cheatsOn, autoUnlockOn } = uiState;
   const logEndRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to log updates
@@ -66,16 +71,20 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
   });
 
   const toggleCheats = useCallback(() => {
-    const next = !cheatsOn;
-    setCheatsOn(next);
-    setDebugEnabled(next);
-  }, [cheatsOn]);
+    setUiState((s) => {
+      const next = !s.cheatsOn;
+      setDebugEnabled(next);
+      return { ...s, cheatsOn: next };
+    });
+  }, []);
 
   const toggleAutoUnlock = useCallback(() => {
-    const next = !autoUnlockOn;
-    setAutoUnlockOn(next);
-    setDevAutoUnlockBuildingsEnabled(next);
-  }, [autoUnlockOn]);
+    setUiState((s) => {
+      const next = !s.autoUnlockOn;
+      setDevAutoUnlockBuildingsEnabled(next);
+      return { ...s, autoUnlockOn: next };
+    });
+  }, []);
 
   const logs = getLogEntries();
 
@@ -118,7 +127,7 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
         {(["cheats", "logs", "hmr"] as const).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => setUiState((s) => ({ ...s, tab: t }))}
             style={{
               ...tabBtnStyle,
               ...(tab === t ? tabBtnActiveStyle : {}),
@@ -226,7 +235,11 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
                 </div>
               )}
               {logs.map((entry, i) => (
-                <div key={i} style={logEntryStyle}>
+                <div
+                  key={`${entry.timestamp}-${entry.category}-${entry.message}`}
+                  style={logEntryStyle}
+                  suppressHydrationWarning
+                >
                   <span style={{ color: "#555", fontSize: 9, minWidth: 55 }}>
                     {new Date(entry.timestamp).toLocaleTimeString()}
                   </span>
@@ -269,9 +282,9 @@ const DebugPanelContent: React.FC<DebugPanelProps> = ({
                   Noch keine Module nachgeladen.
                 </div>
               )}
-              {hmrModules.map((m, i) => (
+              {hmrModules.map((m) => (
                 <div
-                  key={i}
+                  key={m}
                   style={{ fontSize: 11, padding: "2px 0", color: "#e040fb" }}
                 >
                   🔄 {m}
