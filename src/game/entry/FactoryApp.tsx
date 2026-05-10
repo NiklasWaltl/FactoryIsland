@@ -6,6 +6,8 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { useHmrState } from "./useHmrState";
+import { DebugOverlay } from "./DebugOverlay";
 import { gameReducer, gameReducerWithInvariants } from "../store/reducer";
 import { createInitialState } from "../store/initial-state";
 import type { GameMode, GameState } from "../store/types";
@@ -22,12 +24,7 @@ import {
   loadFromStorage,
   saveToStorage,
 } from "../simulation/save";
-import {
-  applyDevScene,
-  DevSceneSelector,
-  getDevSceneFromUrl,
-  hasDevSceneUrlParam,
-} from "../dev";
+import { applyDevScene, getDevSceneFromUrl, hasDevSceneUrlParam } from "../dev";
 import { useGameTicks } from "./use-game-ticks";
 import { ModeSelect } from "../ui/menus/ModeSelect";
 import { Grid } from "../grid/Grid";
@@ -61,13 +58,10 @@ import "../ui/styles/factory-game.css";
 // Debug system (tree-shaken in production)
 import {
   IS_DEV,
-  DebugPanel,
   applyMockToState,
   saveHmrState,
   loadHmrState,
   recordHmrModule,
-  getHmrModules,
-  getHmrStatus,
   debugLog,
 } from "../debug";
 import type { MockAction } from "../debug";
@@ -199,21 +193,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   }, []);
 
   // HMR status tracking
-  const [hmrState, setHmrState] = useState<{
-    modules: string[];
-    status: string;
-  }>(() => ({
-    modules: IS_DEV ? getHmrModules() : [],
-    status: IS_DEV ? getHmrStatus() : "disabled",
-  }));
-
-  useEffect(() => {
-    if (!IS_DEV) return;
-    const id = setInterval(() => {
-      setHmrState({ modules: [...getHmrModules()], status: getHmrStatus() });
-    }, 2000);
-    return () => clearInterval(id);
-  }, []);
+  const hmrState = useHmrState();
 
   // Mock data handler - dispatches directly into the reducer
   const handleMock = useCallback(
@@ -433,18 +413,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
         <BuildMenu state={buildUiSlice} dispatch={dispatch} />
       )}
 
-      {IS_DEV && state.mode === "debug" && (
-        <>
-          <DevSceneSelector mode={mode} />
-          <div className="fi-debug-badge">DEBUG MODE</div>
-          <DebugPanel
-            onMock={handleMock}
-            onResetState={() => handleMock("DEBUG_RESET_STATE")}
-            hmrStatus={hmrState.status}
-            hmrModules={hmrState.modules}
-          />
-        </>
-      )}
+      <DebugOverlay mode={mode} hmrState={hmrState} onMock={handleMock} />
     </>
   );
 };
