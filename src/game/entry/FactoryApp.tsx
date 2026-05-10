@@ -449,7 +449,7 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   );
 };
 
-export const FactoryGame: React.FC = () => {
+const FactoryGame: React.FC = () => {
   const [mode, setMode] = useState<GameMode | null>(null);
 
   if (mode === null) {
