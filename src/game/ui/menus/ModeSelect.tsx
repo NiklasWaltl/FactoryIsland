@@ -48,28 +48,11 @@ export const ModeSelect: React.FC<ModeSelectProps> = ({ onSelect }) => {
           </button>
         </div>
         {IS_DEV && (
-          <div
-            style={{
-              marginTop: 20,
-              paddingTop: 20,
-              borderTop: "1px solid rgba(255,255,255,0.2)",
-            }}
-          >
-            <p style={{ fontSize: 12, opacity: 0.7, marginBottom: 8 }}>
-              🧪 Dev-Tools:
-            </p>
+          <div className="fi-mode-dev-tools">
+            <p className="fi-mode-dev-tools-label">🧪 Dev-Tools:</p>
             <button
               onClick={handleDebugReset}
-              style={{
-                padding: "8px 12px",
-                background: "rgba(249,115,22,0.2)",
-                border: "1px solid rgba(249,115,22,0.5)",
-                color: "#fb923c",
-                borderRadius: 6,
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: 500,
-              }}
+              className="fi-mode-dev-reset-btn"
             >
               🔁 HMR + Cache Clear + Debug
             </button>
