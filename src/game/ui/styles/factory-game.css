@@ -1057,6 +1057,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   padding: 10px 14px;
+  margin-bottom: 8px;
   margin-bottom: 14px;
 }
 .fi-generator-energy-label {
@@ -1132,6 +1133,79 @@
 .fi-generator-stat strong {
   font-size: 14px;
   color: #ffd700;
+}
+.fi-generator-block-reason {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #fca5a5;
+  margin-bottom: 8px;
+}
+.fi-generator-status-row {
+  margin-bottom: 8px;
+}
+.fi-generator-pole-badge {
+  position: static;
+}
+.fi-generator-balance-detail {
+  font-size: 11px;
+  color: #aaa;
+  display: flex;
+  justify-content: space-between;
+}
+.fi-generator-text-positive {
+  color: #7fff7f;
+}
+.fi-generator-connectivity-row {
+  font-size: 11px;
+  color: #aaa;
+  margin-bottom: 12px;
+}
+.fi-generator-fuel-slot {
+  margin-bottom: 12px;
+}
+.fi-generator-fuel-bar-wrap {
+  width: 100%;
+}
+.fi-generator-fuel-bar-wrap .fi-generator-bar-track {
+  margin-top: 6px;
+}
+.fi-generator-bar-meta-text {
+  color: #aaa;
+  font-size: 10px;
+}
+.fi-generator-fuel-full-warning {
+  font-size: 11px;
+  color: #facc15;
+  margin-top: 4px;
+}
+.fi-generator-refill-status {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 8px;
+}
+.fi-generator-refill-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.fi-generator-refill-locked-hint {
+  font-size: 10px;
+  color: #888;
+  margin-top: 4px;
+}
+.fi-generator-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.fi-generator-scheduler-demand {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 12px;
 }
 
 /* ---- Connection badge variants (used inline in panels) ---- */

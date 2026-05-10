@@ -106,23 +106,11 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
         )}
 
         {blockReason && (
-          <div
-            style={{
-              background: "rgba(239,68,68,0.15)",
-              border: "1px solid rgba(239,68,68,0.4)",
-              borderRadius: 6,
-              padding: "6px 10px",
-              fontSize: 12,
-              color: "#fca5a5",
-              marginBottom: 8,
-            }}
-          >
-            {blockReason}
-          </div>
+          <div className="fi-generator-block-reason">{blockReason}</div>
         )}
 
         {/* Generator status */}
-        <div className="fi-generator-energy-label" style={{ marginBottom: 8 }}>
+        <div className="fi-generator-energy-label fi-generator-status-row">
           <span
             className={`fi-generator-power-badge ${g.running ? "fi-generator-power-badge--on" : "fi-generator-power-badge--off"}`}
           >
@@ -133,8 +121,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
                 : "💤 Kein Brennstoff"}
           </span>
           <span
-            className={`fi-debug-badge ${genConnectedToPole ? "fi-debug-badge--active" : "fi-debug-badge--inactive"}`}
-            style={{ position: "static" }}
+            className={`fi-debug-badge fi-generator-pole-badge ${genConnectedToPole ? "fi-debug-badge--active" : "fi-debug-badge--inactive"}`}
           >
             {genConnectedToPole
               ? "🗼 Mit Stromknoten verbunden"
@@ -143,10 +130,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
         </div>
 
         {/* Energy output this period */}
-        <div
-          className="fi-generator-energy-bar-wrap"
-          style={{ marginBottom: 8 }}
-        >
+        <div className="fi-generator-energy-bar-wrap">
           <div className="fi-generator-energy-label">
             <span>⚡ Energie-Bilanz (pro {ENERGY_NET_TICK_MS / 1000}s)</span>
             <span
@@ -168,17 +152,12 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
                   : "0 J"}
             </span>
           </div>
-          <div
-            style={{
-              fontSize: 11,
-              color: "#aaa",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div className="fi-generator-balance-detail">
             <span>
               Produktion:{" "}
-              <strong style={{ color: "#7fff7f" }}>+{production} J</strong>
+              <strong className="fi-generator-text-positive">
+                +{production} J
+              </strong>
             </span>
             <span>
               Verbrauch Maschinen:{" "}
@@ -190,7 +169,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
         </div>
 
         {/* Network connectivity */}
-        <div style={{ fontSize: 11, color: "#aaa", marginBottom: 12 }}>
+        <div className="fi-generator-connectivity-row">
           🔌 Verbundene Maschinen:{" "}
           <strong
             style={{
@@ -206,22 +185,22 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
         <div className="fi-generator-section-title">
           🪵 Brennstoff (Holz) — lokales Inventar
         </div>
-        <div className="fi-smithy-slot" style={{ marginBottom: 12 }}>
+        <div className="fi-smithy-slot fi-generator-fuel-slot">
           <span>Holz im Generator</span>
           <strong>
             {g.fuel} / {GENERATOR_MAX_FUEL}
           </strong>
 
           {g.running && g.fuel > 0 && (
-            <div style={{ width: "100%" }}>
-              <div className="fi-generator-bar-track" style={{ marginTop: 6 }}>
+            <div className="fi-generator-fuel-bar-wrap">
+              <div className="fi-generator-bar-track">
                 <div
                   className="fi-generator-bar-fill fi-generator-bar-fill--fuel"
                   style={{ width: `${Math.min(fuelPct, 100)}%` }}
                 />
               </div>
               <div className="fi-generator-bar-meta">
-                <span style={{ color: "#aaa", fontSize: 10 }}>
+                <span className="fi-generator-bar-meta-text">
                   verbleibendes Holz
                 </span>
               </div>
@@ -229,14 +208,14 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
           )}
 
           {g.fuel >= GENERATOR_MAX_FUEL && (
-            <div style={{ fontSize: 11, color: "#facc15", marginTop: 4 }}>
+            <div className="fi-generator-fuel-full-warning">
               Lokales Holz-Inventar voll ({GENERATOR_MAX_FUEL}/
               {GENERATOR_MAX_FUEL}).
             </div>
           )}
 
           {/* Manual refill request — drones deliver, no auto-refill */}
-          <div style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
+          <div className="fi-generator-refill-status">
             📦 Angefordert:{" "}
             <strong style={{ color: requestedOpen > 0 ? "#7CFF7C" : "#888" }}>
               {requestedOpen}
@@ -246,9 +225,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
               {inboundWood}
             </strong>
           </div>
-          <div
-            style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}
-          >
+          <div className="fi-generator-refill-buttons">
             <button
               className="fi-btn fi-btn-sm"
               disabled={refillHeadroom < 1}
@@ -292,7 +269,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
           </div>
           {refillHeadroom < 1 &&
             (requestedOpen > 0 || g.fuel >= GENERATOR_MAX_FUEL) && (
-              <div style={{ fontSize: 10, color: "#888", marginTop: 4 }}>
+              <div className="fi-generator-refill-locked-hint">
                 {g.fuel >= GENERATOR_MAX_FUEL
                   ? "Speicher voll — keine weitere Anforderung möglich."
                   : `Bereits ${requestedOpen} Holz angefordert (deckt Restkapazität).`}
@@ -302,7 +279,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
 
         {/* Controls */}
         <div className="fi-generator-section-title">⚙️ Steuerung</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <div className="fi-generator-controls">
           <button
             className="fi-btn"
             disabled={g.running || g.fuel <= 0}
@@ -340,7 +317,7 @@ export const GeneratorPanel: React.FC<GeneratorPanelProps> = React.memo(
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: "#aaa", marginTop: 12 }}>
+        <div className="fi-generator-scheduler-demand">
           Scheduler-Nachfrage (verbundene Verbraucher):{" "}
           <strong style={{ color: consumption > 0 ? "#ff8888" : "#555" }}>
             −{consumption} J/2s
