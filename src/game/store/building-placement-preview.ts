@@ -32,7 +32,7 @@ import {
 } from "./conveyor/underground-out-pairing-hint";
 import type { BuildingType, Direction, GameState, Inventory } from "./types";
 
-export const CONVEYOR_PREVIEW_BUILDING_TYPES = [
+const CONVEYOR_PREVIEW_BUILDING_TYPES = [
   "conveyor",
   "conveyor_corner",
   "conveyor_merger",
@@ -53,7 +53,7 @@ export function isConveyorPreviewBuildingType(
   );
 }
 
-export type BuildingPlacementPreviewBlockReason =
+type BuildingPlacementPreviewBlockReason =
   | "out_of_bounds"
   | "not_enough_resources"
   | "non_playable_tile"

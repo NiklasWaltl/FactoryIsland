@@ -30,6 +30,17 @@
     "src/game/ui/hud/productionTransparency.ts",
     "src/game/ui/panels/helpers/workbenchPanelHelpers.ts",
     "src/game/ui/panels/ResearchLabPanel.tsx",
-    "src/game/inventory/**"
+    "src/game/inventory/**",
+    "src/game/constants/**",
+    "src/game/items/**",
+    "src/game/ship/**",
+    "src/game/simulation/recipes/**",
+    "src/game/store/action-handler-deps.ts",
+    "src/game/store/helpers/**",
+    "src/game/store/conveyor/conveyor-routing.ts",
+    "src/game/store/selectors/**",
+    "src/game/buildings/**",
+    "src/game/store/constants/ui/**",
+    "src/game/store/initial-state.ts"
   ]
 }

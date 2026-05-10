@@ -306,12 +306,12 @@ function makeMapShop(): string {
 // FLOOR TILES  (32�32 SVG)
 // ---------------------------------------------------------------------------
 
-export const GRASS_VARIANTS = [
+const GRASS_VARIANTS = [
   { base: "#4a8c3f", tuft: "#3d7a33" },
   { base: "#3d7a33", tuft: "#4a8c3f" },
 ] as const;
 
-export const GRASS_TUFTS: readonly [number, number, number, number][] = [
+const GRASS_TUFTS: readonly [number, number, number, number][] = [
   [4, 4, 2, 2],
   [12, 8, 3, 2],
   [22, 2, 2, 3],

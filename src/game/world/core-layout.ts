@@ -13,9 +13,9 @@ export interface TileCoord {
   readonly col: number;
 }
 
-export const CORE_PLAYABLE_EDGE_INSET_TILES = 2;
-export const START_AREA_WIDTH_TILES = 16;
-export const START_AREA_HEIGHT_TILES = 10;
+const CORE_PLAYABLE_EDGE_INSET_TILES = 2;
+const START_AREA_WIDTH_TILES = 16;
+const START_AREA_HEIGHT_TILES = 10;
 export const START_AREA_FIXED_RESOURCE_CLEARANCE_TILES = 4;
 
 export function getCorePlayableBounds(tileMap: TileType[][]): TileBounds {
@@ -84,7 +84,7 @@ export function isBoundsInsideBounds(
   );
 }
 
-export function assertBoundsInside(
+function assertBoundsInside(
   inner: TileBounds,
   outer: TileBounds,
   innerLabel: string,

@@ -3,9 +3,6 @@
 
 import type { Inventory } from "../types";
 
-export { RESOURCE_1x1_DROP_AMOUNT } from "../constants/resources";
-export { getBoostMultiplier } from "./machine-priority";
-
 /**
  * DEV-only: assert no inventory field is negative.
  * Call after reducer transitions to catch silent corruption early.

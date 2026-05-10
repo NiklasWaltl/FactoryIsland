@@ -27,7 +27,7 @@ export const AUTO_MINER_PRODUCE_TICKS = 6;
 export const DRONE_CAPACITY = 5;
 
 /** Number of parking columns laid out on top of the 2x2 hub footprint. */
-export const DRONE_DOCK_COLUMNS = 2;
+const DRONE_DOCK_COLUMNS = 2;
 
 /**
  * Small per-drone delivery offsets applied to construction-site/building dropoffs.

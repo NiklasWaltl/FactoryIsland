@@ -38,7 +38,7 @@ export interface BuildingInputBufferConfig {
  * Build-menu category keys. The presentation order of categories
  * is defined by `BUILD_CATEGORIES` below, not by enum order.
  */
-export type BuildCategoryKey =
+type BuildCategoryKey =
   | "energy"
   | "production"
   | "logistics"
