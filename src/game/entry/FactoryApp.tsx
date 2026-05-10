@@ -199,18 +199,18 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
   }, []);
 
   // HMR status tracking
-  const [hmrModules, setHmrModules] = useState<string[]>(() =>
-    IS_DEV ? getHmrModules() : [],
-  );
-  const [hmrStatus, setHmrStatus] = useState<string>(() =>
-    IS_DEV ? getHmrStatus() : "disabled",
-  );
+  const [hmrState, setHmrState] = useState<{
+    modules: string[];
+    status: string;
+  }>(() => ({
+    modules: IS_DEV ? getHmrModules() : [],
+    status: IS_DEV ? getHmrStatus() : "disabled",
+  }));
 
   useEffect(() => {
     if (!IS_DEV) return;
     const id = setInterval(() => {
-      setHmrModules([...getHmrModules()]);
-      setHmrStatus(getHmrStatus());
+      setHmrState({ modules: [...getHmrModules()], status: getHmrStatus() });
     }, 2000);
     return () => clearInterval(id);
   }, []);
@@ -440,8 +440,8 @@ const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
           <DebugPanel
             onMock={handleMock}
             onResetState={() => handleMock("DEBUG_RESET_STATE")}
-            hmrStatus={hmrStatus}
-            hmrModules={hmrModules}
+            hmrStatus={hmrState.status}
+            hmrModules={hmrState.modules}
           />
         </>
       )}

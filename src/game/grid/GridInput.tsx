@@ -234,25 +234,26 @@ export function useGridInput(
     setCam(clampCam(cx, cy, 1));
   }, [clampCam, state.tileMap]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (
-        (e.target as HTMLElement)?.tagName === "INPUT" ||
-        (e.target as HTMLElement)?.tagName === "TEXTAREA"
-      ) {
-        return;
-      }
-      if (e.key === "r" || e.key === "R") {
-        const cycle: Direction[] = ["north", "east", "south", "west"];
-        setBuildDirection((prev) => {
-          const idx = cycle.indexOf(prev);
-          return cycle[(idx + 1) % 4];
-        });
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+  const handleRotateKey = useCallback((e: KeyboardEvent) => {
+    if (
+      (e.target as HTMLElement)?.tagName === "INPUT" ||
+      (e.target as HTMLElement)?.tagName === "TEXTAREA"
+    ) {
+      return;
+    }
+    if (e.key === "r" || e.key === "R") {
+      const cycle: Direction[] = ["north", "east", "south", "west"];
+      setBuildDirection((prev) => {
+        const idx = cycle.indexOf(prev);
+        return cycle[(idx + 1) % 4];
+      });
+    }
   }, []);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleRotateKey);
+    return () => window.removeEventListener("keydown", handleRotateKey);
+  }, [handleRotateKey]);
 
   const onGridMouseMove = useCallback(
     (e: React.MouseEvent) => {
