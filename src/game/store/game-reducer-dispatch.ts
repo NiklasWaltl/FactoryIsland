@@ -15,6 +15,17 @@
 // ESM initialization cycle (reducer.ts imports this file).
 // ============================================================
 
+/**
+ * @deprecated
+ * This file is the legacy monolithic dispatch router. Domain logic is being
+ * migrated to Bounded Contexts under `src/game/store/contexts/`.
+ *
+ * Migration guide: `docs/bounded-context-state-management-prd.md`
+ *
+ * Do NOT add new action handlers here. Add them to the relevant context file.
+ * This file will remain functional until the cutover in Phase 3.
+ */
+
 import type { GameState } from "./types";
 import type { GameAction } from "./game-actions";
 

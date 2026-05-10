@@ -15,6 +15,18 @@ import type { ConveyorItem } from "./types/conveyor-types";
 import type { SplitterOutputSide } from "./slices/splitter-filter-state";
 import type { RecipeAutomationPolicyPatch } from "../crafting/policies";
 
+/**
+ * @deprecated
+ * This file is the legacy central action union. New action types should be
+ * added to the relevant Bounded Context under `src/game/store/contexts/`.
+ *
+ * Migration guide: `docs/bounded-context-state-management-prd.md`
+ * Tracked in: Phase 3 of Bounded Context refactor
+ *
+ * This file will remain functional until all 15 contexts are implemented
+ * and `createGameReducer` is wired into the Redux store (Phase 3 cutover).
+ */
+
 // ============================================================
 // ACTIONS
 // ============================================================

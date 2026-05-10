@@ -7,6 +7,17 @@
 // an ESM initialization cycle.
 // ============================================================
 
+/**
+ * @deprecated
+ * This barrel is the legacy reducer public API compatibility surface for
+ * exports that previously lived on `src/game/store/reducer.ts`. New bounded
+ * context reducer composition APIs should be imported from
+ * `src/game/store/contexts/`.
+ *
+ * Existing exports remain functional while the bounded context migration is in
+ * progress.
+ */
+
 // ---- Constants (conveyor) ----
 export {
   CONVEYOR_TILE_CAPACITY,

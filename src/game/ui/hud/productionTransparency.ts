@@ -93,6 +93,7 @@ import {
 } from "../../constants/moduleLabConstants";
 import { computeIngredientLines } from "../panels/helpers";
 
+/** Discriminator identifying which production subsystem a transparency row belongs to. */
 export type TransparencyJobType =
   | "player-craft"
   | "keep-in-stock"
@@ -109,6 +110,7 @@ export type TransparencyJobType =
   | "research_lab"
   | "conveyor";
 
+/** Lifecycle status displayed for a production transparency row. */
 export type TransparencyJobStatus =
   | "queued"
   | "reserved"
@@ -116,6 +118,7 @@ export type TransparencyJobStatus =
   | "delivering"
   | "waiting";
 
+/** A single row rendered in the production status feed for a job, machine, or construction site. */
 export interface ProductionJobStatusRow {
   readonly id: string;
   readonly type: TransparencyJobType;
@@ -126,8 +129,10 @@ export interface ProductionJobStatusRow {
   readonly reason?: string;
 }
 
+/** Outcome of evaluating a keep-stock target: whether it should refill, is satisfied, or was skipped. */
 export type KeepStockDecision = "enqueue" | "skip" | "satisfied";
 
+/** A single row describing the state of one configured keep-stock target. */
 export interface KeepStockStatusRow {
   readonly id: string;
   readonly workbenchId: string;
@@ -141,6 +146,7 @@ export interface KeepStockStatusRow {
   readonly decisionReason: string;
 }
 
+/** Read-only snapshot consumed by the ProductionStatusFeed UI. */
 export interface ProductionTransparencySnapshot {
   readonly jobs: readonly ProductionJobStatusRow[];
   readonly keepStock: readonly KeepStockStatusRow[];
@@ -180,6 +186,11 @@ interface ProductionTransparencyInputRefs {
   readonly productionZones: GameState["productionZones"];
 }
 
+/**
+ * Extracts the subset of GameState references used as memoization keys for the
+ * production transparency snapshot. Each field is a stable slice reference that
+ * changes only when the underlying data changes.
+ */
 function getProductionTransparencyInputRefs(
   state: GameState,
 ): ProductionTransparencyInputRefs {
@@ -217,6 +228,11 @@ function getProductionTransparencyInputRefs(
   };
 }
 
+/**
+ * Compares two ref snapshots by reference equality across every tracked field
+ * to detect whether the cached transparency snapshot can be reused.
+ * Returns false if the previous snapshot is null or any single field differs.
+ */
 function hasSameProductionTransparencyInputRefs(
   left: ProductionTransparencyInputRefs | null,
   right: ProductionTransparencyInputRefs,
@@ -273,6 +289,7 @@ const KEEP_STOCK_EVALUATION_DEPS: KeepStockEvaluationDeps = {
   isUnderConstruction,
 };
 
+/** Converts a `CraftingInventorySource` (job-side) into a plain `CraftingSource` (store-side). */
 function toCraftingSource(source: CraftingInventorySource): CraftingSource {
   if (source.kind === "global") return { kind: "global" };
   if (source.kind === "warehouse")
@@ -280,17 +297,20 @@ function toCraftingSource(source: CraftingInventorySource): CraftingSource {
   return { kind: "zone", zoneId: source.zoneId };
 }
 
+/** Returns a human-readable label for a `CraftingInventorySource` (e.g. "global", "warehouse w1", "zone z3"). */
 function formatSourceLabel(source: CraftingInventorySource): string {
   if (source.kind === "global") return "global";
   if (source.kind === "warehouse") return `warehouse ${source.warehouseId}`;
   return `zone ${source.zoneId}`;
 }
 
+/** Resolves an item ID to its display name, falling back to the raw ID if unknown. */
 function getItemLabel(itemId: string): string {
   if (!isKnownItemId(itemId)) return itemId;
   return getItemDef(itemId)?.displayName ?? itemId;
 }
 
+/** Sums the buffered count of a specific item across the job's `inputBuffer` stacks. */
 function getBufferedAmount(job: CraftingJob, itemId: string): number {
   return (job.inputBuffer ?? []).reduce(
     (sum, stack) => sum + (stack.itemId === itemId ? stack.count : 0),
@@ -298,6 +318,7 @@ function getBufferedAmount(job: CraftingJob, itemId: string): number {
   );
 }
 
+/** Returns true if every ingredient is fully present in the job's input buffer. */
 function hasBufferedIngredients(job: CraftingJob): boolean {
   return job.ingredients.every(
     (ingredient) =>
@@ -305,6 +326,7 @@ function hasBufferedIngredients(job: CraftingJob): boolean {
   );
 }
 
+/** Returns the display name of the first ingredient not yet fully buffered, or null if all are present. */
 function getFirstMissingIngredientLabel(job: CraftingJob): string | null {
   const missing = job.ingredients.find(
     (ingredient) =>
@@ -314,6 +336,10 @@ function getFirstMissingIngredientLabel(job: CraftingJob): string | null {
   return getItemLabel(missing.itemId);
 }
 
+/**
+ * Returns "⚡ Kein Strom" if the asset exists, consumes energy (per `ENERGY_DRAIN`),
+ * and is not currently in `poweredMachineIds`. Returns null otherwise.
+ */
 function getNoPowerReason(state: GameState, assetId: string): string | null {
   const asset = state.assets[assetId];
   if (!asset) return null;
@@ -324,6 +350,10 @@ function getNoPowerReason(state: GameState, assetId: string): string | null {
   return "⚡ Kein Strom";
 }
 
+/**
+ * Probes whether any drone candidate exists for the given job's workbench input node.
+ * Used to distinguish between "no work to do" and "work exists but no drone available".
+ */
 function hasWorkbenchInputCandidateForJob(
   state: GameState,
   job: CraftingJob,
@@ -348,6 +378,11 @@ function hasWorkbenchInputCandidateForJob(
   );
 }
 
+/**
+ * Returns "🚁 Keine Drohne verfügbar" if a workbench-input candidate exists for the
+ * reserved job but no idle, role-allowed drone can pick it up. Returns null when
+ * the job is not zone-scoped reserved-with-pending-input or when a viable drone exists.
+ */
 function getNoWorkbenchInputDroneReason(
   state: GameState,
   job: CraftingJob,
@@ -373,6 +408,11 @@ function getNoWorkbenchInputDroneReason(
   return "🚁 Keine Drohne verfügbar";
 }
 
+/**
+ * Returns "❌ Falsche Zone" if the job is zone-scoped and at least one ingredient
+ * exists in global inventory but cannot be physically sourced from the job's zone.
+ * Returns null if the job is not zone-scoped or all ingredients are reachable.
+ */
 function getWrongZoneReason(state: GameState, job: CraftingJob): string | null {
   if (job.inventorySource.kind !== "zone") return null;
 
@@ -399,6 +439,11 @@ function getWrongZoneReason(state: GameState, job: CraftingJob): string | null {
   return null;
 }
 
+/**
+ * Zone-mismatch check for auto-smelter, manual-assembler, and auto-assembler inputs.
+ * Returns "❌ Falsche Zone" if the building is zone-scoped and the input item exists
+ * globally but cannot be sourced from its zone. Returns null otherwise.
+ */
 function getAutoSmelterWrongZoneReason(
   state: GameState,
   smelterId: string,
@@ -428,6 +473,7 @@ function getAutoSmelterWrongZoneReason(
   return "❌ Falsche Zone";
 }
 
+/** Returns the per-item capacity of the auto-miner's configured output source (global, zone, or warehouse). */
 function getAutoMinerSourceCapacity(
   state: GameState,
   source: AutoMinerOutputSource,
@@ -437,6 +483,7 @@ function getAutoMinerSourceCapacity(
   return getWarehouseCapacity(state.mode);
 }
 
+/** Returns true for stone, iron, or copper deposit asset types. */
 function isDepositAssetType(type: string): boolean {
   return (
     type === "stone_deposit" ||
@@ -445,6 +492,11 @@ function isDepositAssetType(type: string): boolean {
   );
 }
 
+/**
+ * Computes the full `AutoMinerOutputTargetDecision` for the given miner using its
+ * resolved building source and capacity. Mirrors the reducer-side decision logic
+ * read-only so the HUD can surface the same target/blocked/no-target outcome.
+ */
 function getAutoMinerOutputDecision(
   state: GameState,
   minerId: string,
@@ -469,6 +521,11 @@ function getAutoMinerOutputDecision(
   });
 }
 
+/**
+ * Returns "❌ Falsche Zone" if the miner is zone-scoped, has no target in its zone,
+ * but a global re-evaluation would find one — meaning the zone is misconfigured.
+ * Returns null if not zone-scoped or the global path also has no target.
+ */
 function getAutoMinerWrongZoneReason(
   state: GameState,
   minerId: string,
@@ -495,6 +552,7 @@ function getAutoMinerWrongZoneReason(
   return globalDecision.kind === "target" ? "❌ Falsche Zone" : null;
 }
 
+/** Returns true if a battery asset exists, is not deconstructing or under construction, and is in `connectedAssetIds`. */
 function isBatteryConnected(state: GameState): boolean {
   const batteryAsset = Object.values(state.assets).find(
     (asset) => asset.type === "battery",
@@ -504,10 +562,16 @@ function isBatteryConnected(state: GameState): boolean {
   return state.connectedAssetIds.includes(batteryAsset.id);
 }
 
+/** Returns true if `machinePowerRatio` has at least one entry, indicating live energy demand. */
 function hasActiveEnergyConsumers(state: GameState): boolean {
   return Object.keys(state.machinePowerRatio).length > 0;
 }
 
+/**
+ * Returns true if the given generator can be reached by some wood supplier:
+ * a wood drop node with stock, a service hub with dispatchable wood, or a
+ * nearby warehouse capable of dispatching wood.
+ */
 function hasReachableGeneratorFuelSupplier(
   state: GameState,
   generatorId: string,
@@ -535,6 +599,11 @@ function hasReachableGeneratorFuelSupplier(
   );
 }
 
+/**
+ * Returns "📦 Output voll" if the generator is running and connected but its
+ * battery is missing/full and there are no active consumers, meaning produced
+ * energy has nowhere to go. Returns null in all other cases.
+ */
 function getGeneratorOutputFullReason(
   state: GameState,
   generatorId: string,
@@ -554,6 +623,11 @@ function getGeneratorOutputFullReason(
   return null;
 }
 
+/**
+ * Resolves the human-readable wait reason for a queued crafting job by inspecting
+ * recipe ingredient lines: wrong zone, reserved resources, or specific missing items
+ * (with manual/craftable hints). Falls back to "wartet auf Reservierung".
+ */
 function getQueuedReason(state: GameState, job: CraftingJob): string {
   const recipe = getWorkbenchRecipe(job.recipeId);
   if (!recipe) return "wartet: recipe unknown";
@@ -582,6 +656,11 @@ function getQueuedReason(state: GameState, job: CraftingJob): string {
   return "wartet auf Reservierung";
 }
 
+/**
+ * Builds status rows for all open workbench crafting jobs, sorted by priority
+ * and FIFO. Each row classifies the job as player/automation/keep-in-stock and
+ * derives a status + reason based on its current lifecycle phase.
+ */
 function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
   const openJobs = sortByPriorityFifo(
     state.crafting.jobs.filter((job) => isOpenCraftingJob(job.status)),
@@ -645,6 +724,7 @@ function getCraftingJobRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/** Counts the number of non-idle drones currently delivering construction or hub-dispatch supply to the given site. */
 function countInboundConstructionDrones(
   state: GameState,
   targetId: string,
@@ -663,6 +743,10 @@ function countInboundConstructionDrones(
   return total;
 }
 
+/**
+ * Returns the resource with the highest remaining need for a construction site,
+ * tie-broken by item type alphabetically. Returns null if nothing is needed.
+ */
 function getPrimaryConstructionNeed(
   remaining: Partial<Record<CollectableItemType, number>>,
 ): { itemType: CollectableItemType; amount: number } | null {
@@ -681,6 +765,12 @@ function getPrimaryConstructionNeed(
   return entries[0] ?? null;
 }
 
+/**
+ * Builds rows for active construction and upgrade sites. Service-hub upgrades
+ * are emitted with type "upgrade" and elevated priority; everything else is
+ * "construction". The row's reason describes either inbound deliveries or
+ * the primary outstanding resource need.
+ */
 function getConstructionRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
   const siteIds = Object.keys(state.constructionSites).sort();
@@ -711,6 +801,7 @@ function getConstructionRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/** Builds status rows for all auto-miners, surfacing power loss or missing-deposit assignment. */
 function getAutoMinerRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
 
@@ -732,6 +823,10 @@ function getAutoMinerRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds rows for all generator assets. Surfaces output-full, missing-fuel
+ * with no reachable supplier, missing-fuel awaiting delivery, or initialization.
+ */
 function getGeneratorRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
 
@@ -782,6 +877,7 @@ function getGeneratorRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/** Returns the per-item capacity of the manual assembler's resolved source (global, zone, or warehouse). */
 function getManualAssemblerSourceCapacity(
   state: GameState,
   source: CraftingSource,
@@ -791,6 +887,10 @@ function getManualAssemblerSourceCapacity(
   return getWarehouseCapacity(state.mode);
 }
 
+/**
+ * Builds a single row for the active manual assembler, if one exists. Surfaces
+ * output-full, missing recipe, or missing input (with zone-mismatch hint).
+ */
 function getManualAssemblerRows(state: GameState): ProductionJobStatusRow[] {
   const manualAssemblerId =
     Object.values(state.assets).find(
@@ -866,6 +966,10 @@ function getManualAssemblerRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds a single row for the active smithy, if one exists. Surfaces no-power,
+ * output-buffered ingots, or missing input (with zone-mismatch hint).
+ */
 function getSmithyRows(state: GameState): ProductionJobStatusRow[] {
   const smithyId =
     Object.values(state.assets).find(
@@ -926,6 +1030,10 @@ function getSmithyRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds rows for all auto-smelter assets. Surfaces no-power, OUTPUT_BLOCKED,
+ * or missing input ingots (with zone-mismatch hint).
+ */
 function getAutoSmelterRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
 
@@ -977,6 +1085,10 @@ function getAutoSmelterRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds rows for all auto-assembler assets. Surfaces no-power, OUTPUT_BLOCKED,
+ * or insufficient iron-ingot buffer (with zone-mismatch hint).
+ */
 function getAutoAssemblerRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
 
@@ -1025,6 +1137,11 @@ function getAutoAssemblerRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds rows for all conveyor assets (incl. corners, mergers, splitters,
+ * undergrounds). Runs the same eligibility and routing decisions as the tick
+ * to detect routing-blocked or no-target situations and surface "📦 Output voll".
+ */
 function getConveyorRows(state: GameState): ProductionJobStatusRow[] {
   const rows: ProductionJobStatusRow[] = [];
   const routingIndex = getOrBuildRoutingIndex(state);
@@ -1110,6 +1227,11 @@ function getConveyorRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds a single row for the module lab, if one exists. Surfaces a finished
+ * job ready for pickup, an in-progress crafting state, or insufficient module
+ * fragments to start the cheapest recipe.
+ */
 function getModuleLabRows(state: GameState): ProductionJobStatusRow[] {
   const moduleLabId = Object.values(state.assets).find(
     (asset) => asset.type === "module_lab" && asset.status !== "deconstructing",
@@ -1153,6 +1275,11 @@ function getModuleLabRows(state: GameState): ProductionJobStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds a single row for the research lab, if one exists. Marks the lab as
+ * "delivering" with "📦 Output voll" while a research-unlock confirmation
+ * notification is pending; otherwise reports "waiting".
+ */
 function getResearchLabRows(state: GameState): ProductionJobStatusRow[] {
   const researchLabId = Object.values(state.assets).find(
     (asset) =>
@@ -1176,6 +1303,7 @@ function getResearchLabRows(state: GameState): ProductionJobStatusRow[] {
   ];
 }
 
+/** Aggregates rows from every machine-row builder (generators, smithies, smelters, etc.) into a single array. */
 function getMachineRows(state: GameState): ProductionJobStatusRow[] {
   return [
     ...getGeneratorRows(state),
@@ -1221,6 +1349,11 @@ function describeSkipReason(
   }
 }
 
+/**
+ * Builds `KeepStockStatusRow` entries for every configured keep-stock target by
+ * delegating the decision to `evaluateKeepStockTarget` and translating its
+ * typed result (skip/satisfied/enqueue) into the row shape rendered by the HUD.
+ */
 function getKeepStockRows(state: GameState): KeepStockStatusRow[] {
   const rows: KeepStockStatusRow[] = [];
   const targets = listConfiguredKeepStockTargets(state);
@@ -1290,6 +1423,21 @@ function getKeepStockRows(state: GameState): KeepStockStatusRow[] {
   return rows;
 }
 
+/**
+ * Builds a read-only {@link ProductionTransparencySnapshot} from the current game state,
+ * combining crafting job rows, construction/upgrade rows, machine rows (generators,
+ * smithy, smelters, assemblers, conveyors, labs, miners), keep-stock rows, and
+ * deconstruct request rows. Job rows are sorted by reason priority so the most
+ * urgent blockers (no power, wrong zone) appear first.
+ *
+ * Uses module-level memoization: if none of the tracked GameState slice refs have
+ * changed since the last call, the previously returned snapshot is returned as-is
+ * without recomputation. This relies on the reducer producing new slice references
+ * only when their contents change.
+ *
+ * @param state - The current full GameState.
+ * @returns A snapshot containing job rows, keep-stock rows, and deconstruct request rows.
+ */
 export function buildProductionTransparency(
   state: GameState,
 ): ProductionTransparencySnapshot {
