@@ -109,15 +109,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
           ✕
         </button>
       </div>
-      <div
-        className="fi-panel-body"
-        style={{
-          padding: "12px 16px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-        }}
-      >
+      <div className="fi-panel-body fi-hub-body">
         {/* ---- Stufe / Upgrade ---- */}
         <div style={{ fontSize: 13, color: "#aaa" }}>
           <div
@@ -140,16 +132,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
             </div>
           </div>
           {/* Stats summary */}
-          <div
-            style={{
-              marginTop: 6,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "4px 14px",
-              fontSize: 12,
-              color: "#999",
-            }}
-          >
+          <div className="fi-hub-stats-row">
             <span>
               📡 Reichweite: <strong style={{ color: "#ccc" }}>{range}</strong>
             </span>
@@ -172,11 +155,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
           {tier === 1 && hubId && (
             <div style={{ marginTop: 8 }}>
               <button
-                style={{
-                  padding: "4px 10px",
-                  cursor: canUpgrade ? "pointer" : "not-allowed",
-                  opacity: canUpgrade ? 1 : 0.5,
-                }}
+                className="fi-hub-upgrade-btn"
                 disabled={!canUpgrade}
                 onClick={() => dispatch({ type: "UPGRADE_HUB", hubId })}
                 title={
@@ -187,31 +166,18 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
               >
                 ⬆ Upgrade → Service-Hub
               </button>
-              <div style={{ marginTop: 3, fontSize: 11, color: "#888" }}>
+              <div className="fi-hub-upgrade-cost">
                 Kosten: {UPGRADE_COST_LABEL}
               </div>
             </div>
           )}
           {tier === 2 && hubDrones.length < maxDrones && (
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 11,
-                color: "#555",
-                fontStyle: "italic",
-              }}
-            >
+            <div className="fi-hub-drone-slot-hint">
               Weitere Drohnen-Slots verfügbar ({hubDrones.length}/{maxDrones})
             </div>
           )}
         </div>
-        <hr
-          style={{
-            border: "none",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            margin: "4px 0",
-          }}
-        />
+        <hr className="fi-hub-divider" />
 
         {/* ---- Drohnen ---- */}
         <div style={{ fontSize: 13, color: "#aaa" }}>
@@ -222,17 +188,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
             const detail = getDroneStatusDetail(state, d);
             const statusColor = d.status === "idle" ? "#888" : "#4da6ff";
             return (
-              <div
-                key={d.droneId}
-                style={{
-                  marginTop: i === 0 ? 4 : 8,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 4,
-                  paddingLeft: 8,
-                  borderLeft: "2px solid rgba(77,166,255,0.3)",
-                }}
-              >
+              <div key={d.droneId} className="fi-hub-drone-entry">
                 <div
                   style={{
                     display: "flex",
@@ -275,15 +231,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
                     <span style={{ color: "#888" }}>Rolle:</span>
                     <select
                       value={d.role ?? "auto"}
-                      style={{
-                        background: "#222",
-                        color: "#ccc",
-                        border: "1px solid #444",
-                        borderRadius: 3,
-                        padding: "2px 4px",
-                        cursor: "pointer",
-                        fontSize: 12,
-                      }}
+                      className="fi-hub-role-select"
                       onChange={(e) =>
                         dispatch({
                           type: "DRONE_SET_ROLE",
@@ -313,13 +261,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
             );
           })}
         </div>
-        <hr
-          style={{
-            border: "none",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            margin: "4px 0",
-          }}
-        />
+        <hr className="fi-hub-divider" />
 
         {/* ---- Zielmengen ---- */}
         {hubEntry && hubId && (
@@ -347,12 +289,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
                   return (
                     <div
                       key={res}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        opacity: isActive ? 1 : 0.4,
-                      }}
+                      className={`fi-hub-stock-row${!isActive ? " fi-hub-stock-row--inactive" : ""}`}
                     >
                       <span style={{ minWidth: 85 }}>
                         {formatHubResourceLabel(res)}
@@ -370,13 +307,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
                           </span>
                           <span style={{ color: "#666" }}>/</span>
                           <button
-                            style={{
-                              width: 22,
-                              height: 22,
-                              padding: 0,
-                              cursor: "pointer",
-                              fontSize: 13,
-                            }}
+                            className="fi-hub-stock-btn"
                             onClick={() =>
                               dispatch({
                                 type: "SET_HUB_TARGET_STOCK",
@@ -393,13 +324,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
                             {target}
                           </span>
                           <button
-                            style={{
-                              width: 22,
-                              height: 22,
-                              padding: 0,
-                              cursor: "pointer",
-                              fontSize: 13,
-                            }}
+                            className="fi-hub-stock-btn"
                             onClick={() =>
                               dispatch({
                                 type: "SET_HUB_TARGET_STOCK",
@@ -437,13 +362,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
                 })}
               </div>
             </div>
-            <hr
-              style={{
-                border: "none",
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                margin: "4px 0",
-              }}
-            />
+            <hr className="fi-hub-divider" />
           </>
         )}
 
@@ -463,14 +382,7 @@ export const ServiceHubPanel: React.FC<ServiceHubPanelProps> = ({
                 {totalNodes} Nodes, {totalItems} Items gesamt
               </span>
               {totalNodes > 0 && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "4px 12px",
-                    marginTop: 2,
-                  }}
-                >
+                <div className="fi-hub-nodes-row">
                   {RESOURCE_ORDER.map((res) => {
                     const entry = nodesByType[res];
                     if (entry.count === 0) return null;

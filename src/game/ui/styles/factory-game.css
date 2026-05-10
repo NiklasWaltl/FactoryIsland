@@ -1489,3 +1489,84 @@
 .fi-build-status--no-res {
   color: #ff8080;
 }
+
+/* ---- ServiceHubPanel ---- */
+.fi-hub-body {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fi-hub-stats-row {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 12px;
+  color: #999;
+}
+.fi-hub-upgrade-btn {
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.fi-hub-upgrade-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fi-hub-upgrade-cost {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #888;
+}
+.fi-hub-drone-slot-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #555;
+  font-style: italic;
+}
+.fi-hub-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+.fi-hub-drone-entry {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 8px;
+  border-left: 2px solid rgba(77, 166, 255, 0.3);
+}
+.fi-hub-drone-entry + .fi-hub-drone-entry {
+  margin-top: 8px;
+}
+.fi-hub-role-select {
+  background: #222;
+  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 3px;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.fi-hub-stock-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fi-hub-stock-row.fi-hub-stock-row--inactive {
+  opacity: 0.4;
+}
+.fi-hub-stock-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  cursor: pointer;
+  font-size: 13px;
+}
+.fi-hub-nodes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 2px;
+}
