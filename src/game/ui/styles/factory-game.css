@@ -1853,10 +1853,6 @@
 
 /* AutoMiner-specific */
 .fi-auto-miner-panel {
-  position: absolute;
-  top: 120px;
-  right: 16px;
-  z-index: 40;
   min-width: 280px;
 }
 .fi-auto-miner-header {
@@ -1875,4 +1871,54 @@
 .fi-auto-miner-priority {
   display: grid;
   gap: 6px;
+}
+
+/* ---- Floating Panels ---- */
+.fi-floating-panel {
+  position: absolute;
+  top: 120px;
+  right: 16px;
+  z-index: 40;
+}
+
+/* ---- DockWarehousePanel ---- */
+.fi-dock-warehouse-panel {
+  min-width: 300px;
+}
+.fi-dock-warehouse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.fi-dock-warehouse-header h2 {
+  margin: 0;
+}
+.fi-dock-warehouse-fragments-btn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.fi-dock-warehouse-reward-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fi-dock-warehouse-empty {
+  color: #9ca3af;
+}
+.fi-dock-warehouse-next-quest {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #a5b4fc;
+}
+.fi-dock-warehouse-depart-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+.fi-dock-warehouse-depart-warning {
+  font-size: 11px;
+  color: #facc15;
 }

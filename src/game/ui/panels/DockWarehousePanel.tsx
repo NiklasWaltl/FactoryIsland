@@ -88,25 +88,11 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
     return (
       <div
         ref={panelRef}
-        className="fi-panel fi-dock-warehouse-panel"
+        className="fi-panel fi-floating-panel fi-dock-warehouse-panel"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          position: "absolute",
-          top: 120,
-          right: 16,
-          zIndex: 40,
-          minWidth: 300,
-        }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <h2 style={{ margin: 0 }}>⚓ Dock-Lagerhaus</h2>
+        <div className="fi-dock-warehouse-header">
+          <h2>⚓ Dock-Lagerhaus</h2>
           <button
             className="fi-btn fi-btn-sm"
             onClick={() => dispatch({ type: "CLOSE_PANEL" })}
@@ -117,18 +103,17 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
         </div>
 
         <button
-          className="fi-btn fi-btn-sm"
+          className="fi-btn fi-btn-sm fi-dock-warehouse-fragments-btn"
           onClick={() =>
             dispatch({ type: "TOGGLE_PANEL", panel: "fragment_trader" })
           }
-          style={{ width: "100%", marginBottom: 12 }}
         >
           Fragmente kaufen
         </button>
 
-        <div style={{ display: "grid", gap: 8 }}>
+        <div className="fi-machine-grid">
           {/* Ship status */}
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Schiff-Status</span>
             <strong>
               {ship.status === "docked"
@@ -142,37 +127,31 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
           {/* Active quest */}
           {quest ? (
             <>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="fi-machine-row">
                 <span>Aktueller Auftrag</span>
                 <strong>
                   {quest.label} × {quest.amount}
                 </strong>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="fi-machine-row">
                 <span>Geliefert</span>
                 <strong style={{ color: qualityColor }}>
                   {questFilled} / {quest.amount}
                 </strong>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="fi-machine-row">
                 <span>Qualität</span>
                 <strong style={{ color: qualityColor }}>{qualityLabel}</strong>
               </div>
               {expectedReward && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 8,
-                  }}
-                >
+                <div className="fi-dock-warehouse-reward-row">
                   <span>{"Erwarteter Reward:"}</span>
                   <strong>{formatExpectedReward(expectedReward)}</strong>
                 </div>
               )}
             </>
           ) : (
-            <div style={{ color: "#9ca3af" }}>
+            <div className="fi-dock-warehouse-empty">
               {ship.status === "sailing"
                 ? "Wartet auf Ankunft des Schiffs…"
                 : "Kein aktiver Auftrag"}
@@ -181,23 +160,14 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
 
           {/* Next quest preview */}
           {ship.nextQuest && (
-            <div
-              style={{
-                background: "rgba(99,102,241,0.15)",
-                border: "1px solid rgba(99,102,241,0.4)",
-                borderRadius: 6,
-                padding: "6px 10px",
-                fontSize: 12,
-                color: "#a5b4fc",
-              }}
-            >
+            <div className="fi-dock-warehouse-next-quest">
               Nächster Auftrag: {ship.nextQuest.label} × {ship.nextQuest.amount}
             </div>
           )}
 
           {/* Countdown */}
           {ship.status === "docked" && ship.departureAt && (
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div className="fi-machine-row">
               <span>Abfahrt in</span>
               <strong style={{ color: "#facc15" }}>
                 {formatCountdown(departsInMs)}
@@ -205,7 +175,7 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
             </div>
           )}
           {ship.status === "sailing" && ship.returnsAt && (
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div className="fi-machine-row">
               <span>Ankunft in</span>
               <strong style={{ color: "#7dd3fc" }}>
                 {formatCountdown(returnsInMs)}
@@ -217,10 +187,9 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
           {ship.status === "docked" && (
             <>
               <button
-                className="fi-btn fi-btn-sm"
+                className="fi-btn fi-btn-sm fi-dock-warehouse-depart-btn"
                 disabled={!quest}
                 onClick={() => dispatch({ type: "SHIP_DEPART" })}
-                style={{ width: "100%", marginTop: 4 }}
                 title={
                   !quest
                     ? "Kein aktiver Auftrag vorhanden."
@@ -232,7 +201,7 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
                 ⛵ Schiff ablegen lassen
               </button>
               {departureWarning && (
-                <div style={{ fontSize: 11, color: "#facc15" }}>
+                <div className="fi-dock-warehouse-depart-warning">
                   {departureWarning}
                 </div>
               )}
