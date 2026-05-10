@@ -1,0 +1,349 @@
+react-doctor v0.1.5
+
+[32m✔[39m Select projects to scan [2m›[22m factory-island
+[2mScanning C:\Users\nikla\Desktop\FactoryIsland...[22m
+
+
+
+  [33m⚠[39m [33mreact-doctor/no-tiny-text                     [39m [90m×71[39m
+[90m      Font size 9px is too small — body text should be at least 12px for readability, 16px is ideal[39m
+[90m      → Use at least 12px for body content, 16px is ideal. Small text is hard to read, especially on high-DPI mobile screens[39m
+[90m      src/game/grid/GridSelection.tsx:97[39m
+[90m      src/game/grid/GridSelection.tsx:394[39m
+[90m      src/game/grid/GridSelection.tsx:431[39m
+[90m      src/game/grid/GridSelection.tsx:450[39m
+[90m      src/game/grid/GridSelection.tsx:471[39m
+[90m      src/game/grid/GridSelection.tsx:491[39m
+[90m      src/game/grid/GridSelection.tsx:537[39m
+[90m      src/game/grid/GridSelection.tsx:553[39m
+[90m      src/game/grid/GridSelection.tsx:616[39m
+[90m      src/game/grid/GridOverlays.tsx:226[39m
+[90m      src/game/grid/GridOverlays.tsx:404[39m
+[90m      src/game/debug/DebugPanel.tsx:164[39m
+[90m      src/game/debug/DebugPanel.tsx:224[39m
+[90m      src/game/debug/DebugPanel.tsx:233[39m
+[90m      src/game/debug/DebugPanel.tsx:243[39m
+[90m      src/game/debug/DebugPanel.tsx:250[39m
+[90m      src/game/debug/DebugPanel.tsx:256[39m
+[90m      src/game/debug/DebugPanel.tsx:281[39m
+[90m      src/game/debug/DebugPanel.tsx:288[39m
+[90m      src/game/ui/panels/DockWarehousePanel.tsx:235[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:173[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:193[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:224[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:232[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:239[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:295[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:343[39m
+[90m      src/game/ui/panels/PowerPolePanel.tsx:137[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:315[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:434[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:114[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:121[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:144[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:155[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:198[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:207[39m
+[90m      src/game/ui/panels/ManualAssemblerPanel.tsx:89[39m
+[90m      src/game/ui/panels/ManualAssemblerPanel.tsx:108[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:67[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:90[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:112[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:168[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:208[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:293[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:357[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:372[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:378[39m
+[90m      src/game/ui/panels/BatteryPanel.tsx:99[39m
+[90m      src/game/ui/panels/BatteryPanel.tsx:135[39m
+[90m      src/game/ui/panels/BatteryPanel.tsx:146[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:142[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:185[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:199[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:299[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:307[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:336[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:347[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:190[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:199[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:243[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:305[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:330[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:416[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:427[39m
+[90m      src/game/ui/panels/AutoSmelterPanel.tsx:444[39m
+[90m      src/game/ui/panels/AutoMinerPanel.tsx:291[39m
+[90m      src/game/ui/panels/AutoAssemblerPanel.tsx:159[39m
+[90m      src/game/ui/panels/AutoAssemblerPanel.tsx:179[39m
+[90m      src/game/ui/panels/AutoAssemblerPanel.tsx:213[39m
+[90m      src/game/ui/panels/EnergyDebugOverlay.tsx:328[39m
+[90m      src/game/ui/panels/EnergyDebugOverlay.tsx:333[39m
+
+  [33m⚠[39m [33mreact-doctor/no-inline-exhaustive-style       [39m [90m×37[39m
+[90m      15 inline style properties — extract to a CSS class, CSS module, or styled component for maintainability and reuse[39m
+[90m      → Move styles to a CSS class, CSS module, Tailwind utilities, or a styled component — inline objects with many properties hurt readability and create new references every render[39m
+[90m      src/game/ui/hud/ShipStatusBar.tsx:87[39m
+[90m      src/game/dev/DevSceneSelector.tsx:50[39m
+[90m      src/game/grid/GridSelection.tsx:75[39m
+[90m      src/game/grid/GridSelection.tsx:93[39m
+[90m      src/game/grid/GridSelection.tsx:135[39m
+[90m      src/game/grid/GridSelection.tsx:160[39m
+[90m      src/game/grid/GridSelection.tsx:186[39m
+[90m      src/game/grid/GridSelection.tsx:331[39m
+[90m      src/game/grid/GridSelection.tsx:352[39m
+[90m      src/game/grid/GridSelection.tsx:368[39m
+[90m      src/game/grid/GridSelection.tsx:410[39m
+[90m      src/game/grid/GridSelection.tsx:425[39m
+[90m      src/game/grid/GridSelection.tsx:443[39m
+[90m      src/game/grid/GridSelection.tsx:464[39m
+[90m      src/game/grid/GridSelection.tsx:485[39m
+[90m      src/game/grid/GridSelection.tsx:505[39m
+[90m      src/game/grid/GridSelection.tsx:519[39m
+[90m      src/game/grid/GridSelection.tsx:533[39m
+[90m      src/game/grid/GridSelection.tsx:549[39m
+[90m      src/game/grid/GridSelection.tsx:582[39m
+[90m      src/game/grid/GridSelection.tsx:599[39m
+[90m      src/game/grid/GridSelection.tsx:612[39m
+[90m      src/game/grid/GridOverlays.tsx:143[39m
+[90m      src/game/grid/GridOverlays.tsx:184[39m
+[90m      src/game/grid/GridOverlays.tsx:222[39m
+[90m      src/game/grid/GridOverlays.tsx:287[39m
+[90m      src/game/grid/GridOverlays.tsx:300[39m
+[90m      src/game/grid/GridOverlays.tsx:313[39m
+[90m      src/game/grid/GridOverlays.tsx:344[39m
+[90m      src/game/grid/GridOverlays.tsx:386[39m
+[90m      src/game/grid/GridOverlays.tsx:403[39m
+[90m      src/game/debug/DebugPanel.tsx:95[39m
+[90m      src/game/entry/FactoryApp.tsx:87[39m
+[90m      src/game/ui/menus/ModeSelect.tsx:63[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:335[39m
+[90m      src/game/ui/panels/ConveyorSplitterPanel.tsx:154[39m
+[90m      src/game/ui/panels/EnergyDebugOverlay.tsx:285[39m
+
+  [33m⚠[39m [33mreact-doctor/no-barrel-import                 [39m [90m×34[39m
+[90m      Import from barrel/index file — import directly from the source module for better tree-shaking[39m
+[90m      → Import from the direct path: `import { Button } from './components/Button'` instead of `./components`[39m
+[90m      src/game/store/helpers/hotbar.ts:6[39m
+[90m      src/game/store/action-handlers/research.ts:19[39m
+[90m      src/game/store/action-handlers/zone-actions.ts:10[39m
+[90m      src/game/grid/placement-validation.ts:3[39m
+[90m      src/game/constants/deconstruct-refund.ts:6[39m
+[90m      src/game/store/helpers/reducer-helpers.ts:6[39m
+[90m      src/game/ui/menus/__tests__/BuildMenu.test.tsx:10[39m
+[90m      src/game/store/__tests__/auto-miner-source.test.ts:17[39m
+[90m      src/game/drones/execution/drone-finalization/depositing/deposit-generator.ts:2[39m
+[90m      src/game/zones/production-zone-mutation.ts:1[39m
+[90m      src/game/buildings/building-input-targets.ts:1[39m
+[90m      src/game/store/__tests__/production-zones.test.ts:22[39m
+[90m      src/game/grid/GridSelection.tsx:3[39m
+[90m      src/game/drones/execution/drone-finalization/depositing/__tests__/deposit-ship-dock.test.ts:6[39m
+[90m      src/game/store/action-handlers/building-placement/remove-asset.ts:11[39m
+[90m      src/game/drones/execution/drone-finalization/depositing/__tests__/deposit-generator.test.ts:1[39m
+[90m      src/game/store/warehouse-capacity.ts:1[39m
+[90m      src/game/store/__tests__/generator-input-buffer.test.ts:25[39m
+[90m      src/game/store/action-handlers/building-placement/place-conveyors.ts:9[39m
+[90m      src/game/store/__tests__/default-source.test.ts:14[39m
+[90m      src/game/simulation/save-migrations.ts:33[39m
+[90m      src/game/store/action-handlers/building-placement/place-building.ts:4[39m
+[90m      src/game/store/building-placement-preview.ts:13[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:5[39m
+[90m      src/game/drones/selection/helpers/building-supply-need-resolvers.ts:1[39m
+[90m      src/game/store/__tests__/warehouse-logic.test.ts:15[39m
+[90m      src/game/store/action-handler-deps.ts:9[39m
+[90m      src/game/store/action-handlers/machine-actions/phases/generator-fuel-phase.ts:6[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:10[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:8[39m
+[90m      src/game/ui/panels/ZoneSourceSelector.tsx:4[39m
+[90m      src/game/store/__tests__/construction-site-integration.test.ts:14[39m
+[90m      src/game/ui/panels/AutoSmelterPanel.tsx:20[39m
+[90m      src/game/ui/panels/AutoMinerPanel.tsx:22[39m
+
+  [33m⚠[39m [33mjsx-a11y/click-events-have-key-events         [39m [90m×22[39m
+[90m      Enforce a clickable non-interactive element has at least one keyboard event listener.[39m
+[90m      → Visible, non-interactive elements with click handlers must have one of `keyup`, `keydown`, or `keypress` listener.[39m
+[90m      src/game/grid/Grid.tsx:31[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:56[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:165[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:197[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:275[39m
+[90m      src/game/ui/panels/DockWarehousePanel.tsx:89[39m
+[90m      src/game/ui/panels/FragmentTraderPanel.tsx:60[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:94[39m
+[90m      src/game/ui/panels/ResearchLabPanel.tsx:164[39m
+[90m      src/game/ui/panels/PowerPolePanel.tsx:52[39m
+[90m      src/game/ui/panels/PowerPolePanel.tsx:83[39m
+[90m      src/game/ui/panels/MapShopPanel.tsx:15[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:76[39m
+[90m      src/game/ui/panels/ManualAssemblerPanel.tsx:44[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:25[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:77[39m
+[90m      src/game/ui/panels/BatteryPanel.tsx:56[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:180[39m
+[90m      src/game/ui/panels/AutoSmelterPanel.tsx:261[39m
+[90m      src/game/ui/panels/AutoMinerPanel.tsx:232[39m
+[90m      src/game/ui/panels/AutoAssemblerPanel.tsx:83[39m
+[90m      src/game/ui/panels/ConveyorSplitterPanel.tsx:70[39m
+
+  [33m⚠[39m [33mjsx-a11y/no-static-element-interactions       [39m [90m×22[39m
+[90m      Static HTML elements with event handlers require a role.[39m
+[90m      → Add a role attribute to this element, or use a semantic HTML element instead.[39m
+[90m      src/game/grid/Grid.tsx:31[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:56[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:165[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:197[39m
+[90m      src/game/ui/menus/BuildMenu.tsx:275[39m
+[90m      src/game/ui/panels/DockWarehousePanel.tsx:89[39m
+[90m      src/game/ui/panels/FragmentTraderPanel.tsx:60[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:94[39m
+[90m      src/game/ui/panels/ResearchLabPanel.tsx:164[39m
+[90m      src/game/ui/panels/PowerPolePanel.tsx:52[39m
+[90m      src/game/ui/panels/PowerPolePanel.tsx:83[39m
+[90m      src/game/ui/panels/MapShopPanel.tsx:15[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:76[39m
+[90m      src/game/ui/panels/ManualAssemblerPanel.tsx:44[39m
+[90m      src/game/ui/panels/SmithyPanel.tsx:25[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:77[39m
+[90m      src/game/ui/panels/BatteryPanel.tsx:56[39m
+[90m      src/game/ui/panels/WorkbenchPanel.tsx:180[39m
+[90m      src/game/ui/panels/AutoSmelterPanel.tsx:261[39m
+[90m      src/game/ui/panels/AutoMinerPanel.tsx:232[39m
+[90m      src/game/ui/panels/AutoAssemblerPanel.tsx:83[39m
+[90m      src/game/ui/panels/ConveyorSplitterPanel.tsx:70[39m
+
+  [33m⚠[39m [33mreact-doctor/js-combine-iterations            [39m [90m×21[39m
+[90m      .filter().map() iterates the array twice — combine into a single loop with .reduce() or for...of[39m
+[90m      → Combine `.map().filter()` (or similar chains) into a single pass with `.reduce()` or a `for...of` loop to avoid iterating the array twice[39m
+[90m      src/game/ui/hud/productionTransparency.ts:669[39m
+[90m      src/game/store/energy/energy-tick-phases.ts:103[39m
+[90m      src/game/power/energy-consumers.ts:28[39m
+[90m      src/game/power/energy-consumers.ts:28[39m
+[90m      src/game/store/selectors/deconstruct-request-queue.ts:68[39m
+[90m      src/game/store/action-handlers/crafting-queue-actions/index.ts:59[39m
+[90m      src/game/drones/__tests__/deconstruct-workflow.test.ts:134[39m
+[90m      src/game/drones/__tests__/deconstruct-workflow.test.ts:134[39m
+[90m      src/game/crafting/__tests__/tickPhases.test.ts:75[39m
+[90m      src/game/store/__tests__/debug-scene-extended.test.ts:167[39m
+[90m      src/game/crafting/tickPhases.ts:72[39m
+[90m      src/game/entry/use-game-ticks.ts:46[39m
+[90m      src/game/drones/dock/drone-dock.ts:48[39m
+[90m      src/game/drones/dock/drone-dock.ts:48[39m
+[90m      src/game/store/bootstrap/__tests__/fresh-state-invariants.test.ts:162[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:74[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:358[39m
+[90m      src/game/ui/panels/WarehousePanel.tsx:403[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:43[39m
+[90m      src/game/store/__tests__/building-placement-preview.test.ts:21[39m
+[90m      src/game/ui/panels/EnergyDebugOverlay.tsx:239[39m
+
+  [33m⚠[39m [33mreact-doctor/js-tosorted-immutable            [39m [90m×9[39m
+[90m      [...array].sort() — use array.toSorted() for immutable sorting (ES2023)[39m
+[90m      → Use `array.toSorted()` (ES2023) instead of `[...array].sort()` for immutable sorting without the spread allocation[39m
+[90m      src/game/dev/__tests__/scene-factory.test.ts:12[39m
+[90m      src/game/crafting/output.ts:297[39m
+[90m      src/game/drones/selection/select-drone-task.ts:64[39m
+[90m      src/game/crafting/queue/queue.ts:420[39m
+[90m      src/game/crafting/tick/source-selection.ts:90[39m
+[90m      src/game/crafting/queue/jobStatus.ts:53[39m
+[90m      src/game/crafting/queue/jobStatus.ts:54[39m
+[90m      src/game/crafting/planner/planner-output-forecast.ts:40[39m
+[90m      src/game/crafting/planner/planner-output-forecast.ts:41[39m
+
+  [33m⚠[39m [33mreact-doctor/js-cache-property-access         [39m [90m×8[39m
+[90m      ctx.recipe.outputItem is read 5 times inside this loop — hoist into a const at the top of the loop body[39m
+[90m      → Hoist the deep member access into a const at the top of the loop body: `const { x, y } = obj.deeply.nested`[39m
+[90m      src/game/ui/hud/productionTransparency.ts:1263[39m
+[90m      src/game/store/energy/energy-tick-phases.ts:164[39m
+[90m      src/game/store/action-handlers/logistics-tick/phases/auto-smelter.ts:136[39m
+[90m      src/game/store/action-handlers/logistics-tick/phases/auto-assembler.ts:139[39m
+[90m      src/game/crafting/planner/planner-recursion.ts:104[39m
+[90m      src/game/crafting/tick/phases/phase-reserve-queued.ts:134[39m
+[90m      src/game/crafting/tick/phases/phase-reserve-queued.ts:140[39m
+[90m      src/game/crafting/tick/phases/phase-reserve-queued.ts:146[39m
+
+  [33m⚠[39m [33mreact-doctor/no-layout-transition-inline      [39m [90m×4[39m
+[90m      Transitioning layout property "width" causes layout thrash every frame — use transform and opacity instead[39m
+[90m      → Use `transform` and `opacity` for transitions — they run on the compositor thread. For height animations, use `grid-template-rows: 0fr → 1fr`[39m
+[90m      src/game/grid/GridOverlays.tsx:361[39m
+[90m      src/game/ui/panels/ManualAssemblerPanel.tsx:144[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:274[39m
+[90m      src/game/ui/panels/AutoSmelterPanel.tsx:483[39m
+
+  [33m⚠[39m [33mreact-doctor/design-no-em-dash-in-jsx-text    [39m [90m×4[39m
+[90m      Em dash (—) in JSX text reads as model output — replace with comma, colon, semicolon, or parentheses[39m
+[90m      → Replace em dashes in JSX text with commas, colons, semicolons, periods, or parentheses — em dashes read as model-output filler[39m
+[90m      src/game/ui/panels/GeneratorPanel.tsx:206[39m
+[90m      src/game/ui/panels/ModulLabPanel.tsx:355[39m
+[90m      src/game/ui/panels/AutoSmelterPanel.tsx:99[39m
+[90m      src/game/ui/panels/AutoMinerPanel.tsx:100[39m
+
+  [33m⚠[39m [33mreact-doctor/js-index-maps                    [39m [90m×3[39m
+[90m      array.find() in a loop is O(n*m) — build a Map for O(1) lookups[39m
+[90m      → Build an index `Map` once outside the loop instead of `array.find(...)` inside it[39m
+[90m      src/game/simulation/save-codec.ts:233[39m
+[90m      src/game/store/__tests__/construction-site-integration.test.ts:193[39m
+[90m      src/game/store/__tests__/construction-site-integration.test.ts:212[39m
+
+  [33m⚠[39m [33mreact-doctor/rendering-hydration-mismatch-time[39m [90m×3[39m
+[90m      new Date() reachable from JSX renders differently on server vs client — wrap in useEffect+useState (client-only) or add suppressHydrationWarning to the parent if intentional[39m
+[90m      → Wrap dynamic time/random values in useEffect+useState (client-only) or add suppressHydrationWarning to the parent if intentional[39m
+[90m      src/game/debug/DebugPanel.tsx:244[39m
+[90m      src/game/debug/DebugPanel.tsx:244[39m
+[90m      src/game/debug/DebugPanel.tsx:244[39m
+
+  [33m⚠[39m [33mreact-doctor/no-z-index-9999                  [39m [90m×2[39m
+[90m      z-index: 1000 is arbitrarily high — use a deliberate z-index scale (1–50). Extreme values signal a stacking context problem, not a fix[39m
+[90m      → Define a z-index scale in your design tokens (e.g. dropdown: 10, modal: 20, toast: 30). Create a new stacking context with `isolation: isolate` instead of escalating values[39m
+[90m      src/game/dev/DevSceneSelector.tsx:54[39m
+[90m      src/game/debug/DebugPanel.tsx:99[39m
+
+  [33m⚠[39m [33mreact-doctor/no-array-index-as-key            [39m [90m×2[39m
+[90m      Array index "idx" used as key — causes bugs when list is reordered or filtered[39m
+[90m      → Use a stable unique identifier: `key={item.id}` or `key={item.slug}` — index keys break on reorder/filter[39m
+[90m      src/game/ui/hud/Hotbar.tsx:57[39m
+[90m      src/game/grid/GridOverlays.tsx:183[39m
+
+  [33m⚠[39m [33mreact-doctor/no-render-in-render              [39m [90m×2[39m
+[90m      Inline render function "renderPowerPoleRangeArea()" — extract to a separate component for proper reconciliation[39m
+[90m      → Extract to a named component: `const ListItem = ({ item }) => <div>{item.name}</div>`[39m
+[90m      src/game/grid/GridSelection.tsx:646[39m
+[90m      src/game/grid/GridSelection.tsx:690[39m
+
+  [33m⚠[39m [33mreact-doctor/advanced-event-handler-refs      [39m [90m×2[39m
+[90m      useEffect re-subscribes a "updateViewportSize" listener every time the handler identity changes — store the handler in a ref and have the listener read `handlerRef.current()`, then drop it from the deps[39m
+[90m      → Store the handler in a ref and have the listener read `handlerRef.current()` — the subscription stays put while the latest handler is always called[39m
+[90m      src/game/grid/GridInput.tsx:68[39m
+[90m      src/game/grid/GridInput.tsx:253[39m
+
+  [33m⚠[39m [33mreact-doctor/js-set-map-lookups               [39m [90m×2[39m
+[90m      array.includes() in a loop is O(n) per call — convert to a Set for O(1) lookups[39m
+[90m      → Use a `Set` or `Map` for repeated membership tests / keyed lookups — `Array.includes`/`find` is O(n) per call[39m
+[90m      src/game/debug/mockData.ts:142[39m
+[90m      src/game/debug/mockData.ts:175[39m
+
+  [33m⚠[39m [33mreact-doctor/js-min-max-loop                  [39m [90m×2[39m
+[90m      array.sort()[0] for min/max — use Math.min(...array) instead (O(n) vs O(n log n))[39m
+[90m      → Use `Math.min(...array)` / `Math.max(...array)` instead of sorting just to read the first or last element[39m
+[90m      src/game/drones/__tests__/starter-drone-regressions.test.ts:546[39m
+[90m      src/game/store/__tests__/tick-phase-stress.test.ts:375[39m
+
+  [33m⚠[39m [33mreact-doctor/rerender-state-only-in-handlers[39m
+[90m      useState "collapsed" is updated but never read in the component's return — use useRef so updates don't trigger re-renders[39m
+[90m      → Replace useState with useRef when the value is only mutated and never read in render — `ref.current = ...` updates without re-rendering the component[39m
+[90m      src/game/debug/DebugPanel.tsx:47[39m
+
+  [33m⚠[39m [33mreact-doctor/no-giant-component[39m
+[90m      Component "ServiceHubPanel" is 440 lines — consider breaking it into smaller focused components[39m
+[90m      → Extract logical sections into focused components: `<UserHeader />`, `<UserActions />`, etc.[39m
+[90m      src/game/ui/panels/ServiceHubPanel.tsx:57[39m
+
+  [32m┌─────┐[39m  [32m85[39m [2m/ 100[22m [32mGreat[39m
+  [32m│ ◠ ◠ │[39m  [32m███████████████████████████████████████████[39m[2m░░░░░░░[22m
+  [32m│  ▽  │[39m  React Doctor [2m(www.react.doctor)[22m
+  [32m└─────┘[39m
+
+  [33m252 issues[39m [2macross 85/532 files  in 16.1s[22m
+[90m  Full diagnostics written to C:\Users\nikla\AppData\Local\Temp\react-doctor-de16ad57-2698-482e-9608-dff41cef4d2d[39m
+
+  [1m→ Share your results:[22m [36mhttps://www.react.doctor/share?p=factory-island&s=85&w=252&f=85[39m
+

@@ -1,16 +1,8 @@
-import React, {
-  useReducer,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useHmrState } from "./useHmrState";
 import { DebugOverlay } from "./DebugOverlay";
-import { gameReducer, gameReducerWithInvariants } from "../store/reducer";
-import { createInitialState } from "../store/initial-state";
-import type { GameMode, GameState } from "../store/types";
+import { useGamePersistence } from "./useGamePersistence";
+import type { GameMode } from "../store/types";
 import type {
   BuildUIStateSlice,
   HotbarStateSlice,
@@ -18,12 +10,6 @@ import type {
   ShipStatusSlice,
 } from "../store/types/ui-slice-types";
 import { DOCK_WAREHOUSE_ID } from "../store/bootstrap/apply-dock-warehouse-layout";
-import {
-  loadAndHydrate,
-  loadFromStorage,
-  saveToStorage,
-} from "../simulation/save";
-import { applyDevScene, getDevSceneFromUrl, hasDevSceneUrlParam } from "../dev";
 import { useGameTicks } from "./use-game-ticks";
 import { ModeSelect } from "../ui/menus/ModeSelect";
 import { Grid } from "../grid/Grid";
@@ -35,39 +21,12 @@ import { Notifications } from "../ui/hud/Notifications";
 import { AutoDeliveryFeed } from "../ui/hud/AutoDeliveryFeed";
 import { ProductionStatusFeed } from "../ui/hud/ProductionStatusFeed";
 import { ResourceBar } from "../ui/hud/ResourceBar";
-import { addErrorNotification } from "../store/utils/notifications";
 import "../ui/styles/factory-game.css";
 
 // Debug system (tree-shaken in production)
-import {
-  IS_DEV,
-  applyMockToState,
-  saveHmrState,
-  loadHmrState,
-  recordHmrModule,
-  debugLog,
-} from "../debug";
-import type { MockAction } from "../debug";
+import { recordHmrModule } from "../debug";
 
 const SAVE_KEY = "factory-island-save";
-const SAVE_RECOVERY_MESSAGE =
-  "⚠️ Speicherstand hatte Fehler – automatisch repariert";
-
-/**
- * Thin wrapper kept for backward compatibility with HMR path.
- * All migration logic now lives in `simulation/save.ts`.
- */
-function normalizeLoadedState(raw: unknown, mode: GameMode): GameState {
-  return loadAndHydrate(raw, mode);
-}
-
-function createFreshInitialState(mode: GameMode): GameState {
-  const baseState = createInitialState(mode);
-  if (import.meta.env.DEV && mode === "debug") {
-    return applyDevScene(baseState, getDevSceneFromUrl());
-  }
-  return baseState;
-}
 
 /* Error boundary to prevent white-screen crashes */
 class GameErrorBoundary extends React.Component<
@@ -123,78 +82,10 @@ class GameErrorBoundary extends React.Component<
 
 /* Inner game component that gets remounted per mode via key */
 const GameInner: React.FC<{ mode: GameMode }> = ({ mode }) => {
-  // Try to restore HMR state (dev), localStorage save (prod), or fresh state
-  const [state, dispatch] = useReducer(
-    import.meta.env.DEV ? gameReducerWithInvariants : gameReducer,
-    mode,
-    (m) => {
-      if (import.meta.env.DEV && m === "debug" && hasDevSceneUrlParam()) {
-        return createFreshInitialState(m);
-      }
-      if (IS_DEV) {
-        const hmr = loadHmrState();
-        if (hmr) return normalizeLoadedState(hmr, m);
-      }
-      const loaded = loadFromStorage(SAVE_KEY, m);
-      if (loaded.state) {
-        return loaded.state;
-      }
-      if (loaded.recoveredFromCorruption) {
-        const fresh = createFreshInitialState(m);
-        return {
-          ...fresh,
-          notifications: addErrorNotification(
-            fresh.notifications,
-            SAVE_RECOVERY_MESSAGE,
-            8000,
-          ),
-        };
-      }
-      return createFreshInitialState(m);
-    },
-  );
-
-  // Keep latest state available to effects/event callbacks, and persist HMR snapshots in DEV.
-  const stateRef = useRef(state);
-  useEffect(() => {
-    stateRef.current = state;
-    if (!IS_DEV) return;
-    saveHmrState(state);
-  }, [state]);
-
-  // Periodic localStorage save (every 10s + on unload)
-  useEffect(() => {
-    const save = () => {
-      saveToStorage(SAVE_KEY, stateRef.current);
-    };
-    const id = setInterval(save, 10_000);
-    window.addEventListener("beforeunload", save);
-    return () => {
-      clearInterval(id);
-      window.removeEventListener("beforeunload", save);
-    };
-  }, []);
+  const { state, dispatch, handleMock } = useGamePersistence(mode);
 
   // HMR status tracking
   const hmrState = useHmrState();
-
-  // Mock data handler - dispatches directly into the reducer
-  const handleMock = useCallback(
-    (action: MockAction["type"]) => {
-      if (!IS_DEV) return;
-      if (action === "DEBUG_RESET_STATE") {
-        debugLog.mock("Full state reset");
-        dispatch({
-          type: "DEBUG_SET_STATE",
-          state: createFreshInitialState(mode),
-        });
-        return;
-      }
-      const newState = applyMockToState(stateRef.current, action);
-      dispatch({ type: "DEBUG_SET_STATE", state: newState });
-    },
-    [mode],
-  );
 
   // Keyboard shortcuts for hotbar
   useEffect(() => {
