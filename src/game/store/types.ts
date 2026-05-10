@@ -497,4 +497,9 @@ export interface GameState {
   selectedSplitterId: string | null;
   /** Ship quest loop state. Persisted. */
   ship: ShipState;
+  /**
+   * Latest tick-handler error captured by the central tick loop, for diagnostic
+   * surfacing in dev tools. Transient (not persisted in saves).
+   */
+  lastTickError?: { action: string; message: string; tick: number };
 }

@@ -7,7 +7,8 @@ export type MaintenanceHandledActionType =
   | "REMOVE_BUILDING"
   | "REMOVE_POWER_POLE"
   | "DEBUG_SET_STATE"
-  | "EXPIRE_NOTIFICATIONS";
+  | "EXPIRE_NOTIFICATIONS"
+  | "ADD_ERROR_NOTIFICATION";
 
 export const HANDLED_ACTION_TYPES = new Set<string>([
   "CRAFT_WORKBENCH",
@@ -15,6 +16,7 @@ export const HANDLED_ACTION_TYPES = new Set<string>([
   "REMOVE_POWER_POLE",
   "DEBUG_SET_STATE",
   "EXPIRE_NOTIFICATIONS",
+  "ADD_ERROR_NOTIFICATION",
 ]);
 
 export type MaintenanceHandledAction = Extract<
@@ -45,4 +47,9 @@ export type DebugSetStateAction = Extract<
 export type ExpireNotificationsAction = Extract<
   GameAction,
   { type: "EXPIRE_NOTIFICATIONS" }
+>;
+
+export type AddErrorNotificationAction = Extract<
+  GameAction,
+  { type: "ADD_ERROR_NOTIFICATION" }
 >;

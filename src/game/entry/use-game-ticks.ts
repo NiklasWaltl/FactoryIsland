@@ -26,10 +26,39 @@ export function useGameTicks(
   state: GameState,
   dispatch: Dispatch<GameAction>,
 ): void {
+  // Stable wrapper that turns a thrown handler error into a visible
+  // ADD_ERROR_NOTIFICATION dispatch. Shared across every tick interval in this
+  // hook so any tick-handler crash surfaces the same way.
+  const dispatchRef = useRef(dispatch);
+  useEffect(() => {
+    dispatchRef.current = dispatch;
+  }, [dispatch]);
+  const safeDispatchRef = useRef((action: GameAction, tick = 0): void => {
+    try {
+      dispatchRef.current(action);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.error(`[tick] ${action.type} failed:`, err);
+      }
+      try {
+        dispatchRef.current({
+          type: "ADD_ERROR_NOTIFICATION",
+          message: `${action.type}: ${message}`,
+          sourceAction: action.type,
+          tick,
+        });
+      } catch {
+        // Notification dispatch itself failed — nothing further we can do.
+      }
+    }
+  });
+
   // Natural spawn timer — long-period, no interaction with the orchestrator.
   useEffect(() => {
     const id = setInterval(() => {
-      dispatch({ type: "NATURAL_SPAWN" });
+      safeDispatchRef.current({ type: "NATURAL_SPAWN" });
     }, NATURAL_SPAWN_MS);
     return () => clearInterval(id);
   }, []);
@@ -47,7 +76,7 @@ export function useGameTicks(
         .filter(([, growAt]) => now >= growAt)
         .map(([assetId]) => assetId);
       if (readyIds.length > 0) {
-        dispatch({ type: "GROW_SAPLINGS", assetIds: readyIds });
+        safeDispatchRef.current({ type: "GROW_SAPLINGS", assetIds: readyIds });
       }
     }, 1000);
     return () => clearInterval(id);
@@ -138,6 +167,8 @@ export function useGameTicks(
     const notificationsEvery = Math.max(1, Math.round(500 / BASE_TICK_MS));
 
     let tick = 0;
+    const dispatchSafely = (action: GameAction): void =>
+      safeDispatchRef.current(action, tick);
 
     const id = setInterval(() => {
       tick++;
@@ -145,47 +176,47 @@ export function useGameTicks(
       // 1. GENERATOR_TICK — must precede ENERGY_NET_TICK so power allocation
       //    sees up-to-date fuel state.
       if (tick % generatorEvery === 0 && anyGeneratorRunningRef.current) {
-        dispatch({ type: "GENERATOR_TICK" });
+        dispatchSafely({ type: "GENERATOR_TICK" });
       }
 
       // 2. ENERGY_NET_TICK — allocates power, writes poweredMachineIds.
       if (tick % energyNetEvery === 0) {
-        dispatch({ type: "ENERGY_NET_TICK" });
+        dispatchSafely({ type: "ENERGY_NET_TICK" });
       }
 
       // 3. LOGISTICS_TICK — reads freshly written poweredMachineIds.
       if (tick % logisticsEvery === 0) {
-        dispatch({ type: "LOGISTICS_TICK" });
+        dispatchSafely({ type: "LOGISTICS_TICK" });
       }
 
       // 4. DRONE_TICK — operates after logistics has resolved conveyor moves.
       if (tick % droneEvery === 0) {
-        dispatch({ type: "DRONE_TICK" });
+        dispatchSafely({ type: "DRONE_TICK" });
       }
 
       // 5. JOB_TICK — consumes inputs after logistics and drone deposits.
       if (tick % craftingEvery === 0 && shouldRunCraftingTickRef.current) {
-        dispatch({ type: "JOB_TICK" });
+        dispatchSafely({ type: "JOB_TICK" });
       }
 
       // Independent ticks (no ordering interaction with the chain above).
       if (tick % smithyEvery === 0 && smithyProcessingRef.current) {
-        dispatch({ type: "SMITHY_TICK" });
+        dispatchSafely({ type: "SMITHY_TICK" });
       }
       if (
         tick % manualAssemblerEvery === 0 &&
         manualAssemblerProcessingRef.current
       ) {
-        dispatch({ type: "MANUAL_ASSEMBLER_TICK" });
+        dispatchSafely({ type: "MANUAL_ASSEMBLER_TICK" });
       }
       if (tick % moduleLabEvery === 0 && moduleLabJobActiveRef.current) {
-        dispatch({ type: "MODULE_LAB_TICK" });
+        dispatchSafely({ type: "MODULE_LAB_TICK" });
       }
       if (tick % shipEvery === 0) {
-        dispatch({ type: "SHIP_TICK" });
+        dispatchSafely({ type: "SHIP_TICK" });
       }
       if (tick % notificationsEvery === 0) {
-        dispatch({ type: "EXPIRE_NOTIFICATIONS" });
+        dispatchSafely({ type: "EXPIRE_NOTIFICATIONS" });
       }
     }, BASE_TICK_MS);
 

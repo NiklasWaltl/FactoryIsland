@@ -68,6 +68,14 @@ export type GameAction =
   | { type: "SMITHY_ADD_COPPER"; amount: number }
   | { type: "SMITHY_SET_RECIPE"; recipe: "iron" | "copper" }
   | { type: "EXPIRE_NOTIFICATIONS" }
+  | {
+      type: "ADD_ERROR_NOTIFICATION";
+      message: string;
+      /** Original action.type that failed; surfaces in lastTickError diagnostics. */
+      sourceAction?: string;
+      /** Tick counter when the error happened; surfaces in lastTickError diagnostics. */
+      tick?: number;
+    }
   | { type: "DEBUG_SET_STATE"; state: GameState }
   // Generator / Energy
   | { type: "GENERATOR_ADD_FUEL"; amount: number }

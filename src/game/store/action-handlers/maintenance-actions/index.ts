@@ -3,7 +3,8 @@
 // ------------------------------------------------------------
 // Handles:     CRAFT_WORKBENCH (deprecated — use JOB_ENQUEUE),
 //              REMOVE_BUILDING, REMOVE_POWER_POLE,
-//              DEBUG_SET_STATE, EXPIRE_NOTIFICATIONS
+//              DEBUG_SET_STATE, EXPIRE_NOTIFICATIONS,
+//              ADD_ERROR_NOTIFICATION
 // Reads:       state.assets, state.notifications, state.inventory,
 //              state.placedBuildings, state.purchasedBuildings,
 //              state.cellMap (REMOVE_*); whole state on DEBUG_SET_STATE
@@ -26,6 +27,7 @@ import {
   runRemovePowerPolePhase,
   runDebugSetStatePhase,
   runExpireNotificationsPhase,
+  runAddErrorNotificationPhase,
 } from "./phases";
 
 export function isMaintenanceAction(
@@ -62,6 +64,10 @@ export function handleMaintenanceAction(
 
     case "EXPIRE_NOTIFICATIONS": {
       return runExpireNotificationsPhase({ state, action });
+    }
+
+    case "ADD_ERROR_NOTIFICATION": {
+      return runAddErrorNotificationPhase({ state, action });
     }
 
     default:

@@ -6,3 +6,4 @@ export { runRemoveBuildingPhase } from "./remove-building-phase";
 export { runRemovePowerPolePhase } from "./remove-power-pole-phase";
 export { runDebugSetStatePhase } from "./debug-set-state-phase";
 export { runExpireNotificationsPhase } from "./expire-notifications-phase";
+export { runAddErrorNotificationPhase } from "./add-error-notification-phase";
