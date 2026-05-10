@@ -1732,3 +1732,147 @@
   gap: 4px 12px;
   margin-top: 2px;
 }
+
+/* ---- AutoMachinePanels (shared: AutoMiner + AutoSmelter) ---- */
+.fi-machine-grid {
+  display: grid;
+  gap: 8px;
+}
+.fi-machine-row {
+  display: flex;
+  justify-content: space-between;
+}
+.fi-machine-row--center {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.fi-machine-row-actions {
+  display: flex;
+  gap: 6px;
+}
+.fi-machine-hint {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.fi-machine-block-reason {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fca5a5;
+  font-size: 12px;
+}
+.fi-machine-block-reason--inline {
+  font-size: 11px;
+  color: #e8a946;
+}
+.fi-machine-status-badge {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.fi-machine-recipe-btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fi-machine-boost-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.fi-machine-boost-btn--off {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(100, 100, 100, 0.15);
+  color: #d1d5db;
+}
+.fi-machine-boost-btn--on {
+  border: 1px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+.fi-machine-progress-section {
+  margin-top: 10px;
+}
+.fi-machine-progress-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.fi-machine-progress-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.fi-machine-progress-fill {
+  height: 100%;
+  background: #e64545;
+  transition: width 0.1s linear;
+}
+.fi-machine-close-btn {
+  margin-top: 12px;
+}
+
+/* Module slot section (shared by both panels) */
+.fi-module-slot-section {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+.fi-module-slot-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.fi-module-slot-empty {
+  font-size: 12px;
+  color: #9ca3af;
+}
+.fi-module-slot-list {
+  display: grid;
+  gap: 6px;
+}
+.fi-module-slot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.fi-module-slot-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* AutoMiner-specific */
+.fi-auto-miner-panel {
+  position: absolute;
+  top: 120px;
+  right: 16px;
+  z-index: 40;
+  min-width: 280px;
+}
+.fi-auto-miner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.fi-auto-miner-header h2 {
+  margin: 0;
+}
+.fi-auto-miner-priority-btn {
+  min-width: 32px;
+  padding: 4px 8px;
+}
+.fi-auto-miner-priority {
+  display: grid;
+  gap: 6px;
+}

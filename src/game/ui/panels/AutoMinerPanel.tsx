@@ -49,41 +49,15 @@ const ModuleSlotSection: React.FC<ModuleSlotSectionProps> = ({
   freeModules,
   dispatch,
 }) => (
-  <div
-    data-testid="auto-miner-module-slot"
-    style={{
-      display: "grid",
-      gap: 8,
-      borderTop: "1px solid rgba(255,255,255,0.12)",
-      paddingTop: 10,
-      marginTop: 2,
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 8,
-      }}
-    >
+  <div data-testid="auto-miner-module-slot" className="fi-module-slot-section">
+    <div className="fi-module-slot-row">
       <strong>🔩 Modul-Slot</strong>
-      {!equippedModule && (
-        <span style={{ fontSize: 12, color: "#9ca3af" }}>[Leer]</span>
-      )}
+      {!equippedModule && <span className="fi-module-slot-empty">[Leer]</span>}
     </div>
 
     {equippedModule ? (
       <>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 13,
-          }}
-        >
+        <div className="fi-module-slot-item">
           <span>{getModuleDisplayName(equippedModule)}</span>
           <strong>{getModuleTierBadge(equippedModule)} ✓ Aktiv</strong>
         </div>
@@ -97,27 +71,16 @@ const ModuleSlotSection: React.FC<ModuleSlotSectionProps> = ({
         </button>
       </>
     ) : freeModules.length === 0 ? (
-      <div style={{ fontSize: 12, color: "#9ca3af" }}>
+      <div className="fi-module-slot-empty">
         Keine Module verfügbar — im Modul-Labor craften
       </div>
     ) : (
-      <div style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 12, color: "#9ca3af" }}>
-          Verfügbare Module:
-        </span>
+      <div className="fi-module-slot-list">
+        <span className="fi-module-slot-empty">Verfügbare Module:</span>
         {freeModules.map((module) => (
-          <div
-            key={module.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-            }}
-          >
+          <div key={module.id} className="fi-module-slot-item">
             <span>{getModuleDisplayName(module)}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="fi-module-slot-item-actions">
               <strong>{getModuleTierBadge(module)}</strong>
               <button
                 className="fi-btn fi-btn-sm"
@@ -233,23 +196,9 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
         ref={panelRef}
         className="fi-panel fi-auto-miner-panel"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          position: "absolute",
-          top: 120,
-          right: 16,
-          zIndex: 40,
-          minWidth: 280,
-        }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Auto-Miner</h2>
+        <div className="fi-auto-miner-header">
+          <h2>Auto-Miner</h2>
           <button
             className="fi-btn fi-btn-sm"
             onClick={() => dispatch({ type: "CLOSE_PANEL" })}
@@ -265,34 +214,25 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
           dispatch={dispatch}
         />
 
-        <div style={{ display: "grid", gap: 8 }}>
+        <div className="fi-machine-grid">
           {blockReason && (
             <div
               data-testid="auto-miner-block-reason"
-              style={{
-                background: "rgba(239,68,68,0.15)",
-                border: "1px solid rgba(239,68,68,0.4)",
-                borderRadius: 6,
-                padding: "6px 10px",
-                color: "#fca5a5",
-                fontSize: 12,
-              }}
+              className="fi-machine-block-reason"
             >
               ⚠ {blockReason}
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Output-Ziel</span>
             <strong style={{ color: isOutputBlocked ? "#fca5a5" : undefined }}>
               {sourceInfo.sourceLabel}
             </strong>
           </div>
           {sourceInfo.fallbackReason !== "none" && (
-            <div style={{ fontSize: 11, color: "#9ca3af" }}>
-              {sourceInfo.reasonLabel}
-            </div>
+            <div className="fi-machine-hint">{sourceInfo.reasonLabel}</div>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>
               Output (
               {RESOURCE_LABELS[minerState.resource] ?? minerState.resource})
@@ -302,34 +242,28 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
               {sourceCapacity === Infinity ? "∞" : sourceCapacity}
             </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Aktive Ressource</span>
             <strong>
               {RESOURCE_LABELS[minerState.resource] ?? minerState.resource}
             </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Energie</span>
             <strong style={{ color: powerColor }}>{powerLabel}</strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Ertrag pro Minute</span>
             <strong>{itemsPerMinute.toFixed(1)} / min</strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Verbrauch / Periode</span>
             <strong>{currentDrain} E</strong>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="fi-machine-row--center">
             <span>Overclocking</span>
             <button
-              className="fi-btn fi-btn-sm"
+              className={`fi-btn fi-btn-sm fi-machine-boost-btn ${isBoosted ? "fi-machine-boost-btn--on" : "fi-machine-boost-btn--off"}`}
               onClick={() =>
                 dispatch({
                   type: "SET_MACHINE_BOOST",
@@ -337,18 +271,6 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
                   boosted: !isBoosted,
                 })
               }
-              style={{
-                padding: "4px 10px",
-                border: isBoosted
-                  ? "1px solid #f59e0b"
-                  : "1px solid rgba(255,255,255,0.2)",
-                background: isBoosted
-                  ? "rgba(245,158,11,0.2)"
-                  : "rgba(100,100,100,0.15)",
-                color: isBoosted ? "#fbbf24" : "#d1d5db",
-                borderRadius: 4,
-                cursor: "pointer",
-              }}
               title={`Boost: ${AUTO_MINER_BOOST_MULTIPLIER}x Produktion, ${AUTO_MINER_BOOST_MULTIPLIER}x Verbrauch`}
             >
               {isBoosted
@@ -356,16 +278,16 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
                 : "Boost AUS"}
             </button>
           </div>
-          <div style={{ display: "grid", gap: 6 }}>
+          <div className="fi-auto-miner-priority">
             <span>Priorität (1 = höchste, 5 = niedrigste)</span>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="fi-machine-row-actions">
               {[1, 2, 3, 4, 5].map((p) => {
                 const value = p as MachinePriority;
                 const selected = currentPriority === value;
                 return (
                   <button
                     key={p}
-                    className="fi-btn fi-btn-sm"
+                    className="fi-btn fi-btn-sm fi-auto-miner-priority-btn"
                     onClick={() =>
                       dispatch({
                         type: "SET_MACHINE_PRIORITY",
@@ -374,8 +296,6 @@ export const AutoMinerPanel: React.FC<AutoMinerPanelProps> = React.memo(
                       })
                     }
                     style={{
-                      minWidth: 32,
-                      padding: "4px 8px",
                       border: selected ? "1px solid #7CFC00" : undefined,
                       background: selected ? "rgba(124,252,0,0.15)" : undefined,
                       color: selected ? "#7CFC00" : undefined,

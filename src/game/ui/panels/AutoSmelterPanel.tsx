@@ -50,39 +50,16 @@ const ModuleSlotSection: React.FC<ModuleSlotSectionProps> = ({
 }) => (
   <div
     data-testid="auto-smelter-module-slot"
-    style={{
-      display: "grid",
-      gap: 8,
-      borderTop: "1px solid rgba(255,255,255,0.12)",
-      paddingTop: 10,
-      marginTop: 2,
-    }}
+    className="fi-module-slot-section"
   >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 8,
-      }}
-    >
+    <div className="fi-module-slot-row">
       <strong>⚗️ Modul-Slot</strong>
-      {!equippedModule && (
-        <span style={{ fontSize: 12, color: "#9ca3af" }}>[Leer]</span>
-      )}
+      {!equippedModule && <span className="fi-module-slot-empty">[Leer]</span>}
     </div>
 
     {equippedModule ? (
       <>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 13,
-          }}
-        >
+        <div className="fi-module-slot-item">
           <span>{getModuleDisplayName(equippedModule)}</span>
           <strong>{getModuleTierBadge(equippedModule)} ✓ Aktiv</strong>
         </div>
@@ -96,27 +73,16 @@ const ModuleSlotSection: React.FC<ModuleSlotSectionProps> = ({
         </button>
       </>
     ) : freeModules.length === 0 ? (
-      <div style={{ fontSize: 12, color: "#9ca3af" }}>
+      <div className="fi-module-slot-empty">
         Keine Module verfügbar — im Modul-Labor craften
       </div>
     ) : (
-      <div style={{ display: "grid", gap: 6 }}>
-        <span style={{ fontSize: 12, color: "#9ca3af" }}>
-          Verfügbare Module:
-        </span>
+      <div className="fi-module-slot-list">
+        <span className="fi-module-slot-empty">Verfügbare Module:</span>
         {freeModules.map((module) => (
-          <div
-            key={module.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 13,
-            }}
-          >
+          <div key={module.id} className="fi-module-slot-item">
             <span>{getModuleDisplayName(module)}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="fi-module-slot-item-actions">
               <strong>{getModuleTierBadge(module)}</strong>
               <button
                 className="fi-btn fi-btn-sm"
@@ -267,35 +233,27 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
           dispatch={dispatch}
         />
 
-        <div style={{ display: "grid", gap: 8 }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div className="fi-machine-grid">
+          <div className="fi-machine-row">
             <span>Status</span>
             <strong
+              className="fi-machine-status-badge"
               style={{
                 background: currentStatus.bg,
                 color: currentStatus.color,
-                borderRadius: 999,
-                padding: "2px 8px",
-                fontSize: 12,
               }}
             >
               {currentStatus.label}
             </strong>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="fi-machine-row--center">
             <span>Rezept auswählen</span>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="fi-machine-row-actions">
               <button
                 className={
                   smelter.selectedRecipe === "iron"
-                    ? "fi-btn fi-btn-sm--active"
-                    : "fi-btn fi-btn-sm"
+                    ? "fi-btn fi-btn-sm--active fi-machine-recipe-btn"
+                    : "fi-btn fi-btn-sm fi-machine-recipe-btn"
                 }
                 onClick={() =>
                   dispatch({
@@ -305,8 +263,6 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                   })
                 }
                 style={{
-                  padding: "4px 8px",
-                  fontSize: 12,
                   background:
                     smelter.selectedRecipe === "iron"
                       ? "rgba(234,179,8,0.3)"
@@ -317,8 +273,6 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                       : "1px solid rgba(100,100,100,0.5)",
                   color:
                     smelter.selectedRecipe === "iron" ? "#fbbf24" : "#d1d5db",
-                  borderRadius: 4,
-                  cursor: "pointer",
                 }}
               >
                 ⛏️ Eisen
@@ -326,8 +280,8 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
               <button
                 className={
                   smelter.selectedRecipe === "copper"
-                    ? "fi-btn fi-btn-sm--active"
-                    : "fi-btn fi-btn-sm"
+                    ? "fi-btn fi-btn-sm--active fi-machine-recipe-btn"
+                    : "fi-btn fi-btn-sm fi-machine-recipe-btn"
                 }
                 onClick={() =>
                   dispatch({
@@ -337,8 +291,6 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                   })
                 }
                 style={{
-                  padding: "4px 8px",
-                  fontSize: 12,
                   background:
                     smelter.selectedRecipe === "copper"
                       ? "rgba(168,85,247,0.3)"
@@ -349,19 +301,17 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                       : "1px solid rgba(100,100,100,0.5)",
                   color:
                     smelter.selectedRecipe === "copper" ? "#d8b4fe" : "#d1d5db",
-                  borderRadius: 4,
-                  cursor: "pointer",
                 }}
               >
                 🔶 Kupfer
               </button>
             </div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Rezept</span>
             <strong>{recipeDisplay}</strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Input (Förderband-Buffer)</span>
             <strong>
               {requiredInput > 0
@@ -369,7 +319,7 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                 : "-"}
             </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Output-Ziel</span>
             <strong>
               {outputKey
@@ -377,41 +327,35 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                 : "-"}
             </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Durchsatz (60s)</span>
             <strong>{throughputPerMinute} / min</strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Energieversorgung</span>
             <strong style={{ color: powerBadgeColor }}>
               {powerPercent.toFixed(1)}%
             </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Energie (Soll / Ist)</span>
             <strong>
               {nominalEnergyPerSec.toFixed(1)} /{" "}
               {effectiveEnergyPerSec.toFixed(1)} / s
             </strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Verarbeitungsrate</span>
             <strong>{effectiveSpeedPercent.toFixed(1)}%</strong>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="fi-machine-row">
             <span>Input-Buffer</span>
             <strong>{smelter.inputBuffer.length} / 5</strong>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="fi-machine-row--center">
             <span>Overclocking</span>
             <button
-              className="fi-btn fi-btn-sm"
+              className={`fi-btn fi-btn-sm fi-machine-boost-btn ${isBoosted ? "fi-machine-boost-btn--on" : "fi-machine-boost-btn--off"}`}
               onClick={() =>
                 dispatch({
                   type: "SET_MACHINE_BOOST",
@@ -419,18 +363,6 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
                   boosted: !isBoosted,
                 })
               }
-              style={{
-                padding: "4px 10px",
-                border: isBoosted
-                  ? "1px solid #f59e0b"
-                  : "1px solid rgba(255,255,255,0.2)",
-                background: isBoosted
-                  ? "rgba(245,158,11,0.2)"
-                  : "rgba(100,100,100,0.15)",
-                color: isBoosted ? "#fbbf24" : "#d1d5db",
-                borderRadius: 4,
-                cursor: "pointer",
-              }}
               title={`Boost: ${AUTO_SMELTER_BOOST_MULTIPLIER}x Verarbeitung, ${AUTO_SMELTER_BOOST_MULTIPLIER}x Verbrauch`}
             >
               {isBoosted
@@ -441,7 +373,7 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
           {blockReason && (
             <div
               data-testid="auto-smelter-block-reason"
-              style={{ fontSize: 11, color: "#e8a946" }}
+              className="fi-machine-block-reason--inline"
             >
               ⚠ {blockReason}
             </div>
@@ -454,41 +386,23 @@ export const AutoSmelterPanel: React.FC<AutoSmelterPanelProps> = React.memo(
           />
         </div>
 
-        <div style={{ marginTop: 10 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 4,
-            }}
-          >
+        <div className="fi-machine-progress-section">
+          <div className="fi-machine-progress-row">
             <span>Fortschritt</span>
             <strong>
               {smelter.processing ? `${progressPct.toFixed(0)}%` : "-"}
             </strong>
           </div>
-          <div
-            style={{
-              height: 8,
-              background: "rgba(255,255,255,0.15)",
-              borderRadius: 4,
-              overflow: "hidden",
-            }}
-          >
+          <div className="fi-machine-progress-track">
             <div
-              style={{
-                width: `${progressPct}%`,
-                height: "100%",
-                background: "#e64545",
-                transition: "width 0.1s linear",
-              }}
+              className="fi-machine-progress-fill"
+              style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
 
         <button
-          className="fi-btn fi-btn-sm"
-          style={{ marginTop: 12 }}
+          className="fi-btn fi-btn-sm fi-machine-close-btn"
           onClick={() => dispatch({ type: "CLOSE_PANEL" })}
         >
           Schließen
