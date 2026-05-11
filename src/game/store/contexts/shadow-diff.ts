@@ -66,6 +66,49 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
   SHIP_TICK: ["ship"],
   DRONE_TICK: ["drones", "autoAssemblers"],
   ASSIGN_DRONE_TO_HUB: ["drones"],
+  // Placement auto-assigns the nearest warehouse as default source for
+  // crafting buildings. That needs cross-slice reads (assets / warehouse
+  // positions) which zone-context cannot do in isolation, so the legacy
+  // path legitimately writes buildingSourceWarehouseIds here.
+  BUILD_PLACE_BUILDING: ["buildingSourceWarehouseIds"],
+  // CLICK_CELL routes through tryTogglePanelFromAsset, which reads assets /
+  // cellMap / constructionSites to decide which panel + selected-id to set.
+  // UI context cannot replicate those cross-slice reads in isolation, so the
+  // legacy path legitimately writes openPanel and the selected-* fields here.
+  CLICK_CELL: [
+    "openPanel",
+    "selectedWarehouseId",
+    "selectedAutoMinerId",
+    "selectedAutoSmelterId",
+    "selectedAutoAssemblerId",
+    "selectedGeneratorId",
+    "selectedServiceHubId",
+    "selectedCraftingBuildingId",
+    "selectedSplitterId",
+  ],
+  // DEBUG_SET_STATE replaces the entire GameState from the debug panel.
+  // No bounded context handles it, so every owned slice legitimately
+  // diverges. Suppress diffing against the full owned-slice list.
+  DEBUG_SET_STATE: SHADOW_DIFF_SLICES,
+  // BUY_FRAGMENT writes to inventory (coins), warehouseInventories (dock),
+  // and ship (shipsSinceLastFragment) — cross-slice action that no single
+  // context can own in isolation. warehouseInventories is not in
+  // SHADOW_DIFF_SLICES so only the tracked slices need entries.
+  BUY_FRAGMENT: ["inventory", "ship"],
+  // COLLECT_FRAGMENT writes to warehouseInventories (dock) and
+  // moduleFragments — cross-slice, no single context owns both.
+  COLLECT_FRAGMENT: ["moduleFragments"],
+  // SHIP_DEPART reads warehouseInventories[DOCK] to compute quest-delivery
+  // multiplier, then writes ship (status/returnsAt/pendingMultiplier/etc.)
+  // AND clears warehouseInventories[DOCK]. ship-context only owns `ship`,
+  // so it cannot read warehouseInventories to compute the multiplier —
+  // same cross-slice pattern as SHIP_TICK, BUY_FRAGMENT, COLLECT_FRAGMENT.
+  SHIP_DEPART: ["ship"],
+  // SHIP_RETURN writes ship + inventory + moduleInventory + notifications
+  // and reads warehouseInventories for reward computation — same cross-slice
+  // pattern as SHIP_DEPART / SHIP_TICK. Only "ship" is in SHADOW_DIFF_SLICES
+  // so only that slice needs the entry; others are not tracked.
+  SHIP_RETURN: ["ship"],
 };
 
 /** Minimal structural deep equality. Handles primitives, arrays, plain objects. */
