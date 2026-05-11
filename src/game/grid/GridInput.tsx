@@ -20,7 +20,6 @@ export interface UseGridInputResult {
   onMouseMove: (e: React.MouseEvent) => void;
   onGridMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
-  onWheel: (e: React.WheelEvent) => void;
   onClick: (e: React.MouseEvent) => void;
   onContextMenu: (e: React.MouseEvent) => void;
 }
@@ -118,11 +117,11 @@ export function useGridInput(
     setDragging(false);
   }, []);
 
-  const onWheel = useCallback(
-    (e: React.WheelEvent) => {
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const el = containerRef.current;
-      if (!el) return;
       const factor = e.deltaY > 0 ? 0.9 : 1.1;
       const newZoom = Math.min(3, Math.max(0.3, zoom * factor));
 
@@ -136,9 +135,12 @@ export function useGridInput(
       const clamped = clampCam(nx, ny, newZoom);
       setZoom(newZoom);
       setCam(clamped);
-    },
-    [zoom, cam, clampCam],
-  );
+    };
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [zoom, cam, clampCam]);
 
   const onClick = useCallback(
     (e: React.MouseEvent) => {
@@ -286,7 +288,6 @@ export function useGridInput(
     onMouseMove,
     onGridMouseMove,
     onMouseUp,
-    onWheel,
     onClick,
     onContextMenu,
   };

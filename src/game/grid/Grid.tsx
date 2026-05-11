@@ -22,7 +22,6 @@ export const Grid: React.FC<GridProps> = ({ state, dispatch }) => {
     onMouseDown,
     onGridMouseMove,
     onMouseUp,
-    onWheel,
     onClick,
     onContextMenu,
   } = useGridInput(state, dispatch);
@@ -38,7 +37,6 @@ export const Grid: React.FC<GridProps> = ({ state, dispatch }) => {
       onMouseMove={onGridMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
-      onWheel={onWheel}
       onClick={onClick}
       onKeyDown={() => {}}
       onContextMenu={onContextMenu}
