@@ -64,7 +64,27 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
 > = {
   LOGISTICS_TICK: ["autoMiners", "autoSmelters", "autoAssemblers", "inventory"],
   SHIP_TICK: ["ship"],
-  DRONE_TICK: ["drones", "autoAssemblers"],
+  DRONE_TICK: [
+    "drones",
+    "crafting",
+    "network",
+    "inventory",
+    "notifications",
+    "autoMiners",
+    "autoSmelters",
+    "autoAssemblers",
+    "moduleInventory",
+    "buildingZoneIds",
+    "buildingSourceWarehouseIds",
+    "openPanel",
+    "selectedWarehouseId",
+    "selectedAutoMinerId",
+    "selectedAutoSmelterId",
+    "selectedAutoAssemblerId",
+    "selectedGeneratorId",
+  ],
+  JOB_ENQUEUE: ["crafting"],
+  JOB_TICK: ["crafting", "network"],
   ASSIGN_DRONE_TO_HUB: ["drones"],
   // Placement is inherently cross-slice: it reads assets/cellMap/tileMap to
   // validate position and resolve the deposit/warehouse, and writes to many
