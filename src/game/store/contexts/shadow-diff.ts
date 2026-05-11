@@ -104,7 +104,9 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
     "drones",
     "inventory",
     "buildingSourceWarehouseIds",
+    "notifications",
   ],
+  BUILD_PLACE_FLOOR_TILE: ["inventory", "notifications"],
   // CLICK_CELL routes through tryTogglePanelFromAsset, which reads assets /
   // cellMap / constructionSites to decide which panel + selected-id to set.
   // UI context cannot replicate those cross-slice reads in isolation, so the

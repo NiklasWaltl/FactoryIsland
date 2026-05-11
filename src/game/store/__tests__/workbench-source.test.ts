@@ -7,7 +7,6 @@ import {
   gameReducer,
   createInitialState,
   addResources,
-  resolveBuildingSource,
   cellKey,
 } from "../reducer";
 
@@ -20,10 +19,9 @@ function emptyInv(): Inventory {
 }
 
 /**
- * Build a state with two workbenches + two warehouses.
- * Both workbenches are powered.
+ * Build a state with one workbench + two warehouses.
  */
-function stateWithWorkbenches(): GameState {
+function stateWithWorkbenchAndWarehouses(): GameState {
   const base = createInitialState("release");
 
   const wb1: PlacedAsset = {
@@ -33,33 +31,25 @@ function stateWithWorkbenches(): GameState {
     y: 3,
     size: 2,
   };
-  const wb2: PlacedAsset = {
-    id: "wb-2",
-    type: "workbench",
-    x: 7,
-    y: 3,
-    size: 2,
-  };
   const whA: PlacedAsset = {
     id: "wh-A",
     type: "warehouse",
-    x: 5,
-    y: 5,
+    x: 11,
+    y: 11,
     size: 2,
     direction: "south",
   };
   const whB: PlacedAsset = {
     id: "wh-B",
     type: "warehouse",
-    x: 10,
-    y: 5,
+    x: 20,
+    y: 11,
     size: 2,
     direction: "south",
   };
 
   const assets: Record<string, PlacedAsset> = {
     "wb-1": wb1,
-    "wb-2": wb2,
     "wh-A": whA,
     "wh-B": whB,
   };
@@ -68,18 +58,14 @@ function stateWithWorkbenches(): GameState {
     [cellKey(4, 3)]: "wb-1",
     [cellKey(3, 4)]: "wb-1",
     [cellKey(4, 4)]: "wb-1",
-    [cellKey(7, 3)]: "wb-2",
-    [cellKey(8, 3)]: "wb-2",
-    [cellKey(7, 4)]: "wb-2",
-    [cellKey(8, 4)]: "wb-2",
-    [cellKey(5, 5)]: "wh-A",
-    [cellKey(6, 5)]: "wh-A",
-    [cellKey(5, 6)]: "wh-A",
-    [cellKey(6, 6)]: "wh-A",
-    [cellKey(10, 5)]: "wh-B",
-    [cellKey(11, 5)]: "wh-B",
-    [cellKey(10, 6)]: "wh-B",
-    [cellKey(11, 6)]: "wh-B",
+    [cellKey(11, 11)]: "wh-A",
+    [cellKey(12, 11)]: "wh-A",
+    [cellKey(11, 12)]: "wh-A",
+    [cellKey(12, 12)]: "wh-A",
+    [cellKey(20, 11)]: "wh-B",
+    [cellKey(21, 11)]: "wh-B",
+    [cellKey(20, 12)]: "wh-B",
+    [cellKey(21, 12)]: "wh-B",
   };
 
   return {
@@ -90,128 +76,160 @@ function stateWithWorkbenches(): GameState {
     warehousesPlaced: 2,
     warehousesPurchased: 2,
     warehouseInventories: { "wh-A": emptyInv(), "wh-B": emptyInv() },
-    connectedAssetIds: ["wb-1", "wb-2", "wh-A", "wh-B"],
-    poweredMachineIds: ["wb-1", "wb-2"],
-    hotbarSlots: [
-      { toolKind: "empty", durability: 0, maxDurability: 0, amount: 0 },
-      { toolKind: "empty", durability: 0, maxDurability: 0, amount: 0 },
-      { toolKind: "empty", durability: 0, maxDurability: 0, amount: 0 },
-      { toolKind: "empty", durability: 0, maxDurability: 0, amount: 0 },
-    ],
+    connectedAssetIds: ["wb-1", "wh-A", "wh-B"],
+    poweredMachineIds: ["wb-1"],
     buildingSourceWarehouseIds: {},
     selectedCraftingBuildingId: "wb-1",
+    inventory: addResources(emptyInv(), {
+      wood: 999,
+      stone: 999,
+      iron: 999,
+      copper: 999,
+    }),
   };
 }
 
-// ---------------------------------------------------------------------------
-// 1. resolveBuildingSource
-// ---------------------------------------------------------------------------
+/** Build a state with two warehouses and no workbench (for placement tests). */
+function stateWithWarehousesOnly(): GameState {
+  const base = createInitialState("release");
 
-describe("resolveBuildingSource", () => {
-  it("returns global when no mapping exists", () => {
-    const state = stateWithWorkbenches();
-    expect(resolveBuildingSource(state, "wb-1")).toEqual({ kind: "global" });
+  const whA: PlacedAsset = {
+    id: "wh-A",
+    type: "warehouse",
+    x: 11,
+    y: 11,
+    size: 2,
+    direction: "south",
+  };
+  const whB: PlacedAsset = {
+    id: "wh-B",
+    type: "warehouse",
+    x: 20,
+    y: 11,
+    size: 2,
+    direction: "south",
+  };
+
+  return {
+    ...base,
+    assets: {
+      "wh-A": whA,
+      "wh-B": whB,
+    },
+    cellMap: {
+      [cellKey(11, 11)]: "wh-A",
+      [cellKey(12, 11)]: "wh-A",
+      [cellKey(11, 12)]: "wh-A",
+      [cellKey(12, 12)]: "wh-A",
+      [cellKey(20, 11)]: "wh-B",
+      [cellKey(21, 11)]: "wh-B",
+      [cellKey(20, 12)]: "wh-B",
+      [cellKey(21, 12)]: "wh-B",
+    },
+    warehousesPlaced: 2,
+    warehousesPurchased: 2,
+    warehouseInventories: { "wh-A": emptyInv(), "wh-B": emptyInv() },
+    connectedAssetIds: ["wh-A", "wh-B"],
+    poweredMachineIds: [],
+    buildingSourceWarehouseIds: {},
+    inventory: addResources(emptyInv(), {
+      wood: 999,
+      stone: 999,
+      iron: 999,
+      copper: 999,
+    }),
+  };
+}
+
+function enqueueWorkbenchJob(state: GameState, workbenchId: string): GameState {
+  return gameReducer(state, {
+    type: "JOB_ENQUEUE",
+    recipeId: "wood_pickaxe",
+    workbenchId,
+    source: "player",
+    priority: "high",
   });
+}
 
-  it("returns warehouse when a valid mapping exists", () => {
-    const state = {
-      ...stateWithWorkbenches(),
-      buildingSourceWarehouseIds: { "wb-1": "wh-A" },
-    };
-    expect(resolveBuildingSource(state, "wb-1")).toEqual({
-      kind: "warehouse",
-      warehouseId: "wh-A",
-    });
-  });
+function getSingleQueuedJob(state: GameState) {
+  expect(state.crafting.jobs).toHaveLength(1);
+  return state.crafting.jobs[0];
+}
 
-  it("falls back to global when assigned warehouse ID has no asset", () => {
-    const state = {
-      ...stateWithWorkbenches(),
-      buildingSourceWarehouseIds: { "wb-1": "nonexistent" },
-    };
-    expect(resolveBuildingSource(state, "wb-1")).toEqual({ kind: "global" });
-  });
-
-  it("falls back to global when assigned warehouse has no inventory entry", () => {
-    const state = stateWithWorkbenches();
-    state.buildingSourceWarehouseIds = { "wb-1": "wh-A" };
-    delete state.warehouseInventories["wh-A"];
-    expect(resolveBuildingSource(state, "wb-1")).toEqual({ kind: "global" });
-  });
-
-  it("returns global when buildingId is null", () => {
-    expect(resolveBuildingSource(stateWithWorkbenches(), null)).toEqual({
-      kind: "global",
-    });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 2. SET_BUILDING_SOURCE action
-// ---------------------------------------------------------------------------
-
-describe("SET_BUILDING_SOURCE (workbench)", () => {
-  it("sets a valid warehouse for a building", () => {
-    const before = stateWithWorkbenches();
-    const after = gameReducer(before, {
+describe("Workbench source behavior", () => {
+  it("buildingSourceWarehouseIds is set when assigning a warehouse", () => {
+    const before = stateWithWorkbenchAndWarehouses();
+    const assigned = gameReducer(before, {
       type: "SET_BUILDING_SOURCE",
       buildingId: "wb-1",
       warehouseId: "wh-A",
     });
-    expect(after.buildingSourceWarehouseIds["wb-1"]).toBe("wh-A");
+
+    expect(assigned.buildingSourceWarehouseIds["wb-1"]).toBe("wh-A");
+
+    const enqueued = enqueueWorkbenchJob(assigned, "wb-1");
+    const job = getSingleQueuedJob(enqueued);
+    expect(job.inventorySource.kind).toBe("warehouse");
+    if (job.inventorySource.kind === "warehouse") {
+      expect(job.inventorySource.warehouseId).toBe("wh-A");
+    }
   });
 
-  it("resets to global (removes mapping)", () => {
+  it("an unassigned workbench falls back to the nearest warehouse", () => {
+    const before = stateWithWarehousesOnly();
+    const placed = gameReducer(
+      {
+        ...before,
+        buildMode: true,
+        selectedBuildingType: "workbench",
+      },
+      {
+        type: "BUILD_PLACE_BUILDING",
+        x: 21,
+        y: 14,
+      },
+    );
+
+    const workbenchIds = Object.values(placed.assets)
+      .filter((asset) => asset.type === "workbench")
+      .map((asset) => asset.id);
+    expect(workbenchIds).toHaveLength(1);
+    const placedWorkbenchId = workbenchIds[0];
+
+    expect(placed.buildingSourceWarehouseIds[placedWorkbenchId]).toBe("wh-B");
+
+    const enqueued = enqueueWorkbenchJob(placed, placedWorkbenchId);
+    const job = getSingleQueuedJob(enqueued);
+    expect(job.inventorySource.kind).toBe("warehouse");
+    if (job.inventorySource.kind === "warehouse") {
+      expect(job.inventorySource.warehouseId).toBe("wh-B");
+    }
+  });
+
+  it("reassigns source automatically after deleting the assigned warehouse", () => {
     const before = {
-      ...stateWithWorkbenches(),
+      ...stateWithWorkbenchAndWarehouses(),
       buildingSourceWarehouseIds: { "wb-1": "wh-A" },
     };
-    const after = gameReducer(before, {
-      type: "SET_BUILDING_SOURCE",
-      buildingId: "wb-1",
-      warehouseId: null,
-    });
-    expect(after.buildingSourceWarehouseIds["wb-1"]).toBeUndefined();
-  });
 
-  it("rejects an invalid warehouse ID", () => {
-    const before = stateWithWorkbenches();
-    const after = gameReducer(before, {
-      type: "SET_BUILDING_SOURCE",
-      buildingId: "wb-1",
-      warehouseId: "nonexistent",
-    });
-    expect(after).toBe(before);
-  });
+    const afterDelete = gameReducer(
+      {
+        ...before,
+        buildMode: true,
+      },
+      {
+        type: "BUILD_REMOVE_ASSET",
+        assetId: "wh-A",
+      },
+    );
 
-  it("rejects when building itself is invalid", () => {
-    const before = stateWithWorkbenches();
-    const after = gameReducer(before, {
-      type: "SET_BUILDING_SOURCE",
-      buildingId: "bogus",
-      warehouseId: "wh-A",
-    });
-    expect(after).toBe(before);
-  });
-});
+    expect(afterDelete.buildingSourceWarehouseIds["wb-1"]).toBe("wh-B");
 
-// ---------------------------------------------------------------------------
-// 3. CRAFT_WORKBENCH - deprecated action
-// ---------------------------------------------------------------------------
-// The synchronous CRAFT_WORKBENCH reducer case is a no-op (see reducer.ts).
-// Crafting now flows through the queue (ENQUEUE / CRAFT_TICK), which has its
-// own dedicated tests in src/game/crafting/__tests__/. Source resolution is
-// covered by the resolveBuildingSource describe above, so we only assert the
-// deprecation contract here.
-
-describe("CRAFT_WORKBENCH (deprecated) - no-op contract", () => {
-  it("returns the same state reference", () => {
-    const before = stateWithWorkbenches();
-    before.inventory = addResources(emptyInv(), { wood: 20 });
-    const after = gameReducer(before, {
-      type: "CRAFT_WORKBENCH",
-      recipeKey: "wood_pickaxe",
-    });
-    expect(after).toBe(before);
+    const enqueued = enqueueWorkbenchJob(afterDelete, "wb-1");
+    const job = getSingleQueuedJob(enqueued);
+    expect(job.inventorySource.kind).toBe("warehouse");
+    if (job.inventorySource.kind === "warehouse") {
+      expect(job.inventorySource.warehouseId).toBe("wh-B");
+    }
   });
 });
