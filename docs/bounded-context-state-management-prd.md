@@ -560,3 +560,56 @@ Performance process:
 5. Migrate `auto-miner-context.ts` first, keeping `game-reducer-dispatch.ts` functional.
 6. Create `docs/ownership-matrix.md` before migrating the core crafting, drones, and inventory contexts.
 7. Re-run `yarn tsc --project tsconfig.factory.json --noEmit`, `yarn test`, `yarn test --coverage`, `yarn lint`, and `yarn build` at the phase gates.
+
+## 11. Phase 3 Cutover Status
+
+Shadow mode active as of 2026-05-11.
+
+`gameReducer` in `src/game/store/reducer.ts` continues to delegate to
+`dispatchAction` (legacy path) and returns its output unchanged. In DEV builds
+only, `applyContextReducers` runs in parallel on the pre-action state and
+`shadowDiff` compares the slices below against the legacy result, logging any
+mismatch via `console.warn`. Production builds skip the diff entirely.
+
+### Slices in shadow comparison
+
+| Slice                                                                                                                   | Context        | Status                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------ |
+| crafting / keepStockByWorkbench / recipeAutomationPolicies                                                              | crafting       | Shadow active. `SET_KEEP_STOCK_TARGET` drops the workbench-asset gate (cross-slice).                         |
+| drones                                                                                                                  | drones         | Shadow active. `DRONE_TICK` and `ASSIGN_DRONE_TO_HUB` are cross-slice no-ops.                                |
+| inventory / network                                                                                                     | inventory      | Shadow active.                                                                                               |
+| autoMiners                                                                                                              | auto-miner     | Shadow active. `LOGISTICS_TICK` is a cross-slice no-op.                                                      |
+| autoSmelters                                                                                                            | auto-smelter   | Shadow active. `LOGISTICS_TICK` is a cross-slice no-op; recipe set drops construction gate.                  |
+| autoAssemblers                                                                                                          | auto-assembler | Shadow active. `LOGISTICS_TICK` is a cross-slice no-op; recipe set drops construction gate.                  |
+| unlockedBuildings                                                                                                       | research-lab   | Shadow active. `RESEARCH_BUILDING` is a cross-slice no-op.                                                   |
+| moduleLabJob / moduleFragments / moduleInventory                                                                        | module-lab     | Shadow active. `MODULE_LAB_TICK`, `PLACE_MODULE`, `REMOVE_MODULE` are cross-slice no-ops.                    |
+| ship                                                                                                                    | ship           | Shadow active. `SHIP_TICK`, `SHIP_DEPART`, `SHIP_RETURN` are cross-slice no-ops.                             |
+| productionZones / buildingZoneIds / buildingSourceWarehouseIds                                                          | zone           | Shadow active. `SET_BUILDING_ZONE` / `SET_BUILDING_SOURCE` drop asset/warehouse gates.                       |
+| openPanel / notifications / buildMode / hotbarSlots / activeSlot / energyDebugOverlay / lastTickError / selected-\* ids | ui             | Shadow active. `TOGGLE_BUILD_MODE` drops the cross-slice `selectedBuildingType` / `selectedFloorTile` reset. |
+
+### Full no-op contexts (not in shadow comparison)
+
+`warehouse`, `power`, `construction`, `conveyor` — every action they handle
+requires wider `GameState` than the slice owns (inventory, assets,
+notifications, etc.), so their reducers return the input slice unchanged. They
+remain registered in `applyContextReducers` to document ownership but they
+cannot diverge from legacy.
+
+### Known divergences (documented, not bugs)
+
+The contexts above drop a handful of cross-slice safety gates because the
+isolated slice does not own the relevant fields. The live game is unaffected —
+shadow mode only logs warnings, the legacy result is what runs.
+
+- `SET_KEEP_STOCK_TARGET` for an unknown workbench id (no `state.assets` in slice).
+- `SET_BUILDING_ZONE` / `SET_BUILDING_SOURCE` for unknown buildings or warehouses.
+- `AUTO_SMELTER_SET_RECIPE` / `AUTO_ASSEMBLER_SET_RECIPE` while the target is under construction.
+- `SET_SPLITTER_FILTER` for non-splitter or unknown asset ids.
+- `TOGGLE_BUILD_MODE` does not reset `selectedBuildingType` / `selectedFloorTile` (outside the UI slice).
+
+### Next step
+
+Monitor the browser console for `[BoundedContext shadow]` warnings during
+gameplay. When zero unexpected warnings accumulate over a full play session,
+proceed to Phase 4: remove the legacy dispatch and make `applyContextReducers`
+the sole reducer.

@@ -2,6 +2,8 @@
 // Factory Island - Game State & Logic
 // ============================================================
 
+import { applyContextReducers } from "./contexts/create-game-reducer";
+import { shadowDiff } from "./contexts/shadow-diff";
 import { dispatchAction } from "./game-reducer-dispatch";
 import { devAssertInventoryNonNegative } from "./helpers/misc-helpers";
 import type { GameState } from "./types";
@@ -27,7 +29,25 @@ export type { GameAction };
 // and external consumers keep importing it from "../store/reducer".
 // ============================================================
 export function gameReducer(state: GameState, action: GameAction): GameState {
-  return dispatchAction(state, action);
+  const legacyNext = dispatchAction(state, action);
+
+  // Phase 3 Cutover — shadow mode. Bounded contexts run on the pre-action
+  // state alongside the legacy dispatcher; mismatches surface as warnings
+  // without affecting runtime. Production builds skip the diff entirely.
+  if (import.meta.env.DEV) {
+    try {
+      const contextNext = applyContextReducers(state, action);
+      shadowDiff(legacyNext, contextNext, action);
+    } catch (err) {
+      // eslint-disable-next-line no-console -- DEV shadow-mode diagnostic; never reached in production.
+      console.warn(
+        `[BoundedContext shadow] applyContextReducers threw for action ${action.type}`,
+        err,
+      );
+    }
+  }
+
+  return legacyNext;
 }
 
 /** Wraps the core reducer with dev-mode invariant assertions. */
