@@ -66,11 +66,25 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
   SHIP_TICK: ["ship"],
   DRONE_TICK: ["drones", "autoAssemblers"],
   ASSIGN_DRONE_TO_HUB: ["drones"],
-  // Placement auto-assigns the nearest warehouse as default source for
-  // crafting buildings. That needs cross-slice reads (assets / warehouse
-  // positions) which zone-context cannot do in isolation, so the legacy
-  // path legitimately writes buildingSourceWarehouseIds here.
-  BUILD_PLACE_BUILDING: ["buildingSourceWarehouseIds"],
+  // Placement is inherently cross-slice: it reads assets/cellMap/tileMap to
+  // validate position and resolve the deposit/warehouse, and writes to many
+  // slices that the single-slice machine/drone/inventory contexts cannot
+  // initialize in isolation. Same cross-slice pattern as SHIP_DEPART /
+  // BUY_FRAGMENT / COLLECT_FRAGMENT.
+  //  - autoMiners/autoSmelters/autoAssemblers: machine placement requires
+  //    reading assets/cellMap to resolve deposits/footprints.
+  //  - drones: direct service_hub placement spawns the first drone.
+  //  - inventory: non-construction-site placements consume build costs.
+  //  - buildingSourceWarehouseIds: auto-assigns nearest warehouse for
+  //    crafting buildings (needs assets to find warehouse positions).
+  BUILD_PLACE_BUILDING: [
+    "autoMiners",
+    "autoSmelters",
+    "autoAssemblers",
+    "drones",
+    "inventory",
+    "buildingSourceWarehouseIds",
+  ],
   // CLICK_CELL routes through tryTogglePanelFromAsset, which reads assets /
   // cellMap / constructionSites to decide which panel + selected-id to set.
   // UI context cannot replicate those cross-slice reads in isolation, so the
