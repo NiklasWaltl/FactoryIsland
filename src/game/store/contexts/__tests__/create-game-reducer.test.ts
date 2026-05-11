@@ -17,7 +17,7 @@ function createState(): GameState {
 describe("applyContextReducers", () => {
   it("returns the same state reference for unhandled actions", () => {
     const state = createState();
-    const action = { type: "SET_ACTIVE_SLOT", slot: 1 } satisfies GameAction;
+    const action = { type: "CLICK_CELL", x: 0, y: 0 } satisfies GameAction;
 
     expect(applyContextReducers(state, action)).toBe(state);
   });

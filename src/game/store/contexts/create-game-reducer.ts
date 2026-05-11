@@ -1,9 +1,20 @@
 import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
+import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
+import { autoSmelterContext } from "./auto-smelter-context";
+import { constructionContext } from "./construction-context";
+import { conveyorContext } from "./conveyor-context";
 import { craftingContext } from "./crafting-context";
 import { dronesContext } from "./drones-context";
 import { inventoryContext } from "./inventory-context";
+import { moduleLabContext } from "./module-lab-context";
+import { powerContext } from "./power-context";
+import { researchLabContext } from "./research-lab-context";
+import { shipContext } from "./ship-context";
+import { uiContext } from "./ui-context";
+import { warehouseContext } from "./warehouse-context";
+import { zoneContext } from "./zone-context";
 
 export type ContextGameReducer = (
   state: GameState,
@@ -67,6 +78,159 @@ export function applyContextReducers(
       inventory.network !== next.network)
   ) {
     next = { ...next, ...inventory };
+  }
+
+  const autoSmelter = autoSmelterContext.reduce(
+    { autoSmelters: next.autoSmelters },
+    action,
+  );
+  if (autoSmelter !== null && autoSmelter.autoSmelters !== next.autoSmelters) {
+    next = { ...next, autoSmelters: autoSmelter.autoSmelters };
+  }
+
+  const autoAssembler = autoAssemblerContext.reduce(
+    { autoAssemblers: next.autoAssemblers },
+    action,
+  );
+  if (
+    autoAssembler !== null &&
+    autoAssembler.autoAssemblers !== next.autoAssemblers
+  ) {
+    next = { ...next, autoAssemblers: autoAssembler.autoAssemblers };
+  }
+
+  const researchLab = researchLabContext.reduce(
+    { unlockedBuildings: next.unlockedBuildings },
+    action,
+  );
+  if (
+    researchLab !== null &&
+    researchLab.unlockedBuildings !== next.unlockedBuildings
+  ) {
+    next = { ...next, unlockedBuildings: researchLab.unlockedBuildings };
+  }
+
+  const warehouse = warehouseContext.reduce(
+    {
+      warehousesPlaced: next.warehousesPlaced,
+      warehouseInventories: next.warehouseInventories,
+    },
+    action,
+  );
+  if (
+    warehouse !== null &&
+    (warehouse.warehousesPlaced !== next.warehousesPlaced ||
+      warehouse.warehouseInventories !== next.warehouseInventories)
+  ) {
+    next = { ...next, ...warehouse };
+  }
+
+  const power = powerContext.reduce(
+    {
+      battery: next.battery,
+      generators: next.generators,
+      poweredMachineIds: next.poweredMachineIds,
+      machinePowerRatio: next.machinePowerRatio,
+    },
+    action,
+  );
+  if (
+    power !== null &&
+    (power.battery !== next.battery ||
+      power.generators !== next.generators ||
+      power.poweredMachineIds !== next.poweredMachineIds ||
+      power.machinePowerRatio !== next.machinePowerRatio)
+  ) {
+    next = { ...next, ...power };
+  }
+
+  const moduleLab = moduleLabContext.reduce(
+    {
+      moduleLabJob: next.moduleLabJob,
+      moduleFragments: next.moduleFragments,
+      moduleInventory: next.moduleInventory,
+    },
+    action,
+  );
+  if (
+    moduleLab !== null &&
+    (moduleLab.moduleLabJob !== next.moduleLabJob ||
+      moduleLab.moduleFragments !== next.moduleFragments ||
+      moduleLab.moduleInventory !== next.moduleInventory)
+  ) {
+    next = { ...next, ...moduleLab };
+  }
+
+  const ship = shipContext.reduce({ ship: next.ship }, action);
+  if (ship !== null && ship.ship !== next.ship) {
+    next = { ...next, ship: ship.ship };
+  }
+
+  const construction = constructionContext.reduce(
+    { constructionSites: next.constructionSites, assets: next.assets },
+    action,
+  );
+  if (
+    construction !== null &&
+    (construction.constructionSites !== next.constructionSites ||
+      construction.assets !== next.assets)
+  ) {
+    next = { ...next, ...construction };
+  }
+
+  const conveyor = conveyorContext.reduce(
+    {
+      conveyors: next.conveyors,
+      splitterFilterState: next.splitterFilterState,
+    },
+    action,
+  );
+  if (
+    conveyor !== null &&
+    (conveyor.conveyors !== next.conveyors ||
+      conveyor.splitterFilterState !== next.splitterFilterState)
+  ) {
+    next = { ...next, ...conveyor };
+  }
+
+  const zone = zoneContext.reduce(
+    {
+      productionZones: next.productionZones,
+      buildingZoneIds: next.buildingZoneIds,
+      buildingSourceWarehouseIds: next.buildingSourceWarehouseIds,
+    },
+    action,
+  );
+  if (
+    zone !== null &&
+    (zone.productionZones !== next.productionZones ||
+      zone.buildingZoneIds !== next.buildingZoneIds ||
+      zone.buildingSourceWarehouseIds !== next.buildingSourceWarehouseIds)
+  ) {
+    next = { ...next, ...zone };
+  }
+
+  const uiSliceIn = {
+    selectedWarehouseId: next.selectedWarehouseId,
+    selectedPowerPoleId: next.selectedPowerPoleId,
+    selectedAutoMinerId: next.selectedAutoMinerId,
+    selectedAutoSmelterId: next.selectedAutoSmelterId,
+    selectedAutoAssemblerId: next.selectedAutoAssemblerId,
+    selectedGeneratorId: next.selectedGeneratorId,
+    selectedServiceHubId: next.selectedServiceHubId,
+    selectedCraftingBuildingId: next.selectedCraftingBuildingId,
+    selectedSplitterId: next.selectedSplitterId,
+    openPanel: next.openPanel,
+    notifications: next.notifications,
+    buildMode: next.buildMode,
+    hotbarSlots: next.hotbarSlots,
+    activeSlot: next.activeSlot,
+    energyDebugOverlay: next.energyDebugOverlay,
+    lastTickError: next.lastTickError,
+  };
+  const ui = uiContext.reduce(uiSliceIn, action);
+  if (ui !== null && ui !== uiSliceIn) {
+    next = { ...next, ...ui };
   }
 
   return next;
