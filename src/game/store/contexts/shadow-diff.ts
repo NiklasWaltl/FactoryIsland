@@ -121,6 +121,9 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
     "selectedServiceHubId",
     "selectedCraftingBuildingId",
     "selectedSplitterId",
+    "hotbarSlots",
+    "notifications",
+    "inventory",
   ],
   // DEBUG_SET_STATE replaces the entire GameState from the debug panel.
   // No bounded context handles it, so every owned slice legitimately

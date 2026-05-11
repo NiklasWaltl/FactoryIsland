@@ -889,8 +889,14 @@ export function createPhaserGame(parent: HTMLElement): Phaser.Game {
     banner: false,
     audio: { noAudio: true },
     render: {
-      pixelArt: true,
+      pipeline: null as unknown as Phaser.Types.Core.PipelineConfig,
       antialias: false,
+      antialiasGL: false,
+      roundPixels: true,
+      transparent: false,
+      clearBeforeRender: true,
+      powerPreference: "high-performance",
+      desynchronized: false,
     },
   });
 }
