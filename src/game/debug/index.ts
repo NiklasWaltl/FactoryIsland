@@ -11,6 +11,7 @@ export {
   getLogEntries,
   subscribeLog,
   clearLogEntries,
+  runWithLogSuppressed,
 } from "./debugLogger";
 export type { LogEntry, LogCategory } from "./debugLogger";
 export { applyMockToState } from "./mockData";

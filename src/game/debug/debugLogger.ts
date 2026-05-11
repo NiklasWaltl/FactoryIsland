@@ -57,8 +57,26 @@ export function clearLogEntries(): void {
   notifyListeners();
 }
 
+/**
+ * When true, _log() becomes a no-op. Set during the DEV bounded-context
+ * shadow reducer pass so reducer-emitted logs aren't duplicated by the
+ * second (discarded) dispatch.
+ */
+let _suppressed = false;
+
+export function runWithLogSuppressed<T>(fn: () => T): T {
+  const prev = _suppressed;
+  _suppressed = true;
+  try {
+    return fn();
+  } finally {
+    _suppressed = prev;
+  }
+}
+
 function _log(category: LogCategory, message: string): void {
   if (!import.meta.env.DEV) return;
+  if (_suppressed) return;
   if (!isDebugEnabled()) return;
 
   const entry: LogEntry = { timestamp: Date.now(), category, message };

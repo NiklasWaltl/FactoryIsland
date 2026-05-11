@@ -4,6 +4,7 @@
 
 import { applyContextReducers } from "./contexts/create-game-reducer";
 import { shadowDiff } from "./contexts/shadow-diff";
+import { runWithLogSuppressed } from "../debug";
 import { dispatchAction } from "./game-reducer-dispatch";
 import { devAssertInventoryNonNegative } from "./helpers/misc-helpers";
 import type { GameState } from "./types";
@@ -36,7 +37,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   // without affecting runtime. Production builds skip the diff entirely.
   if (import.meta.env.DEV) {
     try {
-      const contextNext = applyContextReducers(state, action);
+      // Suppress debugLog during the shadow pass: the bounded-context
+      // reducers re-run the same code paths as the legacy dispatcher and
+      // would otherwise duplicate every reducer-emitted log line.
+      const contextNext = runWithLogSuppressed(() =>
+        applyContextReducers(state, action),
+      );
       shadowDiff(legacyNext, contextNext, action);
     } catch (err) {
       // eslint-disable-next-line no-console -- DEV shadow-mode diagnostic; never reached in production.
