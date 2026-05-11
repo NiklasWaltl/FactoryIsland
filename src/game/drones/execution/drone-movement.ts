@@ -414,7 +414,7 @@ export function handleMovingToDropoffStatus(
 
   // Arrival: snap to target, enter depositing
   debugLog.inventory(
-    `[Drone] Arrived at dropoff (${dropX},${dropY}), cargo: ${drone.cargo?.amount}× ${drone.cargo?.itemType}`,
+    `[Drone] Arrived at dropoff (${dropX},${dropY}), cargo: ${formatDroneCargoForLog(drone)}`,
   );
   return applyDroneUpdate(state, droneId, {
     ...drone,
@@ -423,4 +423,17 @@ export function handleMovingToDropoffStatus(
     status: "depositing",
     ticksRemaining: DRONE_DEPOSIT_TICKS,
   });
+}
+
+function formatDroneCargoForLog(drone: StarterDroneState): string {
+  if (drone.cargo) {
+    return `${drone.cargo.amount}× ${drone.cargo.itemType}`;
+  }
+  if (drone.deconstructRefund) {
+    const parts = Object.entries(drone.deconstructRefund)
+      .filter(([, amount]) => (amount ?? 0) > 0)
+      .map(([itemType, amount]) => `${amount}× ${itemType}`);
+    if (parts.length > 0) return `salvage[${parts.join(", ")}]`;
+  }
+  return "empty";
 }

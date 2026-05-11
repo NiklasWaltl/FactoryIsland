@@ -42,9 +42,19 @@ export function getLogEntries(): readonly LogEntry[] {
   return _logEntries;
 }
 
+function notifyListeners(): void {
+  // Notify after the current render/reducer cycle. _log() is called from
+  // inside action handlers; firing subscribers synchronously would trigger
+  // DebugPanel's setState mid-render ("Cannot update a component while
+  // rendering a different component").
+  queueMicrotask(() => {
+    _listeners.forEach((fn) => fn());
+  });
+}
+
 export function clearLogEntries(): void {
   _logEntries = [];
-  _listeners.forEach((fn) => fn());
+  notifyListeners();
 }
 
 function _log(category: LogCategory, message: string): void {
@@ -62,7 +72,7 @@ function _log(category: LogCategory, message: string): void {
   // eslint-disable-next-line no-console -- intentional DEV-only bridge to the browser console.
   console.log(`${tag} %c${message}`, style, "color: inherit");
 
-  _listeners.forEach((fn) => fn());
+  notifyListeners();
 }
 
 const LOG_STYLES: Record<LogCategory, string> = {

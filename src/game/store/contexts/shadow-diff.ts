@@ -55,15 +55,17 @@ export const SHADOW_DIFF_SLICES = [
  * Comparing those pairs always mismatches and floods DEV with warnings, so
  * we skip them here.
  *
- * Today this only applies to LOGISTICS_TICK on the three auto-* slices:
- * the bounded contexts cannot replicate logistics work in isolation
- * (cross-slice reads of assets / conveyors / inventory / warehouses).
+ * Applies to ticks the bounded contexts cannot replicate in isolation because
+ * the legacy handlers need cross-slice reads beyond the context's owned slices
+ * (assets / hubs / warehouses / crafting / etc.).
  */
 const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
   Record<GameAction["type"], readonly (keyof GameState)[]>
 > = {
   LOGISTICS_TICK: ["autoMiners", "autoSmelters", "autoAssemblers", "inventory"],
   SHIP_TICK: ["ship"],
+  DRONE_TICK: ["drones", "autoAssemblers"],
+  ASSIGN_DRONE_TO_HUB: ["drones"],
 };
 
 /** Minimal structural deep equality. Handles primitives, arrays, plain objects. */
