@@ -112,6 +112,9 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
   // COLLECT_FRAGMENT writes to warehouseInventories (dock) and
   // moduleFragments — cross-slice, no single context owns both.
   COLLECT_FRAGMENT: ["moduleFragments"],
+  // BUY_MAP_SHOP_ITEM writes inventory, hotbarSlots, and notifications —
+  // cross-slice, no single context owns all three.
+  BUY_MAP_SHOP_ITEM: ["inventory", "hotbarSlots", "notifications"],
   // SHIP_DEPART reads warehouseInventories[DOCK] to compute quest-delivery
   // multiplier, then writes ship (status/returnsAt/pendingMultiplier/etc.)
   // AND clears warehouseInventories[DOCK]. ship-context only owns `ship`,
