@@ -239,6 +239,8 @@ export function applyContextReducers(
     openPanel: next.openPanel,
     notifications: next.notifications,
     buildMode: next.buildMode,
+    selectedBuildingType: next.selectedBuildingType,
+    selectedFloorTile: next.selectedFloorTile,
     hotbarSlots: next.hotbarSlots,
     activeSlot: next.activeSlot,
     energyDebugOverlay: next.energyDebugOverlay,
@@ -277,7 +279,9 @@ export function applyLiveContextReducers(
     action.type === "SET_ACTIVE_SLOT" ||
     action.type === "TOGGLE_PANEL" ||
     action.type === "CLOSE_PANEL" ||
-    action.type === "TOGGLE_ENERGY_DEBUG"
+    action.type === "TOGGLE_ENERGY_DEBUG" ||
+    action.type === "SELECT_BUILD_BUILDING" ||
+    action.type === "SELECT_BUILD_FLOOR_TILE"
   ) {
     const uiSliceIn = {
       selectedWarehouseId: state.selectedWarehouseId,
@@ -292,6 +296,8 @@ export function applyLiveContextReducers(
       openPanel: state.openPanel,
       notifications: state.notifications,
       buildMode: state.buildMode,
+      selectedBuildingType: state.selectedBuildingType,
+      selectedFloorTile: state.selectedFloorTile,
       hotbarSlots: state.hotbarSlots,
       activeSlot: state.activeSlot,
       energyDebugOverlay: state.energyDebugOverlay,

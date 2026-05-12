@@ -19,6 +19,8 @@ function createUiState(
     openPanel: null,
     notifications: [],
     buildMode: false,
+    selectedBuildingType: null,
+    selectedFloorTile: null,
     hotbarSlots: Array.from({ length: 3 }, () => ({ ...EMPTY_HOTBAR_SLOT })),
     activeSlot: 0,
     energyDebugOverlay: false,
@@ -127,24 +129,30 @@ describe("uiContext", () => {
       expect(result.buildMode).toBe(false);
     });
 
-    it("SELECT_BUILD_BUILDING keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createUiState();
+    it("SELECT_BUILD_BUILDING sets the building selection and clears floor selection", () => {
+      const state = createUiState({ selectedFloorTile: "stone_floor" });
       const action = {
         type: "SELECT_BUILD_BUILDING",
         buildingType: "workbench",
       } satisfies GameAction;
 
-      expect(uiContext.reduce(state, action)).toBe(state);
+      const result = expectHandled(uiContext.reduce(state, action));
+
+      expect(result.selectedBuildingType).toBe("workbench");
+      expect(result.selectedFloorTile).toBeNull();
     });
 
-    it("SELECT_BUILD_FLOOR_TILE keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createUiState();
+    it("SELECT_BUILD_FLOOR_TILE sets the floor selection and clears building selection", () => {
+      const state = createUiState({ selectedBuildingType: "workbench" });
       const action = {
         type: "SELECT_BUILD_FLOOR_TILE",
         tileType: "stone_floor",
       } satisfies GameAction;
 
-      expect(uiContext.reduce(state, action)).toBe(state);
+      const result = expectHandled(uiContext.reduce(state, action));
+
+      expect(result.selectedFloorTile).toBe("stone_floor");
+      expect(result.selectedBuildingType).toBeNull();
     });
 
     it("REMOVE_FROM_HOTBAR keeps the slice unchanged (cross-slice no-op)", () => {

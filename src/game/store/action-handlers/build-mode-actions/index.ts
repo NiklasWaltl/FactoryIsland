@@ -18,8 +18,10 @@ import type { GameState } from "../../types";
 import { HANDLED_ACTION_TYPES, type BuildModeHandledAction } from "./types";
 import {
   runToggleBuildModePhase,
-  runSelectBuildBuildingPhase,
-  runSelectBuildFloorTilePhase,
+  // SELECT_BUILD_BUILDING is handled live by uiContext.
+  // runSelectBuildBuildingPhase,
+  // SELECT_BUILD_FLOOR_TILE is handled live by uiContext.
+  // runSelectBuildFloorTilePhase,
 } from "./phases";
 
 export function isBuildModeAction(
@@ -42,13 +44,15 @@ export function handleBuildModeAction(
       return runToggleBuildModePhase({ state, action });
     }
 
-    case "SELECT_BUILD_BUILDING": {
-      return runSelectBuildBuildingPhase({ state, action });
-    }
+    // SELECT_BUILD_BUILDING is handled live by uiContext.
+    // case "SELECT_BUILD_BUILDING": {
+    //   return runSelectBuildBuildingPhase({ state, action });
+    // }
 
-    case "SELECT_BUILD_FLOOR_TILE": {
-      return runSelectBuildFloorTilePhase({ state, action });
-    }
+    // SELECT_BUILD_FLOOR_TILE is handled live by uiContext.
+    // case "SELECT_BUILD_FLOOR_TILE": {
+    //   return runSelectBuildFloorTilePhase({ state, action });
+    // }
 
     default:
       return null;

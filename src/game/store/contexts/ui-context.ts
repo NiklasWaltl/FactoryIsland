@@ -63,8 +63,6 @@ function reduceUi(state: UiContextState, action: UiAction): UiContextState {
 
     case "TOGGLE_BUILD_MODE": {
       const newBuildMode = !state.buildMode;
-      // cross-slice: selectedBuildingType / selectedFloorTile live outside the
-      // UI slice; their reset is handled by the live reducer chain.
       return {
         ...state,
         buildMode: newBuildMode,
@@ -74,14 +72,25 @@ function reduceUi(state: UiContextState, action: UiAction): UiContextState {
     }
 
     case "SELECT_BUILD_BUILDING":
+      return {
+        ...state,
+        selectedBuildingType: action.buildingType,
+        selectedFloorTile: null,
+      };
+
     case "SELECT_BUILD_FLOOR_TILE":
+      return {
+        ...state,
+        selectedFloorTile: action.tileType,
+        selectedBuildingType: null,
+      };
+
     case "REMOVE_FROM_HOTBAR":
     case "EQUIP_BUILDING_FROM_WAREHOUSE":
     case "EQUIP_FROM_WAREHOUSE":
       // cross-slice: no-op in isolated context
-      // The build-mode selectors write selectedBuildingType / selectedFloorTile
-      // (not in the UI slice). Hotbar equip / remove read and write
-      // state.warehouseInventories outside the UI slice.
+      // Hotbar equip / remove read and write state.warehouseInventories outside
+      // the UI slice.
       return state;
 
     default: {

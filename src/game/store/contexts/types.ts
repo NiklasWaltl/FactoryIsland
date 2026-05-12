@@ -90,6 +90,8 @@ export type UiContextState = Pick<
   | "openPanel"
   | "notifications"
   | "buildMode"
+  | "selectedBuildingType"
+  | "selectedFloorTile"
   | "hotbarSlots"
   | "activeSlot"
   | "energyDebugOverlay"
