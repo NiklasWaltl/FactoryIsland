@@ -2,6 +2,7 @@
 export interface ProductionZone {
   id: string;
   name: string;
+  color?: string;
 }
 
 export interface ZoneSourceState {

@@ -6,6 +6,8 @@ import type { BoundedContext, ZoneContextState } from "./types";
 export const ZONE_HANDLED_ACTION_TYPES = [
   "CREATE_ZONE",
   "DELETE_ZONE",
+  "SET_ZONE_NAME",
+  "SET_ZONE_COLOR",
   "SET_BUILDING_ZONE",
   "CLEAR_ALL_BUILDING_ZONES",
   "SET_BUILDING_SOURCE",
@@ -57,6 +59,38 @@ function reduceZone(
         productionZones: remainingZones,
         buildingZoneIds: newBuildingZoneIds,
         routingIndexCache: null,
+      };
+    }
+
+    case "SET_ZONE_NAME": {
+      const { zoneId, name } = action;
+      const zone = state.productionZones[zoneId];
+      if (!zone) return state;
+      return {
+        ...state,
+        productionZones: {
+          ...state.productionZones,
+          [zoneId]: {
+            ...zone,
+            name,
+          },
+        },
+      };
+    }
+
+    case "SET_ZONE_COLOR": {
+      const { zoneId, color } = action;
+      const zone = state.productionZones[zoneId];
+      if (!zone) return state;
+      return {
+        ...state,
+        productionZones: {
+          ...state.productionZones,
+          [zoneId]: {
+            ...zone,
+            color,
+          },
+        },
       };
     }
 

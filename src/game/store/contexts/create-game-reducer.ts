@@ -278,6 +278,8 @@ export function applyLiveContextReducers(
   if (
     action.type === "CREATE_ZONE" ||
     action.type === "DELETE_ZONE" ||
+    action.type === "SET_ZONE_NAME" ||
+    action.type === "SET_ZONE_COLOR" ||
     action.type === "CLEAR_ALL_BUILDING_ZONES"
   ) {
     const zoneSliceIn = {

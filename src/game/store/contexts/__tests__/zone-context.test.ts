@@ -128,6 +128,62 @@ describe("zoneContext", () => {
       expect(result.routingIndexCache).toBeNull();
     });
 
+    it("SET_ZONE_NAME updates an existing zone name", () => {
+      const state = createZoneState({
+        productionZones: {
+          "zone-1": { id: "zone-1", name: "Zone 1" },
+        },
+      });
+      const action = {
+        type: "SET_ZONE_NAME",
+        zoneId: "zone-1",
+        name: "New Name",
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+
+      expect(result.productionZones["zone-1"]?.name).toBe("New Name");
+    });
+
+    it("SET_ZONE_NAME is a no-op when the zone does not exist", () => {
+      const state = createZoneState();
+      const action = {
+        type: "SET_ZONE_NAME",
+        zoneId: "missing",
+        name: "New Name",
+      } satisfies GameAction;
+
+      expect(zoneContext.reduce(state, action)).toBe(state);
+    });
+
+    it("SET_ZONE_COLOR updates an existing zone color", () => {
+      const state = createZoneState({
+        productionZones: {
+          "zone-1": { id: "zone-1", name: "Zone 1" },
+        },
+      });
+      const action = {
+        type: "SET_ZONE_COLOR",
+        zoneId: "zone-1",
+        color: "#22aa44",
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+
+      expect(result.productionZones["zone-1"]?.color).toBe("#22aa44");
+    });
+
+    it("SET_ZONE_COLOR is a no-op when the zone does not exist", () => {
+      const state = createZoneState();
+      const action = {
+        type: "SET_ZONE_COLOR",
+        zoneId: "missing",
+        color: "#22aa44",
+      } satisfies GameAction;
+
+      expect(zoneContext.reduce(state, action)).toBe(state);
+    });
+
     it("SET_BUILDING_ZONE assigns a building to an existing zone", () => {
       const state = createZoneState({
         productionZones: { "zone-1": { id: "zone-1", name: "Zone 1" } },

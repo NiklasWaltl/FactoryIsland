@@ -147,6 +147,8 @@ export type GameAction =
   // Production zones
   | { type: "CREATE_ZONE"; name?: string }
   | { type: "DELETE_ZONE"; zoneId: string }
+  | { type: "SET_ZONE_NAME"; zoneId: string; name: string }
+  | { type: "SET_ZONE_COLOR"; zoneId: string; color?: string }
   | { type: "SET_BUILDING_ZONE"; buildingId: string; zoneId: string | null }
   | { type: "CLEAR_ALL_BUILDING_ZONES" }
   // Starter drone state machine tick
