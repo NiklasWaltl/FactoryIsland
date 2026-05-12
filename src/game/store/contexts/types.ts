@@ -63,7 +63,10 @@ export type ConveyorContextState = Pick<
 
 export type ZoneContextState = Pick<
   GameState,
-  "productionZones" | "buildingZoneIds" | "buildingSourceWarehouseIds"
+  | "productionZones"
+  | "buildingZoneIds"
+  | "buildingSourceWarehouseIds"
+  | "routingIndexCache"
 >;
 
 export type ShipContextState = Pick<GameState, "ship">;

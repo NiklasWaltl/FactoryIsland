@@ -7,8 +7,8 @@
 // ============================================================
 
 import type { GameAction } from "../game-actions";
-import { MAX_ZONES } from "../constants/buildings/index";
-import { makeId } from "../utils/make-id";
+// CREATE_ZONE is handled live by zoneContext.
+// import { makeId } from "../utils/make-id";
 import type { GameState } from "../types";
 import { hasAsset, isBuildingZoneStateConsistent } from "../utils/asset-guards";
 import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
@@ -50,37 +50,39 @@ export function handleZoneAction(
   action: GameAction,
 ): GameState | null {
   switch (action.type) {
-    case "CREATE_ZONE": {
-      if (Object.keys(state.productionZones).length >= MAX_ZONES) return state;
-      const zoneId = makeId();
-      const idx = Object.keys(state.productionZones).length + 1;
-      const name = action.name || `Zone ${idx}`;
-      const nextState = {
-        ...state,
-        productionZones: {
-          ...state.productionZones,
-          [zoneId]: { id: zoneId, name },
-        },
-      };
-      return finalizeZoneAction(nextState, action.type);
-    }
+    // CREATE_ZONE is handled live by zoneContext.
+    // case "CREATE_ZONE": {
+    //   if (Object.keys(state.productionZones).length >= MAX_ZONES) return state;
+    //   const zoneId = makeId();
+    //   const idx = Object.keys(state.productionZones).length + 1;
+    //   const name = action.name || `Zone ${idx}`;
+    //   const nextState = {
+    //     ...state,
+    //     productionZones: {
+    //       ...state.productionZones,
+    //       [zoneId]: { id: zoneId, name },
+    //     },
+    //   };
+    //   return finalizeZoneAction(nextState, action.type);
+    // }
 
-    case "DELETE_ZONE": {
-      const { zoneId } = action;
-      if (!state.productionZones[zoneId]) return state;
-      const { [zoneId]: _, ...remainingZones } = state.productionZones;
-      // Remove all building-zone assignments for this zone
-      const newBuildingZoneIds: Record<string, string> = {};
-      for (const [bid, zid] of Object.entries(state.buildingZoneIds)) {
-        if (zid !== zoneId) newBuildingZoneIds[bid] = zid;
-      }
-      const nextState = {
-        ...state,
-        productionZones: remainingZones,
-        buildingZoneIds: newBuildingZoneIds,
-      };
-      return finalizeZoneAction(nextState, action.type);
-    }
+    // DELETE_ZONE is handled live by zoneContext.
+    // case "DELETE_ZONE": {
+    //   const { zoneId } = action;
+    //   if (!state.productionZones[zoneId]) return state;
+    //   const { [zoneId]: _, ...remainingZones } = state.productionZones;
+    //   // Remove all building-zone assignments for this zone
+    //   const newBuildingZoneIds: Record<string, string> = {};
+    //   for (const [bid, zid] of Object.entries(state.buildingZoneIds)) {
+    //     if (zid !== zoneId) newBuildingZoneIds[bid] = zid;
+    //   }
+    //   const nextState = {
+    //     ...state,
+    //     productionZones: remainingZones,
+    //     buildingZoneIds: newBuildingZoneIds,
+    //   };
+    //   return finalizeZoneAction(nextState, action.type);
+    // }
 
     case "SET_BUILDING_ZONE": {
       const { buildingId, zoneId } = action;

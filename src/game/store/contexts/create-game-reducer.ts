@@ -275,6 +275,19 @@ export function applyLiveContextReducers(
     return { ...state, ...notifications };
   }
 
+  if (action.type === "CREATE_ZONE" || action.type === "DELETE_ZONE") {
+    const zoneSliceIn = {
+      productionZones: state.productionZones,
+      buildingZoneIds: state.buildingZoneIds,
+      buildingSourceWarehouseIds: state.buildingSourceWarehouseIds,
+      routingIndexCache: state.routingIndexCache,
+    };
+    const zone = zoneContext.reduce(zoneSliceIn, action);
+    if (zone === null) return null;
+    if (zone === zoneSliceIn) return state;
+    return { ...state, ...zone };
+  }
+
   if (
     action.type === "SET_ACTIVE_SLOT" ||
     action.type === "TOGGLE_PANEL" ||

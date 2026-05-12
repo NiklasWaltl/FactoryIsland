@@ -52,6 +52,24 @@ describe("zoneContext", () => {
       expect(entries[0]?.name).toBe("Smelting Yard");
     });
 
+    it("CREATE_ZONE invalidates routingIndexCache", () => {
+      const state = createZoneState({
+        routingIndexCache: {
+          warehouseInputTilesByItemId: new Map(),
+          activeWorkbenchJobsByInputItem: new Map(),
+          activeWorkbenchJobsByItemAndWorkbench: new Map(),
+          zoneCompatLookup: new Map(),
+          warehouseIdByInputTileId: new Map(),
+          assetsRef: {},
+        },
+      });
+      const action = { type: "CREATE_ZONE" } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+
+      expect(result.routingIndexCache).toBeNull();
+    });
+
     it("DELETE_ZONE removes the zone and clears its building assignments", () => {
       const state = createZoneState({
         productionZones: {
@@ -84,6 +102,30 @@ describe("zoneContext", () => {
       } satisfies GameAction;
 
       expect(zoneContext.reduce(state, action)).toBe(state);
+    });
+
+    it("DELETE_ZONE invalidates routingIndexCache", () => {
+      const state = createZoneState({
+        productionZones: {
+          "zone-1": { id: "zone-1", name: "Zone 1" },
+        },
+        routingIndexCache: {
+          warehouseInputTilesByItemId: new Map(),
+          activeWorkbenchJobsByInputItem: new Map(),
+          activeWorkbenchJobsByItemAndWorkbench: new Map(),
+          zoneCompatLookup: new Map(),
+          warehouseIdByInputTileId: new Map(),
+          assetsRef: {},
+        },
+      });
+      const action = {
+        type: "DELETE_ZONE",
+        zoneId: "zone-1",
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+
+      expect(result.routingIndexCache).toBeNull();
     });
 
     it("SET_BUILDING_ZONE assigns a building to an existing zone", () => {

@@ -39,6 +39,7 @@ function reduceZone(
           ...state.productionZones,
           [zoneId]: { id: zoneId, name },
         },
+        routingIndexCache: null,
       };
     }
 
@@ -54,6 +55,7 @@ function reduceZone(
         ...state,
         productionZones: remainingZones,
         buildingZoneIds: newBuildingZoneIds,
+        routingIndexCache: null,
       };
     }
 
