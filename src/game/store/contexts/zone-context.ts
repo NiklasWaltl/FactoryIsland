@@ -7,6 +7,7 @@ export const ZONE_HANDLED_ACTION_TYPES = [
   "CREATE_ZONE",
   "DELETE_ZONE",
   "SET_BUILDING_ZONE",
+  "CLEAR_ALL_BUILDING_ZONES",
   "SET_BUILDING_SOURCE",
 ] as const satisfies readonly GameAction["type"][];
 
@@ -71,6 +72,14 @@ function reduceZone(
       return {
         ...state,
         buildingZoneIds: { ...state.buildingZoneIds, [buildingId]: zoneId },
+      };
+    }
+
+    case "CLEAR_ALL_BUILDING_ZONES": {
+      return {
+        ...state,
+        buildingZoneIds: {},
+        routingIndexCache: null,
       };
     }
 

@@ -169,6 +169,45 @@ describe("zoneContext", () => {
       expect(zoneContext.reduce(state, action)).toBe(state);
     });
 
+    it("CLEAR_ALL_BUILDING_ZONES clears all assignments", () => {
+      const state = createZoneState({
+        buildingZoneIds: {
+          "building-a": "zone-1",
+          "building-b": "zone-2",
+        },
+      });
+      const action = {
+        type: "CLEAR_ALL_BUILDING_ZONES",
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+
+      expect(result.buildingZoneIds).toEqual({});
+    });
+
+    it("CLEAR_ALL_BUILDING_ZONES invalidates routingIndexCache", () => {
+      const state = createZoneState({
+        buildingZoneIds: {
+          "building-a": "zone-1",
+        },
+        routingIndexCache: {
+          warehouseInputTilesByItemId: new Map(),
+          activeWorkbenchJobsByInputItem: new Map(),
+          activeWorkbenchJobsByItemAndWorkbench: new Map(),
+          zoneCompatLookup: new Map(),
+          warehouseIdByInputTileId: new Map(),
+          assetsRef: {},
+        },
+      });
+      const action = {
+        type: "CLEAR_ALL_BUILDING_ZONES",
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+
+      expect(result.routingIndexCache).toBeNull();
+    });
+
     it("SET_BUILDING_SOURCE assigns a warehouse to a building", () => {
       const state = createZoneState();
       const action = {

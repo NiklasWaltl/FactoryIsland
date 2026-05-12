@@ -148,6 +148,7 @@ export type GameAction =
   | { type: "CREATE_ZONE"; name?: string }
   | { type: "DELETE_ZONE"; zoneId: string }
   | { type: "SET_BUILDING_ZONE"; buildingId: string; zoneId: string | null }
+  | { type: "CLEAR_ALL_BUILDING_ZONES" }
   // Starter drone state machine tick
   | { type: "DRONE_TICK" }
   // Service hub target stock adjustment

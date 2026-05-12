@@ -275,7 +275,11 @@ export function applyLiveContextReducers(
     return { ...state, ...notifications };
   }
 
-  if (action.type === "CREATE_ZONE" || action.type === "DELETE_ZONE") {
+  if (
+    action.type === "CREATE_ZONE" ||
+    action.type === "DELETE_ZONE" ||
+    action.type === "CLEAR_ALL_BUILDING_ZONES"
+  ) {
     const zoneSliceIn = {
       productionZones: state.productionZones,
       buildingZoneIds: state.buildingZoneIds,

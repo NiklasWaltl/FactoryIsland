@@ -13,12 +13,17 @@ import type { GameState } from "../types";
 import { hasAsset, isBuildingZoneStateConsistent } from "../utils/asset-guards";
 import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 
-type HandledActionType = "CREATE_ZONE" | "DELETE_ZONE" | "SET_BUILDING_ZONE";
+type HandledActionType =
+  | "CREATE_ZONE"
+  | "DELETE_ZONE"
+  | "SET_BUILDING_ZONE"
+  | "CLEAR_ALL_BUILDING_ZONES";
 
 const HANDLED_ACTION_TYPES = new Set<string>([
   "CREATE_ZONE",
   "DELETE_ZONE",
   "SET_BUILDING_ZONE",
+  "CLEAR_ALL_BUILDING_ZONES",
 ]);
 
 export function isZoneAction(
@@ -100,6 +105,15 @@ export function handleZoneAction(
       };
       return finalizeZoneAction(nextState, action.type);
     }
+
+    // CLEAR_ALL_BUILDING_ZONES is handled live by zoneContext.
+    // case "CLEAR_ALL_BUILDING_ZONES": {
+    //   const nextState = {
+    //     ...state,
+    //     buildingZoneIds: {},
+    //   };
+    //   return finalizeZoneAction(nextState, action.type);
+    // }
 
     default:
       return null;
