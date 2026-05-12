@@ -84,6 +84,131 @@ export function useGamePersistence(mode: GameMode): {
     saveHmrState(state);
   }, [state]);
 
+  // DEV-only console bridge for manual reducer dispatch/state inspection.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const zoneIdAlias = new Map<string, string>();
+
+    const getStateWithZoneContext = () => {
+      const current = stateRef.current;
+      return {
+        ...current,
+        zoneContext: {
+          productionZones: current.productionZones,
+          buildingZoneIds: current.buildingZoneIds,
+          buildingSourceWarehouseIds: current.buildingSourceWarehouseIds,
+          routingIndexCache: current.routingIndexCache,
+        },
+      };
+    };
+
+    const normalizeDevAction = (action: unknown): GameAction => {
+      const candidate = action as {
+        type?: string;
+        payload?: {
+          id?: string;
+          name?: string;
+          zoneId?: string | null;
+          buildingId?: string;
+        };
+      };
+      if (!candidate || typeof candidate !== "object") {
+        return action as GameAction;
+      }
+      const payload = candidate.payload;
+      if (!payload || typeof payload !== "object") {
+        return action as GameAction;
+      }
+      switch (candidate.type) {
+        case "CREATE_ZONE":
+          return {
+            type: "CREATE_ZONE",
+            name: payload.name,
+          };
+        case "DELETE_ZONE": {
+          const requestedZoneId = payload.id ?? payload.zoneId ?? "";
+          return {
+            type: "DELETE_ZONE",
+            zoneId: zoneIdAlias.get(requestedZoneId) ?? requestedZoneId,
+          };
+        }
+        case "SET_BUILDING_ZONE": {
+          const requestedZoneId = payload.zoneId ?? null;
+          const resolvedZoneId =
+            requestedZoneId === null
+              ? null
+              : (zoneIdAlias.get(requestedZoneId) ?? requestedZoneId);
+          return {
+            type: "SET_BUILDING_ZONE",
+            buildingId: payload.buildingId ?? "",
+            zoneId: resolvedZoneId,
+          };
+        }
+        case "CLEAR_ALL_BUILDING_ZONES":
+          return { type: "CLEAR_ALL_BUILDING_ZONES" };
+        default:
+          return action as GameAction;
+      }
+    };
+
+    const applyOptimisticState = (action: GameAction) => {
+      try {
+        stateRef.current = gameReducerWithInvariants(stateRef.current, action);
+      } catch {
+        // Keep console bridge resilient; runtime state still updates through real dispatch.
+      }
+    };
+
+    const devDispatch = (action: unknown) => {
+      const candidate = action as {
+        type?: string;
+        payload?: {
+          id?: string;
+        };
+      };
+      const requestedZoneAlias =
+        candidate?.type === "CREATE_ZONE" &&
+        candidate.payload &&
+        typeof candidate.payload.id === "string" &&
+        candidate.payload.id.length > 0
+          ? candidate.payload.id
+          : null;
+
+      const previousZoneIds = new Set(
+        Object.keys(stateRef.current.productionZones),
+      );
+      const normalized = normalizeDevAction(action);
+      applyOptimisticState(normalized);
+
+      if (requestedZoneAlias) {
+        const createdZoneId = Object.keys(
+          stateRef.current.productionZones,
+        ).find((zoneId) => !previousZoneIds.has(zoneId));
+        if (createdZoneId) {
+          zoneIdAlias.set(requestedZoneAlias, createdZoneId);
+        }
+      }
+
+      dispatch(normalized);
+    };
+
+    const devWindow = window as any;
+    devWindow.__store__ = {
+      dispatch: devDispatch,
+      getState: getStateWithZoneContext,
+    };
+    devWindow.dispatch = devDispatch;
+    return () => {
+      if (devWindow.dispatch === devDispatch) {
+        delete devWindow.dispatch;
+      }
+      if (devWindow.__store__?.dispatch === devDispatch) {
+        delete devWindow.__store__;
+      }
+    };
+  }, [dispatch]);
+
   // Periodic localStorage save (every 10s + on unload)
   useEffect(() => {
     const save = () => {
