@@ -295,6 +295,20 @@ export function applyLiveContextReducers(
   }
 
   if (
+    action.type === "NETWORK_CANCEL_RESERVATION" ||
+    action.type === "NETWORK_CANCEL_BY_OWNER"
+  ) {
+    const inventorySliceIn = {
+      inventory: state.inventory,
+      network: state.network,
+    };
+    const inventory = inventoryContext.reduce(inventorySliceIn, action);
+    if (inventory === null) return null;
+    if (inventory === inventorySliceIn) return state;
+    return { ...state, ...inventory };
+  }
+
+  if (
     action.type === "SET_ACTIVE_SLOT" ||
     action.type === "TOGGLE_PANEL" ||
     action.type === "CLOSE_PANEL" ||

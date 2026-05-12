@@ -84,13 +84,14 @@ export function handleCraftingQueueAction(
     case "NETWORK_RESERVE_BATCH":
     case "NETWORK_COMMIT_RESERVATION":
     case "NETWORK_COMMIT_BY_OWNER":
-    case "NETWORK_CANCEL_RESERVATION":
-    case "NETWORK_CANCEL_BY_OWNER": {
+      // case "NETWORK_CANCEL_RESERVATION":
+      // live-switched via applyLiveContextReducers -> inventoryContext.
+      // case "NETWORK_CANCEL_BY_OWNER":
+      // live-switched via applyLiveContextReducers -> inventoryContext.
       return invalidateIfCraftingChanged(
         state,
         runNetworkReservationsPhase({ state, action }),
       );
-    }
 
     // -----------------------------------------------------------------
     // Crafting jobs (Step 3)
