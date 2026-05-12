@@ -68,6 +68,11 @@ export type ZoneContextState = Pick<
 
 export type ShipContextState = Pick<GameState, "ship">;
 
+export type NotificationsContextState = Pick<
+  GameState,
+  "notifications" | "lastTickError"
+>;
+
 // TODO: GameState has no "selectedAssetId", "hotbar", or "debugMode" fields.
 // Current UI state uses selected panel IDs, hotbarSlots/activeSlot, and
 // debug-facing overlays/errors.
@@ -106,5 +111,6 @@ export interface ContextRegistry {
   conveyor: BoundedContext<ConveyorContextState>;
   zone: BoundedContext<ZoneContextState>;
   ship: BoundedContext<ShipContextState>;
+  notifications: BoundedContext<NotificationsContextState>;
   ui: BoundedContext<UiContextState>;
 }

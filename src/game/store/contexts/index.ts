@@ -15,6 +15,7 @@ export type {
   ConveyorContextState,
   ZoneContextState,
   ShipContextState,
+  NotificationsContextState,
   UiContextState,
 } from "./types";
 
@@ -27,6 +28,7 @@ export { craftingContext } from "./crafting-context";
 export { dronesContext } from "./drones-context";
 export { inventoryContext } from "./inventory-context";
 export { moduleLabContext } from "./module-lab-context";
+export { notificationsContext } from "./notifications-context";
 export { powerContext } from "./power-context";
 export { researchLabContext } from "./research-lab-context";
 export { shipContext } from "./ship-context";
@@ -36,6 +38,7 @@ export { zoneContext } from "./zone-context";
 
 export {
   applyContextReducers,
+  applyLiveContextReducers,
   createGameReducer,
   type ContextGameReducer,
 } from "./create-game-reducer";

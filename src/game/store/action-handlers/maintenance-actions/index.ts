@@ -26,8 +26,9 @@ import {
   runRemoveBuildingPhase,
   runRemovePowerPolePhase,
   runDebugSetStatePhase,
-  runExpireNotificationsPhase,
-  runAddErrorNotificationPhase,
+  // Legacy notification phases are now live in notificationsContext.
+  // runExpireNotificationsPhase,
+  // runAddErrorNotificationPhase,
 } from "./phases";
 
 export function isMaintenanceAction(
@@ -62,13 +63,15 @@ export function handleMaintenanceAction(
       return runDebugSetStatePhase({ state, action });
     }
 
-    case "EXPIRE_NOTIFICATIONS": {
-      return runExpireNotificationsPhase({ state, action });
-    }
+    // EXPIRE_NOTIFICATIONS is handled live by notificationsContext.
+    // case "EXPIRE_NOTIFICATIONS": {
+    //   return runExpireNotificationsPhase({ state, action });
+    // }
 
-    case "ADD_ERROR_NOTIFICATION": {
-      return runAddErrorNotificationPhase({ state, action });
-    }
+    // ADD_ERROR_NOTIFICATION is handled live by notificationsContext.
+    // case "ADD_ERROR_NOTIFICATION": {
+    //   return runAddErrorNotificationPhase({ state, action });
+    // }
 
     default:
       return null;

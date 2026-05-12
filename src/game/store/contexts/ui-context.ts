@@ -1,5 +1,4 @@
 import type { GameAction } from "../game-actions";
-import { addErrorNotification } from "../utils/notifications";
 import type { BoundedContext, UiContextState } from "./types";
 
 export const UI_HANDLED_ACTION_TYPES = [
@@ -8,8 +7,6 @@ export const UI_HANDLED_ACTION_TYPES = [
   "CLOSE_PANEL",
   "TOGGLE_ENERGY_DEBUG",
   "TOGGLE_BUILD_MODE",
-  "EXPIRE_NOTIFICATIONS",
-  "ADD_ERROR_NOTIFICATION",
   "SELECT_BUILD_BUILDING",
   "SELECT_BUILD_FLOOR_TILE",
   "REMOVE_FROM_HOTBAR",
@@ -74,31 +71,6 @@ function reduceUi(state: UiContextState, action: UiAction): UiContextState {
         openPanel: newBuildMode ? null : state.openPanel,
         selectedWarehouseId: newBuildMode ? null : state.selectedWarehouseId,
       };
-    }
-
-    case "EXPIRE_NOTIFICATIONS": {
-      const now = Date.now();
-      const alive = state.notifications.filter((n) => n.expiresAt > now);
-      if (alive.length === state.notifications.length) return state;
-      return { ...state, notifications: alive };
-    }
-
-    case "ADD_ERROR_NOTIFICATION": {
-      const next: UiContextState = {
-        ...state,
-        notifications: addErrorNotification(
-          state.notifications,
-          action.message,
-        ),
-      };
-      if (action.sourceAction !== undefined && action.tick !== undefined) {
-        next.lastTickError = {
-          action: action.sourceAction,
-          message: action.message,
-          tick: action.tick,
-        };
-      }
-      return next;
     }
 
     case "SELECT_BUILD_BUILDING":

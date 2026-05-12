@@ -2,7 +2,10 @@
 // Factory Island - Game State & Logic
 // ============================================================
 
-import { applyContextReducers } from "./contexts/create-game-reducer";
+import {
+  applyContextReducers,
+  applyLiveContextReducers,
+} from "./contexts/create-game-reducer";
 import { shadowDiff } from "./contexts/shadow-diff";
 import { runWithLogSuppressed } from "../debug";
 import { dispatchAction } from "./game-reducer-dispatch";
@@ -30,6 +33,9 @@ export type { GameAction };
 // and external consumers keep importing it from "../store/reducer".
 // ============================================================
 export function gameReducer(state: GameState, action: GameAction): GameState {
+  const liveNext = applyLiveContextReducers(state, action);
+  if (liveNext !== null) return liveNext;
+
   const legacyNext = dispatchAction(state, action);
 
   // Phase 3 Cutover — shadow mode. Bounded contexts run on the pre-action

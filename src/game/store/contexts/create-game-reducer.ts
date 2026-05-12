@@ -9,6 +9,7 @@ import { craftingContext } from "./crafting-context";
 import { dronesContext } from "./drones-context";
 import { inventoryContext } from "./inventory-context";
 import { moduleLabContext } from "./module-lab-context";
+import { notificationsContext } from "./notifications-context";
 import { powerContext } from "./power-context";
 import { researchLabContext } from "./research-lab-context";
 import { shipContext } from "./ship-context";
@@ -166,6 +167,21 @@ export function applyContextReducers(
     next = { ...next, ship: ship.ship };
   }
 
+  const notifications = notificationsContext.reduce(
+    {
+      notifications: next.notifications,
+      lastTickError: next.lastTickError,
+    },
+    action,
+  );
+  if (
+    notifications !== null &&
+    (notifications.notifications !== next.notifications ||
+      notifications.lastTickError !== next.lastTickError)
+  ) {
+    next = { ...next, ...notifications };
+  }
+
   const construction = constructionContext.reduce(
     { constructionSites: next.constructionSites, assets: next.assets },
     action,
@@ -234,6 +250,27 @@ export function applyContextReducers(
   }
 
   return next;
+}
+
+export function applyLiveContextReducers(
+  state: GameState,
+  action: GameAction,
+): GameState | null {
+  const notifications = notificationsContext.reduce(
+    {
+      notifications: state.notifications,
+      lastTickError: state.lastTickError,
+    },
+    action,
+  );
+  if (notifications === null) return null;
+  if (
+    notifications.notifications === state.notifications &&
+    notifications.lastTickError === state.lastTickError
+  ) {
+    return state;
+  }
+  return { ...state, ...notifications };
 }
 
 /**
