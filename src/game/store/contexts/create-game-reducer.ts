@@ -263,14 +263,47 @@ export function applyLiveContextReducers(
     },
     action,
   );
-  if (notifications === null) return null;
-  if (
-    notifications.notifications === state.notifications &&
-    notifications.lastTickError === state.lastTickError
-  ) {
-    return state;
+  if (notifications !== null) {
+    if (
+      notifications.notifications === state.notifications &&
+      notifications.lastTickError === state.lastTickError
+    ) {
+      return state;
+    }
+    return { ...state, ...notifications };
   }
-  return { ...state, ...notifications };
+
+  if (
+    action.type === "SET_ACTIVE_SLOT" ||
+    action.type === "TOGGLE_PANEL" ||
+    action.type === "CLOSE_PANEL" ||
+    action.type === "TOGGLE_ENERGY_DEBUG"
+  ) {
+    const uiSliceIn = {
+      selectedWarehouseId: state.selectedWarehouseId,
+      selectedPowerPoleId: state.selectedPowerPoleId,
+      selectedAutoMinerId: state.selectedAutoMinerId,
+      selectedAutoSmelterId: state.selectedAutoSmelterId,
+      selectedAutoAssemblerId: state.selectedAutoAssemblerId,
+      selectedGeneratorId: state.selectedGeneratorId,
+      selectedServiceHubId: state.selectedServiceHubId,
+      selectedCraftingBuildingId: state.selectedCraftingBuildingId,
+      selectedSplitterId: state.selectedSplitterId,
+      openPanel: state.openPanel,
+      notifications: state.notifications,
+      buildMode: state.buildMode,
+      hotbarSlots: state.hotbarSlots,
+      activeSlot: state.activeSlot,
+      energyDebugOverlay: state.energyDebugOverlay,
+      lastTickError: state.lastTickError,
+    };
+    const ui = uiContext.reduce(uiSliceIn, action);
+    if (ui === null) return null;
+    if (ui === uiSliceIn) return state;
+    return { ...state, ...ui };
+  }
+
+  return null;
 }
 
 /**

@@ -14,16 +14,25 @@ import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 
 type HandledActionType =
-  | "SET_ACTIVE_SLOT"
-  | "TOGGLE_PANEL"
-  | "CLOSE_PANEL"
-  | "TOGGLE_ENERGY_DEBUG";
+  // SET_ACTIVE_SLOT is live in uiContext.
+  // | "SET_ACTIVE_SLOT"
+  // TOGGLE_PANEL is live in uiContext.
+  // | "TOGGLE_PANEL"
+  // CLOSE_PANEL is live in uiContext.
+  // | "CLOSE_PANEL"
+  // TOGGLE_ENERGY_DEBUG is live in uiContext.
+  // | "TOGGLE_ENERGY_DEBUG"
+  never;
 
 const HANDLED_ACTION_TYPES = new Set<string>([
-  "SET_ACTIVE_SLOT",
-  "TOGGLE_PANEL",
-  "CLOSE_PANEL",
-  "TOGGLE_ENERGY_DEBUG",
+  // SET_ACTIVE_SLOT is live in uiContext.
+  // "SET_ACTIVE_SLOT",
+  // TOGGLE_PANEL is live in uiContext.
+  // "TOGGLE_PANEL",
+  // CLOSE_PANEL is live in uiContext.
+  // "CLOSE_PANEL",
+  // TOGGLE_ENERGY_DEBUG is live in uiContext.
+  // "TOGGLE_ENERGY_DEBUG",
 ]);
 
 export function isUiAction(
@@ -41,38 +50,42 @@ export function handleUiAction(
   action: GameAction,
 ): GameState | null {
   switch (action.type) {
-    case "SET_ACTIVE_SLOT":
-      return {
-        ...state,
-        activeSlot: Math.min(
-          action.slot,
-          Math.max(0, state.hotbarSlots.length - 1),
-        ),
-      };
+    // SET_ACTIVE_SLOT is live in uiContext.
+    // case "SET_ACTIVE_SLOT":
+    //   return {
+    //     ...state,
+    //     activeSlot: Math.min(
+    //       action.slot,
+    //       Math.max(0, state.hotbarSlots.length - 1),
+    //     ),
+    //   };
 
-    case "TOGGLE_PANEL":
-      return {
-        ...state,
-        openPanel: state.openPanel === action.panel ? null : action.panel,
-      };
+    // TOGGLE_PANEL is live in uiContext.
+    // case "TOGGLE_PANEL":
+    //   return {
+    //     ...state,
+    //     openPanel: state.openPanel === action.panel ? null : action.panel,
+    //   };
 
-    case "CLOSE_PANEL":
-      return {
-        ...state,
-        openPanel: null,
-        selectedAutoMinerId: null,
-        selectedAutoSmelterId: null,
-        selectedAutoAssemblerId: null,
-        selectedGeneratorId: null,
-        selectedWarehouseId: null,
-        selectedCraftingBuildingId: null,
-        selectedServiceHubId: null,
-        selectedSplitterId: null,
-      };
+    // CLOSE_PANEL is live in uiContext.
+    // case "CLOSE_PANEL":
+    //   return {
+    //     ...state,
+    //     openPanel: null,
+    //     selectedAutoMinerId: null,
+    //     selectedAutoSmelterId: null,
+    //     selectedAutoAssemblerId: null,
+    //     selectedGeneratorId: null,
+    //     selectedWarehouseId: null,
+    //     selectedCraftingBuildingId: null,
+    //     selectedServiceHubId: null,
+    //     selectedSplitterId: null,
+    //   };
 
-    case "TOGGLE_ENERGY_DEBUG": {
-      return { ...state, energyDebugOverlay: !state.energyDebugOverlay };
-    }
+    // TOGGLE_ENERGY_DEBUG is live in uiContext.
+    // case "TOGGLE_ENERGY_DEBUG": {
+    //   return { ...state, energyDebugOverlay: !state.energyDebugOverlay };
+    // }
 
     default:
       return null;
