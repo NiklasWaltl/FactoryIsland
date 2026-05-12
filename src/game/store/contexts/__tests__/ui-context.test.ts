@@ -129,6 +129,21 @@ describe("uiContext", () => {
       expect(result.buildMode).toBe(false);
     });
 
+    it("TOGGLE_BUILD_MODE leaving build mode clears selected building and floor tile", () => {
+      const state = createUiState({
+        buildMode: true,
+        selectedBuildingType: "workbench",
+        selectedFloorTile: "stone_floor",
+      });
+      const action = { type: "TOGGLE_BUILD_MODE" } satisfies GameAction;
+
+      const result = expectHandled(uiContext.reduce(state, action));
+
+      expect(result.buildMode).toBe(false);
+      expect(result.selectedBuildingType).toBeNull();
+      expect(result.selectedFloorTile).toBeNull();
+    });
+
     it("SELECT_BUILD_BUILDING sets the building selection and clears floor selection", () => {
       const state = createUiState({ selectedFloorTile: "stone_floor" });
       const action = {

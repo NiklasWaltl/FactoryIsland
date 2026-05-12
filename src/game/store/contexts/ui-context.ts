@@ -66,6 +66,8 @@ function reduceUi(state: UiContextState, action: UiAction): UiContextState {
       return {
         ...state,
         buildMode: newBuildMode,
+        selectedBuildingType: newBuildMode ? state.selectedBuildingType : null,
+        selectedFloorTile: newBuildMode ? state.selectedFloorTile : null,
         openPanel: newBuildMode ? null : state.openPanel,
         selectedWarehouseId: newBuildMode ? null : state.selectedWarehouseId,
       };

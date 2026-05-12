@@ -16,13 +16,13 @@
 import type { GameAction } from "../../game-actions";
 import type { GameState } from "../../types";
 import { HANDLED_ACTION_TYPES, type BuildModeHandledAction } from "./types";
-import {
-  runToggleBuildModePhase,
-  // SELECT_BUILD_BUILDING is handled live by uiContext.
-  // runSelectBuildBuildingPhase,
-  // SELECT_BUILD_FLOOR_TILE is handled live by uiContext.
-  // runSelectBuildFloorTilePhase,
-} from "./phases";
+import {} from // TOGGLE_BUILD_MODE is handled live by uiContext.
+// runToggleBuildModePhase,
+// SELECT_BUILD_BUILDING is handled live by uiContext.
+// runSelectBuildBuildingPhase,
+// SELECT_BUILD_FLOOR_TILE is handled live by uiContext.
+// runSelectBuildFloorTilePhase,
+"./phases";
 
 export function isBuildModeAction(
   action: GameAction,
@@ -40,9 +40,10 @@ export function handleBuildModeAction(
   action: GameAction,
 ): GameState | null {
   switch (action.type) {
-    case "TOGGLE_BUILD_MODE": {
-      return runToggleBuildModePhase({ state, action });
-    }
+    // TOGGLE_BUILD_MODE is handled live by uiContext.
+    // case "TOGGLE_BUILD_MODE": {
+    //   return runToggleBuildModePhase({ state, action });
+    // }
 
     // SELECT_BUILD_BUILDING is handled live by uiContext.
     // case "SELECT_BUILD_BUILDING": {

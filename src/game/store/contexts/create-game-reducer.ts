@@ -280,6 +280,7 @@ export function applyLiveContextReducers(
     action.type === "TOGGLE_PANEL" ||
     action.type === "CLOSE_PANEL" ||
     action.type === "TOGGLE_ENERGY_DEBUG" ||
+    action.type === "TOGGLE_BUILD_MODE" ||
     action.type === "SELECT_BUILD_BUILDING" ||
     action.type === "SELECT_BUILD_FLOOR_TILE"
   ) {
