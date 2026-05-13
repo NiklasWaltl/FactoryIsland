@@ -32,7 +32,9 @@ export type CraftingContextState = Pick<
 
 export type DroneContextState = Pick<GameState, "drones">;
 
-export type InventoryContextState = Pick<GameState, "inventory" | "network">;
+export type InventoryContextState = Pick<GameState, "inventory" | "network"> & {
+  readonly warehouseInventories?: Readonly<GameState["warehouseInventories"]>;
+};
 
 export type WarehouseContextState = Pick<
   GameState,

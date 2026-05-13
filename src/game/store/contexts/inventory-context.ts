@@ -2,6 +2,8 @@ import { applyNetworkAction } from "../../inventory/reservations";
 import type { GameAction } from "../game-actions";
 import type { InventoryContextState, BoundedContext } from "./types";
 
+const EMPTY_WAREHOUSE_INVENTORIES: Readonly<Record<string, never>> = {};
+
 export const INVENTORY_HANDLED_ACTION_TYPES = [
   "NETWORK_RESERVE_BATCH",
   "NETWORK_COMMIT_RESERVATION",
@@ -26,6 +28,8 @@ function reduceInventory(
   action: InventoryAction,
 ): InventoryContextState {
   const actionType = action.type;
+  const warehouseInventories =
+    state.warehouseInventories ?? EMPTY_WAREHOUSE_INVENTORIES;
 
   switch (actionType) {
     case "NETWORK_RESERVE_BATCH":
@@ -33,9 +37,16 @@ function reduceInventory(
     case "NETWORK_COMMIT_BY_OWNER":
     case "NETWORK_CANCEL_RESERVATION":
     case "NETWORK_CANCEL_BY_OWNER": {
-      const result = applyNetworkAction({}, state.network, action);
-      if (result.network === state.network) return state;
-      return { ...state, network: result.network };
+      const result = applyNetworkAction(
+        warehouseInventories,
+        state.network,
+        action,
+      );
+      if (result.network === state.network) {
+        if (state.warehouseInventories !== undefined) return state;
+        return { ...state, warehouseInventories };
+      }
+      return { ...state, warehouseInventories, network: result.network };
     }
 
     default: {

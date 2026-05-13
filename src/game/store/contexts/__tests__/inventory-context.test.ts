@@ -23,10 +23,14 @@ function createReservation(overrides: Partial<Reservation> = {}) {
   } satisfies Reservation;
 }
 
-function createInventoryState(network?: NetworkSlice): InventoryContextState {
+function createInventoryState(
+  network?: NetworkSlice,
+  warehouseInventories?: InventoryContextState["warehouseInventories"],
+): InventoryContextState {
   return {
     inventory: createEmptyInventory(),
     network: network ?? createEmptyNetworkSlice(),
+    ...(warehouseInventories !== undefined ? { warehouseInventories } : {}),
   } satisfies InventoryContextState;
 }
 
@@ -59,6 +63,51 @@ describe("inventoryContext", () => {
       const result = expectHandled(inventoryContext.reduce(state, action));
 
       expect(result.network.lastError?.kind).toBe("INSUFFICIENT_STOCK");
+    });
+
+    it("NETWORK_RESERVE_BATCH uses warehouse snapshot and sets error on overflow", () => {
+      const state = createInventoryState(undefined, {
+        wh1: { ...createEmptyInventory(), iron: 10 },
+      });
+
+      const reserveWithinStock = {
+        type: "NETWORK_RESERVE_BATCH",
+        items: [{ itemId: "iron", count: 5 }],
+        ownerKind: "system_request",
+        ownerId: "reserve-test-1",
+      } satisfies GameAction;
+
+      const afterFirstReserve = expectHandled(
+        inventoryContext.reduce(state, reserveWithinStock),
+      );
+
+      expect(afterFirstReserve.network.lastError).toBeNull();
+      expect(afterFirstReserve.network.reservations).toHaveLength(1);
+      expect(afterFirstReserve.network.reservations[0]).toMatchObject({
+        itemId: "iron",
+        amount: 5,
+        ownerId: "reserve-test-1",
+      });
+      expect(afterFirstReserve.warehouseInventories).toEqual(
+        state.warehouseInventories,
+      );
+
+      const reserveOverflow = {
+        type: "NETWORK_RESERVE_BATCH",
+        items: [{ itemId: "iron", count: 15 }],
+        ownerKind: "system_request",
+        ownerId: "reserve-test-2",
+      } satisfies GameAction;
+
+      const afterOverflow = expectHandled(
+        inventoryContext.reduce(afterFirstReserve, reserveOverflow),
+      );
+
+      expect(afterOverflow.network.lastError?.kind).toBe("INSUFFICIENT_STOCK");
+      expect(afterOverflow.network.reservations).toHaveLength(1);
+      expect(afterOverflow.warehouseInventories).toEqual(
+        state.warehouseInventories,
+      );
     });
 
     it("NETWORK_COMMIT_RESERVATION records unknown reservation errors", () => {

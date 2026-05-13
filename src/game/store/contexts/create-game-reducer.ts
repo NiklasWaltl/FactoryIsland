@@ -70,7 +70,11 @@ export function applyContextReducers(
   }
 
   const inventory = inventoryContext.reduce(
-    { inventory: next.inventory, network: next.network },
+    {
+      inventory: next.inventory,
+      network: next.network,
+      warehouseInventories: next.warehouseInventories,
+    },
     action,
   );
   if (
@@ -295,12 +299,14 @@ export function applyLiveContextReducers(
   }
 
   if (
+    action.type === "NETWORK_RESERVE_BATCH" ||
     action.type === "NETWORK_CANCEL_RESERVATION" ||
     action.type === "NETWORK_CANCEL_BY_OWNER"
   ) {
     const inventorySliceIn = {
       inventory: state.inventory,
       network: state.network,
+      warehouseInventories: state.warehouseInventories,
     };
     const inventory = inventoryContext.reduce(inventorySliceIn, action);
     if (inventory === null) return null;

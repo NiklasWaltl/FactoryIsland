@@ -81,7 +81,8 @@ export function handleCraftingQueueAction(
     // -----------------------------------------------------------------
     // Inventory-network reservations (Step 2)
     // -----------------------------------------------------------------
-    case "NETWORK_RESERVE_BATCH":
+    // case "NETWORK_RESERVE_BATCH":
+    // live-switched via applyLiveContextReducers -> inventoryContext.
     case "NETWORK_COMMIT_RESERVATION":
     case "NETWORK_COMMIT_BY_OWNER":
       // case "NETWORK_CANCEL_RESERVATION":
