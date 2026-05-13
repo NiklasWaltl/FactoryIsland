@@ -73,6 +73,7 @@ export function applyContextReducers(
 
   const crafting = craftingContext.reduce(
     {
+      assets: next.assets,
       crafting: next.crafting,
       keepStockByWorkbench: next.keepStockByWorkbench,
       recipeAutomationPolicies: next.recipeAutomationPolicies,
@@ -344,9 +345,12 @@ export function applyLiveContextReducers(
     action.type === "JOB_CANCEL" ||
     action.type === "JOB_PAUSE" ||
     action.type === "JOB_MOVE" ||
-    action.type === "JOB_SET_PRIORITY"
+    action.type === "JOB_SET_PRIORITY" ||
+    action.type === "SET_KEEP_STOCK_TARGET" ||
+    action.type === "SET_RECIPE_AUTOMATION_POLICY"
   ) {
     const craftingSliceIn = {
+      assets: state.assets,
       crafting: state.crafting,
       keepStockByWorkbench: state.keepStockByWorkbench,
       recipeAutomationPolicies: state.recipeAutomationPolicies,
@@ -356,7 +360,7 @@ export function applyLiveContextReducers(
     if (crafting === null) return null;
     if (crafting === craftingSliceIn) return state;
     const next = { ...state, ...crafting };
-    if (action.type === "JOB_MOVE" || action.type === "JOB_SET_PRIORITY") {
+    if (action.type !== "JOB_CANCEL" && action.type !== "JOB_PAUSE") {
       return next;
     }
     return invalidateIfCraftingChanged(state, next);

@@ -13,6 +13,7 @@ import {
 } from "../../crafting/policies";
 import { KEEP_STOCK_MAX_TARGET } from "../constants/keep-stock";
 import type { GameAction } from "../game-actions";
+import { getAssetOfType } from "../utils/asset-guards";
 import type { CraftingContextState, BoundedContext } from "./types";
 
 export const CRAFTING_HANDLED_ACTION_TYPES = [
@@ -96,6 +97,8 @@ function reduceCrafting(
       return state;
 
     case "SET_KEEP_STOCK_TARGET": {
+      if (!getAssetOfType(state, action.workbenchId, "workbench")) return state;
+
       const clampedAmount = Math.max(
         0,
         Math.min(KEEP_STOCK_MAX_TARGET, Math.floor(action.amount)),

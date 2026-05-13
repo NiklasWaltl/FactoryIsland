@@ -36,8 +36,10 @@ function createJob(overrides: Partial<CraftingJob> = {}): CraftingJob {
 function createCraftingState(
   jobs: readonly CraftingJob[] = [],
   network: NetworkSlice = createEmptyNetworkSlice(),
+  assets: CraftingContextState["assets"] = {},
 ): CraftingContextState {
   return {
+    assets,
     crafting: { ...createEmptyCraftingQueue(), jobs },
     keepStockByWorkbench: {},
     recipeAutomationPolicies: {},
@@ -194,7 +196,15 @@ describe("craftingContext", () => {
     });
 
     it("SET_KEEP_STOCK_TARGET stores the target by workbench and recipe", () => {
-      const state = createCraftingState();
+      const state = createCraftingState([], createEmptyNetworkSlice(), {
+        "workbench-1": {
+          id: "workbench-1",
+          type: "workbench",
+          x: 0,
+          y: 0,
+          size: 1,
+        },
+      });
       const action = {
         type: "SET_KEEP_STOCK_TARGET",
         workbenchId: "workbench-1",
@@ -208,6 +218,22 @@ describe("craftingContext", () => {
       expect(
         result.keepStockByWorkbench?.["workbench-1"]?.wood_pickaxe,
       ).toEqual({ enabled: true, amount: 4 });
+    });
+
+    it("SET_KEEP_STOCK_TARGET keeps state unchanged for missing workbench", () => {
+      const state = createCraftingState();
+      const action = {
+        type: "SET_KEEP_STOCK_TARGET",
+        workbenchId: "missing-workbench",
+        recipeId: "wood_pickaxe",
+        amount: 4,
+        enabled: true,
+      } satisfies GameAction;
+
+      const result = craftingContext.reduce(state, action);
+
+      expect(result).toBe(state);
+      expect(result?.keepStockByWorkbench).toEqual({});
     });
 
     it("SET_RECIPE_AUTOMATION_POLICY stores the recipe policy", () => {

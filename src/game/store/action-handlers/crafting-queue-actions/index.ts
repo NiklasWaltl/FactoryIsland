@@ -33,8 +33,6 @@ import {
   runCraftRequestPhase,
   runJobEnqueuePhase,
   runQueueManagementPhase,
-  runKeepStockTargetPhase,
-  runRecipePolicyPhase,
 } from "./phases";
 
 export type { CraftingQueueActionDeps } from "./deps";
@@ -127,13 +125,11 @@ export function handleCraftingQueueAction(
       );
     }
 
-    case "SET_KEEP_STOCK_TARGET": {
-      return runKeepStockTargetPhase({ state, action, deps });
-    }
+    // case "SET_KEEP_STOCK_TARGET":
+    // live-switched via applyLiveContextReducers -> craftingContext.
 
-    case "SET_RECIPE_AUTOMATION_POLICY": {
-      return runRecipePolicyPhase({ state, action, deps });
-    }
+    // case "SET_RECIPE_AUTOMATION_POLICY":
+    // live-switched via applyLiveContextReducers -> craftingContext.
 
     default:
       return null;

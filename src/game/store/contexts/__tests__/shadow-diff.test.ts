@@ -39,11 +39,7 @@ describe("shadowDiff / applyContextReducers parity", () => {
     expect(deepEqual([{ a: 1 }], [{ a: 2 }])).toBe(false);
   });
 
-  it("crafting slice: SET_KEEP_STOCK_TARGET diverges on unknown workbench (cross-slice gate)", () => {
-    // The legacy reducer guards SET_KEEP_STOCK_TARGET on a workbench asset
-    // existing in state.assets; the crafting context drops that cross-slice
-    // gate, so the two paths diverge for an unknown workbench id. Assert
-    // the documented divergence rather than parity.
+  it("crafting slice: SET_KEEP_STOCK_TARGET matches legacy for unknown workbench", () => {
     const state = freshState();
     const action: GameAction = {
       type: "SET_KEEP_STOCK_TARGET",
@@ -57,9 +53,10 @@ describe("shadowDiff / applyContextReducers parity", () => {
     const context = applyContextReducers(state, action);
 
     expect(legacy.keepStockByWorkbench).toEqual(state.keepStockByWorkbench);
-    expect(context.keepStockByWorkbench["workbench-unknown"]).toEqual({
-      wood_pickaxe: { enabled: true, amount: 4 },
-    });
+    expect(context.keepStockByWorkbench).toEqual(state.keepStockByWorkbench);
+    expect(
+      deepEqual(legacy.keepStockByWorkbench, context.keepStockByWorkbench),
+    ).toBe(true);
   });
 
   it("crafting slice: context matches legacy for SET_RECIPE_AUTOMATION_POLICY", () => {

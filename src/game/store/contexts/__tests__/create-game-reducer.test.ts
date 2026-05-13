@@ -14,6 +14,25 @@ function createState(): GameState {
   return createInitialState("release");
 }
 
+function withWorkbenchAsset(
+  state: GameState,
+  workbenchId = "workbench-1",
+): GameState {
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      [workbenchId]: {
+        id: workbenchId,
+        type: "workbench",
+        x: 0,
+        y: 0,
+        size: 1,
+      },
+    },
+  };
+}
+
 describe("applyContextReducers", () => {
   it("returns the same state reference for unhandled actions", () => {
     const state = createState();
@@ -36,7 +55,7 @@ describe("applyContextReducers", () => {
   });
 
   it("crafting context: SET_KEEP_STOCK_TARGET updates the crafting context slice only", () => {
-    const state = createState();
+    const state = withWorkbenchAsset(createState());
     const action = {
       type: "SET_KEEP_STOCK_TARGET",
       workbenchId: "workbench-1",
@@ -100,7 +119,7 @@ describe("applyContextReducers", () => {
 
   it("createGameReducer composes multiple implemented contexts across dispatches", () => {
     const reducer = createGameReducer();
-    const state = createState();
+    const state = withWorkbenchAsset(createState());
 
     const withDroneRole = reducer(state, {
       type: "DRONE_SET_ROLE",
