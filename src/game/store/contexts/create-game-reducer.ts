@@ -1,5 +1,6 @@
 import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
+import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -21,6 +22,29 @@ export type ContextGameReducer = (
   state: GameState,
   action: GameAction,
 ) => GameState;
+
+function invalidateIfCraftingChanged(
+  previousState: GameState,
+  nextState: GameState,
+): GameState {
+  if (nextState.crafting === previousState.crafting) return nextState;
+  return getRoutingRelevantCraftingSignature(nextState) ===
+    getRoutingRelevantCraftingSignature(previousState)
+    ? nextState
+    : invalidateRoutingIndexCache(nextState);
+}
+
+function getRoutingRelevantCraftingSignature(state: GameState): string {
+  return state.crafting.jobs
+    .filter((job) => job.status !== "done" && job.status !== "cancelled")
+    .map((job) => {
+      const ingredients = job.ingredients
+        .map((ingredient) => `${ingredient.itemId}:${ingredient.count}`)
+        .join(",");
+      return `${job.id}:${job.workbenchId}:${job.status}:${ingredients}`;
+    })
+    .join("|");
+}
 
 /**
  * Applies all implemented Bounded Context reducers to the given state.
@@ -52,6 +76,7 @@ export function applyContextReducers(
       crafting: next.crafting,
       keepStockByWorkbench: next.keepStockByWorkbench,
       recipeAutomationPolicies: next.recipeAutomationPolicies,
+      network: next.network,
     },
     action,
   );
@@ -59,7 +84,8 @@ export function applyContextReducers(
     crafting !== null &&
     (crafting.crafting !== next.crafting ||
       crafting.keepStockByWorkbench !== next.keepStockByWorkbench ||
-      crafting.recipeAutomationPolicies !== next.recipeAutomationPolicies)
+      crafting.recipeAutomationPolicies !== next.recipeAutomationPolicies ||
+      crafting.network !== next.network)
   ) {
     next = { ...next, ...crafting };
   }
@@ -312,6 +338,28 @@ export function applyLiveContextReducers(
     if (inventory === null) return null;
     if (inventory === inventorySliceIn) return state;
     return { ...state, ...inventory };
+  }
+
+  if (
+    action.type === "JOB_CANCEL" ||
+    action.type === "JOB_PAUSE" ||
+    action.type === "JOB_MOVE" ||
+    action.type === "JOB_SET_PRIORITY"
+  ) {
+    const craftingSliceIn = {
+      crafting: state.crafting,
+      keepStockByWorkbench: state.keepStockByWorkbench,
+      recipeAutomationPolicies: state.recipeAutomationPolicies,
+      network: state.network,
+    };
+    const crafting = craftingContext.reduce(craftingSliceIn, action);
+    if (crafting === null) return null;
+    if (crafting === craftingSliceIn) return state;
+    const next = { ...state, ...crafting };
+    if (action.type === "JOB_MOVE" || action.type === "JOB_SET_PRIORITY") {
+      return next;
+    }
+    return invalidateIfCraftingChanged(state, next);
   }
 
   if (

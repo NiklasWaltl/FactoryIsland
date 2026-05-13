@@ -4,7 +4,8 @@
 // Handles:     NETWORK_RESERVE_BATCH, NETWORK_COMMIT_RESERVATION,
 //              NETWORK_COMMIT_BY_OWNER, NETWORK_CANCEL_RESERVATION,
 //              NETWORK_CANCEL_BY_OWNER, CRAFT_REQUEST_WITH_PREREQUISITES,
-//              JOB_ENQUEUE, JOB_CANCEL, JOB_MOVE, JOB_SET_PRIORITY,
+//              JOB_ENQUEUE, JOB_CANCEL, JOB_PAUSE, JOB_MOVE,
+//              JOB_SET_PRIORITY,
 //              JOB_TICK, SET_KEEP_STOCK_TARGET, SET_RECIPE_AUTOMATION_POLICY
 // Reads:       state.crafting, state.network, state.warehouseInventories,
 //              state.inventory, state.assets, state.serviceHubs,
@@ -111,9 +112,14 @@ export function handleCraftingQueueAction(
       );
     }
 
-    case "JOB_CANCEL":
-    case "JOB_MOVE":
-    case "JOB_SET_PRIORITY":
+    // case "JOB_CANCEL":
+    // live-switched via applyLiveContextReducers -> craftingContext.
+    // case "JOB_MOVE":
+    // live-switched via applyLiveContextReducers -> craftingContext.
+    // case "JOB_SET_PRIORITY":
+    // live-switched via applyLiveContextReducers -> craftingContext.
+    // case "JOB_PAUSE":
+    // live-switched via applyLiveContextReducers -> craftingContext.
     case "JOB_TICK": {
       return invalidateIfCraftingChanged(
         state,

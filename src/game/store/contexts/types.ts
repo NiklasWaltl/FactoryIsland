@@ -27,7 +27,7 @@ export type ResearchLabContextState = Pick<GameState, "unlockedBuildings">;
 // Multi-field contexts
 export type CraftingContextState = Pick<
   GameState,
-  "crafting" | "keepStockByWorkbench" | "recipeAutomationPolicies"
+  "crafting" | "keepStockByWorkbench" | "recipeAutomationPolicies" | "network"
 >;
 
 export type DroneContextState = Pick<GameState, "drones">;

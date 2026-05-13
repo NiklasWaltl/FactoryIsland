@@ -56,6 +56,7 @@ function ingredientHintText(line: IngredientLine): string {
 const JOB_STATUS_LABEL: Record<JobStatus, string> = {
   queued: "wartet",
   reserved: "reserviert",
+  paused: "pausiert",
   crafting: "läuft",
   delivering: "liefert",
   done: "fertig",

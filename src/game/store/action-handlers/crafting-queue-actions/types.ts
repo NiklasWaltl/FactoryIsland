@@ -10,6 +10,7 @@ export type HandledActionType =
   | "CRAFT_REQUEST_WITH_PREREQUISITES"
   | "JOB_ENQUEUE"
   | "JOB_CANCEL"
+  | "JOB_PAUSE"
   | "JOB_MOVE"
   | "JOB_SET_PRIORITY"
   | "JOB_TICK"
@@ -25,6 +26,7 @@ export const HANDLED_ACTION_TYPES = new Set<string>([
   "CRAFT_REQUEST_WITH_PREREQUISITES",
   "JOB_ENQUEUE",
   "JOB_CANCEL",
+  "JOB_PAUSE",
   "JOB_MOVE",
   "JOB_SET_PRIORITY",
   "JOB_TICK",

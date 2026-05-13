@@ -1,5 +1,6 @@
 import {
   cancelJob as craftingCancelJob,
+  pauseJob as craftingPauseJob,
   moveJob as craftingMoveJob,
   setJobPriority as craftingSetJobPriority,
 } from "../../../../crafting/queue";
@@ -15,11 +16,17 @@ import type { CraftingQueueActionDeps } from "../deps";
 type QueueManagementAction = Extract<
   GameAction,
   {
-    type: "JOB_CANCEL" | "JOB_MOVE" | "JOB_SET_PRIORITY" | "JOB_TICK";
+    type:
+      | "JOB_CANCEL"
+      | "JOB_PAUSE"
+      | "JOB_MOVE"
+      | "JOB_SET_PRIORITY"
+      | "JOB_TICK";
   }
 >;
 
 type JobCancelAction = Extract<QueueManagementAction, { type: "JOB_CANCEL" }>;
+type JobPauseAction = Extract<QueueManagementAction, { type: "JOB_PAUSE" }>;
 type JobMoveAction = Extract<QueueManagementAction, { type: "JOB_MOVE" }>;
 type JobSetPriorityAction = Extract<
   QueueManagementAction,
@@ -39,6 +46,10 @@ type JobCancelContext = Omit<QueueManagementContext, "action"> & {
 
 type JobMoveContext = Omit<QueueManagementContext, "action"> & {
   action: JobMoveAction;
+};
+
+type JobPauseContext = Omit<QueueManagementContext, "action"> & {
+  action: JobPauseAction;
 };
 
 type JobSetPriorityContext = Omit<QueueManagementContext, "action"> & {
@@ -62,6 +73,14 @@ export function runJobCancelPhase(ctx: JobCancelContext): GameState {
   const jobBefore = { ...r.job, status: r.previousStatus };
   const nextNetwork = releaseJobReservations(state.network, jobBefore);
   return { ...state, crafting: r.queue, network: nextNetwork };
+}
+
+export function runJobPausePhase(ctx: JobPauseContext): GameState {
+  const { state, action } = ctx;
+
+  const r = craftingPauseJob(state.crafting, action.payload.jobId);
+  if (r.queue === state.crafting) return state;
+  return { ...state, crafting: r.queue };
 }
 
 export function runJobMovePhase(ctx: JobMoveContext): GameState {
@@ -103,6 +122,12 @@ export function runQueueManagementPhase(
   switch (ctx.action.type) {
     case "JOB_CANCEL":
       return runJobCancelPhase({
+        state: ctx.state,
+        action: ctx.action,
+        deps: ctx.deps,
+      });
+    case "JOB_PAUSE":
+      return runJobPausePhase({
         state: ctx.state,
         action: ctx.action,
         deps: ctx.deps,

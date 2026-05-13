@@ -1,9 +1,11 @@
 import {
   cancelJob as craftingCancelJob,
   enqueueJob as craftingEnqueueJob,
+  pauseJob as craftingPauseJob,
   moveJob as craftingMoveJob,
   setJobPriority as craftingSetJobPriority,
 } from "../../crafting/queue";
+import { releaseJobReservations } from "../../crafting/tick";
 import {
   applyRecipeAutomationPolicyPatch,
   areRecipeAutomationPolicyEntriesEqual,
@@ -17,6 +19,7 @@ export const CRAFTING_HANDLED_ACTION_TYPES = [
   "CRAFT_REQUEST_WITH_PREREQUISITES",
   "JOB_ENQUEUE",
   "JOB_CANCEL",
+  "JOB_PAUSE",
   "JOB_MOVE",
   "JOB_SET_PRIORITY",
   "JOB_TICK",
@@ -59,6 +62,17 @@ function reduceCrafting(
 
     case "JOB_CANCEL": {
       const r = craftingCancelJob(state.crafting, action.jobId);
+      if (!r.ok) {
+        return { ...state, crafting: r.queue };
+      }
+      const jobBefore = { ...r.job, status: r.previousStatus };
+      const nextNetwork = releaseJobReservations(state.network, jobBefore);
+      return { ...state, crafting: r.queue, network: nextNetwork };
+    }
+
+    case "JOB_PAUSE": {
+      const r = craftingPauseJob(state.crafting, action.payload.jobId);
+      if (r.queue === state.crafting) return state;
       return { ...state, crafting: r.queue };
     }
 

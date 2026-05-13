@@ -16,6 +16,7 @@ export type WorkbenchId = string;
  *
  *   queued      → no reservations held; waiting for ingredients
  *   reserved    → ingredients reserved (Step 2); waiting for free workbench
+ *   paused      → temporarily suspended; keeps current reservation state
  *   crafting    → workbench timer running
  *   delivering  → craft completed; waiting for drone pickup/dropoff
  *   done        → terminal: ingredients committed, output deposited
@@ -27,6 +28,7 @@ export type WorkbenchId = string;
 export type JobStatus =
   | "queued"
   | "reserved"
+  | "paused"
   | "crafting"
   | "delivering"
   | "done"
@@ -115,6 +117,13 @@ export function createEmptyCraftingQueue(): CraftingQueueState {
   return { jobs: [], nextJobSeq: 1, lastError: null };
 }
 
+export interface JobPauseAction {
+  readonly type: "JOB_PAUSE";
+  readonly payload: {
+    readonly jobId: JobId;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Action union
 // ---------------------------------------------------------------------------
@@ -144,6 +153,7 @@ export type CraftingAction =
       readonly expectedStepCount?: number;
     }
   | { readonly type: "JOB_CANCEL"; readonly jobId: JobId }
+  | JobPauseAction
   | {
       readonly type: "JOB_MOVE";
       readonly jobId: JobId;

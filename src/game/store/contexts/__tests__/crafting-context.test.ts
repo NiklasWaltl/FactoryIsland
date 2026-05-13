@@ -1,5 +1,9 @@
 import type { CraftingJob } from "../../../crafting/types";
 import { createEmptyCraftingQueue } from "../../../crafting/types";
+import {
+  createEmptyNetworkSlice,
+  type NetworkSlice,
+} from "../../../inventory/reservationTypes";
 import type { GameAction } from "../../game-actions";
 import type { CraftingContextState } from "../types";
 import {
@@ -31,11 +35,13 @@ function createJob(overrides: Partial<CraftingJob> = {}): CraftingJob {
 
 function createCraftingState(
   jobs: readonly CraftingJob[] = [],
+  network: NetworkSlice = createEmptyNetworkSlice(),
 ): CraftingContextState {
   return {
     crafting: { ...createEmptyCraftingQueue(), jobs },
     keepStockByWorkbench: {},
     recipeAutomationPolicies: {},
+    network,
   } satisfies CraftingContextState;
 }
 
@@ -82,8 +88,21 @@ describe("craftingContext", () => {
       expect(result.crafting.lastError?.kind).toBe("UNKNOWN_WORKBENCH");
     });
 
-    it("JOB_CANCEL marks the job cancelled", () => {
-      const state = createCraftingState([createJob()]);
+    it("JOB_CANCEL marks the job cancelled and releases network reservations", () => {
+      const state = createCraftingState([createJob({ status: "reserved" })], {
+        ...createEmptyNetworkSlice(),
+        reservations: [
+          {
+            id: "res-1",
+            itemId: "wood",
+            amount: 5,
+            ownerKind: "crafting_job",
+            ownerId: "job-1",
+            createdAt: 1,
+          },
+        ],
+        nextReservationId: 2,
+      });
       const action = {
         type: "JOB_CANCEL",
         jobId: "job-1",
@@ -92,6 +111,49 @@ describe("craftingContext", () => {
       const result = expectHandled(craftingContext.reduce(state, action));
 
       expect(result.crafting.jobs[0].status).toBe("cancelled");
+      expect(result.network).not.toBe(state.network);
+      expect(result.network.reservations).toHaveLength(0);
+      expect(result.network.lastError).toBeNull();
+      expect(result.network.nextReservationId).toBe(2);
+    });
+
+    it("JOB_PAUSE marks a queued job as paused", () => {
+      const state = createCraftingState([createJob({ status: "queued" })]);
+      const action = {
+        type: "JOB_PAUSE",
+        payload: { jobId: "job-1" },
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result).not.toBe(state);
+      expect(result.crafting).not.toBe(state.crafting);
+      expect(result.crafting.jobs[0].status).toBe("paused");
+      expect(result.network).toBe(state.network);
+    });
+
+    it("JOB_PAUSE keeps state reference unchanged when already paused", () => {
+      const state = createCraftingState([createJob({ status: "paused" })]);
+      const action = {
+        type: "JOB_PAUSE",
+        payload: { jobId: "job-1" },
+      } satisfies GameAction;
+
+      const result = craftingContext.reduce(state, action);
+
+      expect(result).toBe(state);
+    });
+
+    it("JOB_PAUSE keeps state reference unchanged for non-pausable status", () => {
+      const state = createCraftingState([createJob({ status: "done" })]);
+      const action = {
+        type: "JOB_PAUSE",
+        payload: { jobId: "job-1" },
+      } satisfies GameAction;
+
+      const result = craftingContext.reduce(state, action);
+
+      expect(result).toBe(state);
     });
 
     it("JOB_MOVE updates queue order metadata", () => {

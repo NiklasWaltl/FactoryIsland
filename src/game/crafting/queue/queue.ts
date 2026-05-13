@@ -172,6 +172,19 @@ export type CancelResult =
       readonly error: CraftingError;
     };
 
+export type PauseResult =
+  | { readonly ok: true; readonly queue: CraftingQueueState }
+  | {
+      readonly ok: false;
+      readonly queue: CraftingQueueState;
+      readonly error: CraftingError;
+    };
+
+const PAUSABLE: ReadonlySet<JobStatus> = new Set<JobStatus>([
+  "queued",
+  "reserved",
+]);
+
 /**
  * Mark a job as cancelled. Already-terminal jobs (`done`, `cancelled`) are
  * left untouched and report a business error via lastError.
@@ -216,6 +229,47 @@ export function cancelJob(
     },
     previousStatus: job.status,
     job: updated,
+  };
+}
+
+/**
+ * Pause a waiting job without releasing reservations.
+ *
+ * - `queued` and `reserved` are pausable.
+ * - `paused` is an idempotent no-op.
+ * - non-pausable statuses are no-op for feature-stub compatibility.
+ */
+export function pauseJob(queue: CraftingQueueState, jobId: JobId): PauseResult {
+  const idx = queue.jobs.findIndex((j) => j.id === jobId);
+  if (idx < 0) {
+    const err: CraftingError = {
+      kind: "UNKNOWN_JOB",
+      message: `Job "${jobId}" does not exist.`,
+      jobId,
+    };
+    return { ok: false, queue: { ...queue, lastError: err }, error: err };
+  }
+
+  const job = queue.jobs[idx];
+  if (job.status === "paused") {
+    return { ok: true, queue };
+  }
+  if (!PAUSABLE.has(job.status)) {
+    return { ok: true, queue };
+  }
+
+  const updated: CraftingJob = { ...job, status: "paused" };
+  return {
+    ok: true,
+    queue: {
+      ...queue,
+      jobs: [
+        ...queue.jobs.slice(0, idx),
+        updated,
+        ...queue.jobs.slice(idx + 1),
+      ],
+      lastError: null,
+    },
   };
 }
 
@@ -391,8 +445,9 @@ export function setJobPriority(
 }
 
 const ALLOWED: Readonly<Record<JobStatus, ReadonlySet<JobStatus>>> = {
-  queued: new Set<JobStatus>(["reserved", "cancelled"]),
-  reserved: new Set<JobStatus>(["crafting", "cancelled"]),
+  queued: new Set<JobStatus>(["reserved", "paused", "cancelled"]),
+  reserved: new Set<JobStatus>(["crafting", "paused", "cancelled"]),
+  paused: new Set<JobStatus>(["cancelled"]),
   crafting: new Set<JobStatus>(["delivering", "cancelled"]),
   delivering: new Set<JobStatus>(["done"]),
   done: new Set<JobStatus>([]),
