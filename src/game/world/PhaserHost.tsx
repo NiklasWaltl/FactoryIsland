@@ -20,9 +20,9 @@ import {
 interface PhaserHostProps {
   tileMap: TileMapData;
   floorMap: FloorMapData;
-  staticAssets: StaticAssetSnapshot[];
-  drones: DroneSnapshot[];
-  collectionNodes: CollectionNodeSnapshot[];
+  staticAssets: readonly StaticAssetSnapshot[];
+  drones: readonly DroneSnapshot[];
+  collectionNodes: readonly CollectionNodeSnapshot[];
   ship: ShipSnapshot;
   coins: number;
 }

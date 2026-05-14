@@ -1,10 +1,9 @@
 import React from "react";
 import { CELL_PX } from "../constants/grid";
-import { isUnderConstruction } from "../store/helpers/asset-status";
 import type { GameState } from "../store/types";
 import { debugLog } from "../debug/debugLogger";
 import { WAREHOUSE_INPUT_SPRITE } from "../assets/sprites/sprites";
-import type { StaticAssetSnapshot } from "../world/PhaserGame";
+import { isPhaserRenderedAssetType } from "../store/selectors/phaser-snapshot-selectors";
 import { collectWarehouseMarkers } from "./grid-overlay-helpers";
 
 interface BuildWorldOverlayDataParams {
@@ -20,7 +19,6 @@ interface BuildWorldOverlayDataParams {
 }
 
 export interface GridWorldOverlayData {
-  phaserStaticAssets: StaticAssetSnapshot[];
   migrationGuardOverlayElements: React.ReactNode[];
   dynamicAssetOverlayElements: React.ReactNode[];
   warehouseMarkerElements: React.ReactNode[];
@@ -53,7 +51,6 @@ export function buildWorldOverlayData({
   const logisticsOverlayElements: React.ReactNode[] = [];
   const machineOverlayElements: React.ReactNode[] = [];
   const debugWorldOverlayElements: React.ReactNode[] = [];
-  const phaserStaticAssets: StaticAssetSnapshot[] = [];
 
   for (const asset of Object.values(state.assets)) {
     if (renderedAssets.has(asset.id)) continue;
@@ -86,57 +83,13 @@ export function buildWorldOverlayData({
     const isAutoMiner = asset.type === "auto_miner";
     const isTwoTileBeltMachine =
       asset.type === "auto_smelter" || asset.type === "auto_assembler";
-    const underConstruction = isUnderConstruction(state, asset.id);
 
     const convQueue = isConveyor
       ? (state.conveyors[asset.id]?.queue ?? [])
       : [];
     const minerEntry = isAutoMiner ? state.autoMiners[asset.id] : null;
 
-    if (
-      asset.type === "map_shop" ||
-      asset.type === "stone_deposit" ||
-      asset.type === "iron_deposit" ||
-      asset.type === "copper_deposit" ||
-      asset.type === "stone" ||
-      asset.type === "iron" ||
-      asset.type === "copper" ||
-      asset.type === "tree" ||
-      asset.type === "sapling" ||
-      asset.type === "cable" ||
-      asset.type === "generator" ||
-      asset.type === "battery" ||
-      asset.type === "power_pole" ||
-      asset.type === "conveyor" ||
-      asset.type === "conveyor_corner" ||
-      asset.type === "conveyor_merger" ||
-      asset.type === "conveyor_splitter" ||
-      asset.type === "conveyor_underground_in" ||
-      asset.type === "conveyor_underground_out" ||
-      asset.type === "auto_miner" ||
-      asset.type === "auto_smelter" ||
-      asset.type === "auto_assembler" ||
-      asset.type === "warehouse" ||
-      asset.type === "workbench" ||
-      asset.type === "smithy" ||
-      asset.type === "manual_assembler" ||
-      asset.type === "service_hub" ||
-      asset.type === "dock_warehouse" ||
-      asset.type === "module_lab" ||
-      asset.type === "research_lab"
-    ) {
-      phaserStaticAssets.push({
-        id: asset.id,
-        type: asset.type,
-        x: asset.x,
-        y: asset.y,
-        width: aw,
-        height: ah,
-        direction: asset.direction,
-        isUnderConstruction: underConstruction,
-        isDeconstructing: asset.status === "deconstructing",
-      });
-
+    if (isPhaserRenderedAssetType(asset.type)) {
       if (isPowerPole) {
         connectionOverlayElements.push(
           <div
@@ -475,7 +428,6 @@ export function buildWorldOverlayData({
   ));
 
   return {
-    phaserStaticAssets,
     migrationGuardOverlayElements,
     dynamicAssetOverlayElements,
     warehouseMarkerElements,

@@ -274,15 +274,21 @@ class WorldScene extends Phaser.Scene {
       this.applyFloorMap(data);
     });
 
-    this.events.on(STATIC_ASSETS_EVENT, (data: StaticAssetSnapshot[]) => {
-      this.applyStaticAssets(data);
-    });
+    this.events.on(
+      STATIC_ASSETS_EVENT,
+      (data: readonly StaticAssetSnapshot[]) => {
+        this.applyStaticAssets(data);
+      },
+    );
 
-    this.events.on(COLLECTION_NODES_EVENT, (data: CollectionNodeSnapshot[]) => {
-      this.applyCollectionNodes(data);
-    });
+    this.events.on(
+      COLLECTION_NODES_EVENT,
+      (data: readonly CollectionNodeSnapshot[]) => {
+        this.applyCollectionNodes(data);
+      },
+    );
 
-    this.events.on(DRONE_STATE_EVENT, (data: DroneSnapshot[]) => {
+    this.events.on(DRONE_STATE_EVENT, (data: readonly DroneSnapshot[]) => {
       this.applyDroneStates(data);
     });
 
@@ -343,7 +349,7 @@ class WorldScene extends Phaser.Scene {
   }
 
   /** Apply a full static-asset snapshot for Phaser-rendered world sprites. */
-  private applyStaticAssets(data: StaticAssetSnapshot[]): void {
+  private applyStaticAssets(data: readonly StaticAssetSnapshot[]): void {
     const nextIds = new Set<string>();
 
     for (const asset of data) {
@@ -501,7 +507,7 @@ class WorldScene extends Phaser.Scene {
     this.deconstructOverlayTweens.clear();
   }
 
-  private applyCollectionNodes(data: CollectionNodeSnapshot[]): void {
+  private applyCollectionNodes(data: readonly CollectionNodeSnapshot[]): void {
     const nextIds = new Set<string>();
     for (const node of data) {
       nextIds.add(node.id);
@@ -564,7 +570,7 @@ class WorldScene extends Phaser.Scene {
     label.setPosition(0, size / 2 + 2);
   }
 
-  private applyDroneStates(data: DroneSnapshot[]): void {
+  private applyDroneStates(data: readonly DroneSnapshot[]): void {
     const activeIds = new Set<string>();
     for (const drone of data) {
       activeIds.add(drone.droneId);

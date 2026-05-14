@@ -9,9 +9,12 @@ import { PhaserHost } from "../world/PhaserHost";
 import { buildWorldOverlayData } from "./GridOverlays";
 import { buildSelectionOverlays } from "./GridSelection";
 import {
-  getDockWarehouseInputTile,
-  getDockWarehousePos,
-} from "../store/constants/map/map-layout";
+  selectDroneSnapshots,
+  selectCollectionNodeSnapshots,
+  selectShipSnapshot,
+  selectFullStaticAssetSnapshots,
+  selectCulledStaticAssetSnapshots,
+} from "../store/selectors/phaser-snapshot-selectors";
 
 const WORLD_W = GRID_W * CELL_PX;
 const WORLD_H = GRID_H * CELL_PX;
@@ -63,7 +66,6 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
   const maxCellY = Math.min(GRID_H - 1, Math.ceil(worldY2 / CELL_PX) + 1);
 
   const {
-    phaserStaticAssets,
     migrationGuardOverlayElements,
     dynamicAssetOverlayElements,
     warehouseMarkerElements,
@@ -79,70 +81,19 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
     warnedUnmigratedTypesRef,
   });
 
-  const staticAssetsSignature = phaserStaticAssets
-    .map(
-      (asset) =>
-        `${asset.id}|${asset.type}|${asset.x}|${asset.y}|${asset.width}|${asset.height}|${asset.direction ?? ""}|${asset.isUnderConstruction ? 1 : 0}|${asset.isDeconstructing ? 1 : 0}`,
-    )
-    .join(";");
-  const stableStaticAssets = useMemo(
-    () => phaserStaticAssets,
-    [staticAssetsSignature],
+  const fullStaticAssets = selectFullStaticAssetSnapshots(state);
+  const stableStaticAssets = selectCulledStaticAssetSnapshots(
+    fullStaticAssets,
+    minCellX,
+    minCellY,
+    maxCellX,
+    maxCellY,
   );
-
-  const droneSignature = Object.values(state.drones)
-    .map(
-      (drone) =>
-        `${drone.droneId}|${drone.status}|${drone.tileX}|${drone.tileY}|${drone.hubId ?? ""}|${drone.cargo?.itemType ?? ""}|${drone.cargo?.amount ?? 0}`,
-    )
-    .join(";");
-
-  const droneSnapshots = useMemo(() => {
-    return Object.values(state.drones).map((drone) => ({
-      droneId: drone.droneId,
-      status: drone.status,
-      tileX: drone.tileX,
-      tileY: drone.tileY,
-      cargo: drone.cargo
-        ? { itemType: drone.cargo.itemType, amount: drone.cargo.amount }
-        : null,
-      hubId: drone.hubId,
-      isParkedAtHub: drone.status === "idle" && drone.hubId !== null,
-      parkingSlot: null as number | null,
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [droneSignature]);
-
-  const collectionNodeSignature = Object.values(state.collectionNodes)
-    .map(
-      (node) =>
-        `${node.id}|${node.itemType}|${node.amount}|${node.tileX}|${node.tileY}`,
-    )
-    .join(";");
-
-  const collectionNodeSnapshots = useMemo(() => {
-    return Object.values(state.collectionNodes).map((node) => ({
-      id: node.id,
-      itemType: node.itemType,
-      amount: node.amount,
-      tileX: node.tileX,
-      tileY: node.tileY,
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collectionNodeSignature]);
-
-  const shipSnapshot = useMemo(() => {
-    const dockPos = getDockWarehousePos(state.tileMap);
-    const dockInputTile = getDockWarehouseInputTile(state.tileMap);
-    return {
-      status: state.ship.status,
-      dockTileX: dockPos.x,
-      dockTileY: dockPos.y,
-      inputTileX: dockInputTile.x,
-      inputTileY: dockInputTile.y,
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.ship.status, state.tileMap]);
+  const droneSnapshots = selectDroneSnapshots(state.drones);
+  const collectionNodeSnapshots = selectCollectionNodeSnapshots(
+    state.collectionNodes,
+  );
+  const shipSnapshot = selectShipSnapshot(state);
 
   const { placementOverlayElement, inspectionOverlayElement } =
     buildSelectionOverlays({
