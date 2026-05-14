@@ -54,6 +54,8 @@ export type WarehouseContextState = Pick<
   | "inventory"
   | "selectedWarehouseId"
   | "mode"
+  | "hotbarSlots"
+  | "notifications"
 >;
 
 export type PowerContextState = Pick<

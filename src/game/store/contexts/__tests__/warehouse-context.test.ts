@@ -1,12 +1,26 @@
 import { WAREHOUSE_CAPACITY } from "../../constants/buildings/index";
+import { EMPTY_HOTBAR_SLOT, HOTBAR_SIZE } from "../../constants/ui/hotbar";
 import type { GameAction } from "../../game-actions";
 import { createEmptyInventory } from "../../inventory-ops";
-import type { GameMode } from "../../types";
+import type { GameMode, HotbarSlot } from "../../types";
 import type { WarehouseContextState } from "../types";
 import {
   WAREHOUSE_HANDLED_ACTION_TYPES,
   warehouseContext,
 } from "../warehouse-context";
+
+function createEmptyHotbar(): HotbarSlot[] {
+  return Array.from({ length: HOTBAR_SIZE }, () => ({ ...EMPTY_HOTBAR_SLOT }));
+}
+
+function createFullHotbar(): HotbarSlot[] {
+  return Array.from({ length: HOTBAR_SIZE }, () => ({
+    toolKind: "axe" as const,
+    amount: 5,
+    label: "Axt (5)",
+    emoji: "",
+  }));
+}
 
 function createWarehouseState(
   overrides: Partial<WarehouseContextState> = {},
@@ -17,6 +31,8 @@ function createWarehouseState(
     inventory: createEmptyInventory(),
     selectedWarehouseId: null,
     mode: "release" as GameMode,
+    hotbarSlots: createEmptyHotbar(),
+    notifications: [],
     ...overrides,
   } satisfies WarehouseContextState;
 }
@@ -205,6 +221,189 @@ describe("warehouseContext", () => {
           type: "TRANSFER_FROM_WAREHOUSE",
           item: "iron",
           amount: 5,
+        } satisfies GameAction;
+
+        expect(warehouseContext.reduce(state, action)).toBe(state);
+      });
+    });
+
+    describe("EQUIP_FROM_WAREHOUSE", () => {
+      it("moves stock from the warehouse into an empty hotbar slot", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), axe: 3 },
+          },
+        });
+        const action = {
+          type: "EQUIP_FROM_WAREHOUSE",
+          itemKind: "axe",
+          amount: 1,
+        } satisfies GameAction;
+
+        const result = warehouseContext.reduce(state, action);
+
+        expect(result).not.toBe(state);
+        expect(result!.warehouseInventories["wh-A"]!.axe).toBe(2);
+        const axeSlot = result!.hotbarSlots.find((s) => s.toolKind === "axe");
+        expect(axeSlot?.amount).toBe(1);
+      });
+
+      it("records an error notification when the hotbar is full and leaves warehouse stock untouched", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), sapling: 5 },
+          },
+          hotbarSlots: createFullHotbar(),
+        });
+        const action = {
+          type: "EQUIP_FROM_WAREHOUSE",
+          itemKind: "sapling",
+          amount: 1,
+        } satisfies GameAction;
+
+        const result = warehouseContext.reduce(state, action);
+
+        expect(result).not.toBe(state);
+        // Stock unchanged — preflight-decrement is discarded when the
+        // hotbar refuses the new slot.
+        expect(result!.warehouseInventories["wh-A"]!.sapling).toBe(5);
+        expect(result!.hotbarSlots).toBe(state.hotbarSlots);
+        expect(result!.notifications).toHaveLength(1);
+        expect(result!.notifications[0]?.kind).toBe("error");
+      });
+
+      it("is a no-op when no warehouse is selected", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: null,
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), axe: 3 },
+          },
+        });
+        const action = {
+          type: "EQUIP_FROM_WAREHOUSE",
+          itemKind: "axe",
+          amount: 1,
+        } satisfies GameAction;
+
+        expect(warehouseContext.reduce(state, action)).toBe(state);
+      });
+
+      it("is a no-op when the warehouse does not hold enough stock", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: { "wh-A": createEmptyInventory() },
+        });
+        const action = {
+          type: "EQUIP_FROM_WAREHOUSE",
+          itemKind: "axe",
+          amount: 1,
+        } satisfies GameAction;
+
+        expect(warehouseContext.reduce(state, action)).toBe(state);
+      });
+    });
+
+    describe("EQUIP_BUILDING_FROM_WAREHOUSE", () => {
+      it("moves a building from the warehouse into an empty hotbar slot", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), workbench: 2 },
+          },
+        });
+        const action = {
+          type: "EQUIP_BUILDING_FROM_WAREHOUSE",
+          buildingType: "workbench",
+        } satisfies GameAction;
+
+        const result = warehouseContext.reduce(state, action);
+
+        expect(result).not.toBe(state);
+        expect(result!.warehouseInventories["wh-A"]!.workbench).toBe(1);
+        const buildingSlot = result!.hotbarSlots.find(
+          (s) => s.toolKind === "building",
+        );
+        expect(buildingSlot?.buildingType).toBe("workbench");
+        expect(buildingSlot?.amount).toBe(1);
+      });
+
+      it("is a no-op when the warehouse does not hold the building", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: { "wh-A": createEmptyInventory() },
+        });
+        const action = {
+          type: "EQUIP_BUILDING_FROM_WAREHOUSE",
+          buildingType: "workbench",
+        } satisfies GameAction;
+
+        expect(warehouseContext.reduce(state, action)).toBe(state);
+      });
+    });
+
+    describe("REMOVE_FROM_HOTBAR", () => {
+      it("empties the slot and returns the stock to the warehouse", () => {
+        const slots = createEmptyHotbar();
+        slots[0] = {
+          toolKind: "axe",
+          amount: 2,
+          label: "Axt (2)",
+          emoji: "",
+        };
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), axe: 1 },
+          },
+          hotbarSlots: slots,
+        });
+        const action = {
+          type: "REMOVE_FROM_HOTBAR",
+          slot: 0,
+        } satisfies GameAction;
+
+        const result = warehouseContext.reduce(state, action);
+
+        expect(result).not.toBe(state);
+        expect(result!.warehouseInventories["wh-A"]!.axe).toBe(3);
+        expect(result!.hotbarSlots[0]?.toolKind).toBe("empty");
+      });
+
+      it("is a no-op when the targeted slot is empty", () => {
+        const state = createWarehouseState({
+          selectedWarehouseId: "wh-A",
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), axe: 1 },
+          },
+        });
+        const action = {
+          type: "REMOVE_FROM_HOTBAR",
+          slot: 0,
+        } satisfies GameAction;
+
+        expect(warehouseContext.reduce(state, action)).toBe(state);
+      });
+
+      it("is a no-op when no warehouse is selected", () => {
+        const slots = createEmptyHotbar();
+        slots[0] = {
+          toolKind: "axe",
+          amount: 2,
+          label: "Axt (2)",
+          emoji: "",
+        };
+        const state = createWarehouseState({
+          selectedWarehouseId: null,
+          warehouseInventories: {
+            "wh-A": { ...createEmptyInventory(), axe: 1 },
+          },
+          hotbarSlots: slots,
+        });
+        const action = {
+          type: "REMOVE_FROM_HOTBAR",
+          slot: 0,
         } satisfies GameAction;
 
         expect(warehouseContext.reduce(state, action)).toBe(state);

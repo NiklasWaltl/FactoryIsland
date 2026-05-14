@@ -160,6 +160,8 @@ export function applyContextReducers(
       inventory: next.inventory,
       selectedWarehouseId: next.selectedWarehouseId,
       mode: next.mode,
+      hotbarSlots: next.hotbarSlots,
+      notifications: next.notifications,
     },
     action,
   );
@@ -167,7 +169,9 @@ export function applyContextReducers(
     warehouse !== null &&
     (warehouse.warehousesPlaced !== next.warehousesPlaced ||
       warehouse.warehouseInventories !== next.warehouseInventories ||
-      warehouse.inventory !== next.inventory)
+      warehouse.inventory !== next.inventory ||
+      warehouse.hotbarSlots !== next.hotbarSlots ||
+      warehouse.notifications !== next.notifications)
   ) {
     next = { ...next, ...warehouse };
   }
@@ -390,20 +394,33 @@ export function applyLiveContextReducers(
 
   if (
     action.type === "TRANSFER_TO_WAREHOUSE" ||
-    action.type === "TRANSFER_FROM_WAREHOUSE"
+    action.type === "TRANSFER_FROM_WAREHOUSE" ||
+    action.type === "EQUIP_FROM_WAREHOUSE" ||
+    action.type === "EQUIP_BUILDING_FROM_WAREHOUSE" ||
+    action.type === "REMOVE_FROM_HOTBAR"
   ) {
     // isUnderConstruction reads state.constructionSites, which is outside
     // WarehouseContextState. Mirror the legacy hotbar-transfer-phase guard
     // here (constructionSites stays out of the slice for the same reason
-    // assets stays out of ZoneContextState).
-    const whId = state.selectedWarehouseId;
-    if (whId && isUnderConstruction(state, whId)) return state;
+    // assets stays out of ZoneContextState). The guard is only applied to
+    // TRANSFER_*: equip/remove legacy paths (hotbar-equip-phase.ts,
+    // hotbar-remove-phase.ts) intentionally do NOT block under-construction
+    // warehouses, so the live switch keeps that behaviour.
+    if (
+      action.type === "TRANSFER_TO_WAREHOUSE" ||
+      action.type === "TRANSFER_FROM_WAREHOUSE"
+    ) {
+      const whId = state.selectedWarehouseId;
+      if (whId && isUnderConstruction(state, whId)) return state;
+    }
     const warehouseSliceIn = {
       warehousesPlaced: state.warehousesPlaced,
       warehouseInventories: state.warehouseInventories,
       inventory: state.inventory,
       selectedWarehouseId: state.selectedWarehouseId,
       mode: state.mode,
+      hotbarSlots: state.hotbarSlots,
+      notifications: state.notifications,
     };
     const warehouse = warehouseContext.reduce(warehouseSliceIn, action);
     if (warehouse === null) return null;
