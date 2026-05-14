@@ -48,6 +48,12 @@ module.exports = {
         "react/jsx-no-literals": "off",
       },
     },
+    {
+      files: ["scripts/**/*.{js,ts}"],
+      rules: {
+        "no-console": "off",
+      },
+    },
   ],
   rules: {
     "react/jsx-no-literals": "error",
