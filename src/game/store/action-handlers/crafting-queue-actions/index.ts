@@ -28,7 +28,7 @@ import type { GameAction } from "../../game-actions";
 import type { CraftingQueueActionDeps } from "./deps";
 import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 import { HANDLED_ACTION_TYPES, type CraftingQueueHandledAction } from "./types";
-import { runNetworkReservationsPhase, runQueueManagementPhase } from "./phases";
+import { runQueueManagementPhase } from "./phases";
 
 export type { CraftingQueueActionDeps } from "./deps";
 
@@ -75,18 +75,20 @@ export function handleCraftingQueueAction(
     // -----------------------------------------------------------------
     // Inventory-network reservations (Step 2)
     // -----------------------------------------------------------------
+    // All NETWORK_* actions are live-switched via applyLiveContextReducers
+    // -> inventoryContext. The invalidateIfCraftingChanged wrapper is
+    // intentionally dropped for COMMIT_*: COMMIT does not mutate
+    // state.crafting, so the wrapper was always a no-op for these cases
+    // (asserted by shadow-diff.test.ts legacy parity checks).
     // case "NETWORK_RESERVE_BATCH":
-    // live-switched via applyLiveContextReducers -> inventoryContext.
-    case "NETWORK_COMMIT_RESERVATION":
-    case "NETWORK_COMMIT_BY_OWNER":
-      // case "NETWORK_CANCEL_RESERVATION":
-      // live-switched via applyLiveContextReducers -> inventoryContext.
-      // case "NETWORK_CANCEL_BY_OWNER":
-      // live-switched via applyLiveContextReducers -> inventoryContext.
-      return invalidateIfCraftingChanged(
-        state,
-        runNetworkReservationsPhase({ state, action }),
-      );
+    // case "NETWORK_COMMIT_RESERVATION":
+    // case "NETWORK_COMMIT_BY_OWNER":
+    // case "NETWORK_CANCEL_RESERVATION":
+    // case "NETWORK_CANCEL_BY_OWNER":
+    //   return invalidateIfCraftingChanged(
+    //     state,
+    //     runNetworkReservationsPhase({ state, action }),
+    //   );
 
     // -----------------------------------------------------------------
     // Crafting jobs (Step 3)

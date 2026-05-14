@@ -117,7 +117,8 @@ export function applyContextReducers(
   if (
     inventory !== null &&
     (inventory.inventory !== next.inventory ||
-      inventory.network !== next.network)
+      inventory.network !== next.network ||
+      inventory.warehouseInventories !== next.warehouseInventories)
   ) {
     next = { ...next, ...inventory };
   }
@@ -367,7 +368,9 @@ export function applyLiveContextReducers(
   if (
     action.type === "NETWORK_RESERVE_BATCH" ||
     action.type === "NETWORK_CANCEL_RESERVATION" ||
-    action.type === "NETWORK_CANCEL_BY_OWNER"
+    action.type === "NETWORK_CANCEL_BY_OWNER" ||
+    action.type === "NETWORK_COMMIT_RESERVATION" ||
+    action.type === "NETWORK_COMMIT_BY_OWNER"
   ) {
     const inventorySliceIn = {
       inventory: state.inventory,
@@ -377,6 +380,11 @@ export function applyLiveContextReducers(
     const inventory = inventoryContext.reduce(inventorySliceIn, action);
     if (inventory === null) return null;
     if (inventory === inventorySliceIn) return state;
+    // invalidateIfCraftingChanged intentionally omitted: COMMIT_* does not
+    // mutate state.crafting or state.routingIndexCache. Pre-condition
+    // belegt durch shadow-diff.test.ts:
+    // - "NETWORK_COMMIT_RESERVATION does not mutate crafting or routingIndexCache (legacy)"
+    // - "NETWORK_COMMIT_BY_OWNER does not mutate crafting or routingIndexCache (legacy)"
     return { ...state, ...inventory };
   }
 

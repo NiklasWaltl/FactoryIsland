@@ -42,11 +42,18 @@ function reduceInventory(
         state.network,
         action,
       );
-      if (result.network === state.network) {
+      const networkChanged = result.network !== state.network;
+      const warehousesChanged =
+        result.warehouseInventories !== warehouseInventories;
+      if (!networkChanged && !warehousesChanged) {
         if (state.warehouseInventories !== undefined) return state;
         return { ...state, warehouseInventories };
       }
-      return { ...state, warehouseInventories, network: result.network };
+      return {
+        ...state,
+        warehouseInventories: result.warehouseInventories,
+        network: result.network,
+      };
     }
 
     default: {

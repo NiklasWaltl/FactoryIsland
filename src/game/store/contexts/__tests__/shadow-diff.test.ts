@@ -106,6 +106,38 @@ describe("shadowDiff / applyContextReducers parity", () => {
     expect(deepEqual(legacy.inventory, context.inventory)).toBe(true);
   });
 
+  // Pre-condition for the NETWORK_COMMIT_* live switch (phase 3A): the legacy
+  // reducer routes COMMIT_RESERVATION through invalidateIfCraftingChanged. We
+  // assert here that the wrapper is a no-op for COMMIT_* — crafting and the
+  // routingIndexCache must keep their identity so the live wrapper can omit
+  // the invalidate-call without behavioural divergence.
+  it("NETWORK_COMMIT_RESERVATION does not mutate crafting or routingIndexCache (legacy)", () => {
+    const state = freshState();
+    const action: GameAction = {
+      type: "NETWORK_COMMIT_RESERVATION",
+      reservationId: "missing-reservation",
+    };
+
+    const next = gameReducer(state, action);
+
+    expect(next.crafting).toBe(state.crafting);
+    expect(next.routingIndexCache).toBe(state.routingIndexCache);
+  });
+
+  it("NETWORK_COMMIT_BY_OWNER does not mutate crafting or routingIndexCache (legacy)", () => {
+    const state = freshState();
+    const action: GameAction = {
+      type: "NETWORK_COMMIT_BY_OWNER",
+      ownerKind: "crafting_job",
+      ownerId: "missing-job",
+    };
+
+    const next = gameReducer(state, action);
+
+    expect(next.crafting).toBe(state.crafting);
+    expect(next.routingIndexCache).toBe(state.routingIndexCache);
+  });
+
   it("zone slice: context matches legacy for CREATE_ZONE", () => {
     // CREATE_ZONE generates a fresh id via makeId(); running both
     // reducers consumes two distinct counters, so we compare the
