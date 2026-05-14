@@ -225,6 +225,96 @@ describe("zoneContext", () => {
       expect(zoneContext.reduce(state, action)).toBe(state);
     });
 
+    it("SET_BUILDING_ZONE returns same state if zone unchanged (identity short-circuit)", () => {
+      const state = createZoneState({
+        productionZones: { "zone-1": { id: "zone-1", name: "Zone 1" } },
+        buildingZoneIds: { "building-a": "zone-1" },
+      });
+      const action = {
+        type: "SET_BUILDING_ZONE",
+        buildingId: "building-a",
+        zoneId: "zone-1",
+      } satisfies GameAction;
+
+      expect(zoneContext.reduce(state, action)).toBe(state);
+    });
+
+    it("SET_BUILDING_ZONE is a no-op when clearing a non-existent assignment", () => {
+      const state = createZoneState();
+      const action = {
+        type: "SET_BUILDING_ZONE",
+        buildingId: "building-a",
+        zoneId: null,
+      } satisfies GameAction;
+
+      expect(zoneContext.reduce(state, action)).toBe(state);
+    });
+
+    it("SET_BUILDING_ZONE invalidates routingIndexCache when assigning", () => {
+      const state = createZoneState({
+        productionZones: { "zone-1": { id: "zone-1", name: "Zone 1" } },
+        routingIndexCache: {
+          warehouseInputTilesByItemId: new Map(),
+          activeWorkbenchJobsByInputItem: new Map(),
+          activeWorkbenchJobsByItemAndWorkbench: new Map(),
+          zoneCompatLookup: new Map(),
+          warehouseIdByInputTileId: new Map(),
+          assetsRef: {},
+        },
+      });
+      const action = {
+        type: "SET_BUILDING_ZONE",
+        buildingId: "building-a",
+        zoneId: "zone-1",
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+      expect(result.routingIndexCache).toBeNull();
+    });
+
+    it("SET_BUILDING_ZONE invalidates routingIndexCache when clearing", () => {
+      const state = createZoneState({
+        buildingZoneIds: { "building-a": "zone-1" },
+        routingIndexCache: {
+          warehouseInputTilesByItemId: new Map(),
+          activeWorkbenchJobsByInputItem: new Map(),
+          activeWorkbenchJobsByItemAndWorkbench: new Map(),
+          zoneCompatLookup: new Map(),
+          warehouseIdByInputTileId: new Map(),
+          assetsRef: {},
+        },
+      });
+      const action = {
+        type: "SET_BUILDING_ZONE",
+        buildingId: "building-a",
+        zoneId: null,
+      } satisfies GameAction;
+
+      const result = expectHandled(zoneContext.reduce(state, action));
+      expect(result.routingIndexCache).toBeNull();
+    });
+
+    it("SET_BUILDING_ZONE mutates even for unknown buildingId (assets not in slice)", () => {
+      const state = createZoneState({
+        productionZones: { "zone-1": { id: "zone-1", name: "Zone 1" } },
+      });
+      const action = {
+        type: "SET_BUILDING_ZONE",
+        buildingId: "ghost-building",
+        zoneId: "zone-1",
+      } satisfies GameAction;
+
+      // ZoneContextState does not include `assets`, so the context cannot
+      // reproduce the hasAsset() guard from zone-actions.ts:94. That guard
+      // remains the caller's responsibility (verified separately by
+      // isBuildingZoneStateConsistent invariants).
+      const result = expectHandled(zoneContext.reduce(state, action));
+      expect(result).not.toBe(state);
+      expect(result.buildingZoneIds).toEqual({
+        "ghost-building": "zone-1",
+      });
+    });
+
     it("CLEAR_ALL_BUILDING_ZONES clears all assignments", () => {
       const state = createZoneState({
         buildingZoneIds: {
@@ -292,6 +382,30 @@ describe("zoneContext", () => {
       const result = expectHandled(zoneContext.reduce(state, action));
 
       expect(result.buildingSourceWarehouseIds).toEqual({});
+    });
+
+    it("SET_BUILDING_SOURCE returns same state if source unchanged (identity short-circuit)", () => {
+      const state = createZoneState({
+        buildingSourceWarehouseIds: { "building-a": "warehouse-1" },
+      });
+      const action = {
+        type: "SET_BUILDING_SOURCE",
+        buildingId: "building-a",
+        warehouseId: "warehouse-1",
+      } satisfies GameAction;
+
+      expect(zoneContext.reduce(state, action)).toBe(state);
+    });
+
+    it("SET_BUILDING_SOURCE is a no-op when clearing a non-existent mapping", () => {
+      const state = createZoneState();
+      const action = {
+        type: "SET_BUILDING_SOURCE",
+        buildingId: "building-a",
+        warehouseId: null,
+      } satisfies GameAction;
+
+      expect(zoneContext.reduce(state, action)).toBe(state);
     });
   });
 

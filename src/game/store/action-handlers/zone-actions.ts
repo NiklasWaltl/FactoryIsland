@@ -10,7 +10,7 @@ import type { GameAction } from "../game-actions";
 // CREATE_ZONE is handled live by zoneContext.
 // import { makeId } from "../utils/make-id";
 import type { GameState } from "../types";
-import { hasAsset, isBuildingZoneStateConsistent } from "../utils/asset-guards";
+import { isBuildingZoneStateConsistent } from "../utils/asset-guards";
 import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 
 type HandledActionType =
@@ -89,22 +89,23 @@ export function handleZoneAction(
     //   return finalizeZoneAction(nextState, action.type);
     // }
 
-    case "SET_BUILDING_ZONE": {
-      const { buildingId, zoneId } = action;
-      if (!hasAsset(state, buildingId)) return state;
-      if (!zoneId) {
-        // Remove from zone
-        const { [buildingId]: _removed, ...rest } = state.buildingZoneIds;
-        const nextState = { ...state, buildingZoneIds: rest };
-        return finalizeZoneAction(nextState, action.type);
-      }
-      if (!state.productionZones[zoneId]) return state;
-      const nextState = {
-        ...state,
-        buildingZoneIds: { ...state.buildingZoneIds, [buildingId]: zoneId },
-      };
-      return finalizeZoneAction(nextState, action.type);
-    }
+    // SET_BUILDING_ZONE is handled live by zoneContext.
+    // case "SET_BUILDING_ZONE": {
+    //   const { buildingId, zoneId } = action;
+    //   if (!hasAsset(state, buildingId)) return state;
+    //   if (!zoneId) {
+    //     // Remove from zone
+    //     const { [buildingId]: _removed, ...rest } = state.buildingZoneIds;
+    //     const nextState = { ...state, buildingZoneIds: rest };
+    //     return finalizeZoneAction(nextState, action.type);
+    //   }
+    //   if (!state.productionZones[zoneId]) return state;
+    //   const nextState = {
+    //     ...state,
+    //     buildingZoneIds: { ...state.buildingZoneIds, [buildingId]: zoneId },
+    //   };
+    //   return finalizeZoneAction(nextState, action.type);
+    // }
 
     // CLEAR_ALL_BUILDING_ZONES is handled live by zoneContext.
     // case "CLEAR_ALL_BUILDING_ZONES": {

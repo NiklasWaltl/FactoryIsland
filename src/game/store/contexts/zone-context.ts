@@ -99,13 +99,14 @@ function reduceZone(
       if (!zoneId) {
         if (!(buildingId in state.buildingZoneIds)) return state;
         const { [buildingId]: _removed, ...rest } = state.buildingZoneIds;
-        return { ...state, buildingZoneIds: rest };
+        return { ...state, buildingZoneIds: rest, routingIndexCache: null };
       }
       if (!state.productionZones[zoneId]) return state;
       if (state.buildingZoneIds[buildingId] === zoneId) return state;
       return {
         ...state,
         buildingZoneIds: { ...state.buildingZoneIds, [buildingId]: zoneId },
+        routingIndexCache: null,
       };
     }
 

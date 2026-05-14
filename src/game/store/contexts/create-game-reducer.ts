@@ -319,8 +319,19 @@ export function applyLiveContextReducers(
     action.type === "DELETE_ZONE" ||
     action.type === "SET_ZONE_NAME" ||
     action.type === "SET_ZONE_COLOR" ||
-    action.type === "CLEAR_ALL_BUILDING_ZONES"
+    action.type === "CLEAR_ALL_BUILDING_ZONES" ||
+    action.type === "SET_BUILDING_ZONE"
   ) {
+    // hasAsset guard lives outside ZoneContextState (the slice does not
+    // include `assets`). Mirror the legacy zone-actions.ts:94 behaviour
+    // here so SET_BUILDING_ZONE rejects unknown buildingIds before they
+    // can be written into buildingZoneIds.
+    if (
+      action.type === "SET_BUILDING_ZONE" &&
+      !state.assets[action.buildingId]
+    ) {
+      return state;
+    }
     const zoneSliceIn = {
       productionZones: state.productionZones,
       buildingZoneIds: state.buildingZoneIds,
