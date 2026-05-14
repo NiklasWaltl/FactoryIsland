@@ -37,6 +37,7 @@ function createCraftingState(
   jobs: readonly CraftingJob[] = [],
   network: NetworkSlice = createEmptyNetworkSlice(),
   assets: CraftingContextState["assets"] = {},
+  overrides: Partial<CraftingContextState> = {},
 ): CraftingContextState {
   return {
     assets,
@@ -44,6 +45,14 @@ function createCraftingState(
     keepStockByWorkbench: {},
     recipeAutomationPolicies: {},
     network,
+    notifications: [],
+    constructionSites: {},
+    buildingZoneIds: {},
+    productionZones: {},
+    buildingSourceWarehouseIds: {},
+    warehouseInventories: {},
+    serviceHubs: {},
+    ...overrides,
   } satisfies CraftingContextState;
 }
 
@@ -64,7 +73,7 @@ describe("craftingContext", () => {
       expect(craftingContext.reduce(state, action)).toBeNull();
     });
 
-    it("CRAFT_REQUEST_WITH_PREREQUISITES keeps the slice unchanged during Phase 2", () => {
+    it("CRAFT_REQUEST_WITH_PREREQUISITES rejects when workbench is missing", () => {
       const state = createCraftingState();
       const action = {
         type: "CRAFT_REQUEST_WITH_PREREQUISITES",
@@ -73,10 +82,83 @@ describe("craftingContext", () => {
         source: "player",
       } satisfies GameAction;
 
-      expect(craftingContext.reduce(state, action)).toBe(state);
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.kind).toBe("error");
+      expect(result.notifications.at(-1)?.displayName).toContain(
+        "existiert nicht",
+      );
     });
 
-    it("JOB_ENQUEUE records the queue error when the workbench is outside the context slice", () => {
+    it("CRAFT_REQUEST_WITH_PREREQUISITES rejects when workbench is under construction", () => {
+      const state = createCraftingState(
+        [],
+        createEmptyNetworkSlice(),
+        { "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0, size: 1 } },
+        {
+          constructionSites: {
+            "wb-1": { buildingType: "workbench", remaining: {} },
+          },
+        },
+      );
+      const action = {
+        type: "CRAFT_REQUEST_WITH_PREREQUISITES",
+        recipeId: "wood_pickaxe",
+        workbenchId: "wb-1",
+        source: "player",
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.displayName).toContain("im Bau");
+    });
+
+    it("CRAFT_REQUEST_WITH_PREREQUISITES rejects when workbench has only global source", () => {
+      const state = createCraftingState([], createEmptyNetworkSlice(), {
+        "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0, size: 1 },
+      });
+      const action = {
+        type: "CRAFT_REQUEST_WITH_PREREQUISITES",
+        recipeId: "wood_pickaxe",
+        workbenchId: "wb-1",
+        source: "player",
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.displayName).toContain(
+        "physisches Lager",
+      );
+    });
+
+    it("CRAFT_REQUEST_WITH_PREREQUISITES rejects when policy disallows the recipe", () => {
+      const state = createCraftingState(
+        [],
+        createEmptyNetworkSlice(),
+        { "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0, size: 1 } },
+        {
+          recipeAutomationPolicies: {
+            wood_pickaxe: { manualOnly: true },
+          },
+        },
+      );
+      const action = {
+        type: "CRAFT_REQUEST_WITH_PREREQUISITES",
+        recipeId: "wood_pickaxe",
+        workbenchId: "wb-1",
+        source: "player",
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.kind).toBe("error");
+    });
+
+    it("JOB_ENQUEUE records the queue error and notification when the workbench is missing", () => {
       const state = createCraftingState();
       const action = {
         type: "JOB_ENQUEUE",
@@ -88,6 +170,76 @@ describe("craftingContext", () => {
       const result = expectHandled(craftingContext.reduce(state, action));
 
       expect(result.crafting.lastError?.kind).toBe("UNKNOWN_WORKBENCH");
+      expect(result.notifications.at(-1)?.kind).toBe("error");
+    });
+
+    it("JOB_ENQUEUE rejects under-construction workbenches with a notification", () => {
+      const state = createCraftingState(
+        [],
+        createEmptyNetworkSlice(),
+        {
+          "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0, size: 1 },
+        },
+        {
+          constructionSites: {
+            "wb-1": { buildingType: "workbench", remaining: {} },
+          },
+        },
+      );
+      const action = {
+        type: "JOB_ENQUEUE",
+        recipeId: "wood_pickaxe",
+        workbenchId: "wb-1",
+        source: "player",
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.displayName).toContain("im Bau");
+    });
+
+    it("JOB_ENQUEUE rejects automation when policy disallows the recipe", () => {
+      const state = createCraftingState(
+        [],
+        createEmptyNetworkSlice(),
+        { "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0, size: 1 } },
+        {
+          recipeAutomationPolicies: {
+            wood_pickaxe: { manualOnly: true },
+          },
+        },
+      );
+      const action = {
+        type: "JOB_ENQUEUE",
+        recipeId: "wood_pickaxe",
+        workbenchId: "wb-1",
+        source: "automation",
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.kind).toBe("error");
+    });
+
+    it("JOB_ENQUEUE rejects when workbench has only the global source", () => {
+      const state = createCraftingState([], createEmptyNetworkSlice(), {
+        "wb-1": { id: "wb-1", type: "workbench", x: 0, y: 0, size: 1 },
+      });
+      const action = {
+        type: "JOB_ENQUEUE",
+        recipeId: "wood_pickaxe",
+        workbenchId: "wb-1",
+        source: "player",
+      } satisfies GameAction;
+
+      const result = expectHandled(craftingContext.reduce(state, action));
+
+      expect(result.crafting).toBe(state.crafting);
+      expect(result.notifications.at(-1)?.displayName).toContain(
+        "physisches Lager",
+      );
     });
 
     it("JOB_CANCEL marks the job cancelled and releases network reservations", () => {

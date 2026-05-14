@@ -83,7 +83,6 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
     "selectedAutoAssemblerId",
     "selectedGeneratorId",
   ],
-  JOB_ENQUEUE: ["crafting"],
   JOB_TICK: ["crafting", "network"],
   ASSIGN_DRONE_TO_HUB: ["drones"],
   // Placement is inherently cross-slice: it reads assets/cellMap/tileMap to

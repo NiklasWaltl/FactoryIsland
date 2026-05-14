@@ -9,12 +9,71 @@ import { releaseJobReservations } from "../../crafting/tick";
 import {
   applyRecipeAutomationPolicyPatch,
   areRecipeAutomationPolicyEntriesEqual,
+  checkRecipeAutomationPolicy,
   isRecipeAutomationPolicyEntryDefault,
 } from "../../crafting/policies";
+import { buildWorkbenchAutoCraftPlan } from "../../crafting/planner";
+import { resolveCraftingSource } from "../../crafting/crafting-sources";
+import { getZoneWarehouseIds } from "../../zones/production-zone-aggregation";
+import type { CraftingInventorySource } from "../../crafting/types";
 import { KEEP_STOCK_MAX_TARGET } from "../constants/keep-stock";
 import type { GameAction } from "../game-actions";
+import type { CraftingSource, GameState } from "../types";
+import { addErrorNotification } from "../utils/notifications";
 import { getAssetOfType } from "../utils/asset-guards";
 import type { CraftingContextState, BoundedContext } from "./types";
+
+type CraftingSourceResolverState = Pick<
+  GameState,
+  | "assets"
+  | "buildingZoneIds"
+  | "productionZones"
+  | "buildingSourceWarehouseIds"
+  | "warehouseInventories"
+>;
+
+function resolveBuildingSource(
+  state: CraftingSourceResolverState,
+  buildingId: string | null,
+): CraftingSource {
+  if (!buildingId) return { kind: "global" };
+  const zoneId = state.buildingZoneIds[buildingId];
+  if (zoneId && state.productionZones[zoneId]) {
+    const whIds = getZoneWarehouseIds(state as GameState, zoneId);
+    if (whIds.length > 0) {
+      return { kind: "zone", zoneId };
+    }
+  }
+  const whId = state.buildingSourceWarehouseIds[buildingId] ?? null;
+  return resolveCraftingSource(state as GameState, whId);
+}
+
+function toCraftingJobInventorySource(
+  state: CraftingSourceResolverState,
+  source: CraftingSource,
+): CraftingInventorySource {
+  if (source.kind === "global") {
+    return { kind: "global" };
+  }
+  if (source.kind === "zone") {
+    return {
+      kind: "zone",
+      zoneId: source.zoneId,
+      warehouseIds: getZoneWarehouseIds(state as GameState, source.zoneId),
+    };
+  }
+  return { kind: "warehouse", warehouseId: source.warehouseId };
+}
+
+function withCraftingErrorNotification(
+  state: CraftingContextState,
+  message: string,
+): CraftingContextState {
+  return {
+    ...state,
+    notifications: addErrorNotification(state.notifications, message),
+  };
+}
 
 export const CRAFTING_HANDLED_ACTION_TYPES = [
   "CRAFT_REQUEST_WITH_PREREQUISITES",
@@ -46,19 +105,175 @@ function reduceCrafting(
   const actionType = action.type;
 
   switch (actionType) {
-    case "CRAFT_REQUEST_WITH_PREREQUISITES":
-      return state;
+    case "CRAFT_REQUEST_WITH_PREREQUISITES": {
+      const workbenchAsset = getAssetOfType(
+        state,
+        action.workbenchId,
+        "workbench",
+      );
+      if (!workbenchAsset) {
+        return withCraftingErrorNotification(
+          state,
+          `Werkbank "${action.workbenchId}" existiert nicht.`,
+        );
+      }
+      if (state.constructionSites[workbenchAsset.id]) {
+        return withCraftingErrorNotification(
+          state,
+          `Werkbank [${workbenchAsset.id}] ist noch im Bau.`,
+        );
+      }
+      const recipePolicies = state.recipeAutomationPolicies ?? {};
+      const autoCraftDecision = checkRecipeAutomationPolicy(
+        recipePolicies,
+        action.recipeId,
+        "craftRequest",
+      );
+      if (!autoCraftDecision.allowed) {
+        return withCraftingErrorNotification(state, autoCraftDecision.reason!);
+      }
+      const resolvedSource = resolveBuildingSource(state, action.workbenchId);
+      if (resolvedSource.kind === "global") {
+        return withCraftingErrorNotification(
+          state,
+          "Werkbank braucht ein physisches Lager als Quelle.",
+        );
+      }
+      const inventorySource = toCraftingJobInventorySource(
+        state,
+        resolvedSource,
+      );
+      if (inventorySource.kind === "global") {
+        return withCraftingErrorNotification(
+          state,
+          "Workbench braucht eine physische Quelle (Lagerhaus/Zone) für Auto-Craft.",
+        );
+      }
+      const plan = buildWorkbenchAutoCraftPlan({
+        recipeId: action.recipeId,
+        amount: action.amount ?? 1,
+        producerAssetId: action.workbenchId,
+        source: inventorySource,
+        warehouseInventories: state.warehouseInventories,
+        serviceHubs: state.serviceHubs,
+        network: state.network,
+        assets: state.assets,
+        existingJobs: state.crafting.jobs,
+        canUseRecipe: (recipeId) =>
+          checkRecipeAutomationPolicy(
+            recipePolicies,
+            recipeId,
+            "plannerAutoCraft",
+          ),
+      });
+      if (!plan.ok) {
+        return withCraftingErrorNotification(state, plan.error.message);
+      }
+      let nextQueue = state.crafting;
+      const plannedTotalCount = plan.steps.reduce(
+        (sum, step) => sum + step.count,
+        0,
+      );
+      let divergenceNotice: string | null = null;
+      if (
+        typeof action.expectedStepCount === "number" &&
+        action.expectedStepCount !== plannedTotalCount
+      ) {
+        divergenceNotice = `Hinweis: Auto-Craft-Plan an aktuellen Bestand angepasst (${action.expectedStepCount} → ${plannedTotalCount} Schritte).`;
+      }
+      for (const step of plan.steps) {
+        for (let i = 0; i < step.count; i++) {
+          const enqueueResult = craftingEnqueueJob(nextQueue, {
+            recipeId: step.recipeId,
+            workbenchId: action.workbenchId,
+            source: action.source,
+            priority: action.priority,
+            inventorySource,
+            assets: state.assets,
+          });
+          if (!enqueueResult.ok) {
+            return withCraftingErrorNotification(
+              { ...state, crafting: enqueueResult.queue },
+              enqueueResult.error.message,
+            );
+          }
+          nextQueue = enqueueResult.queue;
+        }
+      }
+      if (nextQueue === state.crafting) return state;
+      return {
+        ...state,
+        crafting: nextQueue,
+        notifications: divergenceNotice
+          ? addErrorNotification(state.notifications, divergenceNotice)
+          : state.notifications,
+      };
+    }
 
     case "JOB_ENQUEUE": {
-      const failed = craftingEnqueueJob(state.crafting, {
+      const workbenchAsset = getAssetOfType(
+        state,
+        action.workbenchId,
+        "workbench",
+      );
+      if (!workbenchAsset) {
+        const failed = craftingEnqueueJob(state.crafting, {
+          recipeId: action.recipeId,
+          workbenchId: action.workbenchId,
+          source: action.source,
+          priority: action.priority,
+          inventorySource: { kind: "global" },
+          assets: state.assets,
+        });
+        return failed.ok
+          ? state
+          : {
+              ...state,
+              crafting: failed.queue,
+              notifications: addErrorNotification(
+                state.notifications,
+                failed.error.message,
+              ),
+            };
+      }
+      if (state.constructionSites[workbenchAsset.id]) {
+        return withCraftingErrorNotification(
+          state,
+          `Werkbank [${workbenchAsset.id}] ist noch im Bau.`,
+        );
+      }
+      if (action.source === "automation") {
+        const decision = checkRecipeAutomationPolicy(
+          state.recipeAutomationPolicies ?? {},
+          action.recipeId,
+          "jobEnqueueAutomation",
+        );
+        if (!decision.allowed) {
+          return withCraftingErrorNotification(state, decision.reason!);
+        }
+      }
+      const resolvedSource = resolveBuildingSource(state, action.workbenchId);
+      if (resolvedSource.kind === "global") {
+        return withCraftingErrorNotification(
+          state,
+          "Werkbank braucht ein physisches Lager als Quelle.",
+        );
+      }
+      const r = craftingEnqueueJob(state.crafting, {
         recipeId: action.recipeId,
         workbenchId: action.workbenchId,
         source: action.source,
         priority: action.priority,
-        inventorySource: { kind: "global" },
-        assets: {},
+        inventorySource: toCraftingJobInventorySource(state, resolvedSource),
+        assets: state.assets,
       });
-      return failed.ok ? state : { ...state, crafting: failed.queue };
+      if (!r.ok) {
+        return withCraftingErrorNotification(
+          { ...state, crafting: r.queue },
+          r.error.message,
+        );
+      }
+      return { ...state, crafting: r.queue };
     }
 
     case "JOB_CANCEL": {

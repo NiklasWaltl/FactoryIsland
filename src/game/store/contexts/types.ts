@@ -32,6 +32,13 @@ export type CraftingContextState = Pick<
   | "keepStockByWorkbench"
   | "recipeAutomationPolicies"
   | "network"
+  | "notifications"
+  | "constructionSites"
+  | "buildingZoneIds"
+  | "productionZones"
+  | "buildingSourceWarehouseIds"
+  | "warehouseInventories"
+  | "serviceHubs"
 >;
 
 export type DroneContextState = Pick<GameState, "drones">;

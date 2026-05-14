@@ -78,6 +78,13 @@ export function applyContextReducers(
       keepStockByWorkbench: next.keepStockByWorkbench,
       recipeAutomationPolicies: next.recipeAutomationPolicies,
       network: next.network,
+      notifications: next.notifications,
+      constructionSites: next.constructionSites,
+      buildingZoneIds: next.buildingZoneIds,
+      productionZones: next.productionZones,
+      buildingSourceWarehouseIds: next.buildingSourceWarehouseIds,
+      warehouseInventories: next.warehouseInventories,
+      serviceHubs: next.serviceHubs,
     },
     action,
   );
@@ -86,7 +93,8 @@ export function applyContextReducers(
     (crafting.crafting !== next.crafting ||
       crafting.keepStockByWorkbench !== next.keepStockByWorkbench ||
       crafting.recipeAutomationPolicies !== next.recipeAutomationPolicies ||
-      crafting.network !== next.network)
+      crafting.network !== next.network ||
+      crafting.notifications !== next.notifications)
   ) {
     next = { ...next, ...crafting };
   }
@@ -346,6 +354,8 @@ export function applyLiveContextReducers(
     action.type === "JOB_PAUSE" ||
     action.type === "JOB_MOVE" ||
     action.type === "JOB_SET_PRIORITY" ||
+    action.type === "JOB_ENQUEUE" ||
+    action.type === "CRAFT_REQUEST_WITH_PREREQUISITES" ||
     action.type === "SET_KEEP_STOCK_TARGET" ||
     action.type === "SET_RECIPE_AUTOMATION_POLICY"
   ) {
@@ -355,12 +365,24 @@ export function applyLiveContextReducers(
       keepStockByWorkbench: state.keepStockByWorkbench,
       recipeAutomationPolicies: state.recipeAutomationPolicies,
       network: state.network,
+      notifications: state.notifications,
+      constructionSites: state.constructionSites,
+      buildingZoneIds: state.buildingZoneIds,
+      productionZones: state.productionZones,
+      buildingSourceWarehouseIds: state.buildingSourceWarehouseIds,
+      warehouseInventories: state.warehouseInventories,
+      serviceHubs: state.serviceHubs,
     };
     const crafting = craftingContext.reduce(craftingSliceIn, action);
     if (crafting === null) return null;
     if (crafting === craftingSliceIn) return state;
     const next = { ...state, ...crafting };
-    if (action.type !== "JOB_CANCEL" && action.type !== "JOB_PAUSE") {
+    if (
+      action.type !== "JOB_CANCEL" &&
+      action.type !== "JOB_PAUSE" &&
+      action.type !== "JOB_ENQUEUE" &&
+      action.type !== "CRAFT_REQUEST_WITH_PREREQUISITES"
+    ) {
       return next;
     }
     return invalidateIfCraftingChanged(state, next);

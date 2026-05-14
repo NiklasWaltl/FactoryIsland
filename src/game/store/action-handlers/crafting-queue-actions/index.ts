@@ -28,12 +28,7 @@ import type { GameAction } from "../../game-actions";
 import type { CraftingQueueActionDeps } from "./deps";
 import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 import { HANDLED_ACTION_TYPES, type CraftingQueueHandledAction } from "./types";
-import {
-  runNetworkReservationsPhase,
-  runCraftRequestPhase,
-  runJobEnqueuePhase,
-  runQueueManagementPhase,
-} from "./phases";
+import { runNetworkReservationsPhase, runQueueManagementPhase } from "./phases";
 
 export type { CraftingQueueActionDeps } from "./deps";
 
@@ -96,19 +91,11 @@ export function handleCraftingQueueAction(
     // -----------------------------------------------------------------
     // Crafting jobs (Step 3)
     // -----------------------------------------------------------------
-    case "CRAFT_REQUEST_WITH_PREREQUISITES": {
-      return invalidateIfCraftingChanged(
-        state,
-        runCraftRequestPhase({ state, action, deps }),
-      );
-    }
+    // case "CRAFT_REQUEST_WITH_PREREQUISITES":
+    // live-switched via applyLiveContextReducers -> craftingContext.
 
-    case "JOB_ENQUEUE": {
-      return invalidateIfCraftingChanged(
-        state,
-        runJobEnqueuePhase({ state, action, deps }),
-      );
-    }
+    // case "JOB_ENQUEUE":
+    // live-switched via applyLiveContextReducers -> craftingContext.
 
     // case "JOB_CANCEL":
     // live-switched via applyLiveContextReducers -> craftingContext.
