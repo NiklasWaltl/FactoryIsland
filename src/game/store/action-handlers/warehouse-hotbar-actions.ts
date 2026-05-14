@@ -13,7 +13,6 @@ import type { GameState } from "../types";
 import type { WarehouseHotbarActionDeps } from "./warehouse-hotbar-actions/deps";
 import {
   runHotbarEquipPhase,
-  runHotbarTransferPhase,
   runHotbarRemovePhase,
 } from "./warehouse-hotbar-actions/phases";
 
@@ -30,10 +29,14 @@ export function handleWarehouseHotbarAction(
       return runHotbarEquipPhase({ state, action, deps });
     }
 
-    case "TRANSFER_TO_WAREHOUSE":
-    case "TRANSFER_FROM_WAREHOUSE": {
-      return runHotbarTransferPhase({ state, action, deps });
-    }
+    // TRANSFER_TO_WAREHOUSE and TRANSFER_FROM_WAREHOUSE are handled live by
+    // warehouseContext. The isUnderConstruction guard runs in
+    // applyLiveContextReducers, since constructionSites is outside
+    // WarehouseContextState.
+    // case "TRANSFER_TO_WAREHOUSE":
+    // case "TRANSFER_FROM_WAREHOUSE": {
+    //   return runHotbarTransferPhase({ state, action, deps });
+    // }
 
     case "REMOVE_FROM_HOTBAR": {
       return runHotbarRemovePhase({ state, action, deps });

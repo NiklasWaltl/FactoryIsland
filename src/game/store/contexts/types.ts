@@ -49,7 +49,11 @@ export type InventoryContextState = Pick<GameState, "inventory" | "network"> & {
 
 export type WarehouseContextState = Pick<
   GameState,
-  "warehousesPlaced" | "warehouseInventories"
+  | "warehousesPlaced"
+  | "warehouseInventories"
+  | "inventory"
+  | "selectedWarehouseId"
+  | "mode"
 >;
 
 export type PowerContextState = Pick<

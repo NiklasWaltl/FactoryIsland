@@ -2,6 +2,7 @@ import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 import { hasWarehouseAssetWithInventory } from "../utils/asset-guards";
+import { isUnderConstruction } from "../helpers/asset-status";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -155,13 +156,17 @@ export function applyContextReducers(
     {
       warehousesPlaced: next.warehousesPlaced,
       warehouseInventories: next.warehouseInventories,
+      inventory: next.inventory,
+      selectedWarehouseId: next.selectedWarehouseId,
+      mode: next.mode,
     },
     action,
   );
   if (
     warehouse !== null &&
     (warehouse.warehousesPlaced !== next.warehousesPlaced ||
-      warehouse.warehouseInventories !== next.warehouseInventories)
+      warehouse.warehouseInventories !== next.warehouseInventories ||
+      warehouse.inventory !== next.inventory)
   ) {
     next = { ...next, ...warehouse };
   }
@@ -373,6 +378,29 @@ export function applyLiveContextReducers(
     if (inventory === null) return null;
     if (inventory === inventorySliceIn) return state;
     return { ...state, ...inventory };
+  }
+
+  if (
+    action.type === "TRANSFER_TO_WAREHOUSE" ||
+    action.type === "TRANSFER_FROM_WAREHOUSE"
+  ) {
+    // isUnderConstruction reads state.constructionSites, which is outside
+    // WarehouseContextState. Mirror the legacy hotbar-transfer-phase guard
+    // here (constructionSites stays out of the slice for the same reason
+    // assets stays out of ZoneContextState).
+    const whId = state.selectedWarehouseId;
+    if (whId && isUnderConstruction(state, whId)) return state;
+    const warehouseSliceIn = {
+      warehousesPlaced: state.warehousesPlaced,
+      warehouseInventories: state.warehouseInventories,
+      inventory: state.inventory,
+      selectedWarehouseId: state.selectedWarehouseId,
+      mode: state.mode,
+    };
+    const warehouse = warehouseContext.reduce(warehouseSliceIn, action);
+    if (warehouse === null) return null;
+    if (warehouse === warehouseSliceIn) return state;
+    return { ...state, ...warehouse };
   }
 
   if (
