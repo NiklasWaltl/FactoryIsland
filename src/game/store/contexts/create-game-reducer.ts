@@ -1,6 +1,7 @@
 import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
 import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
+import { hasWarehouseAssetWithInventory } from "../utils/asset-guards";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -320,7 +321,8 @@ export function applyLiveContextReducers(
     action.type === "SET_ZONE_NAME" ||
     action.type === "SET_ZONE_COLOR" ||
     action.type === "CLEAR_ALL_BUILDING_ZONES" ||
-    action.type === "SET_BUILDING_ZONE"
+    action.type === "SET_BUILDING_ZONE" ||
+    action.type === "SET_BUILDING_SOURCE"
   ) {
     // hasAsset guard lives outside ZoneContextState (the slice does not
     // include `assets`). Mirror the legacy zone-actions.ts:94 behaviour
@@ -331,6 +333,19 @@ export function applyLiveContextReducers(
       !state.assets[action.buildingId]
     ) {
       return state;
+    }
+    // Mirror legacy building-site.ts:67-98 guards for SET_BUILDING_SOURCE:
+    // buildingId must exist, and when warehouseId is set, the warehouse
+    // must exist with a live inventory. Both checks rely on `assets` /
+    // `warehouseInventories`, which are not part of ZoneContextState.
+    if (action.type === "SET_BUILDING_SOURCE") {
+      if (!state.assets[action.buildingId]) return state;
+      if (
+        action.warehouseId !== null &&
+        !hasWarehouseAssetWithInventory(state, action.warehouseId)
+      ) {
+        return state;
+      }
     }
     const zoneSliceIn = {
       productionZones: state.productionZones,

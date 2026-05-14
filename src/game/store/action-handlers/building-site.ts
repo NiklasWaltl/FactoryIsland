@@ -13,8 +13,6 @@ import { HUB_UPGRADE_COST } from "../constants/hub/hub-upgrade-cost";
 import { COLLECTABLE_KEYS } from "../constants/resources";
 import { hasResourcesInPhysicalStorage } from "../../buildings/warehouse/warehouse-storage";
 import {
-  hasAsset,
-  hasWarehouseAssetWithInventory,
   isBuildingSourceStateConsistent,
   isBuildingZoneStateConsistent,
   isConstructionSiteStateConsistent,
@@ -64,39 +62,45 @@ export function handleBuildingSiteAction(
   deps: BuildingSiteActionDeps,
 ): GameState | null {
   switch (action.type) {
-    case "SET_BUILDING_SOURCE": {
-      const { buildingId, warehouseId } = action;
-      if (!hasAsset(state, buildingId)) return state;
-      if (!warehouseId) {
-        // Reset to global: remove the mapping entry
-        const { [buildingId]: _removed, ...rest } =
-          state.buildingSourceWarehouseIds;
-        const nextState = { ...state, buildingSourceWarehouseIds: rest };
-        if (
-          import.meta.env.DEV &&
-          !isBuildingSourceStateConsistent(nextState)
-        ) {
-          deps.debugLog.building(
-            `[Invariant] buildingSourceWarehouseIds inkonsistent nach Reset für ${buildingId}`,
-          );
-        }
-        return nextState;
-      }
-      if (!hasWarehouseAssetWithInventory(state, warehouseId)) return state;
-      const nextState = {
-        ...state,
-        buildingSourceWarehouseIds: {
-          ...state.buildingSourceWarehouseIds,
-          [buildingId]: warehouseId,
-        },
-      };
-      if (import.meta.env.DEV && !isBuildingSourceStateConsistent(nextState)) {
-        deps.debugLog.building(
-          `[Invariant] buildingSourceWarehouseIds inkonsistent nach Setzen für ${buildingId}`,
-        );
-      }
-      return nextState;
-    }
+    // SET_BUILDING_SOURCE is handled live by zoneContext (with hasAsset and
+    // hasWarehouseAssetWithInventory guards applied in
+    // applyLiveContextReducers, since both checks read slices outside
+    // ZoneContextState). The legacy DEV-mode invariant logging is dropped:
+    // the new guards block both inconsistency paths before mutation, so the
+    // logger was already unreachable in practice.
+    // case "SET_BUILDING_SOURCE": {
+    //   const { buildingId, warehouseId } = action;
+    //   if (!hasAsset(state, buildingId)) return state;
+    //   if (!warehouseId) {
+    //     // Reset to global: remove the mapping entry
+    //     const { [buildingId]: _removed, ...rest } =
+    //       state.buildingSourceWarehouseIds;
+    //     const nextState = { ...state, buildingSourceWarehouseIds: rest };
+    //     if (
+    //       import.meta.env.DEV &&
+    //       !isBuildingSourceStateConsistent(nextState)
+    //     ) {
+    //       deps.debugLog.building(
+    //         `[Invariant] buildingSourceWarehouseIds inkonsistent nach Reset für ${buildingId}`,
+    //       );
+    //     }
+    //     return nextState;
+    //   }
+    //   if (!hasWarehouseAssetWithInventory(state, warehouseId)) return state;
+    //   const nextState = {
+    //     ...state,
+    //     buildingSourceWarehouseIds: {
+    //       ...state.buildingSourceWarehouseIds,
+    //       [buildingId]: warehouseId,
+    //     },
+    //   };
+    //   if (import.meta.env.DEV && !isBuildingSourceStateConsistent(nextState)) {
+    //     deps.debugLog.building(
+    //       `[Invariant] buildingSourceWarehouseIds inkonsistent nach Setzen für ${buildingId}`,
+    //     );
+    //   }
+    //   return nextState;
+    // }
 
     case "UPGRADE_HUB": {
       if (deps.isUnderConstruction(state, action.hubId)) {
