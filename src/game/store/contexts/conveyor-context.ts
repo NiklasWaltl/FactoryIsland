@@ -7,7 +7,6 @@ import type { BoundedContext, ConveyorContextState } from "./types";
 
 export const CONVEYOR_HANDLED_ACTION_TYPES = [
   "SET_SPLITTER_FILTER",
-  "LOGISTICS_TICK",
 ] as const satisfies readonly GameAction["type"][];
 
 type ConveyorActionType = (typeof CONVEYOR_HANDLED_ACTION_TYPES)[number];
@@ -48,12 +47,6 @@ function reduceConveyor(
         ),
       };
     }
-
-    case "LOGISTICS_TICK":
-      // cross-slice: no-op in isolated context
-      // The conveyor phase of LOGISTICS_TICK reads state.assets, state.inventory
-      // and state.network outside the conveyor slice.
-      return state;
 
     default: {
       const _exhaustive: never = actionType;

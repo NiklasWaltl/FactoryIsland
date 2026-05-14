@@ -3,7 +3,6 @@ import type { AutoAssemblerContextState, BoundedContext } from "./types";
 
 export const AUTO_ASSEMBLER_HANDLED_ACTION_TYPES = [
   "AUTO_ASSEMBLER_SET_RECIPE",
-  "LOGISTICS_TICK",
 ] as const satisfies readonly GameAction["type"][];
 
 type AutoAssemblerActionType =
@@ -50,10 +49,6 @@ function reduceAutoAssembler(
         },
       };
     }
-
-    case "LOGISTICS_TICK":
-      // cross-slice: no-op in isolated context
-      return state;
 
     default: {
       const _exhaustive: never = actionType;

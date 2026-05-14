@@ -3,7 +3,6 @@ import type { AutoSmelterContextState, BoundedContext } from "./types";
 
 export const AUTO_SMELTER_HANDLED_ACTION_TYPES = [
   "AUTO_SMELTER_SET_RECIPE",
-  "LOGISTICS_TICK",
 ] as const satisfies readonly GameAction["type"][];
 
 type AutoSmelterActionType = (typeof AUTO_SMELTER_HANDLED_ACTION_TYPES)[number];
@@ -36,10 +35,6 @@ function reduceAutoSmelter(
         },
       };
     }
-
-    case "LOGISTICS_TICK":
-      // cross-slice: no-op in isolated context
-      return state;
 
     default: {
       const _exhaustive: never = actionType;

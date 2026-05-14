@@ -92,13 +92,6 @@ describe("constructionContext", () => {
 
       expect(constructionContext.reduce(state, action)).toBe(state);
     });
-
-    it("LOGISTICS_TICK keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createConstructionState();
-      const action = { type: "LOGISTICS_TICK" } satisfies GameAction;
-
-      expect(constructionContext.reduce(state, action)).toBe(state);
-    });
   });
 
   describe("handledActionTypes", () => {

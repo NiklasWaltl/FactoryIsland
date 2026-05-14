@@ -81,13 +81,6 @@ describe("conveyorContext", () => {
 
       expect(result.splitterFilterState["splitter-1"]?.left).toBeNull();
     });
-
-    it("LOGISTICS_TICK keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createConveyorState();
-      const action = { type: "LOGISTICS_TICK" } satisfies GameAction;
-
-      expect(conveyorContext.reduce(state, action)).toBe(state);
-    });
   });
 
   describe("handledActionTypes", () => {

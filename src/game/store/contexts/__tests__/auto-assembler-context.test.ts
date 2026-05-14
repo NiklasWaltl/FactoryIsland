@@ -113,13 +113,6 @@ describe("autoAssemblerContext", () => {
 
       expect(autoAssemblerContext.reduce(state, action)).toBe(state);
     });
-
-    it("LOGISTICS_TICK keeps the auto-assembler slice unchanged (cross-slice no-op)", () => {
-      const state = createAutoAssemblerState();
-      const action = { type: "LOGISTICS_TICK" } satisfies GameAction;
-
-      expect(autoAssemblerContext.reduce(state, action)).toBe(state);
-    });
   });
 
   describe("handledActionTypes", () => {

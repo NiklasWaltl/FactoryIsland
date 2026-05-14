@@ -9,7 +9,6 @@ export const CONSTRUCTION_HANDLED_ACTION_TYPES = [
   "CANCEL_DECONSTRUCT_ASSET",
   "REMOVE_BUILDING",
   "UPGRADE_HUB",
-  "LOGISTICS_TICK",
 ] as const satisfies readonly GameAction["type"][];
 
 type ConstructionActionType =
@@ -40,12 +39,10 @@ function reduceConstruction(
     case "CANCEL_DECONSTRUCT_ASSET":
     case "REMOVE_BUILDING":
     case "UPGRADE_HUB":
-    case "LOGISTICS_TICK":
       // cross-slice: no-op in isolated context
       // Placement and removal need state.inventory, state.warehouseInventories,
       // state.serviceHubs, notifications and geometry validation; hub upgrade
-      // mutates state.serviceHubs alongside constructionSites; LOGISTICS_TICK
-      // advances construction sites through cross-slice drone delivery.
+      // mutates state.serviceHubs alongside constructionSites.
       return state;
 
     default: {

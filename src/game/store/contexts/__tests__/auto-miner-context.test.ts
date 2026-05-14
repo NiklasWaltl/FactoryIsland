@@ -25,13 +25,6 @@ describe("autoMinerContext", () => {
 
       expect(autoMinerContext.reduce(state, action)).toBeNull();
     });
-
-    it("LOGISTICS_TICK keeps the auto-miner slice unchanged during Phase 1", () => {
-      const state = createAutoMinerState();
-      const action = { type: "LOGISTICS_TICK" } satisfies GameAction;
-
-      expect(autoMinerContext.reduce(state, action)).toBe(state);
-    });
   });
 
   describe("handledActionTypes", () => {

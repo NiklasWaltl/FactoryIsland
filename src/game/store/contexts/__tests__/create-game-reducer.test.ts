@@ -41,19 +41,6 @@ describe("applyContextReducers", () => {
     expect(applyContextReducers(state, action)).toBe(state);
   });
 
-  it("auto-miner context: LOGISTICS_TICK composes without mutating unchanged slices", () => {
-    const state = createState();
-    const action = { type: "LOGISTICS_TICK" } satisfies GameAction;
-
-    const result = applyContextReducers(state, action);
-
-    expect(result).toBe(state);
-    expect(result.autoMiners).toBe(state.autoMiners);
-    expect(result.crafting).toBe(state.crafting);
-    expect(result.drones).toBe(state.drones);
-    expect(result.network).toBe(state.network);
-  });
-
   it("crafting context: SET_KEEP_STOCK_TARGET updates the crafting context slice only", () => {
     const state = withWorkbenchAsset(createState());
     const action = {
