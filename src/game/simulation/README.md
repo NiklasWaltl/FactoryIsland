@@ -18,7 +18,7 @@ SaveGameLatest  ──►  JSON.stringify  ──►  localStorage[SAVE_KEY]
 
 localStorage[SAVE_KEY]  ──►  JSON.parse  ──►  unknown
    │
-   │ migrateSave()  ← Kette migrateV0ToV1 … migrateV27ToV28 … migrateV28ToV29
+   │ migrateSave()  ← Kette migrateV0ToV1 … migrateV30ToV31 … migrateV31ToV32
    ▼
 SaveGameLatest
    │
@@ -36,18 +36,18 @@ GameState (runtime, hydratiert)
 
 ## Modulkarte
 
-| Datei                                        | Zweck                                                                                                                                                                                                                                                                                                    |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`save.ts`](./save.ts)                       | Stabile Top-Level Public-API-Fassade fuer Save/Load-Imports.                                                                                                                                                                                                                                             |
-| [`save-codec.ts`](./save-codec.ts)           | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields) + `loadAndHydrate` (one-stop Helper: parse → migrate → hydrate).                                                                                                                                                      |
-| [`save-migrations.ts`](./save-migrations.ts) | `CURRENT_SAVE_VERSION` (aktuell: 29), alle `SaveGameVN`-Interfaces (V1–V29), `migrateVNToVN+1`-Funktionen (V0→V29), Migrations-Chain + `clampGeneratorFuel` (pure Load-Guard für Generator-Fuel-Overflow).                                                                                               |
-| [`save-normalizer.ts`](./save-normalizer.ts) | `sanitizeXxx`-Funktionen: `sanitizeNetworkSlice`, `sanitizeCraftingQueue`, `sanitizeStarterDrone`, `sanitizeConveyorUndergroundPeers`, `sanitizeKeepStockByWorkbench`, `sanitizeRecipeAutomationPolicies` + `rebuildGlobalInventoryFromStorage` (re-derives `globalInventory` aus warehouse/hub-Slices). |
-| [`save-legacy.ts`](./save-legacy.ts)         | V0 (pre-versioned) → V1 Sonderfall + Runtime-Snapshot-Detection.                                                                                                                                                                                                                                         |
-| [`recipes/`](./recipes/)                     | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler / AutoAssemblerV1). Nicht persistenz-relevant.                                                                                                                                                                                     |
-| [`game.ts`](./game.ts)                       | Legacy-Compatibility-Shim (`export * from "../store/reducer"`); aktuell ohne interne Konsumenten in `src/**`.                                                                                                                                                                                            |
-| [`mining-utils.ts`](./mining-utils.ts)       | Hilfsfunktionen für Auto-Miner-Tick (Yield-Multiplikator, etc.).                                                                                                                                                                                                                                         |
-| [`smelting-utils.ts`](./smelting-utils.ts)   | Hilfsfunktionen für Auto-Smelter-Tick (Speed-Multiplikator, Tick-Intervall, etc.).                                                                                                                                                                                                                       |
-| [`__tests__/`](./__tests__/)                 | Roundtrip-, Migrations- und Simulation-Unit-Tests (10 Test-Dateien).                                                                                                                                                                                                                                     |
+| Datei                                        | Zweck                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`save.ts`](./save.ts)                       | Stabile Top-Level Public-API-Fassade fuer Save/Load-Imports.                                                                                                                                                                                                                                                                                                                                |
+| [`save-codec.ts`](./save-codec.ts)           | `serializeState` (Whitelist!) + `deserializeState` (re-derive runtime-only fields) + `loadAndHydrate` (one-stop Helper: parse → migrate → hydrate).                                                                                                                                                                                                                                         |
+| [`save-migrations.ts`](./save-migrations.ts) | Re-export-Fassade fuer die Migrations: exportiert `CURRENT_SAVE_VERSION` (aktuell: **32**, definiert in [`migrations/types.ts`](./migrations/types.ts)), alle `SaveGameVN`-Interfaces (V1–V32) und `migrateSave`/`clampGeneratorFuel`. Die eigentliche Chain (V0 → V32) liegt in [`migrations/`](./migrations/) (`v01-v10.ts`, `v11-v20.ts`, `v21-v30.ts`, `v31.ts`, `v32.ts`, `index.ts`). |
+| [`save-normalizer.ts`](./save-normalizer.ts) | `sanitizeXxx`-Funktionen: `sanitizeNetworkSlice`, `sanitizeCraftingQueue`, `sanitizeStarterDrone`, `sanitizeConveyorUndergroundPeers`, `sanitizeKeepStockByWorkbench`, `sanitizeRecipeAutomationPolicies` + `rebuildGlobalInventoryFromStorage` (re-derives `globalInventory` aus warehouse/hub-Slices).                                                                                    |
+| [`save-legacy.ts`](./save-legacy.ts)         | V0 (pre-versioned) → V1 Sonderfall + Runtime-Snapshot-Detection.                                                                                                                                                                                                                                                                                                                            |
+| [`recipes/`](./recipes/)                     | Statische Recipe-Definitionen (Workbench / Smelting / ManualAssembler / AutoAssemblerV1). Nicht persistenz-relevant.                                                                                                                                                                                                                                                                        |
+| [`game.ts`](./game.ts)                       | Legacy-Compatibility-Shim (`export * from "../store/reducer"`); aktuell ohne interne Konsumenten in `src/**`.                                                                                                                                                                                                                                                                               |
+| [`mining-utils.ts`](./mining-utils.ts)       | Hilfsfunktionen für Auto-Miner-Tick (Yield-Multiplikator, etc.).                                                                                                                                                                                                                                                                                                                            |
+| [`smelting-utils.ts`](./smelting-utils.ts)   | Hilfsfunktionen für Auto-Smelter-Tick (Speed-Multiplikator, Tick-Intervall, etc.).                                                                                                                                                                                                                                                                                                          |
+| [`__tests__/`](./__tests__/)                 | Roundtrip-, Migrations- und Simulation-Unit-Tests.                                                                                                                                                                                                                                                                                                                                          |
 
 **API-Grenze:** Neue Konsumenten sollten aus [`save.ts`](./save.ts) importieren. Direkte Importe aus [`save-codec.ts`](./save-codec.ts), [`save-migrations.ts`](./save-migrations.ts) oder [`save-normalizer.ts`](./save-normalizer.ts) sind primär fuer interne Implementierung und gezielte Tests gedacht.
 
@@ -68,15 +68,15 @@ Beispiel: `state.fooBar: Record<string, number>` soll persistiert werden.
 
 ### Schritt 3 — Save-Schema-Versionsbump
 
-[`save-migrations.ts`](./save-migrations.ts):
+Die Migrations sind seit dem V31-Schritt in [`migrations/`](./migrations/) aufgesplittet. [`save-migrations.ts`](./save-migrations.ts) ist nur noch der Re-Export-Shim.
 
-1. Neues Interface `SaveGameV<N+1>` — Copy aus `SaveGameV<N>` + neues Feld.
-2. Update `type SaveGameLatest = SaveGameV<N+1>`.
-3. `CURRENT_SAVE_VERSION` von `N` → `N+1` bumpen.
-4. Neue Migrations-Funktion `migrateV<N>ToV<N+1>(save: SaveGameV<N>): SaveGameV<N+1>` schreiben — typischer Inhalt: `{ ...save, version: N+1, fooBar: {} }`.
-5. In der `migrations`-Chain einen Eintrag `{ from: N, to: N+1, migrate: migrateV<N>ToV<N+1> }` ergänzen.
+1. Neues Interface `SaveGameV<N+1>` in [`migrations/types.ts`](./migrations/types.ts) — Copy aus `SaveGameV<N>` + neues Feld.
+2. `type SaveGameLatest = SaveGameV<N+1>` in derselben Datei aktualisieren.
+3. `CURRENT_SAVE_VERSION` in [`migrations/types.ts`](./migrations/types.ts) von `N` → `N+1` bumpen.
+4. Neue Migrations-Funktion `migrateV<N>ToV<N+1>(save: SaveGameV<N>): SaveGameV<N+1>` anlegen — entweder in der zustaendigen Bucket-Datei (`v21-v30.ts`) oder, fuer Einzel-Schritte ab V30, in einer eigenen `migrations/v<N+1>.ts` (Muster: [`v31.ts`](./migrations/v31.ts), [`v32.ts`](./migrations/v32.ts)). Typischer Inhalt: `{ ...save, version: N+1, fooBar: {} }`.
+5. In [`migrations/index.ts`](./migrations/index.ts) den neuen Import ergaenzen und einen `step(N, N+1, migrateV<N>ToV<N+1>)`-Eintrag an die `MIGRATIONS`-Liste anhaengen.
 
-> **Aktueller Stand:** `CURRENT_SAVE_VERSION = 29` (V29). Nächste Migration wäre V29→V30.
+> **Aktueller Stand:** `CURRENT_SAVE_VERSION = 32` (V32). Nächste Migration wäre V32→V33.
 
 ### Schritt 4 — Whitelist im Codec
 
@@ -111,6 +111,7 @@ Wenn das Feld inhaltliche Invarianten hat (z. B. Foreign Keys auf andere `state`
 - **`autoDeliveryLog`, `notifications`, `openPanel`, `selected*Id` sind absichtlich NICHT persistiert** — UI-transient. Nicht in `serializeState` aufnehmen, sonst überschreibt Save den UI-State.
 - **`connectedAssetIds`** wird beim Hydraten neu berechnet; **`poweredMachineIds`** wird beim Laden auf ein leeres Array zurückgesetzt und erst im `ENERGY_NET_TICK` neu aufgebaut.
 - **`drones[id]`** ist der einzige kanonische Speicherort für Drohnen. Das frühere Parallelfeld `starterDrone` wurde mit Migration v29→v30 entfernt. `deserializeState` sanitisiert Drohneneinträge über `sanitizeStarterDrone` — neue Drone-Felder dort ergänzen.
+- **`unlockedBuildings`-Drift im Code-Pfad:** v31 ergaenzt das Feld fuer Legacy-Saves, v32 fuegt `research_lab` idempotent an. Wer einen weiteren Default-Unlock dazustellt, muss sowohl `TIER_0_UNLOCKED_BUILDINGS` (fuer Frischstart) als auch eine neue idempotente Migration einplanen — sonst sehen geladene Saves den neuen Eintrag nicht.
 
 ---
 

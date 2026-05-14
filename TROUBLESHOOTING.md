@@ -8,12 +8,12 @@ Common errors, causes, and solutions for development and build.
 
 ### `tsc` fails during `yarn build`
 
-| Cause | Solution |
-|---|---|
-| Path alias missing | Factory Island uses only relative imports within `src/game/`. Only alias: `game/*`. |
+| Cause                              | Solution                                                                                      |
+| ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| Path alias missing                 | Factory Island uses only relative imports within `src/game/`. Only alias: `game/*`.           |
 | Type missing in `store/reducer.ts` | New types must be defined in `store/reducer.ts` and re-exported in `types/game.ts` if needed. |
-| `tsconfig.factory.json` not used | Check: `tsc --project tsconfig.factory.json` (not `tsconfig.json`). |
-| Missing `vite/client` types | `tsconfig.factory.json` must contain `"types": ["vite/client"]`. |
+| `tsconfig.factory.json` not used   | Check: `tsc --project tsconfig.factory.json` (not `tsconfig.json`).                           |
+| Missing `vite/client` types        | `tsconfig.factory.json` must contain `"types": ["vite/client"]`.                              |
 
 ### Import error: `Cannot find module 'features/...'`
 
@@ -38,11 +38,11 @@ import { getSmeltingRecipe } from "./recipes";
 
 ### `yarn dev` does not start
 
-| Checkpoint | Action |
-|---|---|
-| Port occupied | Port 3000 is used (`server.port: 3000`). Stop the other process. |
-| `node_modules` missing | Run `yarn install`. |
-| Vite version incompatible | `vite@^5.4.21` is required (see `package.json`). |
+| Checkpoint                | Action                                                           |
+| ------------------------- | ---------------------------------------------------------------- |
+| Port occupied             | Port 3000 is used (`server.port: 3000`). Stop the other process. |
+| `node_modules` missing    | Run `yarn install`.                                              |
+| Vite version incompatible | `vite@^5.4.21` is required (see `package.json`).                 |
 
 ### HMR does not work / state is lost
 
@@ -77,16 +77,18 @@ import { getSmeltingRecipe } from "./recipes";
 
 ### Old save crashes after code change
 
-**Cause**: New fields in `GameState` without a corresponding migration in `save.ts`.
+**Cause**: New fields in `GameState` without a corresponding migration under `src/game/simulation/migrations/`.
 
 **Solution**:
-1. Increment `CURRENT_SAVE_VERSION` in `save.ts`.
-2. Define new interface `SaveGameV{N}`.
-3. Write migration function `migrateV{N-1}ToV{N}()`.
-4. Add entry `{ from: N-1, to: N, migrate: migrateV{N-1}ToV{N} }` to the `MIGRATIONS` array.
-5. Point the `SaveGameLatest` alias to the new interface.
+
+1. Increment `CURRENT_SAVE_VERSION` in [`src/game/simulation/migrations/types.ts`](src/game/simulation/migrations/types.ts).
+2. Define new interface `SaveGameV{N}` and point the `SaveGameLatest` alias to it (same file).
+3. Write migration function `migrateV{N-1}ToV{N}()` in the relevant bucket (`v21-v30.ts`) or in its own `migrations/v{N}.ts` (pattern: `v31.ts`, `v32.ts`).
+4. Add an import + `step(N-1, N, migrateV{N-1}ToV{N})` entry to the `MIGRATIONS` array in [`migrations/index.ts`](src/game/simulation/migrations/index.ts).
+5. Update the whitelist in `serializeState` and the hydrate in `deserializeState` ([save-codec.ts](src/game/simulation/save-codec.ts)). See `simulation/README.md` for the full runbook.
 
 **Quick workaround** (development only):
+
 ```javascript
 // Browser-Konsole
 localStorage.removeItem("factory-island-save");
@@ -101,6 +103,7 @@ localStorage.removeItem("factory-island-save");
 ### Save contains derived state
 
 `serializeState()` persists only core fields. Transient fields are reset during load:
+
 - `connectedAssetIds` → `computeConnectedAssetIds()` (immediately in `deserializeState`)
 - `poweredMachineIds` → next `ENERGY_NET_TICK`
 - `openPanel`, `notifications`, `buildMode` → defaults
@@ -114,15 +117,15 @@ If a new field should be transient: do **not** include it in `SaveGameV*`; initi
 
 ### Machine receives no power
 
-| Checkpoint | Detail |
-|---|---|
-| Generator placed? | Must stand on stone floor (`REQUIRES_STONE_FLOOR`). |
-| Generator has fuel? | Add wood + start. |
-| Cable connection? | Only `cable`, `generator`, `power_pole` are cable conductors (phase-1 BFS). Machines and batteries do not conduct energy through cables. |
-| Power Pole in range? | Chebyshev distance ≤ 3 tiles (`POWER_POLE_RANGE`). Machine must be within range of a pole connected via cable. |
-| Machine registered in `ENERGY_DRAIN`? | New machines must be registered there. |
-| Priority too low? | `MachinePriority` 5 = lowest. During shortage, lower priorities are throttled. |
-| Auto-Smelter draws too much? | In processing state, 60 J/period (instead of 10 J idle). Plan sufficient generator capacity for full operation. |
+| Checkpoint                            | Detail                                                                                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Generator placed?                     | Must stand on stone floor (`REQUIRES_STONE_FLOOR`).                                                                                      |
+| Generator has fuel?                   | Add wood + start.                                                                                                                        |
+| Cable connection?                     | Only `cable`, `generator`, `power_pole` are cable conductors (phase-1 BFS). Machines and batteries do not conduct energy through cables. |
+| Power Pole in range?                  | Chebyshev distance ≤ 3 tiles (`POWER_POLE_RANGE`). Machine must be within range of a pole connected via cable.                           |
+| Machine registered in `ENERGY_DRAIN`? | New machines must be registered there.                                                                                                   |
+| Priority too low?                     | `MachinePriority` 5 = lowest. During shortage, lower priorities are throttled.                                                           |
+| Auto-Smelter draws too much?          | In processing state, 60 J/period (instead of 10 J idle). Plan sufficient generator capacity for full operation.                          |
 
 ### Debug: visualize energy network
 
@@ -148,12 +151,12 @@ In debug mode: `TOGGLE_ENERGY_DEBUG` action or UI button → `EnergyDebugOverlay
 
 The warehouse input is **direction-dependent** — depending on `warehouse.direction`:
 
-| warehouse.direction | Input Position | Conveyor must point |
-|---|---|---|
-| `"south"` (Default) | `(x, y + height)` | `"north"` |
-| `"north"` | `(x, y - 1)` | `"south"` |
-| `"east"` | `(x + width, y)` | `"west"` |
-| `"west"` | `(x - 1, y)` | `"east"` |
+| warehouse.direction | Input Position    | Conveyor must point |
+| ------------------- | ----------------- | ------------------- |
+| `"south"` (Default) | `(x, y + height)` | `"north"`           |
+| `"north"`           | `(x, y - 1)`      | `"south"`           |
+| `"east"`            | `(x + width, y)`  | `"west"`            |
+| `"west"`            | `(x - 1, y)`      | `"east"`            |
 
 Validation: `isValidWarehouseInput(entityX, entityY, entityDir, warehouse)` from `store/reducer`.
 
@@ -163,12 +166,12 @@ Validation: `isValidWarehouseInput(entityX, entityY, entityDir, warehouse)` from
 
 ### Building cannot be placed
 
-| Checkpoint | Detail |
-|---|---|
-| Collision? | `placeAsset()` checks for overlapping assets. |
-| Wrong floor? | Generator requires stone floor. |
+| Checkpoint                 | Detail                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| Collision?                 | `placeAsset()` checks for overlapping assets.                                |
+| Wrong floor?               | Generator requires stone floor.                                              |
 | Auto-Miner not on deposit? | Must stand directly on `stone_deposit`, `iron_deposit`, or `copper_deposit`. |
-| Direction not set? | Default is `"east"`. R key to switch. |
+| Direction not set?         | Default is `"east"`. R key to switch.                                        |
 
 ### Size bugs for rotatable machines
 
@@ -214,6 +217,7 @@ Auto-Smelter: `size=2, width=2, height=1` — with `asset.size` alone, the heigh
 ### Debug logs do not appear in the console
 
 Debug logger checks **two conditions**:
+
 1. `import.meta.env.DEV` — must be true (DEV build, not production)
 2. `isDebugEnabled()` — runtime toggle, can be disabled from debug UI
 
@@ -229,25 +233,25 @@ Both must be true. Reset runtime toggle: `import { setDebugEnabled } from "./deb
 
 ## 10. Quick Checklist
 
-| Problem | First Action |
-|---|---|
-| Build fails | Run `tsc --project tsconfig.factory.json` separately → read error message |
-| White Screen (blank) | Browser console (F12) → check JS error |
-| White Screen with text | GameErrorBoundary caught error — "Try again" or manually delete save |
-| Old save crashes | `localStorage.removeItem("factory-island-save")` |
-| Save is ignored | Mode mismatch? Debug save is not loaded in release mode |
-| Machine without power | Enable energy network debug overlay; check cable conductors (only cable/generator/power_pole) |
-| Auto-Smelter without power | Account for high drain (60 J/period processing) — more generator capacity |
-| Conveyor ignored | Check `conveyors[id]` in reducer case |
-| Warehouse accepts nothing | Direction-dependent input: check `getWarehouseInputCell()` |
-| Sprite missing | Check `ASSET_SPRITES` in `sprites.ts` + `preload()` in `PhaserGame.ts` |
-| HMR state lost | Reload page — debug mode starts with test setup |
-| Import error | Only relative imports in `src/game/`, only alias: `game/*` |
-| New field crashes saves | Add migration in `save.ts`, increment `CURRENT_SAVE_VERSION` |
-| Panel shows nothing | Check whether panel is mounted in `GameInner` (FactoryApp.tsx) and `UIPanel` union is extended |
-| assetWidth/assetHeight missing | Not exported — use `asset.width ?? asset.size` directly |
-| Debug logs missing | Check both conditions: `import.meta.env.DEV` AND `isDebugEnabled()` |
+| Problem                        | First Action                                                                                                                                                                                                 |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Build fails                    | Run `tsc --project tsconfig.factory.json` separately → read error message                                                                                                                                    |
+| White Screen (blank)           | Browser console (F12) → check JS error                                                                                                                                                                       |
+| White Screen with text         | GameErrorBoundary caught error — "Try again" or manually delete save                                                                                                                                         |
+| Old save crashes               | `localStorage.removeItem("factory-island-save")`                                                                                                                                                             |
+| Save is ignored                | Mode mismatch? Debug save is not loaded in release mode                                                                                                                                                      |
+| Machine without power          | Enable energy network debug overlay; check cable conductors (only cable/generator/power_pole)                                                                                                                |
+| Auto-Smelter without power     | Account for high drain (60 J/period processing) — more generator capacity                                                                                                                                    |
+| Conveyor ignored               | Check `conveyors[id]` in reducer case                                                                                                                                                                        |
+| Warehouse accepts nothing      | Direction-dependent input: check `getWarehouseInputCell()`                                                                                                                                                   |
+| Sprite missing                 | Check `ASSET_SPRITES` in `sprites.ts` + `preload()` in `PhaserGame.ts`                                                                                                                                       |
+| HMR state lost                 | Reload page — debug mode starts with test setup                                                                                                                                                              |
+| Import error                   | Only relative imports in `src/game/`, only alias: `game/*`                                                                                                                                                   |
+| New field crashes saves        | Add migration under `src/game/simulation/migrations/`, increment `CURRENT_SAVE_VERSION` in `migrations/types.ts`, register the step in `migrations/index.ts`, and extend `serializeState`/`deserializeState` |
+| Panel shows nothing            | Check whether panel is mounted in `GameInner` (FactoryApp.tsx) and `UIPanel` union is extended                                                                                                               |
+| assetWidth/assetHeight missing | Not exported — use `asset.width ?? asset.size` directly                                                                                                                                                      |
+| Debug logs missing             | Check both conditions: `import.meta.env.DEV` AND `isDebugEnabled()`                                                                                                                                          |
 
 ---
 
-*Last updated: 2026-04-17 — Maintenance note: When new error patterns or build changes appear, extend this file. No duplication with `ARCHITECTURE.md` — structure belongs there, troubleshooting belongs here.*
+_Last updated: 2026-04-17 — Maintenance note: When new error patterns or build changes appear, extend this file. No duplication with `ARCHITECTURE.md` — structure belongs there, troubleshooting belongs here._

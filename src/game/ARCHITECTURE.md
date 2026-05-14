@@ -1,7 +1,7 @@
 # `src/game` — Architecture
 
 > Architecture, runtime, and data-flow documentation. Current state. If conflicts arise, code is authoritative.
-> **Last verified:** 2026-05-04.
+> **Last verified:** 2026-05-14.
 
 ---
 
@@ -28,10 +28,11 @@ Onboarding in this order:
 4. [`entry/FactoryApp.tsx`](./entry/FactoryApp.tsx) — Boot, Hydration, Save/HMR.
 5. [`entry/use-game-ticks.ts`](./entry/use-game-ticks.ts) — all tick dispatches visible.
 6. [`store/types.ts`](./store/types.ts) from L378 — `GameState` shape.
-7. [`store/reducer.ts`](./store/reducer.ts) — thin reducer entry point.
-8. [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts) — actual dispatch chain.
-9. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union.
-10. [`crafting/README.md`](./crafting/README.md) — most complex subsystem.
+7. [`store/reducer.ts`](./store/reducer.ts) — thin reducer entry point (composes the three dispatch layers below).
+8. [`store/contexts/create-game-reducer.ts`](./store/contexts/create-game-reducer.ts) — live bounded-context path (`applyLiveContextReducers`) + DEV shadow path (`applyContextReducers`).
+9. [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts) — legacy cluster fallback chain (`@deprecated`).
+10. [`store/game-actions.ts`](./store/game-actions.ts) — `GameAction`-Union.
+11. [`crafting/README.md`](./crafting/README.md) — most complex subsystem.
 
 ---
 
@@ -346,11 +347,17 @@ The Dock Warehouse is not a normal build-menu placement. It is seeded and normal
 
 Grid/building constants have canonical homes under `constants/` and `store/constants/`. Prefer direct imports for new code. For backward compatibility, `store/reducer.ts` still re-exports `reducer-public-api.ts`, and `simulation/game.ts` re-exports `store/reducer`.
 
-### 4. Cluster handler chain instead of mega-switch
+### 4. Three-layer dispatch: bounded-context (live) → legacy cluster chain → DEV shadow diff
 
-`dispatchAction` in [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts) is the dispatch chain of `handleXAction(state, action, deps?) → GameState | null`. Many clusters use explicit `HANDLED_ACTION_TYPES` guards; others use direct `switch(action.type)` guards inside the handler body (for example `machine-actions.ts`, `ship-actions.ts`, and `module-lab-actions.ts`). `null` = fallthrough. Remaining actions land in the inline `switch` at the end of this file. [`store/reducer.ts`](./store/reducer.ts) remains the thin public entry point.
+`gameReducer` in [`store/reducer.ts`](./store/reducer.ts) routes every action through three layers in order:
 
-**Rationale:** Clusters are grouped by domain (crafting, drones, energy). A domain change touches only one cluster. The mixed guard strategy keeps each cluster locally readable while preserving a single top-level dispatch chain. Deps are injected to avoid ESM cycles with `reducer.ts`.
+1. **Live bounded-context path** — `applyLiveContextReducers` in [`store/contexts/create-game-reducer.ts`](./store/contexts/create-game-reducer.ts). Handles a curated allowlist of actions (notifications, zone, network commit/cancel, warehouse hotbar/transfer, crafting queue, UI selection) through the per-domain reducers in [`store/contexts/`](./store/contexts/). Returns `null` to fall through.
+2. **Legacy fallback chain** — `dispatchAction` in [`store/game-reducer-dispatch.ts`](./store/game-reducer-dispatch.ts). Chain of `handleXAction(state, action, deps?) → GameState | null`. Some clusters use `HANDLED_ACTION_TYPES` guards, others use inline `switch(action.type)` (e.g. `machine-actions.ts`, `ship-actions.ts`, `module-lab-actions.ts`). Remaining actions land in the inline `switch` at the end. This file is `@deprecated` — new handlers belong in `store/contexts/`.
+3. **DEV shadow diff** — in DEV only, the full bounded-context composition (`applyContextReducers`) re-runs on the pre-action state and `shadowDiff` compares its result to the legacy output. Mismatches log warnings; the legacy result is what the store sees. Production builds skip the diff entirely.
+
+The cutover plan is documented in [`docs/bounded-context-state-management-prd.md`](../../docs/bounded-context-state-management-prd.md).
+
+**Rationale:** Bounded contexts narrow each reducer to a small state slice with an exhaustive action union, which makes ownership and isolation explicit. Running the legacy dispatcher as the source of truth while contexts ramp up keeps behaviour stable; the shadow diff catches regressions before each migration step flips into the live path.
 
 ### 5. Physical inventory layers + reservation layer coexist
 

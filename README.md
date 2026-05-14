@@ -52,19 +52,19 @@ yarn test
 
 # Project Structure
 
-| Ordner | Beschreibung |
-|--------|--------------|
-| `buildings/` | Building definitions and placement logic |
-| `crafting/` | Crafting queue, reservations, keep-stock |
-| `drones/` | Drone units and service hub logic |
-| `inventory/` | Inventory management |
-| `items/` | Item registry and definitions |
-| `logistics/` | Conveyor belts, splitters, underground conveyors |
-| `modules/` | Module Lab, modules, fragments |
-| `power/` | Energy grid and priority system |
-| `ship/` | Ship and dock quest system |
-| `zones/` | Production zones |
-| `simulation/` | Tick system, save/load, recipes |
+| Ordner        | Beschreibung                                     |
+| ------------- | ------------------------------------------------ |
+| `buildings/`  | Building definitions and placement logic         |
+| `crafting/`   | Crafting queue, reservations, keep-stock         |
+| `drones/`     | Drone units and service hub logic                |
+| `inventory/`  | Inventory management                             |
+| `items/`      | Item registry and definitions                    |
+| `logistics/`  | Conveyor belts, splitters, underground conveyors |
+| `modules/`    | Module Lab, modules, fragments                   |
+| `power/`      | Energy grid and priority system                  |
+| `ship/`       | Ship and dock quest system                       |
+| `zones/`      | Production zones                                 |
+| `simulation/` | Tick system, save/load, recipes                  |
 
 `src/game/` # All Factory Island game source code (uses React and Phaser)
 
@@ -98,7 +98,8 @@ React owns all state via a central `useReducer`. The data flow is strictly one-d
 
 - UI events, tick intervals, and keyboard handlers **dispatch actions**
 - Phaser receives **read-only state snapshots** and must never dispatch
-- 12 independent tick intervals are mounted in `use-game-ticks.ts`
+- All periodic dispatches share a central BASE_TICK orchestrator in `use-game-ticks.ts` (three setIntervals total: Natural Spawn, Sapling Polling, and the BASE_TICK orchestrator that fires `GENERATOR_TICK → ENERGY_NET_TICK → LOGISTICS_TICK → DRONE_TICK → JOB_TICK` plus the independent workbench/lab/ship/notification ticks at their configured cadences)
+- Reducer dispatch is mid-migration: bounded-context reducers in `store/contexts/` handle a growing list of action types live; the remaining actions still flow through the legacy cluster dispatch chain in `store/game-reducer-dispatch.ts` (with a DEV shadow-diff that compares both paths). See [`docs/bounded-context-state-management-prd.md`](docs/bounded-context-state-management-prd.md).
 
 ## Persistence
 
@@ -106,7 +107,7 @@ Game state is saved to `localStorage` under the key `factory-island-save`:
 
 - Auto-save every **10 seconds** and on `beforeunload`
 - Save codec is **whitelist-based** (only known fields are serialized)
-- Migration system supports saves up to **version 29**
+- Migration chain currently runs V0 → **V32** (`CURRENT_SAVE_VERSION` in [`src/game/simulation/migrations/types.ts`](src/game/simulation/migrations/types.ts))
 - In DEV mode: HMR state snapshot is preserved across hot reloads
 
 ## Features
@@ -125,22 +126,22 @@ Game state is saved to `localStorage` under the key `factory-island-save`:
 
 All game data is defined in central registries:
 
-| Registry | Contents |
-|----------|----------|
-| Item Registry | All items with IDs, names, icons, stack sizes |
-| Building Registry | All buildings with build-menu categories and properties |
-| Recipe Tables | Workbench, Smelting, Manual Assembler, Auto Assembler V1 (`src/game/simulation/recipes/`) and Module Lab recipes (`src/game/constants/moduleLabConstants.ts`) |
+| Registry          | Contents                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Item Registry     | All items with IDs, names, icons, stack sizes                                                                                                                 |
+| Building Registry | All buildings with build-menu categories and properties                                                                                                       |
+| Recipe Tables     | Workbench, Smelting, Manual Assembler, Auto Assembler V1 (`src/game/simulation/recipes/`) and Module Lab recipes (`src/game/constants/moduleLabConstants.ts`) |
 
 ## Testing
 
 Tests run with **Jest 27** in a `jsdom` environment. Configuration files:
 
-| File | Purpose |
-|------|---------|
-| `jest.config.js` | Main Jest configuration |
-| `tsconfig.test.json` | TypeScript config for test environment |
-| `setup.ts` | Global test setup |
-| `importMetaTransformer.js` | Transforms `import.meta.env` for Jest |
+| File                       | Purpose                                |
+| -------------------------- | -------------------------------------- |
+| `jest.config.js`           | Main Jest configuration                |
+| `tsconfig.test.json`       | TypeScript config for test environment |
+| `setup.ts`                 | Global test setup                      |
+| `importMetaTransformer.js` | Transforms `import.meta.env` for Jest  |
 
 Test files are colocated with source code under `src/game/**/__tests__/`.
 
@@ -162,11 +163,11 @@ Active ESLint rules include `no-console` and `react/jsx-no-literals`.
 
 Three GitHub Actions workflows are configured:
 
-| Workflow | Trigger | Steps |
-|----------|---------|-------|
-| CI | Pull Request (to `main`) | Frozen install → typecheck → tests → lint |
-| Factory Island standalone deploy | Push to `main` (path-filtered) + manual dispatch | Build → upload `dist-factory/` as artifact |
-| Perform a code review when a pull request is created | Pull Request (`opened`) | Automated code review via Codex |
+| Workflow                                             | Trigger                                          | Steps                                      |
+| ---------------------------------------------------- | ------------------------------------------------ | ------------------------------------------ |
+| CI                                                   | Pull Request (to `main`)                         | Frozen install → typecheck → tests → lint  |
+| Factory Island standalone deploy                     | Push to `main` (path-filtered) + manual dispatch | Build → upload `dist-factory/` as artifact |
+| Perform a code review when a pull request is created | Pull Request (`opened`)                          | Automated code review via Codex            |
 
 > Note: S3 deployment is scaffolded in the deploy workflow but currently commented out.
 
@@ -189,17 +190,17 @@ See [AGENTS.md](AGENTS.md) for AI coding agent guidelines.
 
 # Build
 
-| Command | Purpose | Config |
-|---------|---------|--------|
-| `yarn dev` | Development server | `vite.factory.config.ts` |
-| `yarn build` | Production build | `vite.factory.config.ts` + `tsconfig.factory.json` |
-| `yarn preview` | Preview production build | `vite.factory.config.ts` |
-| `yarn test` | Run tests | `jest.config.js` |
-| `yarn test:silent` | Run tests without verbose output | `jest.config.js` |
-| `yarn lint` | Lint source files | ESLint |
-| `yarn format` | Run ESLint auto-fixes (`eslint --fix`), including Prettier checks | `.eslintrc.js` + `.prettierrc.json` |
-| `yarn prepare` | Husky setup (runs automatically after install) | `package.json` |
-| `yarn tsc -p tsconfig.factory.json --noEmit` | Typecheck without emitting files (used in CI) | `tsconfig.factory.json` |
+| Command                                      | Purpose                                                           | Config                                             |
+| -------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------- |
+| `yarn dev`                                   | Development server                                                | `vite.factory.config.ts`                           |
+| `yarn build`                                 | Production build                                                  | `vite.factory.config.ts` + `tsconfig.factory.json` |
+| `yarn preview`                               | Preview production build                                          | `vite.factory.config.ts`                           |
+| `yarn test`                                  | Run tests                                                         | `jest.config.js`                                   |
+| `yarn test:silent`                           | Run tests without verbose output                                  | `jest.config.js`                                   |
+| `yarn lint`                                  | Lint source files                                                 | ESLint                                             |
+| `yarn format`                                | Run ESLint auto-fixes (`eslint --fix`), including Prettier checks | `.eslintrc.js` + `.prettierrc.json`                |
+| `yarn prepare`                               | Husky setup (runs automatically after install)                    | `package.json`                                     |
+| `yarn tsc -p tsconfig.factory.json --noEmit` | Typecheck without emitting files (used in CI)                     | `tsconfig.factory.json`                            |
 
 ---
 
