@@ -7,6 +7,7 @@ import {
   SHIP_REWARD_TABLE,
   type ExpectedRewardRange,
 } from "../../ship/reward-table";
+import { useNowMs } from "../hooks/useNowMs";
 
 interface DockWarehousePanelProps {
   state: GameState;
@@ -45,7 +46,10 @@ export const DockWarehousePanel: React.FC<DockWarehousePanelProps> = React.memo(
         document.removeEventListener("mousedown", onDocumentMouseDown);
     }, [dispatch]);
 
-    const now = Date.now();
+    const countdownActive =
+      (ship.status === "docked" && ship.departureAt !== null) ||
+      (ship.status === "sailing" && ship.returnsAt !== null);
+    const now = useNowMs(1000, countdownActive);
     const quest = ship.activeQuest;
     const expectedReward = quest
       ? getExpectedRewardRange(quest, SHIP_REWARD_TABLE)

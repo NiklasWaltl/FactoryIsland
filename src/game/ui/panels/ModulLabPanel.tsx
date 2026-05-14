@@ -3,7 +3,7 @@
 // active job tracking, and owned-module management.
 // ============================================================
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { GameState, PlacedAsset } from "../../store/types";
 import type { GameAction } from "../../store/game-actions";
 import type { Module } from "../../modules/module.types";
@@ -18,6 +18,7 @@ import {
   getCompatibleAssetsForModule,
   selectModuleFragmentCount,
 } from "../../store/selectors/module-selectors";
+import { useNowMs } from "../hooks/useNowMs";
 
 interface ModulLabPanelProps {
   state: GameState;
@@ -57,17 +58,12 @@ function getRemainingModuleLabMs(
 export const ModulLabPanel: React.FC<ModulLabPanelProps> = React.memo(
   ({ state, dispatch }) => {
     const [activeTab, setActiveTab] = useState<TabId>("fragments");
-    const [now, setNow] = useState(() => Date.now());
 
     const fragments = selectModuleFragmentCount(state);
     const job = state.moduleLabJob;
     const modules = state.moduleInventory;
 
-    useEffect(() => {
-      if (!job || job.status !== "crafting") return;
-      const id = window.setInterval(() => setNow(Date.now()), 250);
-      return () => window.clearInterval(id);
-    }, [job]);
+    const now = useNowMs(250, job !== null && job.status === "crafting");
 
     const remainingMs = getRemainingModuleLabMs(job, now);
 

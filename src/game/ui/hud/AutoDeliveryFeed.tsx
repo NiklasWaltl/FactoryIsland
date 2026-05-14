@@ -4,6 +4,7 @@ import {
   RESOURCE_EMOJIS,
   RESOURCE_LABELS,
 } from "../../store/constants/resources";
+import { useNowMs } from "../hooks/useNowMs";
 
 interface Props {
   log: AutoDeliveryEntry[];
@@ -21,8 +22,8 @@ const SOURCE_LABEL: Record<AutoDeliveryEntry["sourceType"], string> = {
   auto_smelter: "Auto-Smelter",
 };
 
-function relativeTime(timestamp: number): string {
-  const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+function relativeTime(nowMs: number, timestamp: number): string {
+  const diffSec = Math.floor((nowMs - timestamp) / 1000);
   if (diffSec < 60) return `${diffSec}s`;
   const diffMin = Math.floor(diffSec / 60);
   if (diffMin < 60) return `${diffMin}m`;
@@ -32,6 +33,7 @@ function relativeTime(timestamp: number): string {
 /** Shows the last deliveries made by auto-devices into warehouses. */
 export const AutoDeliveryFeed: React.FC<Props> = React.memo(({ log }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const now = useNowMs(1000, !collapsed && log.length > 0);
 
   if (log.length === 0) return null;
 
@@ -96,7 +98,7 @@ export const AutoDeliveryFeed: React.FC<Props> = React.memo(({ log }) => {
               </span>
               <span className="fi-auto-delivery-amount">×{entry.amount}</span>
               <span className="fi-auto-delivery-time">
-                {relativeTime(entry.timestamp)}
+                {relativeTime(now, entry.timestamp)}
               </span>
             </div>
           ))}

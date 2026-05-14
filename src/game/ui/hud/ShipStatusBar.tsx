@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import type { GameState } from "../../store/types";
 import type { ShipStatusSlice } from "../../store/types/ui-slice-types";
 import { DOCK_WAREHOUSE_ID } from "../../store/bootstrap/apply-dock-warehouse-layout";
+import { useNowMs } from "../hooks/useNowMs";
 
 interface ShipStatusBarProps {
   state: ShipStatusSlice;
@@ -17,15 +18,9 @@ function formatCountdown(ms: number): string {
 
 export const ShipStatusBar: React.FC<ShipStatusBarProps> = React.memo(
   ({ state }) => {
-    const [, setNowTick] = useState(0);
-
-    useEffect(() => {
-      const id = setInterval(() => setNowTick((tick) => tick + 1), 250);
-      return () => clearInterval(id);
-    }, []);
+    const now = useNowMs(250);
 
     const ship = state.ship;
-    const now = Date.now();
     const departureAt = ship.departureAt;
 
     let statusText: string;
