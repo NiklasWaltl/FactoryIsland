@@ -4,7 +4,6 @@ import type { BoundedContext, WarehouseContextState } from "./types";
 export const WAREHOUSE_HANDLED_ACTION_TYPES = [
   "TRANSFER_TO_WAREHOUSE",
   "TRANSFER_FROM_WAREHOUSE",
-  "LOGISTICS_TICK",
 ] as const satisfies readonly GameAction["type"][];
 
 type WarehouseActionType = (typeof WAREHOUSE_HANDLED_ACTION_TYPES)[number];
@@ -27,10 +26,9 @@ function reduceWarehouse(
   switch (actionType) {
     case "TRANSFER_TO_WAREHOUSE":
     case "TRANSFER_FROM_WAREHOUSE":
-    case "LOGISTICS_TICK":
       // cross-slice: no-op in isolated context
-      // Transfers need state.inventory + state.selectedWarehouseId; the
-      // logistics tick reads many fields outside the warehouse slice.
+      // Transfers need state.inventory + state.selectedWarehouseId, which
+      // are not part of WarehouseContextState.
       return state;
 
     default: {

@@ -42,13 +42,6 @@ describe("warehouseContext", () => {
 
       expect(warehouseContext.reduce(state, action)).toBe(state);
     });
-
-    it("LOGISTICS_TICK keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createWarehouseState();
-      const action = { type: "LOGISTICS_TICK" } satisfies GameAction;
-
-      expect(warehouseContext.reduce(state, action)).toBe(state);
-    });
   });
 
   describe("handledActionTypes", () => {
