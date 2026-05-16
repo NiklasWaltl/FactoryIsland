@@ -143,14 +143,20 @@ export function applyContextReducers(
   }
 
   const researchLab = researchLabContext.reduce(
-    { unlockedBuildings: next.unlockedBuildings },
+    {
+      unlockedBuildings: next.unlockedBuildings,
+      inventory: next.inventory,
+      notifications: next.notifications,
+    },
     action,
   );
   if (
     researchLab !== null &&
-    researchLab.unlockedBuildings !== next.unlockedBuildings
+    (researchLab.unlockedBuildings !== next.unlockedBuildings ||
+      researchLab.inventory !== next.inventory ||
+      researchLab.notifications !== next.notifications)
   ) {
-    next = { ...next, unlockedBuildings: researchLab.unlockedBuildings };
+    next = { ...next, ...researchLab };
   }
 
   const warehouse = warehouseContext.reduce(
@@ -200,6 +206,8 @@ export function applyContextReducers(
       moduleLabJob: next.moduleLabJob,
       moduleFragments: next.moduleFragments,
       moduleInventory: next.moduleInventory,
+      assets: next.assets,
+      notifications: next.notifications,
     },
     action,
   );
@@ -207,7 +215,9 @@ export function applyContextReducers(
     moduleLab !== null &&
     (moduleLab.moduleLabJob !== next.moduleLabJob ||
       moduleLab.moduleFragments !== next.moduleFragments ||
-      moduleLab.moduleInventory !== next.moduleInventory)
+      moduleLab.moduleInventory !== next.moduleInventory ||
+      moduleLab.assets !== next.assets ||
+      moduleLab.notifications !== next.notifications)
   ) {
     next = { ...next, ...moduleLab };
   }
@@ -465,6 +475,91 @@ export function applyLiveContextReducers(
       return next;
     }
     return invalidateIfCraftingChanged(state, next);
+  }
+
+  if (
+    action.type === "AUTO_SMELTER_SET_RECIPE" ||
+    action.type === "AUTO_ASSEMBLER_SET_RECIPE"
+  ) {
+    // isUnderConstruction reads state.constructionSites, which is outside both
+    // AutoSmelterContextState and AutoAssemblerContextState. Mirror the legacy
+    // gate (auto-smelter-set-recipe-phase.ts:15 and auto-assembler-actions.ts:18)
+    // here so the live switch keeps recipe changes blocked while the machine is
+    // still a construction site.
+    if (isUnderConstruction(state, action.assetId)) return state;
+
+    if (action.type === "AUTO_SMELTER_SET_RECIPE") {
+      const smelterSliceIn = { autoSmelters: state.autoSmelters };
+      const smelter = autoSmelterContext.reduce(smelterSliceIn, action);
+      if (smelter === null) return null;
+      if (smelter === smelterSliceIn) return state;
+      return { ...state, ...smelter };
+    }
+
+    const assemblerSliceIn = { autoAssemblers: state.autoAssemblers };
+    const assembler = autoAssemblerContext.reduce(assemblerSliceIn, action);
+    if (assembler === null) return null;
+    if (assembler === assemblerSliceIn) return state;
+    return { ...state, ...assembler };
+  }
+
+  if (action.type === "RESEARCH_BUILDING") {
+    // All slices RESEARCH_BUILDING touches (inventory, unlockedBuildings,
+    // notifications) are inside ResearchLabContextState — no cross-slice
+    // wrapper needed. Mirrors action-handlers/research.ts:46-93.
+    const researchSliceIn = {
+      unlockedBuildings: state.unlockedBuildings,
+      inventory: state.inventory,
+      notifications: state.notifications,
+    };
+    const research = researchLabContext.reduce(researchSliceIn, action);
+    if (research === null) return null;
+    if (research === researchSliceIn) return state;
+    return { ...state, ...research };
+  }
+
+  if (
+    action.type === "START_MODULE_CRAFT" ||
+    action.type === "MODULE_LAB_TICK" ||
+    action.type === "COLLECT_MODULE" ||
+    action.type === "PLACE_MODULE" ||
+    action.type === "REMOVE_MODULE"
+  ) {
+    // All slices touched by these actions (moduleLabJob, moduleFragments,
+    // moduleInventory, assets.moduleSlot, notifications) are inside
+    // ModuleLabContextState — no cross-slice wrapper needed. Mirrors
+    // action-handlers/module-lab-actions.ts.
+    const moduleLabSliceIn = {
+      moduleLabJob: state.moduleLabJob,
+      moduleFragments: state.moduleFragments,
+      moduleInventory: state.moduleInventory,
+      assets: state.assets,
+      notifications: state.notifications,
+    };
+    const moduleLab = moduleLabContext.reduce(moduleLabSliceIn, action);
+    if (moduleLab === null) return null;
+    if (moduleLab === moduleLabSliceIn) return state;
+    return { ...state, ...moduleLab };
+  }
+
+  if (action.type === "SET_SPLITTER_FILTER") {
+    // The asset-gate (state.assets[splitterId] must exist AND be a
+    // conveyor_splitter) reads outside ConveyorContextState. Mirror the
+    // legacy guard from machine-config.ts:86-87 here so the live switch
+    // keeps the same behaviour: the context drops the gate (see
+    // shadow-diff.test.ts:217-236), but the live wrapper restores it.
+    const splitterAsset = state.assets[action.splitterId];
+    if (!splitterAsset || splitterAsset.type !== "conveyor_splitter") {
+      return state;
+    }
+    const conveyorSliceIn = {
+      conveyors: state.conveyors,
+      splitterFilterState: state.splitterFilterState,
+    };
+    const conveyor = conveyorContext.reduce(conveyorSliceIn, action);
+    if (conveyor === null) return null;
+    if (conveyor === conveyorSliceIn) return state;
+    return { ...state, ...conveyor };
   }
 
   if (

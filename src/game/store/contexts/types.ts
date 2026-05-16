@@ -22,7 +22,10 @@ export interface BoundedContext<State> {
 export type AutoMinerContextState = Pick<GameState, "autoMiners">;
 export type AutoSmelterContextState = Pick<GameState, "autoSmelters">;
 export type AutoAssemblerContextState = Pick<GameState, "autoAssemblers">;
-export type ResearchLabContextState = Pick<GameState, "unlockedBuildings">;
+export type ResearchLabContextState = Pick<
+  GameState,
+  "unlockedBuildings" | "inventory" | "notifications"
+>;
 
 // Multi-field contexts
 export type CraftingContextState = Pick<
@@ -72,7 +75,11 @@ export type ConstructionContextState = Pick<
 // current module collection field.
 export type ModuleLabContextState = Pick<
   GameState,
-  "moduleLabJob" | "moduleFragments" | "moduleInventory"
+  | "moduleLabJob"
+  | "moduleFragments"
+  | "moduleInventory"
+  | "assets"
+  | "notifications"
 >;
 
 export type ConveyorContextState = Pick<

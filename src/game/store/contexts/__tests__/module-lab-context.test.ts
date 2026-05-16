@@ -1,5 +1,6 @@
 import type { GameAction } from "../../game-actions";
-import type { ModuleLabJob } from "../../types";
+import type { ModuleLabJob, PlacedAsset } from "../../types";
+import type { Module } from "../../../modules/module.types";
 import type { ModuleLabContextState } from "../types";
 import {
   MODULE_LAB_HANDLED_ACTION_TYPES,
@@ -13,8 +14,31 @@ function createModuleLabState(
     moduleLabJob: null,
     moduleFragments: 0,
     moduleInventory: [],
+    assets: {},
+    notifications: [],
     ...overrides,
   } satisfies ModuleLabContextState;
+}
+
+function makeAsset(
+  overrides: Partial<PlacedAsset> & Pick<PlacedAsset, "id" | "type">,
+): PlacedAsset {
+  return {
+    x: 0,
+    y: 0,
+    size: 1,
+    ...overrides,
+  } as PlacedAsset;
+}
+
+function makeModule(
+  overrides: Partial<Module> & Pick<Module, "id" | "type">,
+): Module {
+  return {
+    tier: 1,
+    equippedTo: null,
+    ...overrides,
+  } as Module;
 }
 
 function expectHandled(
@@ -135,26 +159,150 @@ describe("moduleLabContext", () => {
       expect(moduleLabContext.reduce(state, action)).toBe(state);
     });
 
-    it("MODULE_LAB_TICK keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createModuleLabState();
+    it("MODULE_LAB_TICK flips a crafting job to done once duration has elapsed", () => {
+      const startedAt = Date.now() - 60_000;
+      const job: ModuleLabJob = {
+        recipeId: "module_tier1",
+        moduleType: "miner-boost",
+        tier: 1,
+        fragmentsRequired: 3,
+        startedAt,
+        durationMs: 10_000,
+        status: "crafting",
+      };
+      const state = createModuleLabState({ moduleLabJob: job });
+      const action = { type: "MODULE_LAB_TICK" } satisfies GameAction;
+
+      const result = expectHandled(moduleLabContext.reduce(state, action));
+
+      expect(result.moduleLabJob?.status).toBe("done");
+    });
+
+    it("MODULE_LAB_TICK is a no-op while the duration has not elapsed", () => {
+      const job: ModuleLabJob = {
+        recipeId: "module_tier1",
+        moduleType: "miner-boost",
+        tier: 1,
+        fragmentsRequired: 3,
+        startedAt: Date.now(),
+        durationMs: 60_000,
+        status: "crafting",
+      };
+      const state = createModuleLabState({ moduleLabJob: job });
       const action = { type: "MODULE_LAB_TICK" } satisfies GameAction;
 
       expect(moduleLabContext.reduce(state, action)).toBe(state);
     });
 
-    it("PLACE_MODULE keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createModuleLabState();
+    it("MODULE_LAB_TICK is a no-op while the module_lab asset is deconstructing", () => {
+      const startedAt = Date.now() - 60_000;
+      const job: ModuleLabJob = {
+        recipeId: "module_tier1",
+        moduleType: "miner-boost",
+        tier: 1,
+        fragmentsRequired: 3,
+        startedAt,
+        durationMs: 10_000,
+        status: "crafting",
+      };
+      const state = createModuleLabState({
+        moduleLabJob: job,
+        assets: {
+          lab: makeAsset({
+            id: "lab",
+            type: "module_lab",
+            status: "deconstructing",
+          }),
+        },
+      });
+      const action = { type: "MODULE_LAB_TICK" } satisfies GameAction;
+
+      expect(moduleLabContext.reduce(state, action)).toBe(state);
+    });
+
+    it("PLACE_MODULE equips a compatible module to the asset", () => {
+      const state = createModuleLabState({
+        moduleInventory: [makeModule({ id: "mod-1", type: "miner-boost" })],
+        assets: {
+          miner: makeAsset({ id: "miner", type: "auto_miner" }),
+        },
+      });
       const action = {
         type: "PLACE_MODULE",
         moduleId: "mod-1",
-        assetId: "asset-1",
+        assetId: "miner",
+      } satisfies GameAction;
+
+      const result = expectHandled(moduleLabContext.reduce(state, action));
+
+      expect(result.moduleInventory[0]?.equippedTo).toBe("miner");
+      expect(result.assets.miner?.moduleSlot).toBe("mod-1");
+      expect(result.notifications).toHaveLength(0);
+    });
+
+    it("PLACE_MODULE emits an error notification for an incompatible asset", () => {
+      const state = createModuleLabState({
+        moduleInventory: [makeModule({ id: "mod-1", type: "miner-boost" })],
+        // miner-boost is only compatible with auto_miner; auto_smelter rejects it.
+        assets: {
+          smelter: makeAsset({ id: "smelter", type: "auto_smelter" }),
+        },
+      });
+      const action = {
+        type: "PLACE_MODULE",
+        moduleId: "mod-1",
+        assetId: "smelter",
+      } satisfies GameAction;
+
+      const result = expectHandled(moduleLabContext.reduce(state, action));
+
+      expect(result.moduleInventory[0]?.equippedTo).toBeNull();
+      expect(result.assets.smelter?.moduleSlot).toBeUndefined();
+      expect(result.notifications).toHaveLength(1);
+      expect(result.notifications[0]).toMatchObject({ kind: "error" });
+    });
+
+    it("PLACE_MODULE is a no-op when the asset is missing", () => {
+      const state = createModuleLabState({
+        moduleInventory: [makeModule({ id: "mod-1", type: "miner-boost" })],
+      });
+      const action = {
+        type: "PLACE_MODULE",
+        moduleId: "mod-1",
+        assetId: "missing",
       } satisfies GameAction;
 
       expect(moduleLabContext.reduce(state, action)).toBe(state);
     });
 
-    it("REMOVE_MODULE keeps the slice unchanged (cross-slice no-op)", () => {
-      const state = createModuleLabState();
+    it("REMOVE_MODULE clears equippedTo and the asset's moduleSlot", () => {
+      const state = createModuleLabState({
+        moduleInventory: [
+          makeModule({ id: "mod-1", type: "miner-boost", equippedTo: "miner" }),
+        ],
+        assets: {
+          miner: makeAsset({
+            id: "miner",
+            type: "auto_miner",
+            moduleSlot: "mod-1",
+          }),
+        },
+      });
+      const action = {
+        type: "REMOVE_MODULE",
+        moduleId: "mod-1",
+      } satisfies GameAction;
+
+      const result = expectHandled(moduleLabContext.reduce(state, action));
+
+      expect(result.moduleInventory[0]?.equippedTo).toBeNull();
+      expect(result.assets.miner?.moduleSlot).toBeNull();
+    });
+
+    it("REMOVE_MODULE is a no-op when the module is not equipped", () => {
+      const state = createModuleLabState({
+        moduleInventory: [makeModule({ id: "mod-1", type: "miner-boost" })],
+      });
       const action = {
         type: "REMOVE_MODULE",
         moduleId: "mod-1",

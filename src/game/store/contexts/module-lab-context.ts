@@ -1,13 +1,22 @@
-import type { Module } from "../../modules/module.types";
+import type { Module, ModuleType } from "../../modules/module.types";
 import {
+  MODULE_COMPATIBLE_BUILDINGS,
   getModuleLabRecipe,
   getRecipeFragmentCost,
 } from "../../constants/moduleLabConstants";
 import type { GameAction } from "../game-actions";
-import type { ModuleLabJob } from "../types";
+import type { AssetType, ModuleLabJob } from "../types";
 import { normalizeModuleFragmentCount } from "../helpers/module-fragments";
+import { addErrorNotification } from "../utils/notifications";
 import { makeModuleId } from "../utils/make-id";
 import type { BoundedContext, ModuleLabContextState } from "./types";
+
+function isModuleCompatibleWithAsset(
+  moduleType: ModuleType,
+  assetType: AssetType,
+): boolean {
+  return MODULE_COMPATIBLE_BUILDINGS[moduleType].includes(assetType);
+}
 
 export const MODULE_LAB_HANDLED_ACTION_TYPES = [
   "START_MODULE_CRAFT",
@@ -59,6 +68,94 @@ function startModuleCraft(
   };
 }
 
+function moduleLabTick(
+  state: ModuleLabContextState,
+  now: number,
+): ModuleLabContextState {
+  const job = state.moduleLabJob;
+  if (!job || job.status !== "crafting") return state;
+  const moduleLab = Object.values(state.assets).find(
+    (asset) => asset.type === "module_lab",
+  );
+  if (moduleLab?.status === "deconstructing") return state;
+  if (now < job.startedAt + job.durationMs) return state;
+  return {
+    ...state,
+    moduleLabJob: { ...job, status: "done" },
+  };
+}
+
+function placeModule(
+  state: ModuleLabContextState,
+  moduleId: string,
+  assetId: string,
+): ModuleLabContextState {
+  const inventory = state.moduleInventory;
+  const target = inventory.find((m) => m.id === moduleId);
+  if (!target) return state;
+  if (target.equippedTo !== null) return state;
+
+  const asset = state.assets[assetId];
+  if (!asset) return state;
+  if (asset.moduleSlot || inventory.some((m) => m.equippedTo === assetId)) {
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Gebäude hat bereits ein Modul eingesetzt",
+      ),
+    };
+  }
+  if (!isModuleCompatibleWithAsset(target.type, asset.type)) {
+    return {
+      ...state,
+      notifications: addErrorNotification(
+        state.notifications,
+        "Dieses Modul passt nicht zu diesem Gebäude",
+      ),
+    };
+  }
+
+  return {
+    ...state,
+    moduleInventory: inventory.map((m) =>
+      m.id === moduleId ? { ...m, equippedTo: assetId } : m,
+    ),
+    assets: {
+      ...state.assets,
+      [assetId]: { ...asset, moduleSlot: moduleId },
+    },
+  };
+}
+
+function removeModule(
+  state: ModuleLabContextState,
+  moduleId: string,
+  assetId?: string,
+): ModuleLabContextState {
+  const inventory = state.moduleInventory;
+  const target = inventory.find((m) => m.id === moduleId);
+  if (!target) return state;
+  if (target.equippedTo === null) return state;
+  if (assetId !== undefined && target.equippedTo !== assetId) return state;
+
+  const equippedAssetId = target.equippedTo;
+  const equippedAsset = state.assets[equippedAssetId];
+
+  return {
+    ...state,
+    moduleInventory: inventory.map((m) =>
+      m.id === moduleId ? { ...m, equippedTo: null } : m,
+    ),
+    assets: equippedAsset
+      ? {
+          ...state.assets,
+          [equippedAssetId]: { ...equippedAsset, moduleSlot: null },
+        }
+      : state.assets,
+  };
+}
+
 function collectModule(
   state: ModuleLabContextState,
   now: number,
@@ -97,12 +194,20 @@ function reduceModuleLab(
       return collectModule(state, Date.now(), Math.random);
 
     case "MODULE_LAB_TICK":
-    case "PLACE_MODULE":
+      return moduleLabTick(state, Date.now());
+
+    case "PLACE_MODULE": {
+      // Mirrors action-handlers/module-lab-actions.ts:184-187 — PLACE_MODULE
+      // ships with both `assetId` and a legacy `buildingId` alias on the
+      // action payload. Resolve the alias before delegating.
+      const targetAssetId = action.assetId ?? action.buildingId;
+      return targetAssetId
+        ? placeModule(state, action.moduleId, targetAssetId)
+        : state;
+    }
+
     case "REMOVE_MODULE":
-      // cross-slice: no-op in isolated context
-      // The tick gates on state.assets[moduleLab]?.status; placement and
-      // removal mutate state.assets and notifications.
-      return state;
+      return removeModule(state, action.moduleId, action.assetId);
 
     default: {
       const _exhaustive: never = actionType;
