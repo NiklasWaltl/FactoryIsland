@@ -62,8 +62,21 @@ export const SHADOW_DIFF_SLICES = [
 const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
   Record<GameAction["type"], readonly (keyof GameState)[]>
 > = {
+  // Permanent — Option B wrapper (2026-05-16). LOGISTICS_TICK is live-switched
+  // via LOGISTICS_TICK_LIVE_DEPS in contexts/create-game-reducer.ts, so the
+  // shadow-diff pass in reducer.ts never runs for this action at runtime.
+  // applyContextReducers cannot reproduce the cross-slice logistics writes
+  // (autoMiners, autoSmelters, autoAssemblers, inventory) in isolated
+  // single-slice contexts; the suppression stays by design and still gates
+  // direct shadowDiff() calls from shadow-diff.test.ts.
   LOGISTICS_TICK: ["autoMiners", "autoSmelters", "autoAssemblers", "inventory"],
   SHIP_TICK: ["ship"],
+  // Permanent — Option B wrapper (2026-05-16). DRONE_TICK is live-switched
+  // via DRONE_TICK_LIVE_DEPS in contexts/create-game-reducer.ts, same
+  // rationale as LOGISTICS_TICK above. DRONE_TICK writes >10 slices
+  // cross-context (drones + crafting + network + inventory + machine
+  // inventories + UI selection on hub-collect side effects); no single
+  // bounded-context slice can own that surface. Suppression stays by design.
   DRONE_TICK: [
     "drones",
     "crafting",

@@ -48,8 +48,10 @@ import {
   SHOP_ACTION_DEPS,
   DRONE_ASSIGNMENT_ACTION_DEPS,
   DRONE_ROLE_ACTION_DEPS,
-  DRONE_TICK_ACTION_DEPS,
-  LOGISTICS_TICK_IO_DEPS,
+  // DRONE_TICK_ACTION_DEPS — live-switched via DRONE_TICK_LIVE_DEPS
+  //   in contexts/create-game-reducer.ts (2026-05-16).
+  // LOGISTICS_TICK_IO_DEPS — live-switched via LOGISTICS_TICK_LIVE_DEPS
+  //   in contexts/create-game-reducer.ts (2026-05-16).
 } from "./action-handler-deps";
 
 import { handleCraftingQueueAction } from "./action-handlers/crafting-queue-actions";
@@ -75,9 +77,13 @@ import { handleHubTargetAction } from "./action-handlers/hub-target-actions";
 import { handleAutoSmelterAction } from "./action-handlers/auto-smelter-actions";
 import { handleAutoAssemblerAction } from "./action-handlers/auto-assembler-actions";
 import { handleDroneRoleAction } from "./action-handlers/drone-role-actions";
-import { handleDroneTickAction } from "./action-handlers/drone-tick-actions";
+// handleDroneTickAction — live-switched in
+//   contexts/create-game-reducer.ts (2026-05-16).
+// import { handleDroneTickAction } from "./action-handlers/drone-tick-actions";
 import { handleDroneAssignmentAction } from "./action-handlers/drone-assignment";
-import { handleLogisticsTickAction } from "./action-handlers/logistics-tick";
+// handleLogisticsTickAction — live-switched in
+//   contexts/create-game-reducer.ts (2026-05-16).
+// import { handleLogisticsTickAction } from "./action-handlers/logistics-tick";
 import { handleShipAction } from "./action-handlers/ship-actions";
 
 export function dispatchAction(
@@ -156,12 +162,17 @@ export function dispatchAction(
     DRONE_ROLE_ACTION_DEPS,
   );
   if (droneRoleResult !== null) return droneRoleResult;
-  const droneTickResult = handleDroneTickAction(
-    state,
-    action,
-    DRONE_TICK_ACTION_DEPS,
-  );
-  if (droneTickResult !== null) return droneTickResult;
+  // DRONE_TICK is live-switched via applyLiveContextReducers in
+  // contexts/create-game-reducer.ts (direct wrapper around
+  // handleDroneTickAction with DRONE_TICK_LIVE_DEPS, 2026-05-16).
+  // The legacy call is kept as a no-op fall-through so that
+  // game-reducer-dispatch.ts removal stays a single mechanical step.
+  // const droneTickResult = handleDroneTickAction(
+  //   state,
+  //   action,
+  //   DRONE_TICK_ACTION_DEPS,
+  // );
+  // if (droneTickResult !== null) return droneTickResult;
   const droneAssignmentResult = handleDroneAssignmentAction(
     state,
     action,
@@ -174,11 +185,14 @@ export function dispatchAction(
     CLICK_CELL_ACTION_DEPS,
   );
   if (clickCellResult !== null) return clickCellResult;
-  const logisticsTickResult =
-    action.type === "LOGISTICS_TICK"
-      ? handleLogisticsTickAction(state, LOGISTICS_TICK_IO_DEPS)
-      : null;
-  if (logisticsTickResult !== null) return logisticsTickResult;
+  // LOGISTICS_TICK is live-switched via applyLiveContextReducers in
+  // contexts/create-game-reducer.ts (direct wrapper around
+  // handleLogisticsTickAction with LOGISTICS_TICK_LIVE_DEPS, 2026-05-16).
+  // const logisticsTickResult =
+  //   action.type === "LOGISTICS_TICK"
+  //     ? handleLogisticsTickAction(state, LOGISTICS_TICK_IO_DEPS)
+  //     : null;
+  // if (logisticsTickResult !== null) return logisticsTickResult;
   const shipResult = handleShipAction(state, action);
   if (shipResult !== null) return shipResult;
   // All inline cases have been migrated to dedicated handlers or to the

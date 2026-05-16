@@ -13,10 +13,19 @@ import {
   type BuildingSiteActionDeps,
   handleBuildingSiteAction,
 } from "../action-handlers/building-site";
-import { addErrorNotification } from "../utils/notifications";
+import { addErrorNotification, addNotification } from "../utils/notifications";
 import { makeId } from "../utils/make-id";
 import { debugLog } from "../../debug/debugLogger";
 import { fullCostAsRemaining } from "../inventory-ops";
+import { addAutoDelivery, tickOneDrone } from "../helpers/reducer-helpers";
+import {
+  type DroneTickActionDeps,
+  handleDroneTickAction,
+} from "../action-handlers/drone-tick-actions";
+import {
+  type LogisticsTickIoDeps,
+  handleLogisticsTickAction,
+} from "../action-handlers/logistics-tick";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -90,6 +99,25 @@ const BUILDING_SITE_LIVE_DEPS: BuildingSiteActionDeps = {
   addErrorNotification,
   fullCostAsRemaining,
   debugLog,
+};
+
+// Mirrors DRONE_TICK_ACTION_DEPS in action-handler-deps.ts:225-227.
+// Same decoupling rationale as PLACEMENT_LIVE_DEPS — the live switch
+// keeps a module-local frozen deps object so create-game-reducer.ts
+// does not import the legacy DI barrel. `tickOneDrone` is the
+// reducer-helpers wrapper that bundles TICK_ONE_DRONE_IO_DEPS.
+const DRONE_TICK_LIVE_DEPS: DroneTickActionDeps = {
+  tickOneDrone,
+};
+
+// Mirrors LOGISTICS_TICK_IO_DEPS in action-handler-deps.ts:229-232.
+// Same decoupling rationale as the other LIVE_DEPS constants above.
+// Both helpers are pure (no captured state) — `addNotification` lives in
+// utils/notifications, `addAutoDelivery` is the reducer-helpers function
+// that wraps `makeId` + AUTO_DELIVERY_BATCH_WINDOW_MS / LOG_MAX.
+const LOGISTICS_TICK_LIVE_DEPS: LogisticsTickIoDeps = {
+  addNotification,
+  addAutoDelivery,
 };
 
 function invalidateIfCraftingChanged(
@@ -751,6 +779,37 @@ export function applyLiveContextReducers(
     return (
       handleBuildingSiteAction(state, action, BUILDING_SITE_LIVE_DEPS) ?? state
     );
+  }
+
+  if (action.type === "DRONE_TICK") {
+    // Option B — direct wrapper analogous to BUILD_PLACE_BUILDING /
+    // UPGRADE_HUB. handleDroneTickAction iterates state.drones and runs
+    // tickOneDrone per entry. Pure (state, action, deps) → GameState; no
+    // guards (no isPaused / isGameOver in this codebase), empty drones map
+    // is handled implicitly by the zero-iteration loop in
+    // runDroneTickPhase. Placed BEFORE the LOGISTICS_TICK wrapper to mirror
+    // the dispatcher ordering (game-reducer-dispatch.ts:159 vs :177).
+    // Shadow-diff suppressions for the cross-context writes (drones,
+    // crafting, network, inventory, …) are pre-existing — see
+    // shadow-diff.ts:67-85.
+    // The `?? state` is defensive against the cluster's
+    // `default: return null` branch, currently unreachable because the
+    // live-switch only routes DRONE_TICK here.
+    return handleDroneTickAction(state, action, DRONE_TICK_LIVE_DEPS) ?? state;
+  }
+
+  if (action.type === "LOGISTICS_TICK") {
+    // Option B — direct wrapper. handleLogisticsTickAction is a pure
+    // (state, deps) → GameState orchestrator over four phases
+    // (auto-miner, conveyor, auto-smelter, auto-assembler). The handler
+    // always returns at least { ...state, routingIndexCache } even when
+    // no slice mutated, because getOrBuildRoutingIndex runs
+    // unconditionally in Phase 0. No guards exist in the legacy path.
+    // Mirrors game-reducer-dispatch.ts:177-181 verbatim.
+    // Shadow-diff suppressions for cross-context writes (autoMiners,
+    // autoSmelters, autoAssemblers, inventory) are pre-existing — see
+    // shadow-diff.ts:65.
+    return handleLogisticsTickAction(state, LOGISTICS_TICK_LIVE_DEPS);
   }
 
   if (
