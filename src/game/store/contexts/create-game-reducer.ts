@@ -222,6 +222,16 @@ export function applyContextReducers(
       generators: next.generators,
       poweredMachineIds: next.poweredMachineIds,
       machinePowerRatio: next.machinePowerRatio,
+      selectedGeneratorId: next.selectedGeneratorId,
+      constructionSites: next.constructionSites,
+      assets: next.assets,
+      notifications: next.notifications,
+      inventory: next.inventory,
+      warehouseInventories: next.warehouseInventories,
+      buildingZoneIds: next.buildingZoneIds,
+      productionZones: next.productionZones,
+      buildingSourceWarehouseIds: next.buildingSourceWarehouseIds,
+      mode: next.mode,
     },
     action,
   );
@@ -230,7 +240,10 @@ export function applyContextReducers(
     (power.battery !== next.battery ||
       power.generators !== next.generators ||
       power.poweredMachineIds !== next.poweredMachineIds ||
-      power.machinePowerRatio !== next.machinePowerRatio)
+      power.machinePowerRatio !== next.machinePowerRatio ||
+      power.notifications !== next.notifications ||
+      power.inventory !== next.inventory ||
+      power.warehouseInventories !== next.warehouseInventories)
   ) {
     next = { ...next, ...power };
   }
@@ -550,6 +563,54 @@ export function applyLiveContextReducers(
     if (research === null) return null;
     if (research === researchSliceIn) return state;
     return { ...state, ...research };
+  }
+
+  if (
+    action.type === "GENERATOR_START" ||
+    action.type === "GENERATOR_STOP" ||
+    action.type === "REMOVE_POWER_POLE" ||
+    action.type === "GENERATOR_REQUEST_REFILL" ||
+    action.type === "GENERATOR_TICK" ||
+    action.type === "GENERATOR_ADD_FUEL"
+  ) {
+    // GENERATOR_START/STOP write only `generators` and read
+    // `selectedGeneratorId` + `constructionSites` from PowerContextState.
+    // REMOVE_POWER_POLE is a no-op in the legacy path too (pole removal
+    // runs via BUILD_REMOVE_ASSET) — live-switching keeps the same
+    // behaviour.
+    // GENERATOR_REQUEST_REFILL writes `generators` (or `notifications` on
+    // the empty-headroom path) and reads `selectedGeneratorId` +
+    // `constructionSites`.
+    // GENERATOR_TICK iterates `generators`, reading `assets[id].status`
+    // (deconstructing) + `constructionSites[id]`.
+    // GENERATOR_ADD_FUEL writes `generators` AND `inventory` OR
+    // `warehouseInventories` (resolved via crafting-source helpers using
+    // `buildingZoneIds`, `productionZones`, `buildingSourceWarehouseIds`,
+    // `mode`). Mirrors:
+    //   action-handlers/machine-actions/phases/generator-toggle-phase.ts
+    //   action-handlers/machine-actions/phases/generator-fuel-phase.ts
+    //   action-handlers/machine-actions/phases/generator-tick-phase.ts
+    //   action-handlers/maintenance-actions/phases/remove-power-pole-phase.ts
+    const powerSliceIn = {
+      battery: state.battery,
+      generators: state.generators,
+      poweredMachineIds: state.poweredMachineIds,
+      machinePowerRatio: state.machinePowerRatio,
+      selectedGeneratorId: state.selectedGeneratorId,
+      constructionSites: state.constructionSites,
+      assets: state.assets,
+      notifications: state.notifications,
+      inventory: state.inventory,
+      warehouseInventories: state.warehouseInventories,
+      buildingZoneIds: state.buildingZoneIds,
+      productionZones: state.productionZones,
+      buildingSourceWarehouseIds: state.buildingSourceWarehouseIds,
+      mode: state.mode,
+    };
+    const power = powerContext.reduce(powerSliceIn, action);
+    if (power === null) return null;
+    if (power === powerSliceIn) return state;
+    return { ...state, ...power };
   }
 
   if (

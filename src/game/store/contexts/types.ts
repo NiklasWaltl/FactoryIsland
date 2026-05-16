@@ -63,7 +63,20 @@ export type WarehouseContextState = Pick<
 
 export type PowerContextState = Pick<
   GameState,
-  "battery" | "generators" | "poweredMachineIds" | "machinePowerRatio"
+  | "battery"
+  | "generators"
+  | "poweredMachineIds"
+  | "machinePowerRatio"
+  | "selectedGeneratorId"
+  | "constructionSites"
+  | "assets"
+  | "notifications"
+  | "inventory"
+  | "warehouseInventories"
+  | "buildingZoneIds"
+  | "productionZones"
+  | "buildingSourceWarehouseIds"
+  | "mode"
 >;
 
 export type ConstructionContextState = Pick<
