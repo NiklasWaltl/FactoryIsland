@@ -208,9 +208,14 @@ export function dispatchAction(
     // COLLECT_FRAGMENT is handled above by
     // handleModuleFragmentAction (see action-handlers/module-fragment-actions.ts).
 
-    // CRAFT_WORKBENCH, REMOVE_BUILDING, EXPIRE_NOTIFICATIONS,
-    // DEBUG_SET_STATE and REMOVE_POWER_POLE are handled above by
-    // handleMaintenanceAction (see action-handlers/maintenance-actions/index.ts).
+    // CRAFT_WORKBENCH, EXPIRE_NOTIFICATIONS, DEBUG_SET_STATE and
+    // REMOVE_POWER_POLE are handled above by handleMaintenanceAction
+    // (see action-handlers/maintenance-actions/index.ts).
+    //
+    // REMOVE_BUILDING is live-switched via applyLiveContextReducers in
+    // contexts/create-game-reducer.ts (no-op marker, 2026-05-16). The
+    // legacy handleMaintenanceAction host stays in place for the other
+    // maintenance cases listed above.
 
     // TOGGLE_PANEL and CLOSE_PANEL are handled above by
     // handleUiAction (see action-handlers/ui-actions.ts).
@@ -234,8 +239,13 @@ export function dispatchAction(
     // are handled above by handleBuildModeAction
     // (see action-handlers/build-mode-actions/index.ts).
 
-    // BUILD_PLACE_BUILDING and BUILD_REMOVE_ASSET are handled above by
-    // handleBuildingPlacementAction (see action-handlers/building-placement.ts).
+    // BUILD_PLACE_BUILDING and BUILD_REMOVE_ASSET are live-switched via
+    // applyLiveContextReducers in contexts/create-game-reducer.ts (direct
+    // wrappers around handlePlaceBuildingAction / handleRemoveAssetAction,
+    // 2026-05-16). The handleBuildingPlacementAction call above stays as a
+    // fallback host for REQUEST/CANCEL_DECONSTRUCT_ASSET — also already
+    // live-switched but routed through the same cluster handler — and will
+    // be removed with the full cutover.
 
     // BUILD_PLACE_FLOOR_TILE is handled above by
     // handleFloorPlacementAction (see action-handlers/floor-placement.ts).
@@ -251,8 +261,14 @@ export function dispatchAction(
     // legacy handleMachineConfigAction call below still hosts
     // SET_SPLITTER_FILTER and stays in place for the shadow-diff path.
 
-    // SET_BUILDING_SOURCE and UPGRADE_HUB are handled above by
-    // handleBuildingSiteAction (see action-handlers/building-site.ts).
+    // SET_BUILDING_SOURCE is live-switched via applyLiveContextReducers
+    // -> zoneContext (with cross-slice guards in create-game-reducer.ts).
+    // UPGRADE_HUB is live-switched via applyLiveContextReducers in
+    // contexts/create-game-reducer.ts (direct wrapper around
+    // handleBuildingSiteAction with BUILDING_SITE_LIVE_DEPS, 2026-05-16).
+    // The handleBuildingSiteAction call above is now effectively dormant
+    // — both action types are claimed by the live switch — and will be
+    // removed with the full cutover.
 
     // SET_KEEP_STOCK_TARGET and SET_RECIPE_AUTOMATION_POLICY are handled
     // above by handleCraftingQueueAction

@@ -6,6 +6,17 @@ import { hasWarehouseAssetWithInventory } from "../utils/asset-guards";
 import { isUnderConstruction } from "../helpers/asset-status";
 import { computeConnectedAssetIds } from "../../logistics/connectivity";
 import { runEnergyNetTick } from "../energy/energy-net-tick";
+import { handlePlaceBuildingAction } from "../action-handlers/building-placement/place-building";
+import { handleRemoveAssetAction } from "../action-handlers/building-placement/remove-asset";
+import { type BuildingPlacementIoDeps } from "../action-handlers/building-placement";
+import {
+  type BuildingSiteActionDeps,
+  handleBuildingSiteAction,
+} from "../action-handlers/building-site";
+import { addErrorNotification } from "../utils/notifications";
+import { makeId } from "../utils/make-id";
+import { debugLog } from "../../debug/debugLogger";
+import { fullCostAsRemaining } from "../inventory-ops";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -59,6 +70,27 @@ function recomputeConnectivityAndInvalidateCache(state: GameState): GameState {
     connectedAssetIds: computeConnectedAssetIds(state),
   });
 }
+
+// Mirrors BUILDING_PLACEMENT_IO_DEPS in action-handler-deps.ts:177-181.
+// Duplicated here as a frozen module-local constant so create-game-reducer.ts
+// stays decoupled from the legacy action-handler-deps barrel — the same reason
+// runEnergyNetTick is imported directly rather than going through the
+// dispatcher's DI container.
+const PLACEMENT_LIVE_DEPS: BuildingPlacementIoDeps = {
+  makeId,
+  addErrorNotification,
+  debugLog,
+};
+
+// Mirrors BUILDING_SITE_ACTION_DEPS in action-handler-deps.ts:183-188.
+// Same decoupling rationale as PLACEMENT_LIVE_DEPS — kept module-local so
+// the live-switch does not pull in the legacy DI barrel.
+const BUILDING_SITE_LIVE_DEPS: BuildingSiteActionDeps = {
+  isUnderConstruction,
+  addErrorNotification,
+  fullCostAsRemaining,
+  debugLog,
+};
 
 function invalidateIfCraftingChanged(
   previousState: GameState,
@@ -671,6 +703,54 @@ export function applyLiveContextReducers(
       ...state,
       ...construction,
     });
+  }
+
+  if (action.type === "BUILD_PLACE_BUILDING") {
+    // BUILD_PLACE_BUILDING writes ~19 slices across 22 reads — far too wide
+    // for any single bounded context to own without becoming a GameState
+    // clone. Strategy fixed 2026-05-16 (Option B): live-wire the legacy
+    // pure-on-GameState handler here. handlePlaceBuildingAction already
+    // returns `state` unchanged on guard violations (place-building.ts:59,70)
+    // or `state` with an appended error notification via the injected
+    // addErrorNotification dep — no separate eligibility wrapper needed.
+    // finalizePlacement (place-building-shared.ts:159-170) recomputes
+    // connectedAssetIds and invalidates routingIndexCache before returning.
+    // Same direct-delegation pattern as runEnergyNetTick.
+    return handlePlaceBuildingAction(state, action, PLACEMENT_LIVE_DEPS);
+  }
+
+  if (action.type === "BUILD_REMOVE_ASSET") {
+    // Mirror of BUILD_PLACE_BUILDING. handleRemoveAssetAction wraps
+    // executeGenericRemoveAsset, which gates via decideRemoveAssetEligibility
+    // (remove-asset.ts:55-94, reads buildMode/hotbarSlots/activeSlot/assets
+    // internally) and short-circuits to the unmutated state when blocked.
+    // Side effects identical to PLACE: invalidateRoutingIndexCache +
+    // computeConnectedAssetIds are inlined in executeGenericRemoveAsset
+    // (remove-asset.ts:482-485). Direct delegation suffices.
+    return handleRemoveAssetAction(state, action, PLACEMENT_LIVE_DEPS);
+  }
+
+  if (action.type === "REMOVE_BUILDING") {
+    // No-op marker — runRemoveBuildingPhase (maintenance-actions/phases/
+    // remove-building-phase.ts) has been `state => state` since
+    // BUILD_REMOVE_ASSET took over building removal in Build Mode.
+    // Live-switched for migration completeness; behaviour is identical.
+    return state;
+  }
+
+  if (action.type === "UPGRADE_HUB") {
+    // Option B — direct wrapper analogous to BUILD_PLACE_BUILDING.
+    // handleBuildingSiteAction's UPGRADE_HUB case (building-site.ts:105-179)
+    // returns `state` (or `state` with an appended error notification via
+    // deps.addErrorNotification) on every guard violation
+    // (isUnderConstruction, tier !== 1, pendingUpgrade, insufficient
+    // resources). The `?? state` is defensive against the switch's
+    // `default: return null` branch — currently unreachable because the
+    // live-switch only routes UPGRADE_HUB here, but kept to mirror the
+    // wrapper-vs-cluster-handler contract used elsewhere in this file.
+    return (
+      handleBuildingSiteAction(state, action, BUILDING_SITE_LIVE_DEPS) ?? state
+    );
   }
 
   if (

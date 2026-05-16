@@ -96,6 +96,14 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
   //  - inventory: non-construction-site placements consume build costs.
   //  - buildingSourceWarehouseIds: auto-assigns nearest warehouse for
   //    crafting buildings (needs assets to find warehouse positions).
+  //
+  // Permanent — Option B migration (live wrapper in create-game-reducer.ts,
+  // 2026-05-16). applyContextReducers runs each per-domain reducer in
+  // isolation, so single-slice contexts cannot reproduce the cross-slice
+  // writes (autoMiners, inventory, buildingSourceWarehouseIds, …) that the
+  // legacy handler produces. Suppressions stay by design and would only be
+  // removable under a full Option-A migration (ConstructionContextState
+  // widened to ~12 extra slices) — not planned.
   BUILD_PLACE_BUILDING: [
     "autoMiners",
     "autoSmelters",
