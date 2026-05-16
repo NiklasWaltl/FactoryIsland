@@ -96,6 +96,18 @@ const SHADOW_DIFF_EXPECTED_DIVERGENCES: Partial<
     "selectedAutoAssemblerId",
     "selectedGeneratorId",
   ],
+  // Permanent — Option B wrapper (2026-05-17). JOB_TICK is live-switched
+  // via applyPlanningTriggers + applyExecutionTick (inline) in
+  // contexts/create-game-reducer.ts, so the runtime shadowDiff pass in
+  // reducer.ts never fires for this action. The bounded-context crafting
+  // reducer keeps JOB_TICK as a no-op (crafting-context.ts:311) because
+  // applyExecutionTick also writes inventory / warehouseInventories /
+  // serviceHubs (tickPhases.ts:103-110) — cross-slice writes outside
+  // CraftingContextState. The suppression stays by design and still
+  // gates direct shadowDiff() calls from shadow-diff.test.ts. Only
+  // tracked slices (crafting, network) are listed; the cross-context
+  // inventory write is not in SHADOW_DIFF_SLICES and therefore never
+  // compared.
   JOB_TICK: ["crafting", "network"],
   ASSIGN_DRONE_TO_HUB: ["drones"],
   // Placement is inherently cross-slice: it reads assets/cellMap/tileMap to

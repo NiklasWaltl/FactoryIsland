@@ -1,16 +1,17 @@
 // ============================================================
-// Live-switch wrapper tests for DRONE_TICK + LOGISTICS_TICK
-// (Option B migration, 2026-05-16).
+// Live-switch wrapper tests for DRONE_TICK + LOGISTICS_TICK + JOB_TICK
+// (Option B migration, 2026-05-16 / 2026-05-17).
 // ------------------------------------------------------------
-// Covers the two BASE_TICK orchestrator tick actions that are now
+// Covers the three BASE_TICK orchestrator tick actions that are now
 // claimed by applyLiveContextReducers via DRONE_TICK_LIVE_DEPS /
-// LOGISTICS_TICK_LIVE_DEPS. Verifies:
+// LOGISTICS_TICK_LIVE_DEPS / inline JOB_TICK wrapper. Verifies:
 //   - the live switch claims each action (non-null return)
 //   - happy/empty paths preserve the legacy contract
 //   - deps are forwarded verbatim (spy tests against the underlying
 //     cluster handlers, mirroring how the live wrappers call them)
 // Deep tick coverage stays in the per-phase tests under
-// action-handlers/logistics-tick/ and the drone-execution tests.
+// action-handlers/logistics-tick/, the drone-execution tests and
+// crafting/__tests__/tick.test.ts.
 // ============================================================
 
 import { createInitialState } from "../../initial-state";
@@ -21,7 +22,7 @@ import {
   type LogisticsTickIoDeps,
 } from "../../action-handlers/logistics-tick";
 import type { GameAction } from "../../game-actions";
-import type { GameState } from "../../types";
+import type { GameState, Inventory, PlacedAsset } from "../../types";
 
 function baseState(): GameState {
   return createInitialState("release");
@@ -162,5 +163,152 @@ describe("applyLiveContextReducers — LOGISTICS_TICK", () => {
     expect(addNotification).not.toHaveBeenCalled();
     expect(addAutoDelivery).not.toHaveBeenCalled();
     expect(result.routingIndexCache).toBeDefined();
+  });
+});
+
+// ============================================================
+// JOB_TICK — live-switch wrapper (Option B, 2026-05-17)
+// ============================================================
+//
+// The wrapper calls applyPlanningTriggers + applyExecutionTick inline
+// (mirrors runJobTickPhase in queue-management-phase.ts:106-117). We
+// verify contract-level behaviour here; the deep tick lifecycle lives
+// in crafting/__tests__/tick.test.ts.
+
+const JOB_TICK_WB = "wb-live-job-tick";
+const JOB_TICK_WH = "wh-live-job-tick";
+
+function jobTickWorldWithWorkbench(opts: { wood?: number } = {}): GameState {
+  const base = createInitialState("release");
+  const woodAmount = opts.wood ?? 0;
+
+  const wb: PlacedAsset = {
+    id: JOB_TICK_WB,
+    type: "workbench",
+    x: 0,
+    y: 0,
+    size: 1,
+  };
+  const wh: PlacedAsset = {
+    id: JOB_TICK_WH,
+    type: "warehouse",
+    x: 5,
+    y: 5,
+    size: 2,
+  };
+  const newAssets: Record<string, PlacedAsset> = {
+    ...base.assets,
+    [wb.id]: wb,
+    [wh.id]: wh,
+  };
+  const wInv: Inventory = { ...base.inventory, wood: woodAmount };
+
+  return {
+    ...base,
+    assets: newAssets,
+    warehouseInventories: { [JOB_TICK_WH]: wInv },
+    inventory: { ...base.inventory },
+    buildingSourceWarehouseIds: { [JOB_TICK_WB]: JOB_TICK_WH },
+  };
+}
+
+describe("applyLiveContextReducers — JOB_TICK", () => {
+  it("claims the action (returns non-null state) instead of falling through", () => {
+    const s = baseState();
+    const action: GameAction = { type: "JOB_TICK" };
+
+    const result = applyLiveContextReducers(s, action);
+
+    expect(result).not.toBeNull();
+  });
+
+  it("happy path: queued job progresses to reserved after one tick", () => {
+    // Mirrors the tick.test.ts single-job lifecycle precondition: an
+    // empty workbench, a stocked warehouse, and a freshly enqueued job
+    // must advance from `queued` → `reserved` in one JOB_TICK pass.
+    let s = jobTickWorldWithWorkbench({ wood: 5 });
+    s = applyLiveContextReducers(s, {
+      type: "JOB_ENQUEUE",
+      recipeId: "wood_pickaxe",
+      workbenchId: JOB_TICK_WB,
+      source: "player",
+    })!;
+    expect(s.crafting.jobs).toHaveLength(1);
+    expect(s.crafting.jobs[0].status).toBe("queued");
+
+    const next = applyLiveContextReducers(s, { type: "JOB_TICK" })!;
+
+    expect(next.crafting.jobs[0].status).toBe("reserved");
+    expect(next.network.reservations).toHaveLength(1);
+  });
+
+  it("empty queue: returns the input state reference unchanged", () => {
+    const s = baseState();
+    expect(s.crafting.jobs).toEqual([]);
+    const action: GameAction = { type: "JOB_TICK" };
+
+    const next = applyLiveContextReducers(s, action);
+
+    // No planning trigger fires (no keep-stock targets in the seed
+    // world), tickCraftingJobs short-circuits on an empty jobs list —
+    // both phases return the input state reference, so the wrapper
+    // hands `state` back via invalidateIfCraftingChanged's identity
+    // branch (crafting === crafting).
+    expect(next).toBe(s);
+  });
+
+  it("under-construction workbench: reserved job is held back from crafting", () => {
+    // applyExecutionTick filters ready workbenches via
+    // !deps.isUnderConstruction (tickPhases.ts:73-79), and
+    // phase-promote-reserved.ts:62-65 keeps reserved jobs blocked
+    // when their workbench is not in readyWorkbenchIds. JOB_ENQUEUE
+    // itself rejects under-construction workbenches
+    // (crafting-context.ts:239), so we enqueue against the finished
+    // workbench first, run one tick (queued → reserved), then inject
+    // the construction site and tick again — the reserved job must
+    // NOT advance to `crafting`.
+    let s = jobTickWorldWithWorkbench({ wood: 5 });
+    s = applyLiveContextReducers(s, {
+      type: "JOB_ENQUEUE",
+      recipeId: "wood_pickaxe",
+      workbenchId: JOB_TICK_WB,
+      source: "player",
+    })!;
+    s = applyLiveContextReducers(s, { type: "JOB_TICK" })!;
+    expect(s.crafting.jobs[0].status).toBe("reserved");
+
+    s = {
+      ...s,
+      constructionSites: {
+        ...s.constructionSites,
+        [JOB_TICK_WB]: { buildingType: "workbench", remaining: { wood: 1 } },
+      },
+    };
+
+    const next = applyLiveContextReducers(s, { type: "JOB_TICK" })!;
+
+    expect(next.crafting.jobs[0].status).toBe("reserved");
+  });
+
+  it("network slice parity: every reservation references a live job after tick", () => {
+    // The reservation slice must stay consistent with the crafting
+    // slice: each entry in state.network.reservations should map back
+    // to a job that still exists (no orphan reservations after the
+    // tick wrapper runs).
+    let s = jobTickWorldWithWorkbench({ wood: 5 });
+    s = applyLiveContextReducers(s, {
+      type: "JOB_ENQUEUE",
+      recipeId: "wood_pickaxe",
+      workbenchId: JOB_TICK_WB,
+      source: "player",
+    })!;
+
+    const next = applyLiveContextReducers(s, { type: "JOB_TICK" })!;
+
+    const jobIds = new Set(next.crafting.jobs.map((job) => job.id));
+    for (const reservation of next.network.reservations) {
+      if (reservation.ownerKind !== "crafting_job") continue;
+      expect(jobIds.has(reservation.ownerId)).toBe(true);
+    }
   });
 });

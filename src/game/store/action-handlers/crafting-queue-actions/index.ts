@@ -28,7 +28,14 @@ import type { GameAction } from "../../game-actions";
 import type { CraftingQueueActionDeps } from "./deps";
 import { invalidateRoutingIndexCache } from "../../helpers/routing-index-cache";
 import { HANDLED_ACTION_TYPES, type CraftingQueueHandledAction } from "./types";
-import { runQueueManagementPhase } from "./phases";
+// runQueueManagementPhase — JOB_TICK was the last case using this in
+// the legacy dispatch path; it is now live-switched in
+// contexts/create-game-reducer.ts (Option B direct wrapper calling
+// applyPlanningTriggers + applyExecutionTick inline, 2026-05-17). The
+// phase function stays exported from ./phases for the queue-management
+// cases JOB_CANCEL / JOB_PAUSE / JOB_MOVE / JOB_SET_PRIORITY, which
+// route through craftingContext.
+// import { runQueueManagementPhase } from "./phases";
 
 export type { CraftingQueueActionDeps } from "./deps";
 
@@ -107,12 +114,15 @@ export function handleCraftingQueueAction(
     // live-switched via applyLiveContextReducers -> craftingContext.
     // case "JOB_PAUSE":
     // live-switched via applyLiveContextReducers -> craftingContext.
-    case "JOB_TICK": {
-      return invalidateIfCraftingChanged(
-        state,
-        runQueueManagementPhase({ state, action, deps }),
-      );
-    }
+
+    // case "JOB_TICK":
+    // live-switched via applyLiveContextReducers -> direct wrapper
+    // (2026-05-17). applyPlanningTriggers + applyExecutionTick are
+    // called inline there because applyExecutionTick writes
+    // state.inventory, which is outside CraftingContextState — the
+    // bounded-context reduce path cannot own JOB_TICK without
+    // slice-widening. Same Option-B pattern as DRONE_TICK /
+    // LOGISTICS_TICK.
 
     // case "SET_KEEP_STOCK_TARGET":
     // live-switched via applyLiveContextReducers -> craftingContext.

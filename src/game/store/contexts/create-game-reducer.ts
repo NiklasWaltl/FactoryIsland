@@ -26,6 +26,19 @@ import {
   type LogisticsTickIoDeps,
   handleLogisticsTickAction,
 } from "../action-handlers/logistics-tick";
+import {
+  applyExecutionTick,
+  applyPlanningTriggers,
+  type ExecutionTickDeps,
+  type PlanningTriggerDeps,
+} from "../../crafting/tickPhases";
+import {
+  KEEP_STOCK_MAX_TARGET,
+  KEEP_STOCK_OPEN_JOB_CAP,
+} from "../constants/keep-stock";
+import { resolveBuildingSource } from "../building-source";
+import { toCraftingJobInventorySource } from "../crafting/crafting-source-adapters";
+import { getCraftingSourceInventory } from "../../crafting/crafting-sources";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -118,6 +131,26 @@ const DRONE_TICK_LIVE_DEPS: DroneTickActionDeps = {
 const LOGISTICS_TICK_LIVE_DEPS: LogisticsTickIoDeps = {
   addNotification,
   addAutoDelivery,
+};
+
+// JOB_TICK sub-deps. Mirrors PLANNING_TRIGGER_DEPS + EXECUTION_TICK_DEPS
+// in action-handler-deps.ts:89-100 — duplicated here for the same
+// decoupling reason as the other LIVE_DEPS constants above (no import
+// from the legacy DI barrel). All helpers are pure (no captured state).
+// The wrapper calls applyPlanningTriggers + applyExecutionTick directly
+// (mirrors runJobTickPhase in queue-management-phase.ts:106-117) so we
+// don't need to assemble the full CraftingQueueActionDeps DI surface.
+const JOB_TICK_PLANNING_DEPS: PlanningTriggerDeps = {
+  KEEP_STOCK_OPEN_JOB_CAP,
+  KEEP_STOCK_MAX_TARGET,
+  resolveBuildingSource,
+  toCraftingJobInventorySource,
+  getCraftingSourceInventory,
+  isUnderConstruction,
+};
+
+const JOB_TICK_EXECUTION_DEPS: ExecutionTickDeps = {
+  isUnderConstruction,
 };
 
 function invalidateIfCraftingChanged(
@@ -810,6 +843,29 @@ export function applyLiveContextReducers(
     // autoSmelters, autoAssemblers, inventory) are pre-existing — see
     // shadow-diff.ts:65.
     return handleLogisticsTickAction(state, LOGISTICS_TICK_LIVE_DEPS);
+  }
+
+  if (action.type === "JOB_TICK") {
+    // Option B — direct wrapper. JOB_TICK is split into two clearly
+    // named phases (see crafting/tickPhases.ts):
+    //   1. Planning  — ONLY layer allowed to enqueue new automation
+    //                  jobs (currently keep-in-stock refills).
+    //   2. Execution — progresses existing jobs; never enqueues.
+    // Mirrors runJobTickPhase in
+    // action-handlers/crafting-queue-actions/phases/queue-management-phase.ts:106-117.
+    // Calling the phase functions directly here avoids assembling the
+    // full CraftingQueueActionDeps DI surface (the other cluster cases
+    // — CRAFT_REQUEST_WITH_PREREQUISITES, JOB_ENQUEUE, … — keep using
+    // it via their own craftingContext live-switch path above).
+    // No guards: pause/game-over gating sits in the tick orchestrator
+    // (entry/use-game-ticks.ts:199). applyExecutionTick writes
+    // `state.inventory` (tickPhases.ts:84,95,106) which is outside
+    // CraftingContextState, so the bounded-context reduce path cannot
+    // own JOB_TICK without slice-widening — hence direct wrapper
+    // analogous to DRONE_TICK / LOGISTICS_TICK.
+    const planned = applyPlanningTriggers(state, JOB_TICK_PLANNING_DEPS);
+    const next = applyExecutionTick(planned, JOB_TICK_EXECUTION_DEPS);
+    return invalidateIfCraftingChanged(state, next);
   }
 
   if (
