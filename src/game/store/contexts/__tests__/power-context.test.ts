@@ -552,6 +552,238 @@ describe("powerContext", () => {
 
       expect(powerContext.reduce(state, action)).toBe(state);
     });
+
+    describe("SET_MACHINE_PRIORITY", () => {
+      it("writes the clamped priority for an energy consumer", () => {
+        const state = createPowerState({
+          assets: {
+            "miner-1": {
+              id: "miner-1",
+              type: "auto_miner",
+              x: 0,
+              y: 0,
+              size: 1,
+              priority: 3,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_PRIORITY",
+          assetId: "miner-1",
+          priority: 1,
+        } satisfies GameAction;
+
+        const next = expectHandled(powerContext.reduce(state, action));
+
+        expect(next.assets["miner-1"]?.priority).toBe(1);
+      });
+
+      it("clamps a priority above the cap to 5", () => {
+        const state = createPowerState({
+          assets: {
+            "miner-1": {
+              id: "miner-1",
+              type: "auto_miner",
+              x: 0,
+              y: 0,
+              size: 1,
+              priority: 3,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_PRIORITY",
+          assetId: "miner-1",
+          priority: 6 as PowerContextState["assets"][string]["priority"],
+        } as unknown as GameAction;
+
+        const next = expectHandled(powerContext.reduce(state, action));
+
+        expect(next.assets["miner-1"]?.priority).toBe(5);
+      });
+
+      it("clamps a priority below the floor to 1", () => {
+        const state = createPowerState({
+          assets: {
+            "miner-1": {
+              id: "miner-1",
+              type: "auto_miner",
+              x: 0,
+              y: 0,
+              size: 1,
+              priority: 3,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_PRIORITY",
+          assetId: "miner-1",
+          priority: 0 as PowerContextState["assets"][string]["priority"],
+        } as unknown as GameAction;
+
+        const next = expectHandled(powerContext.reduce(state, action));
+
+        expect(next.assets["miner-1"]?.priority).toBe(1);
+      });
+
+      it("returns the same state reference when the priority is unchanged", () => {
+        const state = createPowerState({
+          assets: {
+            "miner-1": {
+              id: "miner-1",
+              type: "auto_miner",
+              x: 0,
+              y: 0,
+              size: 1,
+              priority: 4,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_PRIORITY",
+          assetId: "miner-1",
+          priority: 4,
+        } satisfies GameAction;
+
+        expect(powerContext.reduce(state, action)).toBe(state);
+      });
+
+      it("is a no-op for non-energy-consumer asset types", () => {
+        const state = createPowerState({
+          assets: {
+            "wh-1": {
+              id: "wh-1",
+              type: "warehouse",
+              x: 0,
+              y: 0,
+              size: 1,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_PRIORITY",
+          assetId: "wh-1",
+          priority: 2,
+        } satisfies GameAction;
+
+        expect(powerContext.reduce(state, action)).toBe(state);
+      });
+
+      it("is a no-op when the asset does not exist", () => {
+        const state = createPowerState();
+        const action = {
+          type: "SET_MACHINE_PRIORITY",
+          assetId: "missing",
+          priority: 2,
+        } satisfies GameAction;
+
+        expect(powerContext.reduce(state, action)).toBe(state);
+      });
+    });
+
+    describe("SET_MACHINE_BOOST", () => {
+      it("enables boost on an auto_miner", () => {
+        const state = createPowerState({
+          assets: {
+            "miner-1": {
+              id: "miner-1",
+              type: "auto_miner",
+              x: 0,
+              y: 0,
+              size: 1,
+              boosted: false,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_BOOST",
+          assetId: "miner-1",
+          boosted: true,
+        } satisfies GameAction;
+
+        const next = expectHandled(powerContext.reduce(state, action));
+
+        expect(next.assets["miner-1"]?.boosted).toBe(true);
+      });
+
+      it("disables boost on an auto_smelter", () => {
+        const state = createPowerState({
+          assets: {
+            "smelter-1": {
+              id: "smelter-1",
+              type: "auto_smelter",
+              x: 0,
+              y: 0,
+              size: 1,
+              boosted: true,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_BOOST",
+          assetId: "smelter-1",
+          boosted: false,
+        } satisfies GameAction;
+
+        const next = expectHandled(powerContext.reduce(state, action));
+
+        expect(next.assets["smelter-1"]?.boosted).toBe(false);
+      });
+
+      it("returns the same state reference when boost is unchanged", () => {
+        const state = createPowerState({
+          assets: {
+            "miner-1": {
+              id: "miner-1",
+              type: "auto_miner",
+              x: 0,
+              y: 0,
+              size: 1,
+              boosted: true,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_BOOST",
+          assetId: "miner-1",
+          boosted: true,
+        } satisfies GameAction;
+
+        expect(powerContext.reduce(state, action)).toBe(state);
+      });
+
+      it("is a no-op for asset types that do not support boost", () => {
+        const state = createPowerState({
+          assets: {
+            "asm-1": {
+              id: "asm-1",
+              type: "auto_assembler",
+              x: 0,
+              y: 0,
+              size: 1,
+            } as PowerContextState["assets"][string],
+          },
+        });
+        const action = {
+          type: "SET_MACHINE_BOOST",
+          assetId: "asm-1",
+          boosted: true,
+        } satisfies GameAction;
+
+        expect(powerContext.reduce(state, action)).toBe(state);
+      });
+
+      it("is a no-op when the asset does not exist", () => {
+        const state = createPowerState();
+        const action = {
+          type: "SET_MACHINE_BOOST",
+          assetId: "missing",
+          boosted: true,
+        } satisfies GameAction;
+
+        expect(powerContext.reduce(state, action)).toBe(state);
+      });
+    });
   });
 
   describe("handledActionTypes", () => {

@@ -246,8 +246,10 @@ export function dispatchAction(
     // TOGGLE_ENERGY_DEBUG is handled above by
     // handleUiAction (see action-handlers/ui-actions.ts).
 
-    // SET_MACHINE_PRIORITY and SET_MACHINE_BOOST are handled above by
-    // handleMachineConfigAction (see action-handlers/machine-config.ts).
+    // SET_MACHINE_PRIORITY and SET_MACHINE_BOOST are live-switched via
+    // power-context (contexts/create-game-reducer.ts, 2026-05-16). The
+    // legacy handleMachineConfigAction call below still hosts
+    // SET_SPLITTER_FILTER and stays in place for the shadow-diff path.
 
     // SET_BUILDING_SOURCE and UPGRADE_HUB are handled above by
     // handleBuildingSiteAction (see action-handlers/building-site.ts).

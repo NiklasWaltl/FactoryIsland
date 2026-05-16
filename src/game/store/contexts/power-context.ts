@@ -7,10 +7,16 @@ import {
 import { getZoneWarehouseIds } from "../../zones/production-zone-aggregation";
 import { GENERATOR_TICKS_PER_WOOD } from "../constants/energy/generator";
 import { GENERATOR_MAX_FUEL } from "../constants/buildings/index";
+import { DEFAULT_MACHINE_PRIORITY } from "../constants/energy/energy-balance";
 import { consumeResources } from "../helpers/reducer-helpers";
+import {
+  clampMachinePriority,
+  isBoostSupportedType,
+  isEnergyConsumerType,
+} from "../helpers/machine-priority";
 import { addErrorNotification } from "../utils/notifications";
 import type { GameAction } from "../game-actions";
-import type { CraftingSource, GameState } from "../types";
+import type { CraftingSource, GameState, PlacedAsset } from "../types";
 import type { BoundedContext, PowerContextState } from "./types";
 
 // Local slice-typed mirror of store/building-source.ts. Same precedent as
@@ -49,6 +55,8 @@ export const POWER_HANDLED_ACTION_TYPES = [
   "GENERATOR_TICK",
   "ENERGY_NET_TICK",
   "REMOVE_POWER_POLE",
+  "SET_MACHINE_PRIORITY",
+  "SET_MACHINE_BOOST",
 ] as const satisfies readonly GameAction["type"][];
 
 type PowerActionType = (typeof POWER_HANDLED_ACTION_TYPES)[number];
@@ -60,6 +68,22 @@ const POWER_ACTION_TYPE_SET: ReadonlySet<GameAction["type"]> = new Set(
 
 function isPowerAction(action: GameAction): action is PowerAction {
   return POWER_ACTION_TYPE_SET.has(action.type);
+}
+
+// Mirrors action-handlers/machine-config.ts:36-51 (patchMachineAsset). Local
+// copy keeps the bounded context free of an action-handlers/ import.
+function patchAsset(
+  state: PowerContextState,
+  assetId: string,
+  patch: Partial<PlacedAsset>,
+): PowerContextState {
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      [assetId]: { ...state.assets[assetId], ...patch },
+    },
+  };
 }
 
 function reducePower(
@@ -226,6 +250,30 @@ function reducePower(
       // mirrored slice would have to widen PowerContextState beyond what
       // any other Power action needs — hence the wrapper.
       return state;
+
+    case "SET_MACHINE_PRIORITY": {
+      // Mirrors action-handlers/machine-config.ts:58-71.
+      const asset = state.assets[action.assetId];
+      if (!asset) return state;
+      if (!isEnergyConsumerType(asset.type)) return state;
+      const nextPriority = clampMachinePriority(action.priority);
+      if ((asset.priority ?? DEFAULT_MACHINE_PRIORITY) === nextPriority) {
+        return state;
+      }
+      return patchAsset(state, action.assetId, { priority: nextPriority });
+    }
+
+    case "SET_MACHINE_BOOST": {
+      // Mirrors action-handlers/machine-config.ts:73-83. Hard restriction:
+      // boost (tier-1 overclocking) is only valid for auto_miner /
+      // auto_smelter — other asset types are rejected upstream.
+      const asset = state.assets[action.assetId];
+      if (!asset) return state;
+      if (!isBoostSupportedType(asset.type)) return state;
+      const nextBoost = !!action.boosted;
+      if ((asset.boosted ?? false) === nextBoost) return state;
+      return patchAsset(state, action.assetId, { boosted: nextBoost });
+    }
 
     default: {
       const _exhaustive: never = actionType;

@@ -244,7 +244,8 @@ export function applyContextReducers(
       power.machinePowerRatio !== next.machinePowerRatio ||
       power.notifications !== next.notifications ||
       power.inventory !== next.inventory ||
-      power.warehouseInventories !== next.warehouseInventories)
+      power.warehouseInventories !== next.warehouseInventories ||
+      power.assets !== next.assets)
   ) {
     next = { ...next, ...power };
   }
@@ -584,7 +585,9 @@ export function applyLiveContextReducers(
     action.type === "REMOVE_POWER_POLE" ||
     action.type === "GENERATOR_REQUEST_REFILL" ||
     action.type === "GENERATOR_TICK" ||
-    action.type === "GENERATOR_ADD_FUEL"
+    action.type === "GENERATOR_ADD_FUEL" ||
+    action.type === "SET_MACHINE_PRIORITY" ||
+    action.type === "SET_MACHINE_BOOST"
   ) {
     // GENERATOR_START/STOP write only `generators` and read
     // `selectedGeneratorId` + `constructionSites` from PowerContextState.
@@ -599,11 +602,16 @@ export function applyLiveContextReducers(
     // GENERATOR_ADD_FUEL writes `generators` AND `inventory` OR
     // `warehouseInventories` (resolved via crafting-source helpers using
     // `buildingZoneIds`, `productionZones`, `buildingSourceWarehouseIds`,
-    // `mode`). Mirrors:
+    // `mode`).
+    // SET_MACHINE_PRIORITY / SET_MACHINE_BOOST write `assets[id].priority`
+    // resp. `assets[id].boosted`. Both read only `assets[id].type` for the
+    // consumer/boost-eligibility gate — fully covered by PowerContextState.
+    // Mirrors:
     //   action-handlers/machine-actions/phases/generator-toggle-phase.ts
     //   action-handlers/machine-actions/phases/generator-fuel-phase.ts
     //   action-handlers/machine-actions/phases/generator-tick-phase.ts
     //   action-handlers/maintenance-actions/phases/remove-power-pole-phase.ts
+    //   action-handlers/machine-config.ts (SET_MACHINE_PRIORITY/BOOST cases)
     const powerSliceIn = {
       battery: state.battery,
       generators: state.generators,
