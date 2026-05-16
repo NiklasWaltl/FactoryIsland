@@ -6,10 +6,13 @@
 // `handle...Action(state, action, deps?)` returns either the next
 // state (action belonged to its cluster) or `null` (fall through).
 //
-// The remaining inline `switch` only covers cases that have not
-// been extracted (e.g. ENERGY_NET_TICK). All extracted cases are documented
-// inline below via `// <ACTION> is handled above by handle<Cluster>Action`
-// markers so the action surface remains greppable from this file.
+// As of 2026-05-16 the inline `switch` has no active cases left —
+// ENERGY_NET_TICK was the last and is now live-switched via
+// applyLiveContextReducers in contexts/create-game-reducer.ts.
+// All cases are documented inline below via
+// `// <ACTION> is handled above by handle<Cluster>Action` markers so the
+// action surface remains greppable from this file. The dispatcher is
+// effectively empty and will be removed with the full cutover.
 //
 // IMPORTANT: This module must NOT import from ./reducer to avoid an
 // ESM initialization cycle (reducer.ts imports this file).
@@ -29,7 +32,9 @@
 import type { GameState } from "./types";
 import type { GameAction } from "./game-actions";
 
-import { runEnergyNetTick } from "./energy/energy-net-tick";
+// runEnergyNetTick import removed with ENERGY_NET_TICK live-switch
+// migration (2026-05-16). Restore alongside the commented case below
+// only if the cutover is reverted.
 
 import {
   CRAFTING_QUEUE_ACTION_DEPS,
@@ -176,6 +181,12 @@ export function dispatchAction(
   if (logisticsTickResult !== null) return logisticsTickResult;
   const shipResult = handleShipAction(state, action);
   if (shipResult !== null) return shipResult;
+  // All inline cases have been migrated to dedicated handlers or to the
+  // live-switched bounded contexts. The switch below contains only marker
+  // comments documenting where each action is handled. It falls through to
+  // `return state` for any action that none of the cluster handlers above
+  // claimed — which is correct since every reachable action is now claimed
+  // by either a handle*Action above or by applyLiveContextReducers.
   switch (action.type) {
     // NETWORK_*, CRAFT_REQUEST_WITH_PREREQUISITES, JOB_*,
     // SET_KEEP_STOCK_TARGET and SET_RECIPE_AUTOMATION_POLICY are handled
@@ -207,9 +218,13 @@ export function dispatchAction(
     // GROW_SAPLING, GROW_SAPLINGS and NATURAL_SPAWN are handled above by
     // handleGrowthAction (see action-handlers/growth-actions/index.ts).
 
-    case "ENERGY_NET_TICK": {
-      return runEnergyNetTick(state);
-    }
+    // ENERGY_NET_TICK is live-switched via applyLiveContextReducers in
+    // contexts/create-game-reducer.ts (wrapper around runEnergyNetTick).
+    // Migrated 2026-05-16. The legacy case is left here as a comment
+    // until the full cutover removes game-reducer-dispatch.ts entirely.
+    // case "ENERGY_NET_TICK": {
+    //   return runEnergyNetTick(state);
+    // }
 
     // AUTO_SMELTER_SET_RECIPE is handled above by
     // handleAutoSmelterAction (see action-handlers/auto-smelter-actions/index.ts).

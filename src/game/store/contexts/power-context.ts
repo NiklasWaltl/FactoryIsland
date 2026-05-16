@@ -217,10 +217,14 @@ function reducePower(
     }
 
     case "ENERGY_NET_TICK":
-      // cross-slice: no-op in isolated context
-      // ENERGY_NET_TICK pulls 8 slices (assets, cellMap, connectedAssetIds,
-      // autoSmelters, autoAssemblers, constructionSites, generators, battery).
-      // Migrated in Power-4 (wrapper session).
+      // Handled directly in the live-switch wrapper
+      // (contexts/create-game-reducer.ts → runEnergyNetTick), so this
+      // context never owns the transition. The case is kept here only to
+      // satisfy POWER_HANDLED_ACTION_TYPES exhaustiveness. ENERGY_NET_TICK
+      // reads ~8 slices (assets, cellMap, connectedAssetIds, autoSmelters,
+      // autoAssemblers, constructionSites, generators, battery) and a
+      // mirrored slice would have to widen PowerContextState beyond what
+      // any other Power action needs — hence the wrapper.
       return state;
 
     default: {

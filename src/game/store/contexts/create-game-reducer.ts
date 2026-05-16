@@ -5,6 +5,7 @@ import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 import { hasWarehouseAssetWithInventory } from "../utils/asset-guards";
 import { isUnderConstruction } from "../helpers/asset-status";
 import { computeConnectedAssetIds } from "../../logistics/connectivity";
+import { runEnergyNetTick } from "../energy/energy-net-tick";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -563,6 +564,18 @@ export function applyLiveContextReducers(
     if (research === null) return null;
     if (research === researchSliceIn) return state;
     return { ...state, ...research };
+  }
+
+  if (action.type === "ENERGY_NET_TICK") {
+    // ENERGY_NET_TICK is a pure GameState→GameState transformation
+    // (battery, poweredMachineIds, machinePowerRatio) that reads ~8 slices
+    // (assets, cellMap, connectedAssetIds, autoSmelters, autoAssemblers,
+    // constructionSites, generators, battery). Mirroring it through
+    // PowerContextState would force the slice to widen beyond what any
+    // other Power action needs. Strategy fixed 2026-05-16: live-wire it
+    // as a direct wrapper here — the power context keeps a no-op stub.
+    // Mirrors game-reducer-dispatch.ts:210-212 verbatim.
+    return runEnergyNetTick(state);
   }
 
   if (
