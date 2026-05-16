@@ -1,5 +1,59 @@
 import type { GameAction } from "../game-actions";
+import type { PlacedAsset } from "../types";
 import type { BoundedContext, ConstructionContextState } from "./types";
+
+function getNextDeconstructRequestSeq(
+  assets: Readonly<Record<string, PlacedAsset>>,
+): number {
+  let maxSeq = 0;
+  for (const asset of Object.values(assets)) {
+    if (asset.status !== "deconstructing") continue;
+    if ((asset.deconstructRequestSeq ?? 0) > maxSeq) {
+      maxSeq = asset.deconstructRequestSeq ?? 0;
+    }
+  }
+  return maxSeq + 1;
+}
+
+function markAssetAsDeconstructing(
+  state: ConstructionContextState,
+  assetId: string,
+): ConstructionContextState {
+  const targetAsset = state.assets[assetId];
+  if (!targetAsset || targetAsset.status === "deconstructing") return state;
+  const nextDeconstructRequestSeq = getNextDeconstructRequestSeq(state.assets);
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      [assetId]: {
+        ...targetAsset,
+        status: "deconstructing",
+        deconstructRequestSeq: nextDeconstructRequestSeq,
+      },
+    },
+  };
+}
+
+function clearAssetDeconstructingStatus(
+  state: ConstructionContextState,
+  assetId: string,
+): ConstructionContextState {
+  const targetAsset = state.assets[assetId];
+  if (!targetAsset || targetAsset.status !== "deconstructing") return state;
+  const {
+    status: _status,
+    deconstructRequestSeq: _deconstructRequestSeq,
+    ...assetWithoutStatus
+  } = targetAsset;
+  return {
+    ...state,
+    assets: {
+      ...state.assets,
+      [assetId]: assetWithoutStatus,
+    },
+  };
+}
 
 export const CONSTRUCTION_HANDLED_ACTION_TYPES = [
   "BUILD_PLACE_BUILDING",
@@ -32,11 +86,15 @@ function reduceConstruction(
   const actionType = action.type;
 
   switch (actionType) {
+    case "REQUEST_DECONSTRUCT_ASSET":
+      return markAssetAsDeconstructing(state, action.assetId);
+
+    case "CANCEL_DECONSTRUCT_ASSET":
+      return clearAssetDeconstructingStatus(state, action.assetId);
+
     case "BUILD_PLACE_BUILDING":
     case "BUILD_PLACE_FLOOR_TILE":
     case "BUILD_REMOVE_ASSET":
-    case "REQUEST_DECONSTRUCT_ASSET":
-    case "CANCEL_DECONSTRUCT_ASSET":
     case "REMOVE_BUILDING":
     case "UPGRADE_HUB":
       // cross-slice: no-op in isolated context

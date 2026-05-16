@@ -1,8 +1,10 @@
 import type { GameAction } from "../game-actions";
 import type { GameState } from "../types";
+import { BUILDING_COSTS } from "../constants/buildings/index";
 import { invalidateRoutingIndexCache } from "../helpers/routing-index-cache";
 import { hasWarehouseAssetWithInventory } from "../utils/asset-guards";
 import { isUnderConstruction } from "../helpers/asset-status";
+import { computeConnectedAssetIds } from "../../logistics/connectivity";
 import { autoAssemblerContext } from "./auto-assembler-context";
 import { autoMinerContext } from "./auto-miner-context";
 import { autoSmelterContext } from "./auto-smelter-context";
@@ -24,6 +26,38 @@ export type ContextGameReducer = (
   state: GameState,
   action: GameAction,
 ) => GameState;
+
+// Mirrors action-handlers/building-placement/remove-asset.ts:55-94. The
+// deconstruct eligibility gate reads hotbarSlots, activeSlot and buildMode —
+// all outside ConstructionContextState — so we replicate the gate in the
+// live-switch wrapper rather than expanding the slice. Behaviour stays
+// identical to the legacy handler.
+function isDeconstructEligible(
+  state: Pick<GameState, "buildMode" | "hotbarSlots" | "activeSlot" | "assets">,
+  assetId: string,
+): boolean {
+  const activeHotbarSlot = state.hotbarSlots[state.activeSlot];
+  const removeToolActive =
+    state.buildMode || activeHotbarSlot?.toolKind === "building";
+  if (!removeToolActive) return false;
+  const targetAsset = state.assets[assetId];
+  if (!targetAsset) return false;
+  if (!(targetAsset.type in BUILDING_COSTS)) return false;
+  if (targetAsset.fixed) return false;
+  return true;
+}
+
+// Mirrors the connectivity/cache recompute in markAssetAsDeconstructing /
+// clearAssetDeconstructingStatus from
+// action-handlers/building-placement/request-deconstruct.ts:39-43,64-68.
+// Pulled into the wrapper because computeConnectedAssetIds needs `cellMap`
+// and `constructionSites` reads that are outside ConstructionContextState.
+function recomputeConnectivityAndInvalidateCache(state: GameState): GameState {
+  return invalidateRoutingIndexCache({
+    ...state,
+    connectedAssetIds: computeConnectedAssetIds(state),
+  });
+}
 
 function invalidateIfCraftingChanged(
   previousState: GameState,
@@ -516,6 +550,45 @@ export function applyLiveContextReducers(
     if (research === null) return null;
     if (research === researchSliceIn) return state;
     return { ...state, ...research };
+  }
+
+  if (
+    action.type === "REQUEST_DECONSTRUCT_ASSET" ||
+    action.type === "CANCEL_DECONSTRUCT_ASSET"
+  ) {
+    // Cross-slice eligibility gate — mirrors decideRemoveAssetEligibility in
+    // action-handlers/building-placement/remove-asset.ts:55-94. Reads
+    // buildMode/hotbarSlots/activeSlot, which stay outside the construction
+    // slice for the same reason assets stays out of ZoneContextState.
+    if (!isDeconstructEligible(state, action.assetId)) return state;
+
+    // CANCEL additionally requires the asset to already be deconstructing —
+    // mirrors handleCancelDeconstructAssetAction:99-100. Catching this in the
+    // wrapper avoids a no-op connectivity recompute below.
+    if (action.type === "CANCEL_DECONSTRUCT_ASSET") {
+      if (state.assets[action.assetId]?.status !== "deconstructing") {
+        return state;
+      }
+    }
+
+    const constructionSliceIn = {
+      assets: state.assets,
+      constructionSites: state.constructionSites,
+    };
+    const construction = constructionContext.reduce(
+      constructionSliceIn,
+      action,
+    );
+    if (construction === null) return null;
+    if (construction === constructionSliceIn) return state;
+
+    // Status flip on `assets` invalidates the energy network and the conveyor
+    // routing index — mirrors markAssetAsDeconstructing /
+    // clearAssetDeconstructingStatus side effects.
+    return recomputeConnectivityAndInvalidateCache({
+      ...state,
+      ...construction,
+    });
   }
 
   if (
